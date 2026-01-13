@@ -26,14 +26,12 @@ parklive/
 │   │   ├── composer.json        # Dependències PHP
 │   │   └── Dockerfile           # Contenidor Docker
 │   │
-│   └── frontend-service/        # Servei Frontend (React/Vue)
+│   └── frontend-service/        # Servei Frontend
 │       ├── src/
-│       │   ├── models/          # Models de dades del client
-│       │   ├── views/           # Components de visualització
-│       │   ├── controllers/     # Gestors d'estat i lògica
-│       │   └── services/        # Crides a l'API
+│       │   ├── assets/          
+│       │   ├── js/           
+│       │   └── sass/        
 │       ├── public/              # Recursos estàtics
-│       ├── package.json         # Dependències Node.js
 │       └── Dockerfile           # Contenidor Docker
 │
 ├── shared/                      # Recursos compartits entre serveis
