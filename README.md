@@ -1,77 +1,153 @@
-# Parklive
+# Parklive - Sistema de Gestió d'Aparcaments
 
-## Estructura del Proyecto / Project Structure
+## Descripció
+Parklive és un sistema complet de gestió d'aparcaments que implementa una arquitectura de microserveis amb el patró MVC (Model-Vista-Controlador). El projecte està dissenyat per ser escalable, modular i fàcil de mantenir.
 
-Este proyecto está organizado para soportar múltiples tecnologías: Python, PHP, HTML, SASS, JavaScript y Base de Datos.
+## Arquitectura del Projecte
 
-### 📁 Estructura de Carpetas
+El projecte segueix una arquitectura de microserveis amb Docker, on cada servei implementa el seu propi patró MVC:
 
 ```
-Parklive/
-├── backend/              # Backend del proyecto (Python/PHP)
-│   ├── api/             # Endpoints de la API REST
-│   ├── controllers/     # Controladores de la aplicación
-│   ├── models/          # Modelos de datos
-│   ├── middleware/      # Middleware de autenticación y validación
-│   ├── utils/           # Funciones auxiliares
-│   └── tests/           # Tests del backend
+parklive/
+├── services/
+│   ├── python-service/          # Servei backend Python (API REST)
+│   │   ├── models/              # Models de dades i lògica de negoci
+│   │   ├── views/               # Serialitzadors i formatadors de resposta
+│   │   ├── controllers/         # Controladors i lògica de rutes
+│   │   ├── config/              # Configuració del servei
+│   │   ├── requirements.txt     # Dependències Python
+│   │   └── Dockerfile           # Contenidor Docker
+│   │
+│   ├── php-service/             # Servei backend PHP (API REST)
+│   │   ├── models/              # Models de dades i accés a BD
+│   │   ├── views/               # Vistes JSON i resposta API
+│   │   ├── controllers/         # Controladors PHP
+│   │   ├── config/              # Configuració del servei
+│   │   ├── composer.json        # Dependències PHP
+│   │   └── Dockerfile           # Contenidor Docker
+│   │
+│   └── frontend-service/        # Servei Frontend (React/Vue)
+│       ├── src/
+│       │   ├── models/          # Models de dades del client
+│       │   ├── views/           # Components de visualització
+│       │   ├── controllers/     # Gestors d'estat i lògica
+│       │   └── services/        # Crides a l'API
+│       ├── public/              # Recursos estàtics
+│       ├── package.json         # Dependències Node.js
+│       └── Dockerfile           # Contenidor Docker
 │
-├── frontend/            # Frontend del proyecto
-│   ├── public/          # Archivos públicos (HTML)
-│   └── src/             # Código fuente del frontend
-│       ├── js/          # JavaScript
-│       ├── sass/        # SASS/SCSS
-│       ├── components/  # Componentes reutilizables
-│       └── assets/      # Recursos estáticos
-│           ├── images/  # Imágenes
-│           └── fonts/   # Fuentes
+├── shared/                      # Recursos compartits entre serveis
+│   ├── utils/                   # Utilitats comunes
+│   ├── middlewares/             # Middleware compartit
+│   ├── validators/              # Validadors de dades
+│   └── constants/               # Constants globals
 │
-├── database/            # Base de datos
-│   ├── migrations/      # Migraciones de base de datos
-│   ├── seeds/           # Datos de prueba
-│   └── models/          # Modelos de base de datos
+├── database/                    # Scripts i configuració de base de dades
+│   ├── migrations/              # Migracions de BD
+│   ├── seeds/                   # Dades de prova
+│   └── schemas/                 # Esquemes de BD
 │
-├── config/              # Archivos de configuración
-├── docs/                # Documentación del proyecto
-└── logs/                # Archivos de logs (ignorados por git)
+├── docker-compose.yml           # Orquestració de contenidors
+├── .env.example                 # Exemple de variables d'entorn
+└── README.md                    # Aquest fitxer
 ```
 
-### 🛠️ Tecnologías Soportadas
 
-- **Python**: Para el backend y procesamiento de datos
-- **PHP**: Para validación de usuarios
-- **HTML**: Para la estructura de las páginas
-- **SASS/SCSS**: Para los estilos (compilado a CSS)
-- **JavaScript**: Para la interactividad del frontend
-- **Base de Datos**: Estructura para migraciones y modelos
 
-### 📝 Descripción de Carpetas
+## Directori Shared
 
-#### Backend
-- **api/**: Define los endpoints REST de tu aplicación
-- **controllers/**: Lógica de control de la aplicación
-- **models/**: Definición de modelos de datos
-- **middleware/**: Autenticación, autorización, validaciones
-- **utils/**: Funciones helper y utilidades
-- **tests/**: Tests unitarios e integración
+El directori `shared/` conté recursos comuns utilitzats per múltiples serveis:
 
-#### Frontend
-- **public/**: Archivos HTML accesibles directamente
-- **src/js/**: Código JavaScript modular
-- **src/sass/**: Estilos SASS que se compilan a CSS
-- **src/components/**: Componentes UI reutilizables
-- **src/assets/**: Recursos estáticos (imágenes, fuentes)
+- **utils/**: Funcions auxiliars reutilitzables
+- **middlewares/**: Middleware d'autenticació, logging, CORS, etc.
+- **validators/**: Esquemes de validació de dades
+- **constants/**: Constants i configuracions globals
 
-#### Database
-- **seeds/**: Datos iniciales para desarrollo
-- **models/**: Definición de esquemas de base de datos
+## Directori Database
 
-#### Otros
-- **docs/**: Documentación técnica y de usuario
-- **logs/**: Logs de aplicación (ignorados en git)
+El directori `database/` gestiona tot el relacionat amb la base de dades:
 
-4. Comenzar a desarrollar tu aplicación
+- **migrations/**: Control de versions de l'esquema de BD
+- **seeds/**: Dades inicials per a desenvolupament i testing
+- **schemas/**: Definicions d'esquemes i diagrames
 
----
+## Instal·lació i Configuració
 
-*Esta estructura está diseñada para escalar y mantener un código organizado y mantenible.*
+### Prerequisits
+- Docker i Docker Compose
+- Git
+
+### Passos d'Instal·lació
+
+1. **Clonar el repositori:**
+   ```bash
+   git clone https://github.com/RogerMuntane/Parklive.git
+   cd Parklive
+   git checkout restructure-mvc-docker
+   ```
+
+2. **Configurar variables d'entorn:**
+   ```bash
+   cp .env.example .env
+   # Editar .env amb les teves configuracions
+   ```
+
+3. **Construir i iniciar els contenidors:**
+   ```bash
+   docker-compose build
+   docker-compose up -d
+   ```
+
+4. **Executar migracions:**
+   ```bash
+   docker-compose exec python-service python manage.py migrate
+   docker-compose exec php-service php artisan migrate
+   ```
+
+5. **Carregar dades de prova (opcional):**
+   ```bash
+   docker-compose exec python-service python manage.py seed
+   docker-compose exec php-service php artisan db:seed
+   ```
+
+## Ús i Desenvolupament
+
+### Executar els serveis
+```bash
+# Iniciar tots els serveis
+docker-compose up -d
+
+# Veure els logs
+docker-compose logs -f
+
+# Aturar els serveis
+docker-compose down
+```
+
+### Accedir als serveis
+- **Frontend**: http://localhost:3000
+- **Python API**: http://localhost:8000
+- **PHP API**: http://localhost:8080
+- **Base de dades**: localhost:5432 (PostgreSQL) o localhost:3306 (MySQL)
+
+## Testing
+
+### Executar tests
+```bash
+# Python Service
+docker-compose exec python-service pytest
+
+# PHP Service
+docker-compose exec php-service php artisan test
+
+# Frontend Service
+docker-compose exec frontend-service npm test
+```
+
+## Contacte
+
+**Autor**: Roger Muntané  
+**GitHub**: [@RogerMuntane](https://github.com/RogerMuntane)
+
+
+**Última actualització**: 2026-01-13
