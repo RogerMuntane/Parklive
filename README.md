@@ -39,7 +39,7 @@ Parklive/
 ### 🛠️ Tecnologías Soportadas
 
 - **Python**: Para el backend y procesamiento de datos
-- **PHP**: Para servicios del backend y API
+- **PHP**: Para validación de usuarios
 - **HTML**: Para la estructura de las páginas
 - **SASS/SCSS**: Para los estilos (compilado a CSS)
 - **JavaScript**: Para la interactividad del frontend
@@ -63,20 +63,13 @@ Parklive/
 - **src/assets/**: Recursos estáticos (imágenes, fuentes)
 
 #### Database
-- **migrations/**: Scripts de migración de esquema
 - **seeds/**: Datos iniciales para desarrollo
 - **models/**: Definición de esquemas de base de datos
 
 #### Otros
-- **config/**: Configuraciones de entorno y servicios
 - **docs/**: Documentación técnica y de usuario
 - **logs/**: Logs de aplicación (ignorados en git)
 
-### 🚀 Próximos Pasos
-
-1. Instalar dependencias necesarias
-2. Configurar variables de entorno
-3. Configurar la base de datos
 4. Comenzar a desarrollar tu aplicación
 
 ---
