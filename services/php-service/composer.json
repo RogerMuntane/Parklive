@@ -1,0 +1,19 @@
+{
+    "name": "parklive/php-service",
+    "description": "ParkLive PHP Authentication Service",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "ext-mysqli": "*",
+        "ext-pdo": "*",
+        "firebase/php-jwt": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\Models\\": "models/",
+            "App\\Views\\": "views/",
+            "App\\Controllers\\": "controllers/",
+            "App\\Config\\": "config/"
+        }
+    }
+}

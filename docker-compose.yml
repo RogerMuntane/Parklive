@@ -1,69 +1,104 @@
 version: '3.8'
 
 services:
-  # MySQL Database
+  # Base de dades MySQL
   mysql:
     image: mysql:8.0
     container_name: parklive_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: parklive_db
-      MYSQL_USER: parklive_user
-      MYSQL_PASSWORD: password_segur
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database:/docker-entrypoint-initdb.d
+      - ./database/schemas:/docker-entrypoint-initdb.d/01-schemas
+      - ./database/migrations:/docker-entrypoint-initdb.d/02-migrations
+      - ./database/seeds:/docker-entrypoint-initdb.d/03-seeds
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
     networks:
       - parklive_network
 
-  # PHP + Apache
-  php-apache:
-    build: ./docker/php
+  # Servei PHP
+  php-service:
+    build:
+      context: ./services/php-service
+      dockerfile: Dockerfile
     container_name: parklive_php
     restart: always
     ports:
-      - "9080:80"
+      - "8080:80"
     volumes:
-      - ./auth-php:/var/www/html/auth
-      - ./public:/var/www/html/public
+      - ./services/php-service:/var/www/html
+      - ./shared:/var/www/shared
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
     networks:
       - parklive_network
 
-  # Python API
-  python-api:
-    build: ./docker/python
+  # Servei Python
+  python-service:
+    build:
+      context: ./services/python-service
+      dockerfile: Dockerfile
     container_name: parklive_python
     restart: always
     ports:
       - "5000:5000"
     volumes:
-      - ./backend-python:/app
+      - ./services/python-service:/app
+      - ./shared:/app/shared
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
       DB_HOST: mysql
-      DB_USER: parklive_user
-      DB_PASSWORD: password_segur
-      DB_NAME: parklive_db
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      FLASK_ENV: development
+      PYTHONUNBUFFERED: 1
     networks:
       - parklive_network
 
-  # phpMyAdmin (opcional, per gestió BD)
+  # Servei Frontend
+  frontend-service:
+    build:
+      context: ./services/frontend-service
+      dockerfile: Dockerfile
+    container_name: parklive_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    volumes:
+      - ./services/frontend-service/src:/usr/share/nginx/html/src
+      - ./services/frontend-service/public:/usr/share/nginx/html
+    networks:
+      - parklive_network
+
+  # phpMyAdmin
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: parklive_phpmyadmin
     restart: always
     ports:
-      - "9081:80"
+      - "8081:80"
     environment:
       PMA_HOST: mysql
-      PMA_USER: parklive_user
-      PMA_PASSWORD: password_segur
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASSWORD}
     depends_on:
       - mysql
     networks:
