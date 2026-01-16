@@ -123,10 +123,10 @@ docker-compose down
 ```
 
 ### Accedir als serveis
-- **Frontend**: http://localhost:3000
-- **Python API**: http://localhost:8000
+- **Frontend**: http://localhost:3307
+- **Python API**: http://localhost:5000
 - **PHP API**: http://localhost:8080
-- **Base de dades**: localhost:5432 (PostgreSQL) o localhost:3306 (MySQL)
+- **Base de dades**: localhost:3306 (MySQL) phpMyAdmin:  localhost:8081
 
 ## Testing
 
