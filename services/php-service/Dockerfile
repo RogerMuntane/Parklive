@@ -6,12 +6,12 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql
 # Habilitar mod_rewrite per URLs amigables
 RUN a2enmod rewrite
 
-# Configurar Apache per permetre .htaccess
-RUN echo '<Directory /var/www/html>' > /etc/apache2/conf-available/docker-php.conf && \
-    echo '    AllowOverride All' >> /etc/apache2/conf-available/docker-php.conf && \
-    echo '    Require all granted' >> /etc/apache2/conf-available/docker-php.conf && \
-    echo '</Directory>' >> /etc/apache2/conf-available/docker-php.conf && \
-    a2enconf docker-php
+# Configurar Apache per permetre .htaccess sense sobreescriure la config de PHP
+RUN echo '<Directory /var/www/html>' > /etc/apache2/conf-available/parklive.conf && \
+    echo '    AllowOverride All' >> /etc/apache2/conf-available/parklive.conf && \
+    echo '    Require all granted' >> /etc/apache2/conf-available/parklive.conf && \
+    echo '</Directory>' >> /etc/apache2/conf-available/parklive.conf && \
+    a2enconf parklive
 
 # Instal·lar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
