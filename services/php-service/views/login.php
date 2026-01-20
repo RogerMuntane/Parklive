@@ -1,10 +1,12 @@
 <?php
-error_reporting(-1);
-ini_set('display_errors', 'On');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-require_once "../controllers/controlador.php";
+$errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : array();
+$successMessage = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : null;
 
-$controller = new controlador();
+unset($_SESSION['errors'], $_SESSION['success_message']);
 ?>
 <!DOCTYPE html>
 <html lang="ca">
@@ -12,42 +14,32 @@ $controller = new controlador();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registre - Parklive</title>
-    <link rel="stylesheet" href="login.css">
+    <title>Inici sessió - Parklive</title>
+    <link rel="stylesheet" href="signin.css">
 </head>
 
 <body>
     <div class="container">
-        <h1>Registre d'Usuari</h1>
+        <h1>Iniciar sessió</h1>
 
-        <?php if (isset($_GET['success']) && $_GET['success'] === 'true'): ?>
+        <?php if (!empty($successMessage)): ?>
             <div class="success-message">
-                Usuari registrat correctament!
+                <?php echo htmlspecialchars($successMessage); ?>
             </div>
         <?php endif; ?>
 
-        <?php if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])): ?>
+        <?php if (!empty($errors)): ?>
             <div class="error-message">
                 <strong>Errors en la validació:</strong>
                 <ul class="error-list">
-                    <?php foreach ($_SESSION['errors'] as $error): ?>
+                    <?php foreach ($errors as $error): ?>
                         <li><?php echo htmlspecialchars($error); ?></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
-            <?php unset($_SESSION['errors']); ?>
         <?php endif; ?>
 
-        <form action="../controllers/controlador.php" method="POST">
-            <div class="form-group">
-                <label for="name">Nom:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-
-            <div class="form-group">
-                <label for="cognom">Cognom:</label>
-                <input type="text" id="cognom" name="cognom" required>
-            </div>
+        <form action="../controllers/login.php" method="POST">
 
             <div class="form-group">
                 <label for="mail">Email:</label>
@@ -59,18 +51,10 @@ $controller = new controlador();
                 <input type="password" id="contrasenya" name="contrasenya" required>
             </div>
 
-            <div class="form-group">
-                <label for="contrasenya_confirmar">Confirmar Contrasenya:</label>
-                <input type="password" id="contrasenya_confirmar" name="contrasenya_confirmar" required>
-            </div>
-
-            <div class="form-group">
-                <label for="telefon">Telèfon:</label>
-                <input type="tel" id="telefon" name="telefon" required>
-            </div>
-
-            <button type="submit">Registrar-se</button>
+            <button type="submit">Iniciar sessió</button>
         </form>
+
+        <p class="helper-text">No tens compte? <a href="signin.php">Registra't</a></p>
     </div>
 </body>
 

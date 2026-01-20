@@ -3,7 +3,7 @@ session_start();
 require_once "../models/validarUsuari.php";
 require_once "../models/guardarUsuari.php";
 
-class Controlador
+class Signin
 {
     private $validador;
     private $guardador;
@@ -36,7 +36,7 @@ class Controlador
             if ($this->guardador->guardarUsuari($nom, $cognom, $email, $contrasenya, $telefono)) {
                 $this->success = true;
                 $_SESSION['success_message'] = "Usuari registrat correctament!";
-                header('Location: ../views/login.php?success=true');
+                header('Location: ../views/signin.php?success=true');
                 exit();
             } else {
                 $this->errors = $this->guardador->getErrors();
@@ -49,7 +49,7 @@ class Controlador
         $_SESSION['errors'] = $this->errors;
 
         // Tornar a la vista de login per mostrar els errors
-        header('Location: ../views/login.php');
+        header('Location: ../views/signin.php');
         exit();
     }
 
@@ -66,5 +66,5 @@ class Controlador
 
 // Instanciar el controlador solo si se accede directamente a este archivo
 if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
-    $con = new Controlador();
+    $con = new Signin();
 }
