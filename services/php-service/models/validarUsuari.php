@@ -121,6 +121,26 @@ class validarUsuari
         return true;
     }
 
+    public function validarContrasenyaLogin($contrasenya)
+    {
+        if (empty($contrasenya)) {
+            $this->errors[] = "La contrasenya és obligatòria";
+            return false;
+        }
+
+        if (strlen($contrasenya) < 8) {
+            $this->errors[] = "La contrasenya ha de tenir almenys 8 caràcters";
+            return false;
+        }
+
+        if (strlen($contrasenya) > 128) {
+            $this->errors[] = "La contrasenya no pot superar 128 caràcters";
+            return false;
+        }
+
+        return true;
+    }
+
     public function validarTelefono($telefono)
     {
         if (empty($telefono)) {

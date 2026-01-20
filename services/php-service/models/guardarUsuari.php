@@ -79,19 +79,18 @@ class guardarUsuari
     private function emailExisteix($email)
     {
         try {
-            //Descomentar quan hi hagi base de dades
-//            $stmt = $this->conexio->prepare("SELECT id FROM usuaris WHERE email = ?");
-//
-//            if (!$stmt) {
-//                throw new Exception('Error en la preparació de la consulta: ' . $this->conexio->error);
-//            }
-//
-//            $stmt->bind_param('s', $email);
-//            $stmt->execute();
-//            $result = $stmt->get_result();
-//            $stmt->close();
-//
-//            return $result->num_rows > 0;
+            $stmt = $this->conexio->prepare("SELECT id FROM usuaris WHERE email = ?");
+
+            if (!$stmt) {
+                throw new Exception('Error en la preparació de la consulta: ' . $this->conexio->error);
+            }
+
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+
+            return $result->num_rows > 0;
             return true;
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
