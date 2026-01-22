@@ -37,7 +37,8 @@ class Login
 
         $_SESSION['success_message'] = "Sessió iniciada correctament";
 
-        header('Location: ../views/login.php?success=true');
+        // Redirigir a la pàgina d'inici o dashboard
+        header('Location: ../views/dashboard.php');
         exit();
     }
 }

@@ -55,6 +55,7 @@ unset($_SESSION['errors'], $_SESSION['success_message']);
         </form>
 
         <p class="helper-text">No tens compte? <a href="signin.php">Registra't</a></p>
+        <p class="helper-text"><a href="canvi_contrasenya.php">He oblidat la contrasenya</a></p>
     </div>
 </body>
 
