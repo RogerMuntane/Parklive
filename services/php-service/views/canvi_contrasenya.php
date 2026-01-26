@@ -3,14 +3,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Verificar que l'usuari està autenticat
-if (!isset($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
-    // header('Location: login.php');
-    exit();
-}
-
 $errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : array();
 $successMessage = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : null;
+$emailUsuari = isset($_SESSION['user']['email']) ? $_SESSION['user']['email'] : '';
 
 unset($_SESSION['errors'], $_SESSION['success_message']);
 ?>
@@ -42,13 +37,13 @@ unset($_SESSION['errors'], $_SESSION['success_message']);
         <form action="../controllers/canvi_contassenya.php" method="POST">
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($_SESSION['user']['email'] ?? ''); ?>" required readonly>
+                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($emailUsuari); ?>" required>
             </div>
 
-            <div class="form-group">
-                <label for="contrasenya_actual">Contrasenya actual:</label>
-                <input type="password" id="contrasenya_actual" name="contrasenya_actual" required>
-            </div>
+<!--            <div class="form-group">-->
+<!--                <label for="contrasenya_actual">Contrasenya actual:</label>-->
+<!--                <input type="password" id="contrasenya_actual" name="contrasenya_actual" required>-->
+<!--            </div>-->
 
             <div class="form-group">
                 <label for="contrasenya_nova">Nova contrasenya:</label>
