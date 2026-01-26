@@ -15,12 +15,13 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database/schemas:/docker-entrypoint-initdb.d/01-schemas
-      - ./database/migrations:/docker-entrypoint-initdb.d/02-migrations
-      - ./database/procedures:/docker-entrypoint-initdb.d/03-procedures
-      - ./database/seeds:/docker-entrypoint-initdb.d/04-seeds
+      - ./database/schemas/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/procedures/01-user-procedures.sql:/docker-entrypoint-initdb.d/02-user-procedures.sql
+      - ./database/procedures/02-parking-procedures.sql:/docker-entrypoint-initdb.d/03-parking-procedures.sql
+      - ./database/procedures/04-payment-procedures.sql:/docker-entrypoint-initdb.d/04-payment-procedures.sql
+      - ./database/seeds/seed.sql:/docker-entrypoint-initdb.d/05-seed.sql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
     networks:
@@ -112,3 +113,4 @@ volumes:
 networks:
   parklive_network:
     driver: bridge
+  
