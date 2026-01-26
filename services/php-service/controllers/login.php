@@ -1,6 +1,8 @@
 <?php
-session_start();
-require_once "../models/loginModel.php";
+
+require_once __DIR__ . "/../models/loginModel.php";
+require_once __DIR__ . "/../models/SessionModel.php";
+require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
 class Login
 {
@@ -8,6 +10,9 @@ class Login
 
     public function __construct()
     {
+        // Verificar que l'usuari NO estigui ja autenticat
+        AuthMiddleware::verificarNoAutenticat();
+
         $this->model = new LoginModel();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -23,22 +28,27 @@ class Login
         $usuari = $this->model->autenticar($email, $contrasenya);
 
         if (!$usuari) {
+            SessionModel::iniciarSessio();
             $_SESSION['errors'] = $this->model->getErrors();
             header('Location: ../views/login.php');
             exit();
         }
 
-        $_SESSION['user'] = array(
-            'id' => $usuari['id'],
-            'nom' => $usuari['nom'],
-            'cognom' => $usuari['cognom'],
-            'email' => $usuari['email']
-        );
+        // Guardar l'usuari a la sessió utilitzant el SessionModel
+        SessionModel::guardarUsuari($usuari);
+        SessionModel::setFlashMessage('success', 'Sessió iniciada correctament');
 
-        $_SESSION['success_message'] = "Sessió iniciada correctament";
+        // Comprovar si hi ha una URL de redirecció guardada
+        SessionModel::iniciarSessio();
+        $redirectUrl = isset($_SESSION['redirect_after_login'])
+            ? $_SESSION['redirect_after_login']
+            : '../views/dashboard.php'; //Canviar per a quan es fagifrontend
 
-        // Redirigir a la pàgina d'inici o dashboard
-        header('Location: ../views/dashboard.php');
+        // Eliminar la URL de redirecció
+        unset($_SESSION['redirect_after_login']);
+
+        // Redirigir
+        header('Location: ' . $redirectUrl);
         exit();
     }
 }

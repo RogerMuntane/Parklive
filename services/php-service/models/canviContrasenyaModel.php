@@ -15,14 +15,13 @@ class CanviContrasenyaModel
 
     /**
      * Valida i canvia la contrasenya d'un usuari
-     * @param int $usuariId ID de l'usuari
      * @param string $email Email de l'usuari
      * @param string $contrasenyaActual Contrasenya actual
      * @param string $contrasenyaNova Nova contrasenya
      * @param string $contrasenyaConfirmar Confirmació de la nova contrasenya
      * @return bool
      */
-    public function canviarContrasenya($usuariId, $email, $contrasenyaActual, $contrasenyaNova, $contrasenyaConfirmar)
+    public function canviarContrasenya($email, $contrasenyaNova, $contrasenyaConfirmar)
     {
         $this->errors = array();
 
@@ -32,9 +31,6 @@ class CanviContrasenyaModel
         }
         $this->validador->clearErrors();
 
-        if (empty($contrasenyaActual)) {
-            $this->errors[] = "La contrasenya actual és obligatòria";
-        }
 
         if (!$this->validador->validarContrasenya($contrasenyaNova, $contrasenyaConfirmar)) {
             $this->errors = array_merge($this->errors, $this->validador->getErrors());
@@ -50,35 +46,25 @@ class CanviContrasenyaModel
             return false;
         }
 
-        // Obtenir usuari actual
-        $usuari = $this->obtenirUsuariPerId($usuariId);
+        // Obtenir usuari per email
+        $usuari = $this->obtenirUsuariPerEmail($email);
 
         if (!$usuari) {
             $this->errors[] = "Usuari no trobat";
             return false;
         }
 
-        // Verificar que l'email coincideix
-        if ($usuari['email'] !== $email) {
-            $this->errors[] = "L'email no coincideix amb el del compte";
-            return false;
-        }
 
-        // Verificar que la contrasenya actual és correcta
-        if (!password_verify($contrasenyaActual, $usuari['contrasenya'])) {
-            $this->errors[] = "La contrasenya actual és incorrecta";
-            return false;
-        }
 
         // Verificar que la nova contrasenya és diferent de l'actual
-        if ($contrasenyaActual === $contrasenyaNova) {
+        if (password_verify($contrasenyaNova, $usuari['contrasenya'])) {
             $this->errors[] = "La nova contrasenya ha de ser diferent de l'actual";
             return false;
         }
 
         // Actualitzar contrasenya
         $contrasenyaHash = password_hash($contrasenyaNova, PASSWORD_BCRYPT);
-        $resultat = $this->actualitzarContrasenya($usuariId, $contrasenyaHash);
+        $resultat = $this->actualitzarContrasenya($email, $contrasenyaHash);
 
         if (!$resultat) {
             $this->errors[] = "Error en actualitzar la contrasenya. Intenta de nou.";
@@ -89,12 +75,12 @@ class CanviContrasenyaModel
     }
 
     /**
-     * Obté les dades de l'usuari per ID
+     * Obté les dades de l'usuari per email
      */
-    private function obtenirUsuariPerId($usuariId)
+    private function obtenirUsuariPerEmail($email)
     {
         $stmt = $this->conexio->prepare(
-            "SELECT id, email, contrasenya FROM usuaris WHERE id = ? LIMIT 1"
+            "SELECT id, email, contrasenya FROM usuaris WHERE email = ? LIMIT 1"
         );
 
         if (!$stmt) {
@@ -102,7 +88,7 @@ class CanviContrasenyaModel
             return null;
         }
 
-        $stmt->bind_param('i', $usuariId);
+        $stmt->bind_param('s', $email);
         $stmt->execute();
         $result = $stmt->get_result();
         $usuari = $result->fetch_assoc();
@@ -114,10 +100,10 @@ class CanviContrasenyaModel
     /**
      * Actualitza la contrasenya en la base de dades
      */
-    private function actualitzarContrasenya($usuariId, $contrasenyaHash)
+    private function actualitzarContrasenya($email, $contrasenyaHash)
     {
         $stmt = $this->conexio->prepare(
-            "UPDATE usuaris SET contrasenya = ? WHERE id = ?"
+            "UPDATE usuaris SET contrasenya = ? WHERE email = ?"
         );
 
         if (!$stmt) {
@@ -125,7 +111,7 @@ class CanviContrasenyaModel
             return false;
         }
 
-        $stmt->bind_param('si', $contrasenyaHash, $usuariId);
+        $stmt->bind_param('ss', $contrasenyaHash, $email);
         $resultat = $stmt->execute();
         $stmt->close();
 
@@ -139,9 +125,9 @@ class CanviContrasenyaModel
     {
         try {
             $host = 'localhost';
-            $db = 'parklive';
+            $db = 'parklive_db';
             $user = 'root';
-            $password = '';
+            $password = 'root_password_123';
 
             $this->conexio = new mysqli($host, $user, $password, $db);
 

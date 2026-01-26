@@ -15,9 +15,9 @@ class guardarUsuari
         try {
             // Configuració de la base de dades
             $host = 'localhost';
-            $db = 'parklive';
+            $db = 'parklive_db';
             $user = 'root';
-            $password = '';
+            $password = 'root_password_123';
 
             $this->conexio = new mysqli($host, $user, $password, $db);
 
@@ -34,6 +34,10 @@ class guardarUsuari
     public function guardarUsuari($nom, $cognom, $email, $contrasenya, $telefono)
     {
         try {
+            if (!$this->conexio) {
+                throw new Exception('No hi ha connexió amb la base de dades');
+            }
+
             // Verificar si l'email ja existeix
             if ($this->emailExisteix($email)) {
                 $this->errors[] = "Ja existeix un usuari amb aquest email";
@@ -79,7 +83,11 @@ class guardarUsuari
     private function emailExisteix($email)
     {
         try {
-            $stmt = $this->conexio->prepare("SELECT id FROM usuaris WHERE email = ?");
+            if (!$this->conexio) {
+                throw new Exception('No hi ha connexió amb la base de dades');
+            }
+
+            $stmt = $this->conexio->prepare("SELECT id FROM usuaris WHERE email = '{$email}'");
 
             if (!$stmt) {
                 throw new Exception('Error en la preparació de la consulta: ' . $this->conexio->error);
@@ -89,9 +97,7 @@ class guardarUsuari
             $stmt->execute();
             $result = $stmt->get_result();
             $stmt->close();
-
             return $result->num_rows > 0;
-            return true;
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
             return false;
