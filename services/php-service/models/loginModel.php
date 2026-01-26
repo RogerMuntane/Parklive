@@ -49,9 +49,9 @@ class LoginModel
     {
         try {
             $host = 'localhost';
-            $db = 'parklive';
+            $db = 'parklive_db';
             $user = 'root';
-            $password = '';
+            $password = 'root_password_123';
 
             $this->conexio = new mysqli($host, $user, $password, $db);
 
