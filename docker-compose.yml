@@ -17,9 +17,10 @@ services:
       - mysql_data:/var/lib/mysql
       - ./database/schemas:/docker-entrypoint-initdb.d/01-schemas
       - ./database/migrations:/docker-entrypoint-initdb.d/02-migrations
-      - ./database/seeds:/docker-entrypoint-initdb.d/03-seeds
+      - ./database/procedures:/docker-entrypoint-initdb.d/03-procedures
+      - ./database/seeds:/docker-entrypoint-initdb.d/04-seeds
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
     networks:

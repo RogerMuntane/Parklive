@@ -1,17 +1,17 @@
--- ============================================================
+
 -- BASE DE DADES PARKLIVE
--- ============================================================
+
 
 -- Crear la base de dades
-CREATE DATABASE IF NOT EXISTS parklive_db 
-CHARACTER SET utf8mb4 
+CREATE DATABASE IF NOT EXISTS parklive_db
+CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
 USE parklive_db;
 
--- ============================================================
+
 -- TAULES D'USUARIS I AUTENTICACIÓ
--- ============================================================
+
 
 -- Taula d'usuaris
 CREATE TABLE usuaris (
@@ -67,9 +67,9 @@ CREATE TABLE subscripcions (
     INDEX idx_estat (estat)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TAULES D'APARCAMENTS
--- ============================================================
+
 
 -- Taula d'aparcaments
 CREATE TABLE aparcaments (
@@ -134,9 +134,9 @@ CREATE TABLE fotografies_aparcaments (
     INDEX idx_aparcament (aparcament_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TAULES DE RESERVES I PAGAMENTS
--- ============================================================
+
 
 -- Taula de reserves
 CREATE TABLE reserves (
@@ -196,9 +196,9 @@ CREATE TABLE factures (
     INDEX idx_numero (numero_factura)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TAULES DE VALORACIONS I RESSENYES
--- ============================================================
+
 
 -- Taula de valoracions
 CREATE TABLE valoracions (
@@ -231,9 +231,9 @@ CREATE TABLE respostes_valoracions (
     INDEX idx_valoracio (valoracio_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TAULES DE COL·LABORACIÓ I GAMIFICACIÓ
--- ============================================================
+
 
 -- Taula de contribucions d'usuaris
 CREATE TABLE contribucions (
@@ -282,9 +282,9 @@ CREATE TABLE usuaris_recompenses (
     UNIQUE KEY unique_user_reward (usuari_id, recompensa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TAULES DE CONTINGUT I BLOG
--- ============================================================
+
 
 -- Taula d'articles del blog
 CREATE TABLE articles_blog (
@@ -322,9 +322,9 @@ CREATE TABLE faqs (
     INDEX idx_activa (activa)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TAULES DE NOTIFICACIONS I COMUNICACIÓ
--- ============================================================
+
 
 -- Taula de notificacions
 CREATE TABLE notificacions (
@@ -360,9 +360,9 @@ CREATE TABLE missatges_suport (
     INDEX idx_prioritat (prioritat)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TAULES DE CONFIGURACIÓ I SISTEMA
--- ============================================================
+
 
 -- Taula de configuració del sistema
 CREATE TABLE configuracio_sistema (
@@ -388,13 +388,13 @@ CREATE TABLE logs_sistema (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- VISTES ÚTILS
--- ============================================================
+
 
 -- Vista d'aparcaments amb informació completa
 CREATE VIEW vista_aparcaments_complet AS
-SELECT 
+SELECT
     a.id,
     a.nom,
     a.tipus,
@@ -423,7 +423,7 @@ GROUP BY a.id;
 
 -- Vista de reserves actives
 CREATE VIEW vista_reserves_actives AS
-SELECT 
+SELECT
     r.id,
     r.codi_reserva,
     u.nom as usuari_nom,
@@ -441,9 +441,9 @@ JOIN aparcaments a ON r.aparcament_id = a.id
 LEFT JOIN pagaments p ON r.id = p.reserva_id
 WHERE r.estat IN ('confirmada', 'en_curs');
 
--- ============================================================
+
 -- TRIGGERS ÚTILS
--- ============================================================
+
 
 -- Trigger per actualitzar valoració mitjana de l'aparcament
 DELIMITER //
@@ -451,15 +451,15 @@ CREATE TRIGGER after_valoracio_insert
 AFTER INSERT ON valoracions
 FOR EACH ROW
 BEGIN
-    UPDATE aparcaments 
+    UPDATE aparcaments
     SET valoracio_mitjana = (
-        SELECT AVG(puntuacio) 
-        FROM valoracions 
+        SELECT AVG(puntuacio)
+        FROM valoracions
         WHERE aparcament_id = NEW.aparcament_id
     ),
     total_valoracions = (
-        SELECT COUNT(*) 
-        FROM valoracions 
+        SELECT COUNT(*)
+        FROM valoracions
         WHERE aparcament_id = NEW.aparcament_id
     )
     WHERE id = NEW.aparcament_id;
@@ -473,16 +473,16 @@ AFTER INSERT ON contribucions
 FOR EACH ROW
 BEGIN
     IF NEW.validada = TRUE THEN
-        UPDATE usuaris 
+        UPDATE usuaris
         SET punts_gamificacio = punts_gamificacio + NEW.punts_guanyats
         WHERE id = NEW.usuari_id;
     END IF;
 END//
 DELIMITER ;
 
--- ============================================================
+
 -- ÍNDEXS ADDICIONALS PER OPTIMITZACIÓ
--- ============================================================
+
 
 -- Índex per cerques geoespacials d'aparcaments
 CREATE INDEX idx_geo_aparcaments ON aparcaments(latitud, longitud);
