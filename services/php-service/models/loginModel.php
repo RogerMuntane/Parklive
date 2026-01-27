@@ -1,6 +1,6 @@
 <?php
 
-require_once "validarUsuari.php";
+require_once __DIR__ . '/validarUsuari.php';
 
 class LoginModel
 {
