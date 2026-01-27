@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/DatabaseConnection.php';
+
 class guardarUsuari
 {
     private $conexio;
@@ -13,19 +15,7 @@ class guardarUsuari
     private function conectarBaseDades()
     {
         try {
-            // Configuració de la base de dades
-            $host = 'localhost';
-            $db = 'parklive_db';
-            $user = 'root';
-            $password = 'root_password_123';
-
-            $this->conexio = new mysqli($host, $user, $password, $db);
-
-            if ($this->conexio->connect_error) {
-                throw new Exception('Error de connexió: ' . $this->conexio->connect_error);
-            }
-
-            $this->conexio->set_charset('utf8');
+            $this->conexio = DatabaseConnection::create();
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
         }
@@ -38,23 +28,16 @@ class guardarUsuari
                 throw new Exception('No hi ha connexió amb la base de dades');
             }
 
-            // Verificar si l'email ja existeix
-            if ($this->emailExisteix($email)) {
-                $this->errors[] = "Ja existeix un usuari amb aquest email";
-                return false;
-            }
-
             // Encriptar la contrasenya
             $contrasenhaHash = password_hash($contrasenya, PASSWORD_BCRYPT);
 
-            // Preparar la consulta
+            // Executar procedure sp_insertar_usuari
             $stmt = $this->conexio->prepare(
-                "INSERT INTO usuaris (nom, cognom, email, contrasenya, telefono, data_registre) 
-                 VALUES (?, ?, ?, ?, ?, NOW())"
+                "CALL sp_insertar_usuari(?, ?, ?, ?, ?, 'basic', @nou_id, @error_msg)"
             );
 
             if (!$stmt) {
-                throw new Exception('Error en la preparació de la consulta: ' . $this->conexio->error);
+                throw new Exception('Error en la preparació del procedure: ' . $this->conexio->error);
             }
 
             // Vincular paràmetres
@@ -67,12 +50,22 @@ class guardarUsuari
                 $telefono
             );
 
-            // Executar la consulta
+            // Executar el procedure
             if ($stmt->execute()) {
                 $stmt->close();
+
+                // Obtenir els resultats del procedure
+                $result = $this->conexio->query("SELECT @nou_id as nou_id, @error_msg as error_msg");
+                if ($result) {
+                    $row = $result->fetch_assoc();
+                    if ($row['nou_id'] === null) {
+                        throw new Exception($row['error_msg'] ?? 'Error al guardar l\'usuari');
+                    }
+                    return true;
+                }
                 return true;
             } else {
-                throw new Exception('Error al guardar l\'usuari: ' . $stmt->error);
+                throw new Exception('Error al executar procedure: ' . $stmt->error);
             }
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
@@ -87,17 +80,24 @@ class guardarUsuari
                 throw new Exception('No hi ha connexió amb la base de dades');
             }
 
-            $stmt = $this->conexio->prepare("SELECT id FROM usuaris WHERE email = '{$email}'");
+            // Executar procedure sp_comprovar_email_existeix
+            $stmt = $this->conexio->prepare("CALL sp_comprovar_email_existeix(?, @existeix)");
 
             if (!$stmt) {
-                throw new Exception('Error en la preparació de la consulta: ' . $this->conexio->error);
+                throw new Exception('Error en la preparació del procedure: ' . $this->conexio->error);
             }
 
             $stmt->bind_param('s', $email);
             $stmt->execute();
-            $result = $stmt->get_result();
             $stmt->close();
-            return $result->num_rows > 0;
+
+            // Obtenir el resultat del procedure
+            $result = $this->conexio->query("SELECT @existeix as existeix");
+            if ($result) {
+                $row = $result->fetch_assoc();
+                return $row['existeix'] ? true : false;
+            }
+            return false;
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
             return false;
