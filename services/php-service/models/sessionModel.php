@@ -35,7 +35,7 @@ class SessionModel
         $_SESSION[self::SESSION_KEY] = [
             'id' => $usuari['id'],
             'nom' => $usuari['nom'],
-            'cognom' => $usuari['cognom'],
+            'cognom' => $usuari['cognoms'] ?? $usuari['cognom'] ?? '',
             'email' => $usuari['email']
         ];
 

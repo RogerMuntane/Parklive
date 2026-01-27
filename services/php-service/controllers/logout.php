@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../models/SessionModel.php';
+require_once __DIR__ . '/../models/sessionModel.php';
 
 /**
  * Controlador per tancar la sessió de l'usuari

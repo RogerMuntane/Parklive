@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../models/loginModel.php";
-require_once __DIR__ . "/../models/SessionModel.php";
+require_once __DIR__ . "/../models/sessionModel.php";
 require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
 class Login
@@ -42,7 +42,7 @@ class Login
         SessionModel::iniciarSessio();
         $redirectUrl = isset($_SESSION['redirect_after_login'])
             ? $_SESSION['redirect_after_login']
-            : '../views/dashboard.php'; //Canviar per a quan es fagifrontend
+            : '../views/protected_example.php';
 
         // Eliminar la URL de redirecció
         unset($_SESSION['redirect_after_login']);
