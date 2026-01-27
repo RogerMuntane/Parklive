@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../models/loginModel.php";
-require_once __DIR__ . "/../models/SessionModel.php";
+require_once __DIR__ . "/../models/sessionModel.php";
 require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
 class Login

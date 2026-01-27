@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/DatabaseConnection.php';
 require_once "validarUsuari.php";
 
 class LoginModel
@@ -48,18 +49,7 @@ class LoginModel
     private function conectarBaseDades()
     {
         try {
-            $host = 'localhost';
-            $db = 'parklive_db';
-            $user = 'root';
-            $password = 'root_password_123';
-
-            $this->conexio = new mysqli($host, $user, $password, $db);
-
-            if ($this->conexio->connect_error) {
-                throw new Exception('Error de connexió: ' . $this->conexio->connect_error);
-            }
-
-            $this->conexio->set_charset('utf8');
+            $this->conexio = DatabaseConnection::create();
             return true;
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
@@ -69,12 +59,10 @@ class LoginModel
 
     private function obtenirUsuariPerEmail($email)
     {
-        $stmt = $this->conexio->prepare(
-            "SELECT id, nom, cognom, email, contrasenya FROM usuaris WHERE email = ? LIMIT 1"
-        );
+        $stmt = $this->conexio->prepare("CALL sp_obtenir_usuari_per_email(?)");
 
         if (!$stmt) {
-            $this->errors[] = 'Error en la preparació de la consulta: ' . $this->conexio->error;
+            $this->errors[] = 'Error en la preparació del procedure: ' . $this->conexio->error;
             return null;
         }
 

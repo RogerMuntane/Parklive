@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/DatabaseConnection.php';
 require_once "validarUsuari.php";
 
 class CanviContrasenyaModel
@@ -75,16 +76,14 @@ class CanviContrasenyaModel
     }
 
     /**
-     * Obté les dades de l'usuari per email
+     * Obté les dades de l'usuari per email usant procedure sp_obtenir_usuari_per_email
      */
     private function obtenirUsuariPerEmail($email)
     {
-        $stmt = $this->conexio->prepare(
-            "SELECT id, email, contrasenya FROM usuaris WHERE email = ? LIMIT 1"
-        );
+        $stmt = $this->conexio->prepare("CALL sp_obtenir_usuari_per_email(?)");
 
         if (!$stmt) {
-            $this->errors[] = 'Error en la preparació de la consulta: ' . $this->conexio->error;
+            $this->errors[] = 'Error en la preparació del procedure: ' . $this->conexio->error;
             return null;
         }
 
@@ -98,22 +97,30 @@ class CanviContrasenyaModel
     }
 
     /**
-     * Actualitza la contrasenya en la base de dades
+     * Actualitza la contrasenya en la base de dades usant procedure sp_actualitzar_contrasenya
      */
     private function actualitzarContrasenya($email, $contrasenyaHash)
     {
-        $stmt = $this->conexio->prepare(
-            "UPDATE usuaris SET contrasenya = ? WHERE email = ?"
-        );
+        $stmt = $this->conexio->prepare("CALL sp_actualitzar_contrasenya(?, ?, @actualitzat, @error)");
 
         if (!$stmt) {
-            $this->errors[] = 'Error en la preparació de la consulta: ' . $this->conexio->error;
+            $this->errors[] = 'Error en la preparació del procedure: ' . $this->conexio->error;
             return false;
         }
 
-        $stmt->bind_param('ss', $contrasenyaHash, $email);
+        $stmt->bind_param('ss', $email, $contrasenyaHash);
         $resultat = $stmt->execute();
         $stmt->close();
+
+        // Obtenir els resultats del procedure
+        $queryResult = $this->conexio->query("SELECT @actualitzat as actualitzat, @error as error_msg");
+        if ($queryResult) {
+            $row = $queryResult->fetch_assoc();
+            if (!$row['actualitzat']) {
+                $this->errors[] = $row['error_msg'] ?? 'Error al actualitzar contrasenya';
+                return false;
+            }
+        }
 
         return $resultat;
     }
@@ -124,18 +131,7 @@ class CanviContrasenyaModel
     private function conectarBaseDades()
     {
         try {
-            $host = 'localhost';
-            $db = 'parklive_db';
-            $user = 'root';
-            $password = 'root_password_123';
-
-            $this->conexio = new mysqli($host, $user, $password, $db);
-
-            if ($this->conexio->connect_error) {
-                throw new Exception('Error de connexió: ' . $this->conexio->connect_error);
-            }
-
-            $this->conexio->set_charset('utf8');
+            $this->conexio = DatabaseConnection::create();
             return true;
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
