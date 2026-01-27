@@ -38,7 +38,7 @@ class LoginModel
 
         $usuari = $this->obtenirUsuariPerEmail($email);
 
-        if (!$usuari || !password_verify($contrasenya, $usuari['contrasenya'])) {
+        if (!$usuari || !password_verify($contrasenya, $usuari['contrasenya_hash'])) {
             $this->errors[] = "Email o contrasenya incorrectes";
             return null;
         }

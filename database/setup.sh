@@ -126,6 +126,21 @@ else
     exit 1
 fi
 
+# Carregar dades de seed.sql (només per desenvolupament)
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BOLD}${ARROW} Carregant dades de prova (database/seeds/seed.sql)${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+if [ -f "database/seeds/seed.sql" ]; then
+    echo -e "${INFO} Aplicant seed.sql sobre la base de dades ${BOLD}${DB_NAME}${NC}"
+    docker-compose exec -T mysql \
+        mysql -u root -p"${DB_ROOT_PASS}" "${DB_NAME}" < database/seeds/seed.sql
+    echo -e "${GREEN}  Dades de seed.sql carregades correctament${NC}"
+else
+    echo -e "${YELLOW}${WARNING} No s'ha trobat database/seeds/seed.sql, s'omet la càrrega de dades inicials${NC}"
+fi
+
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}${BOLD}  Configuració completada amb èxit!${NC}"

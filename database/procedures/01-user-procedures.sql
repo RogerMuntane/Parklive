@@ -10,10 +10,13 @@ DROP PROCEDURE IF EXISTS sp_actualitzar_ultima_connexio;
 -- 1. COMPROVAR SI EXISTEIX EL EMAIL
 -- Retorna 1 si l'email existeix, 0 si no existeix
 -- Exemple: CALL sp_comprovar_email_existeix('joan@example.com', @existeix);
-DELIMITER // CREATE PROCEDURE sp_comprovar_email_existeix(
+DELIMITER //
+
+CREATE PROCEDURE sp_comprovar_email_existeix(
     IN p_email VARCHAR(255),
     OUT p_existeix BOOLEAN
-) BEGIN
+)
+BEGIN
 DECLARE v_count INT;
 -- Comprovar si l'email existeix (només usuaris actius o inactius)
 SELECT COUNT(*) INTO v_count
@@ -22,11 +25,15 @@ WHERE email = p_email
     AND estat IN ('actiu', 'inactiu', 'suspès');
 -- Retornar resultat
 SET p_existeix = (v_count > 0);
-END // DELIMITER;
+END//
+
+DELIMITER ;
 -- 2. INSERTAR NOU USUARI
 -- Retorna l'ID del nou usuari creat o NULL si hi ha error
 -- Exemple: CALL sp_insertar_usuari('Joan', 'García', 'joan@test.com', '$2y$10$...', '666777888', 'basic', @nou_id, @error_msg);
-DELIMITER // CREATE PROCEDURE sp_insertar_usuari(
+DELIMITER //
+
+CREATE PROCEDURE sp_insertar_usuari(
     IN p_nom VARCHAR(100),
     IN p_cognoms VARCHAR(150),
     IN p_email VARCHAR(255),
@@ -35,7 +42,8 @@ DELIMITER // CREATE PROCEDURE sp_insertar_usuari(
     IN p_tipus_usuari ENUM('basic', 'premium', 'operador', 'admin'),
     OUT p_nou_id INT,
     OUT p_error_msg VARCHAR(500)
-) BEGIN
+)
+BEGIN
 DECLARE v_email_existeix BOOLEAN DEFAULT FALSE;
 DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN -- Si hi ha error, fer rollback i retornar missatge
     ROLLBACK;
@@ -90,17 +98,22 @@ SET p_error_msg = NULL;
 COMMIT;
 END IF;
 END IF;
-END // DELIMITER;
+END//
+
+DELIMITER ;
 -- 3. ACTUALITZAR CONTRASENYA
 -- Actualitza la contrasenya d'un usuari per email
 -- Retorna 1 si s'ha actualitzat correctament, 0 si no s'ha trobat l'usuari
 -- Exemple: CALL sp_actualitzar_contrasenya('joan@test.com', '$2y$10$...', @actualitzat, @error_msg);
-DELIMITER // CREATE PROCEDURE sp_actualitzar_contrasenya(
+DELIMITER //
+
+CREATE PROCEDURE sp_actualitzar_contrasenya(
     IN p_email VARCHAR(255),
     IN p_nova_contrasenya_hash VARCHAR(255),
     OUT p_actualitzat BOOLEAN,
     OUT p_error_msg VARCHAR(500)
-) BEGIN
+)
+BEGIN
 DECLARE v_usuari_id INT;
 DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK;
 SET p_actualitzat = FALSE;
@@ -133,11 +146,16 @@ SET p_error_msg = NULL;
 COMMIT;
 END IF;
 END IF;
-END // DELIMITER;
+END//
+
+DELIMITER ;
 -- 4. OBTENIR USUARI PER EMAIL
 -- Retorna tota la informació d'un usuari per email
 -- Exemple: CALL sp_obtenir_usuari_per_email('joan@test.com');
-DELIMITER // CREATE PROCEDURE sp_obtenir_usuari_per_email(IN p_email VARCHAR(255)) BEGIN -- Retornar informació completa de l'usuari
+DELIMITER //
+
+CREATE PROCEDURE sp_obtenir_usuari_per_email(IN p_email VARCHAR(255))
+BEGIN -- Retornar informació completa de l'usuari
 SELECT id,
     nom,
     cognoms,
@@ -157,11 +175,16 @@ FROM usuaris
 WHERE email = TRIM(LOWER(p_email))
     AND estat != 'eliminat'
 LIMIT 1;
-END // DELIMITER;
+END//
+
+DELIMITER ;
 -- 5. OBTENIR USUARI PER ID
 -- Retorna tota la informació d'un usuari per ID
 -- Exemple: CALL sp_obtenir_usuari_per_id(1);
-DELIMITER // CREATE PROCEDURE sp_obtenir_usuari_per_id(IN p_usuari_id INT) BEGIN
+DELIMITER //
+
+CREATE PROCEDURE sp_obtenir_usuari_per_id(IN p_usuari_id INT)
+BEGIN
 SELECT id,
     nom,
     cognoms,
@@ -181,16 +204,23 @@ FROM usuaris
 WHERE id = p_usuari_id
     AND estat != 'eliminat'
 LIMIT 1;
-END // DELIMITER;
+END//
+
+DELIMITER ;
 -- 6. ACTUALITZAR ÚLTIMA CONNEXIÓ
 -- Actualitza la data d'última connexió quan un usuari fa login
 -- Exemple: CALL sp_actualitzar_ultima_connexio('joan@test.com');
-DELIMITER // CREATE PROCEDURE sp_actualitzar_ultima_connexio(IN p_email VARCHAR(255)) BEGIN
+DELIMITER //
+
+CREATE PROCEDURE sp_actualitzar_ultima_connexio(IN p_email VARCHAR(255))
+BEGIN
 UPDATE usuaris
 SET ultima_connexio = NOW()
 WHERE email = TRIM(LOWER(p_email))
     AND estat IN ('actiu', 'premium');
-END // DELIMITER;
+END//
+
+DELIMITER ;
 -- EXEMPLES D'ÚS
 /*
  
