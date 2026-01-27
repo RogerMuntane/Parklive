@@ -1,6 +1,6 @@
 -- BASE DE DADES PARKLIVE
 -- Crear la base de dades
-CREATE DATABASE IF NOT EXISTS parklive_db CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE DATABASE IF NOT EXISTS parklive_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE parklive_db;
 -- TAULES D'USUARIS I AUTENTICACIÓ
 -- Taula d'usuaris
@@ -23,7 +23,7 @@ CREATE TABLE usuaris (
     INDEX idx_email (email),
     INDEX idx_tipus_usuari (tipus_usuari),
     INDEX idx_estat (estat)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de sessions
 CREATE TABLE sessions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -36,7 +36,7 @@ CREATE TABLE sessions (
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
     INDEX idx_token (token),
     INDEX idx_expires (expires_at)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de subscripcions premium
 CREATE TABLE subscripcions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -108,7 +108,7 @@ CREATE TABLE historic_disponibilitat (
     FOREIGN KEY (aparcament_id) REFERENCES aparcaments(id) ON DELETE CASCADE,
     INDEX idx_aparcament (aparcament_id),
     INDEX idx_timestamp (timestamp)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de fotografies d'aparcaments
 CREATE TABLE fotografies_aparcaments (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -151,7 +151,7 @@ CREATE TABLE reserves (
     INDEX idx_aparcament (aparcament_id),
     INDEX idx_estat (estat),
     INDEX idx_codi (codi_reserva)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de pagaments
 CREATE TABLE pagaments (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -180,7 +180,7 @@ CREATE TABLE pagaments (
     INDEX idx_reserva (reserva_id),
     INDEX idx_usuari (usuari_id),
     INDEX idx_estat (estat)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de factures
 CREATE TABLE factures (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -197,7 +197,7 @@ CREATE TABLE factures (
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
     INDEX idx_numero (numero_factura)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE VALORACIONS I RESSENYES
 -- Taula de valoracions
 CREATE TABLE valoracions (
@@ -218,7 +218,7 @@ CREATE TABLE valoracions (
     UNIQUE KEY unique_user_parking (usuari_id, aparcament_id),
     INDEX idx_aparcament (aparcament_id),
     INDEX idx_puntuacio (puntuacio)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de respostes a valoracions
 CREATE TABLE respostes_valoracions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -229,7 +229,7 @@ CREATE TABLE respostes_valoracions (
     FOREIGN KEY (valoracio_id) REFERENCES valoracions(id) ON DELETE CASCADE,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
     INDEX idx_valoracio (valoracio_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE COL·LABORACIÓ I GAMIFICACIÓ
 -- Taula de contribucions d'usuaris
 CREATE TABLE contribucions (
@@ -254,7 +254,7 @@ CREATE TABLE contribucions (
     INDEX idx_usuari (usuari_id),
     INDEX idx_aparcament (aparcament_id),
     INDEX idx_tipus (tipus)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de recompenses i insignies
 CREATE TABLE recompenses (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -271,7 +271,7 @@ CREATE TABLE recompenses (
     icona_url VARCHAR(500),
     activa BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de recompenses d'usuaris
 CREATE TABLE usuaris_recompenses (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -284,7 +284,7 @@ CREATE TABLE usuaris_recompenses (
     FOREIGN KEY (recompensa_id) REFERENCES recompenses(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
     UNIQUE KEY unique_user_reward (usuari_id, recompensa_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE CONTINGUT I BLOG
 -- Taula d'articles del blog
 CREATE TABLE articles_blog (
@@ -311,7 +311,7 @@ CREATE TABLE articles_blog (
     INDEX idx_slug (slug),
     INDEX idx_publicat (publicat),
     INDEX idx_categoria (categoria)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de FAQ
 CREATE TABLE faqs (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -325,7 +325,7 @@ CREATE TABLE faqs (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_categoria (categoria),
     INDEX idx_activa (activa)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE NOTIFICACIONS I COMUNICACIÓ
 -- Taula de notificacions
 CREATE TABLE notificacions (
@@ -347,7 +347,7 @@ CREATE TABLE notificacions (
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
     INDEX idx_llegida (llegida)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de contacte/suport
 CREATE TABLE missatges_suport (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -381,7 +381,7 @@ CREATE TABLE configuracio_sistema (
     tipus ENUM('string', 'number', 'boolean', 'json') DEFAULT 'string',
     descripcio VARCHAR(500),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de logs del sistema
 CREATE TABLE logs_sistema (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

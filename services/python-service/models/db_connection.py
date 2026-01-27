@@ -15,7 +15,10 @@ class Database:
                 port=int(os.getenv('DB_PORT', 3306)),
                 user=os.getenv('DB_USER', 'root'),
                 password=os.getenv('DB_PASSWORD', ''),
-                database=os.getenv('DB_NAME', '')
+                database=os.getenv('DB_NAME', ''),
+                charset='utf8mb4',
+                collation='utf8mb4_unicode_ci',
+                use_unciode=True
             )
             if self.connection.is_connected():
                 print("Connexió a la base de dades MySQL establerta amb èxit!")
