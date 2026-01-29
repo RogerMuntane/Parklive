@@ -37,6 +37,20 @@ CREATE TABLE sessions (
     INDEX idx_token (token),
     INDEX idx_expires (expires_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+-- Taula de codis de canvi de contrasenya
+CREATE TABLE codis_reset_contrasenya (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuari_id INT UNSIGNED NOT NULL,
+    code_hash CHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    used_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_usuari (usuari_id),
+    INDEX idx_expires (expires_at),
+    INDEX idx_used (used),
+    CONSTRAINT fk_reset_usuari FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 -- Taula de subscripcions premium
 CREATE TABLE subscripcions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -447,12 +461,9 @@ FROM reserves r
 WHERE r.estat IN ('confirmada', 'en_curs');
 -- TRIGGERS ÚTILS
 -- Trigger per actualitzar valoració mitjana de l'aparcament
-DELIMITER //
-
-CREATE TRIGGER after_valoracio_insert
-AFTER INSERT ON valoracions
-FOR EACH ROW
-BEGIN
+DELIMITER // CREATE TRIGGER after_valoracio_insert
+AFTER
+INSERT ON valoracions FOR EACH ROW BEGIN
 UPDATE aparcaments
 SET valoracio_mitjana = (
         SELECT AVG(puntuacio)
@@ -465,22 +476,15 @@ SET valoracio_mitjana = (
         WHERE aparcament_id = NEW.aparcament_id
     )
 WHERE id = NEW.aparcament_id;
-END//
-
-DELIMITER //
--- Trigger per afegir punts quan es fa una contribució
+END // DELIMITER // -- Trigger per afegir punts quan es fa una contribució
 CREATE TRIGGER after_contribucio_insert
-AFTER INSERT ON contribucions
-FOR EACH ROW
-BEGIN
-IF NEW.validada = TRUE THEN
+AFTER
+INSERT ON contribucions FOR EACH ROW BEGIN IF NEW.validada = TRUE THEN
 UPDATE usuaris
 SET punts_gamificacio = punts_gamificacio + NEW.punts_guanyats
 WHERE id = NEW.usuari_id;
 END IF;
-END//
-
-DELIMITER ;
+END // DELIMITER;
 -- ÍNDEXS ADDICIONALS PER OPTIMITZACIÓ
 -- Índex per cerques geoespacials d'aparcaments
 CREATE INDEX idx_geo_aparcaments ON aparcaments(latitud, longitud);
