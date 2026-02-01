@@ -46,6 +46,7 @@ services:
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
+      PYTHON_SERVICE_URL: http://python-service:5000
     networks:
       - parklive_network
 
@@ -69,6 +70,11 @@ services:
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      smtp_mail: ${smtp_mail}
+      smtp_pasword: ${smtp_pasword}
+      RESET_CODE_TTL_MINUTES: 30
       FLASK_ENV: development
       PYTHONUNBUFFERED: 1
     networks:

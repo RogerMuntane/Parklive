@@ -18,7 +18,7 @@ class Database:
                 database=os.getenv('DB_NAME', ''),
                 charset='utf8mb4',
                 collation='utf8mb4_unicode_ci',
-                use_unciode=True
+                use_unicode=True
             )
             if self.connection.is_connected():
                 print("Connexió a la base de dades MySQL establerta amb èxit!")
@@ -34,8 +34,6 @@ class Database:
 
 # Crea una instància global reutilitzable del Database
 db = Database()
-
-# Mètode per accedir (si vols cridar connect() automàticament)
 
 
 def get_db_connection():

@@ -459,13 +459,20 @@ FROM reserves r
     JOIN aparcaments a ON r.aparcament_id = a.id
     LEFT JOIN pagaments p ON r.id = p.reserva_id
 WHERE r.estat IN ('confirmada', 'en_curs');
+
+
 -- TRIGGERS ÚTILS
 -- Trigger per actualitzar valoració mitjana de l'aparcament
-DELIMITER // CREATE TRIGGER after_valoracio_insert
-AFTER
-INSERT ON valoracions FOR EACH ROW BEGIN
-UPDATE aparcaments
-SET valoracio_mitjana = (
+-- TRIGGERS ÚTILS
+-- Trigger per actualitzar valoració mitjana de l'aparcament
+DELIMITER //
+
+CREATE TRIGGER after_valoracio_insert
+AFTER INSERT ON valoracions
+FOR EACH ROW
+BEGIN
+    UPDATE aparcaments
+    SET valoracio_mitjana = (
         SELECT AVG(puntuacio)
         FROM valoracions
         WHERE aparcament_id = NEW.aparcament_id
@@ -475,16 +482,26 @@ SET valoracio_mitjana = (
         FROM valoracions
         WHERE aparcament_id = NEW.aparcament_id
     )
-WHERE id = NEW.aparcament_id;
-END // DELIMITER // -- Trigger per afegir punts quan es fa una contribució
+    WHERE id = NEW.aparcament_id;
+END//
+
+DELIMITER ;
+
+-- Trigger per afegir punts quan es fa una contribució
+DELIMITER //
+
 CREATE TRIGGER after_contribucio_insert
-AFTER
-INSERT ON contribucions FOR EACH ROW BEGIN IF NEW.validada = TRUE THEN
-UPDATE usuaris
-SET punts_gamificacio = punts_gamificacio + NEW.punts_guanyats
-WHERE id = NEW.usuari_id;
-END IF;
-END // DELIMITER;
+AFTER INSERT ON contribucions
+FOR EACH ROW
+BEGIN
+    IF NEW.validada = TRUE THEN
+        UPDATE usuaris
+        SET punts_gamificacio = punts_gamificacio + NEW.punts_guanyats
+        WHERE id = NEW.usuari_id;
+    END IF;
+END//
+
+DELIMITER ;
 -- ÍNDEXS ADDICIONALS PER OPTIMITZACIÓ
 -- Índex per cerques geoespacials d'aparcaments
 CREATE INDEX idx_geo_aparcaments ON aparcaments(latitud, longitud);

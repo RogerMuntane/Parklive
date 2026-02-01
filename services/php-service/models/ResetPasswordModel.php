@@ -70,6 +70,40 @@ class ResetPasswordModel
         return $affected;
     }
 
+    public function obtenirCodiResetPerId(?int $registreId, ?int $usuariId = null): ?array
+    {
+        if (!$this->conexio || !$registreId) {
+            return null;
+        }
+
+        if ($usuariId) {
+            $stmt = $this->conexio->prepare(
+                'SELECT id, usuari_id, code_hash, expires_at, used, used_at, created_at FROM codis_reset_contrasenya WHERE id = ? AND usuari_id = ? LIMIT 1'
+            );
+        } else {
+            $stmt = $this->conexio->prepare(
+                'SELECT id, usuari_id, code_hash, expires_at, used, used_at, created_at FROM codis_reset_contrasenya WHERE id = ? LIMIT 1'
+            );
+        }
+
+        if (!$stmt) {
+            $this->errors[] = 'Error en preparar la consulta de codi de reset: ' . $this->conexio->error;
+            return null;
+        }
+
+        if ($usuariId) {
+            $stmt->bind_param('ii', $registreId, $usuariId);
+        } else {
+            $stmt->bind_param('i', $registreId);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result ? $result->fetch_assoc() : null;
+        $stmt->close();
+
+        return $row ?: null;
+    }
+
     public function getErrors(): array
     {
         return $this->errors;

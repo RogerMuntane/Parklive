@@ -12,67 +12,19 @@ class CanviContrasenyaModel
     public function __construct()
     {
         $this->validador = new validarUsuari();
+        $this->conectarBaseDades();
     }
 
     /**
-     * Valida i canvia la contrasenya d'un usuari
-     * @param string $email Email de l'usuari
-     * @param string $contrasenyaActual Contrasenya actual
-     * @param string $contrasenyaNova Nova contrasenya
-     * @param string $contrasenyaConfirmar Confirmació de la nova contrasenya
-     * @return bool
+     * Connecta amb la base de dades
      */
-    public function canviarContrasenya($email, $contrasenyaNova, $contrasenyaConfirmar)
+    private function conectarBaseDades()
     {
-        $this->errors = array();
-
-        // Validacions
-        if (!$this->validador->validarEmail($email)) {
-            $this->errors = array_merge($this->errors, $this->validador->getErrors());
+        try {
+            $this->conexio = DatabaseConnection::create();
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
         }
-        $this->validador->clearErrors();
-
-
-        if (!$this->validador->validarContrasenya($contrasenyaNova, $contrasenyaConfirmar)) {
-            $this->errors = array_merge($this->errors, $this->validador->getErrors());
-        }
-        $this->validador->clearErrors();
-
-        if (!empty($this->errors)) {
-            return false;
-        }
-
-        // Connexió a la base de dades
-        if (!$this->conectarBaseDades()) {
-            return false;
-        }
-
-        // Obtenir usuari per email
-        $usuari = $this->obtenirUsuariPerEmail($email);
-
-        if (!$usuari) {
-            $this->errors[] = "Usuari no trobat";
-            return false;
-        }
-
-
-
-        // Verificar que la nova contrasenya és diferent de l'actual
-        if (password_verify($contrasenyaNova, $usuari['contrasenya'])) {
-            $this->errors[] = "La nova contrasenya ha de ser diferent de l'actual";
-            return false;
-        }
-
-        // Actualitzar contrasenya
-        $contrasenyaHash = password_hash($contrasenyaNova, PASSWORD_BCRYPT);
-        $resultat = $this->actualitzarContrasenya($email, $contrasenyaHash);
-
-        if (!$resultat) {
-            $this->errors[] = "Error en actualitzar la contrasenya. Intenta de nou.";
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -80,8 +32,12 @@ class CanviContrasenyaModel
      */
     private function obtenirUsuariPerEmail($email)
     {
-        $stmt = $this->conexio->prepare("CALL sp_obtenir_usuari_per_email(?)");
+        if (!$this->conexio) {
+            $this->errors[] = 'No hi ha connexió amb la base de dades';
+            return null;
+        }
 
+        $stmt = $this->conexio->prepare("CALL sp_obtenir_usuari_per_email(?)");
         if (!$stmt) {
             $this->errors[] = 'Error en la preparació del procedure: ' . $this->conexio->error;
             return null;
@@ -99,10 +55,14 @@ class CanviContrasenyaModel
     /**
      * Actualitza la contrasenya en la base de dades usant procedure sp_actualitzar_contrasenya
      */
-    private function actualitzarContrasenya($email, $contrasenyaHash)
+    private function actualitzarContrasenyaProcedure($email, $contrasenyaHash)
     {
-        $stmt = $this->conexio->prepare("CALL sp_actualitzar_contrasenya(?, ?, @actualitzat, @error)");
+        if (!$this->conexio) {
+            $this->errors[] = 'No hi ha connexió amb la base de dades';
+            return false;
+        }
 
+        $stmt = $this->conexio->prepare("CALL sp_actualitzar_contrasenya(?, ?, @actualitzat, @error)");
         if (!$stmt) {
             $this->errors[] = 'Error en la preparació del procedure: ' . $this->conexio->error;
             return false;
@@ -113,12 +73,14 @@ class CanviContrasenyaModel
         $stmt->close();
 
         // Obtenir els resultats del procedure
-        $queryResult = $this->conexio->query("SELECT @actualitzat as actualitzat, @error as error_msg");
-        if ($queryResult) {
-            $row = $queryResult->fetch_assoc();
-            if (!$row['actualitzat']) {
-                $this->errors[] = $row['error_msg'] ?? 'Error al actualitzar contrasenya';
-                return false;
+        if ($resultat) {
+            $queryResult = $this->conexio->query("SELECT @actualitzat as actualitzat, @error as error_msg");
+            if ($queryResult) {
+                $row = $queryResult->fetch_assoc();
+                if (!$row['actualitzat']) {
+                    $this->errors[] = $row['error_msg'] ?? 'Error al actualitzar contrasenya';
+                    return false;
+                }
             }
         }
 
@@ -126,17 +88,79 @@ class CanviContrasenyaModel
     }
 
     /**
-     * Connecta amb la base de dades
+     * Valida i canvia la contrasenya d'un usuari (per a canvi manual)
+     * Requiere que l'usuari proporcioni la contrasenya actual per verificació
      */
-    private function conectarBaseDades()
+    public function canviarContrasenya($email, $contrasenyaNova, $contrasenyaConfirmar)
     {
-        try {
-            $this->conexio = DatabaseConnection::create();
-            return true;
-        } catch (Exception $e) {
-            $this->errors[] = $e->getMessage();
+        $this->errors = array();
+
+        // Validacions
+        if (!$this->validador->validarEmail($email)) {
+            $this->errors = array_merge($this->errors, $this->validador->getErrors());
+        }
+        $this->validador->clearErrors();
+
+        if (!$this->validador->validarContrasenya($contrasenyaNova, $contrasenyaConfirmar)) {
+            $this->errors = array_merge($this->errors, $this->validador->getErrors());
+        }
+        $this->validador->clearErrors();
+
+        if (!empty($this->errors)) {
             return false;
         }
+
+        // Obtenir usuari per email
+        $usuari = $this->obtenirUsuariPerEmail($email);
+        if (!$usuari) {
+            $this->errors[] = "Usuari no trobat";
+            return false;
+        }
+
+        // Verificar que la nova contrasenya és diferent de l'actual
+        if (password_verify($contrasenyaNova, $usuari['contrasenya_hash'])) {
+            $this->errors[] = "La nova contrasenya ha de ser diferent de l'actual";
+            return false;
+        }
+
+        // Actualitzar contrasenya
+        $contrasenyaHash = password_hash($contrasenyaNova, PASSWORD_BCRYPT);
+        return $this->actualitzarContrasenyaProcedure($email, $contrasenyaHash);
+    }
+
+    /**
+     * Canvia la contrasenya després de verificar el codi de reset (RESET FLOW)
+     * No requereix contrasenya actual perquè ja s'ha verificat el codi per email
+     */
+    public function canviarContrasenyaReset($email, $contrasenyaNova, $contrasenyaConfirmar)
+    {
+        $this->errors = array();
+
+        // Validacions
+        if (!$this->validador->validarEmail($email)) {
+            $this->errors = array_merge($this->errors, $this->validador->getErrors());
+        }
+        $this->validador->clearErrors();
+
+        if (!$this->validador->validarContrasenya($contrasenyaNova, $contrasenyaConfirmar)) {
+            $this->errors = array_merge($this->errors, $this->validador->getErrors());
+        }
+        $this->validador->clearErrors();
+
+        if (!empty($this->errors)) {
+            return false;
+        }
+
+        // Obtenir usuari per email
+        $usuari = $this->obtenirUsuariPerEmail($email);
+        if (!$usuari) {
+            $this->errors[] = "Usuari no trobat";
+            return false;
+        }
+
+        // Encriptar i actualitzar contrasenya
+        $contrasenyaHash = password_hash($contrasenyaNova, PASSWORD_BCRYPT);
+        return $this->actualitzarContrasenyaProcedure($email, $contrasenyaHash);
     }
 
     /**

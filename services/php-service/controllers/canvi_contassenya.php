@@ -1,14 +1,18 @@
 <?php
 session_start();
+
 require_once "../models/canviContrasenyaModel.php";
+require_once "../models/ResetPasswordModel.php";
 
 class CanviContrasenya
 {
     private $model;
+    private $resetModel;
 
     public function __construct()
     {
         $this->model = new CanviContrasenyaModel();
+        $this->resetModel = new ResetPasswordModel();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->processarFormulari();
@@ -24,10 +28,22 @@ class CanviContrasenya
         $contrasenyaNova = isset($_POST['contrasenya_nova']) ? $_POST['contrasenya_nova'] : '';
         $contrasenyaConfirmar = isset($_POST['contrasenya_confirmar']) ? $_POST['contrasenya_confirmar'] : '';
 
+        // Validar que s'ha verificat el codi
+        $resetData = isset($_SESSION['password_reset']) ? $_SESSION['password_reset'] : null;
+        if (!$resetData || !$resetData['verified']) {
+            $_SESSION['errors'] = array('No s\'ha verificat el codi de reset.');
+            header('Location: ../views/request_reset_code.php');
+            exit();
+        }
+
         // Realitzar canvi de contrasenya
-        if ($this->model->canviarContrasenya($email, $contrasenyaNova, $contrasenyaConfirmar)) {
+        if ($this->model->canviarContrasenyaReset($email, $contrasenyaNova, $contrasenyaConfirmar)) {
+            // Marcar el codi com a usat
+            $this->resetModel->marcarCodiComUsat($resetData['verification_id'] ?? null);
+
             // Èxit: destruir sessió i redirigir a login
             $_SESSION['success_message'] = "Contrasenya canviada correctament. Inicia sessió de nou.";
+            unset($_SESSION['password_reset']);
             session_destroy();
             header('Location: ../views/login.php');
             exit();

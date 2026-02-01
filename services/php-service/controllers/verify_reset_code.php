@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require_once '../models/ResetPasswordModel.php';
+
 $errors = array();
 $code = isset($_POST['verification_code']) ? trim($_POST['verification_code']) : '';
 $resetData = isset($_SESSION['password_reset']) ? $_SESSION['password_reset'] : null;
@@ -14,14 +16,30 @@ if (empty($code)) {
 }
 
 if ($resetData) {
-    $expiresAt = isset($resetData['expires_at']) ? strtotime($resetData['expires_at']) : null;
-    if ($expiresAt && time() > $expiresAt) {
-        $errors[] = "El codi ha caducat. Demana'n un de nou.";
-    }
+    $resetModel = new ResetPasswordModel();
+    $verificationId = $resetData['verification_id'] ?? null;
+    $userId = $resetData['user_id'] ?? null;
+    $dbReset = $resetModel->obtenirCodiResetPerId(
+        $verificationId ? (int) $verificationId : null,
+        $userId ? (int) $userId : null
+    );
 
-    $expectedHash = $resetData['code_hash'] ?? null;
-    if (!$expectedHash) {
+    if (!$dbReset) {
         $errors[] = 'No s\'ha pogut validar el codi.';
+    } else {
+        if (!empty($dbReset['used'])) {
+            $errors[] = 'Aquest codi ja ha estat utilitzat.';
+        }
+
+        $expiresAt = isset($dbReset['expires_at']) ? strtotime($dbReset['expires_at']) : null;
+        if ($expiresAt && time() > $expiresAt) {
+            $errors[] = "El codi ha caducat. Demana'n un de nou.";
+        }
+
+        $expectedHash = $dbReset['code_hash'] ?? null;
+        if (!$expectedHash) {
+            $errors[] = 'No s\'ha pogut validar el codi.';
+        }
     }
 }
 
