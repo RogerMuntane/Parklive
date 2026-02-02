@@ -66,6 +66,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      PYTHONPATH: /app
       DB_HOST: mysql
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}

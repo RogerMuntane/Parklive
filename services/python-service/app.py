@@ -1,8 +1,12 @@
-import os
-from flask import Flask
-from routes.aparcament_routes import aparcament_routes
-from routes.reset_routes import reset_routes
 from models.db_connection import db
+from routes.reset_routes import reset_routes
+from routes.aparcament_routes import aparcament_routes
+from flask import Flask
+import sys
+import os
+
+# Afegir el directori actual al PYTHONPATH
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 app = Flask(__name__)
