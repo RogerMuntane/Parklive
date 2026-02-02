@@ -5,7 +5,6 @@ import string
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-import bcrypt
 from mysql.connector import Error
 
 from models.base_service import BaseService
@@ -77,77 +76,3 @@ class ResetCodeService(BaseService):
             import traceback
             traceback.print_exc()
             return self._handle_error(ex, "Error en enviar el codi", 500)
-
-    def verify_code_and_reset_password(
-        self, email: str, code: str, new_password: str
-    ) -> Dict[str, Any]:
-        """
-        Verifica el codi de reset i canvia la contrasenya.
-        Retorna un diccionari amb el resultat (status/error).
-        """
-        try:
-            conn = self._get_connection()
-
-            # Obtenir l'usuari
-            user = self._fetch_user_by_email(email)
-            if not user:
-                return {"error": "Usuari no trobat", "status_code": 404}
-
-            # Obtenir el codi de reset més recent i no usat
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute(
-                "SELECT id, code_hash, expires_at, used FROM codis_reset_contrasenya "
-                "WHERE usuari_id = %s AND used = FALSE ORDER BY created_at DESC LIMIT 1",
-                (user["id"],),
-            )
-            reset_record = cursor.fetchone()
-            cursor.close()
-
-            if not reset_record:
-                return {"error": "No hi ha codi de reset actiu", "status_code": 400}
-
-            # Verificar si ha expirat
-            expires_at = reset_record["expires_at"]
-            if isinstance(expires_at, str):
-                expires_at = datetime.fromisoformat(
-                    expires_at.replace("Z", "+00:00")
-                )
-
-            if datetime.utcnow() > expires_at:
-                return {"error": "El codi ha expirat", "status_code": 400}
-
-            # Verificar el codi introduït
-            code_hash = self._hash_code(code)
-            if code_hash != reset_record["code_hash"]:
-                return {"error": "Codi incorrecte", "status_code": 400}
-
-            # Encriptar la nova contrasenya amb bcrypt
-            password_hash = bcrypt.hashpw(
-                new_password.encode("utf-8"), bcrypt.gensalt()
-            ).decode("utf-8")
-
-            # Actualitzar contrasenya i marcar codi com a usat
-            cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE usuaris SET contrasenya_hash = %s WHERE id = %s",
-                (password_hash, user["id"]),
-            )
-            cursor.execute(
-                "UPDATE codis_reset_contrasenya SET used = TRUE, used_at = %s WHERE id = %s",
-                (datetime.utcnow(), reset_record["id"]),
-            )
-            conn.commit()
-            cursor.close()
-
-            return {
-                "status": "ok",
-                "message": "Contrasenya canviada correctament",
-                "status_code": 200,
-            }
-
-        except Error:
-            return self._handle_error(
-                Error(), "Error en canviar la contrasenya", 500
-            )
-        except Exception as ex:
-            return self._handle_error(ex, "Error en canviar la contrasenya", 500)

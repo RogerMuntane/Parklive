@@ -23,18 +23,22 @@ class BaseService:
 
     def _fetch_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """
-        Obté un usuari per email.
-        Retorna un diccionari amb id i email, o None si no existeix.
+        Obté un usuari per email (via procedure).
+        Retorna un diccionari amb les dades de l'usuari, o None si no existeix.
         """
         conn = self._get_connection()
         if not conn:
             raise RuntimeError("Base de dades no disponible")
 
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT id, email FROM usuaris WHERE email = %s LIMIT 1", (email,)
-        )
-        user = cursor.fetchone()
+        cursor.callproc("sp_obtenir_usuari_per_email", (email,))
+
+        # Obtenir el primer resultset del procedure
+        user = None
+        for result in cursor.stored_results():
+            user = result.fetchone()
+            break
+
         cursor.close()
         return user
 
