@@ -14,6 +14,8 @@ app = Flask(__name__)
 # Registrar les rutes
 app.register_blueprint(aparcament_routes)
 app.register_blueprint(reset_routes)
+app.register_blueprint(aparcament_filters_routes)
+
 
 # Connectar a la base de dades a l'inici
 
