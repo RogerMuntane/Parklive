@@ -2,7 +2,7 @@ from models.db_connection import db
 from routes.reset_routes import reset_routes
 from routes.aparcament_routes import aparcament_routes
 from routes.reserves_routes import reserves_routes
-from flask import Flask
+from flask import Flask, jsonify
 import sys
 import os
 
@@ -16,6 +16,12 @@ app = Flask(__name__)
 app.register_blueprint(aparcament_routes)
 app.register_blueprint(reset_routes)
 app.register_blueprint(reserves_routes)
+
+
+# Health check endpoint per Docker
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'healthy'}), 200
 
 
 # Connectar a la base de dades a l'inici

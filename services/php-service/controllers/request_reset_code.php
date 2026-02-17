@@ -54,29 +54,29 @@ if (function_exists('curl_init')) {
     curl_close($ch);
 }
 //Per se falla el curl es pot fer una petició post(No es necesari, ja que funciona correctament)
-// else {
-//     $context = stream_context_create([
-//         'http' => [
-//             'method' => 'POST',
-//             'header' => "Content-Type: application/json\r\n",
-//             'content' => $payload,
-//             'timeout' => 10,
-//         ],
-//     ]);
-//     $responseBody = @file_get_contents($url, false, $context);
-//     if (isset($http_response_header)) {
-//         foreach ($http_response_header as $headerLine) {
-//             if (stripos($headerLine, 'HTTP/') === 0) {
-//                 $parts = explode(' ', $headerLine);
-//                 $httpCode = isset($parts[1]) ? (int)$parts[1] : null;
-//                 break;
-//             }
-//         }
-//     }
-//     if ($responseBody === false) {
-//         $errors[] = 'Error en comunicar amb el servei de verificació.';
-//     }
-// }
+else {
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/json\r\n",
+            'content' => $payload,
+            'timeout' => 10,
+        ],
+    ]);
+    $responseBody = @file_get_contents($url, false, $context);
+    if (isset($http_response_header)) {
+        foreach ($http_response_header as $headerLine) {
+            if (stripos($headerLine, 'HTTP/') === 0) {
+                $parts = explode(' ', $headerLine);
+                $httpCode = isset($parts[1]) ? (int)$parts[1] : null;
+                break;
+            }
+        }
+    }
+    if ($responseBody === false) {
+        $errors[] = 'Error en comunicar amb el servei de verificació.';
+    }
+}
 
 // Gestionar resposta de Python API
 if (!empty($errors) || !$responseBody || $httpCode !== 200) {

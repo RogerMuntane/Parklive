@@ -37,8 +37,8 @@ services:
       - ./services/php-service:/var/www/html
       - ./shared:/var/www/shared
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
+      - python-service
     environment:
       DB_HOST: mysql
       DB_USER: ${MYSQL_USER}
