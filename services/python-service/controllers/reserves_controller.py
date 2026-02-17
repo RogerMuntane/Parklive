@@ -3,7 +3,8 @@ from models.reserves_model import (
     get_reserves_usuari,
     get_totes_reserves,
     get_reserves_per_estat,
-    obte_detall_reserva
+    obte_detall_reserva,
+    crear_reserva
 )
 
 
@@ -174,3 +175,59 @@ def detall_reserva(reserva_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+def crear_nova_reserva():
+    """
+    Controlador per crear una nova reserva
+
+    Espera un JSON amb:
+    {
+        "usuari_id": 1,
+        "aparcament_id": 5,
+        "data_entrada": "2026-03-15 10:00:00",
+        "data_sortida": "2026-03-15 18:00:00",
+        "preu_total": 24.50,
+        "descompte_aplicat": 0.00,  # Opcional
+        "notes": "Arribada aproximada a les 10h"  # Opcional
+    }
+    """
+    try:
+        # Validar que el request té dades JSON
+        if not request.is_json:
+            return jsonify({"error": "El contingut ha de ser JSON"}), 400
+
+        data = request.get_json()
+
+        # Validar camps obligatoris
+        required_fields = ['usuari_id', 'aparcament_id', 'data_entrada', 'data_sortida', 'preu_total']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
+            return jsonify({
+                "error": f"Falten els següents camps obligatoris: {', '.join(missing_fields)}"
+            }), 400
+
+        # Validar tipus de dades
+        try:
+            data['usuari_id'] = int(data['usuari_id'])
+            data['aparcament_id'] = int(data['aparcament_id'])
+            data['preu_total'] = float(data['preu_total'])
+
+            if 'descompte_aplicat' in data:
+                data['descompte_aplicat'] = float(data['descompte_aplicat'])
+        except (ValueError, TypeError):
+            return jsonify({"error": "Els camps numèrics tenen tipus invàlids"}), 400
+
+        # Crear la reserva
+        nova_reserva = crear_reserva(data)
+
+        return jsonify({
+            "message": "Reserva creada amb èxit",
+            "reserva": nova_reserva
+        }), 201
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Error en crear la reserva: {str(e)}"}), 500

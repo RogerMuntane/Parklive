@@ -3,7 +3,8 @@ from controllers.reserves_controller import (
     reserves_usuari_historial,
     totes_reserves,
     reserva_perEstat,
-    detall_reserva
+    detall_reserva,
+    crear_nova_reserva
 )
 
 
@@ -66,3 +67,21 @@ def get_reserva_detail(reserva_id):
     - reserva_id: ID de la reserva
     """
     return detall_reserva(reserva_id)
+
+@reserves_routes.route("/api/reserves", methods=["POST"])
+def create_reserva():
+    """
+    Endpoint POST per crear una nova reserva
+
+    Body JSON:
+    {
+        "usuari_id": 1,
+        "aparcament_id": 5,
+        "data_entrada": "2026-03-15 10:00:00",
+        "data_sortida": "2026-03-15 18:00:00",
+        "preu_total": 24.50,
+        "descompte_aplicat": 0.00,
+        "notes": "Notes opcionals"
+    }
+    """
+    return crear_nova_reserva()

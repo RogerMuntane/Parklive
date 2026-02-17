@@ -2,6 +2,8 @@ from models.db_connection import get_db_connection
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 import math
+import secrets
+import string
 
 
 def serialize_value(value):
@@ -35,7 +37,7 @@ def get_reserves_usuari(usuari_id, filters=None):
 
     # Query base amb informació de l'aparcament i pagament
     query = """
-    SELECT 
+    SELECT
         r.id,
         r.codi_reserva,
         r.usuari_id,
@@ -209,7 +211,7 @@ def get_totes_reserves(filters=None):
     cursor = conn.cursor(dictionary=True)
 
     query = """
-    SELECT 
+    SELECT
         r.id,
         r.codi_reserva,
         r.usuari_id,
@@ -345,7 +347,7 @@ def obte_detall_reserva(reserva_id):
     cursor = conn.cursor(dictionary=True)
 
     query = """
-    SELECT 
+    SELECT
         r.id,
         r.codi_reserva,
         r.usuari_id,
@@ -422,3 +424,144 @@ def obte_detall_reserva(reserva_id):
         'created_at': serialize_value(row['created_at']),
         'updated_at': serialize_value(row['updated_at'])
     }
+
+def crear_reserva(data):
+    """
+    Crea una nova reserva
+
+    Paràmetres esperats en data:
+    - usuari_id: ID de l'usuari (requerit)
+    - aparcament_id: ID de l'aparcament (requerit)
+    - data_entrada: data i hora d'entrada (format: YYYY-MM-DD HH:MM:SS) (requerit)
+    - data_sortida: data i hora de sortida (format: YYYY-MM-DD HH:MM:SS) (requerit)
+    - preu_total: preu total de la reserva (requerit)
+    - descompte_aplicat: descompte aplicat (opcional, per defecte 0)
+    - notes: notes addicionals (opcional)
+
+    Retorna:
+    - ID de la nova reserva i el codi de reserva generat
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Validar camps obligatoris
+        required_fields = ['usuari_id', 'aparcament_id', 'data_entrada', 'data_sortida', 'preu_total']
+        for field in required_fields:
+            if field not in data or data[field] is None:
+                raise ValueError(f"El camp '{field}' és obligatori")
+
+        # Validar que l'usuari existeix
+        cursor.execute("SELECT id FROM usuaris WHERE id = %s", (data['usuari_id'],))
+        if not cursor.fetchone():
+            raise ValueError(f"L'usuari amb ID {data['usuari_id']} no existeix")
+
+        # Validar que l'aparcament existeix i està actiu amb places disponibles
+        cursor.execute("""
+            SELECT id, estat, places_disponibles, capacitat_total
+            FROM aparcaments
+            WHERE id = %s
+        """, (data['aparcament_id'],))
+
+        aparcament = cursor.fetchone()
+        if not aparcament:
+            raise ValueError(f"L'aparcament amb ID {data['aparcament_id']} no existeix")
+
+        # Comprovar que l'aparcament està actiu (no en manteniment ni inactiu)
+        if aparcament['estat'] not in ('actiu', 'complet'):
+            raise ValueError(f"L'aparcament està en estat '{aparcament['estat']}' i no accepta reserves")
+
+        # Comprovar que hi ha places (opcional, depèn de la teva lògica de negoci)
+        # Pots comentar aquest check si vols permetre reserves encara que estigui "complet"
+        if aparcament['places_disponibles'] <= 0:
+            raise ValueError(f"L'aparcament no té places disponibles")
+
+        # Validar dates
+        try:
+            data_entrada = datetime.strptime(data['data_entrada'], '%Y-%m-%d %H:%M:%S')
+            data_sortida = datetime.strptime(data['data_sortida'], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            raise ValueError("Format de data invàlid. Utilitzar: YYYY-MM-DD HH:MM:SS")
+
+        if data_sortida <= data_entrada:
+            raise ValueError("La data de sortida ha de ser posterior a la data d'entrada")
+
+        # Comprovar si hi ha solapament amb altres reserves
+        cursor.execute("""
+            SELECT COUNT(*) as count
+            FROM reserves
+            WHERE aparcament_id = %s
+            AND estat NOT IN ('cancel·lada', 'finalitzada')
+            AND (
+                (data_entrada <= %s AND data_sortida > %s) OR
+                (data_entrada < %s AND data_sortida >= %s) OR
+                (data_entrada >= %s AND data_sortida <= %s)
+            )
+        """, (
+            data['aparcament_id'],
+            data['data_entrada'], data['data_entrada'],
+            data['data_sortida'], data['data_sortida'],
+            data['data_entrada'], data['data_sortida']
+        ))
+
+        if cursor.fetchone()['count'] > 0:
+            raise ValueError("L'aparcament ja té una reserva activa en aquest període")
+
+        # Generar codi de reserva únic (format: PR-XXXXXX)
+        def generate_codi_reserva():
+            chars = string.ascii_uppercase + string.digits
+            return 'PR-' + ''.join(secrets.choice(chars) for _ in range(6))
+
+        codi_reserva = generate_codi_reserva()
+
+        # Assegurar que el codi és únic
+        cursor.execute("SELECT id FROM reserves WHERE codi_reserva = %s", (codi_reserva,))
+        while cursor.fetchone():
+            codi_reserva = generate_codi_reserva()
+            cursor.execute("SELECT id FROM reserves WHERE codi_reserva = %s", (codi_reserva,))
+
+        # Inserir la nova reserva
+        insert_query = """
+            INSERT INTO reserves (
+                usuari_id,
+                aparcament_id,
+                data_entrada,
+                data_sortida,
+                estat,
+                preu_total,
+                descompte_aplicat,
+                codi_reserva,
+                notes
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        values = (
+            data['usuari_id'],
+            data['aparcament_id'],
+            data['data_entrada'],
+            data['data_sortida'],
+            'pendent',  # Estat inicial
+            data['preu_total'],
+            data.get('descompte_aplicat', 0.00),
+            codi_reserva,
+            data.get('notes', None)
+        )
+
+        cursor.execute(insert_query, values)
+        conn.commit()
+
+        reserva_id = cursor.lastrowid
+
+        # Obtenir la reserva creada amb tots els detalls
+        reserva_creada = obte_detall_reserva(reserva_id)
+
+        cursor.close()
+        conn.close()
+
+        return reserva_creada
+
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        raise e
