@@ -2,6 +2,7 @@ from models.db_connection import db
 from routes.reset_routes import reset_routes
 from routes.aparcament_routes import aparcament_routes
 from routes.reserves_routes import reserves_routes
+from routes.contribucions_routes import contribucions_routes
 from flask import Flask
 import sys
 import os
@@ -16,6 +17,7 @@ app = Flask(__name__)
 app.register_blueprint(aparcament_routes)
 app.register_blueprint(reset_routes)
 app.register_blueprint(reserves_routes)
+app.register_blueprint(contribucions_routes)
 
 
 # Connectar a la base de dades a l'inici
