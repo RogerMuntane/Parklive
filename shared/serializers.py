@@ -1,0 +1,42 @@
+"""
+Serialitzadors per convertir tipus de dades no JSON serialitzables.
+
+Aquest mòdul es munta al contenidor Python via docker-compose (./shared -> /app/shared)
+i ha d'existir perquè imports com `from shared.serializers import ...` funcionin.
+"""
+
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+
+
+def serialize_value(value):
+    """Converteix un valor a un format serialitzable per JSON."""
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, timedelta):
+        total_seconds = int(value.total_seconds())
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, bytes):
+        return value.decode("utf-8")
+    return value
+
+
+def serialize_row(row):
+    """Serialitza una fila (dict) de la base de dades."""
+    if row is None:
+        return None
+
+    return {key: serialize_value(value) for key, value in row.items()}
+
+
+def serialize_rows(rows):
+    """Serialitza múltiples files (llista de dicts)."""
+    if rows is None:
+        return []
+
+    return [serialize_row(row) for row in rows]

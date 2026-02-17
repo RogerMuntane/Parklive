@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Base de dades MySQL
   mysql:
@@ -55,6 +53,8 @@ services:
     build:
       context: ./services/python-service
       dockerfile: Dockerfile
+      # Helps when BuildKit cannot resolve DNS inside the build container.
+      network: host
     container_name: parklive_python
     restart: always
     ports:
