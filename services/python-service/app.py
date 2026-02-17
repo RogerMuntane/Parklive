@@ -20,6 +20,12 @@ app.register_blueprint(reserves_routes)
 app.register_blueprint(contribucions_routes)
 
 
+# Health check endpoint per Docker
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'healthy'}), 200
+
+
 # Connectar a la base de dades a l'inici
 
 
