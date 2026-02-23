@@ -208,7 +208,7 @@ INSERT INTO factures (pagament_id, usuari_id, numero_factura, import_subtotal, i
 
 INSERT INTO valoracions (usuari_id, aparcament_id, puntuacio, comentari, aspectes_valorats, verificada, util_count) VALUES
 (5, 1, 5, 'Excel·lent aparcament al centre de Barcelona. Molt net i ben senyalitzat. Les places són amples i té càrrega elèctrica.', '{"neteja": 5, "seguretat": 5, "facilitat_acces": 4, "relacio_qualitat_preu": 4}', TRUE, 12),
-(6, 1, 4, 'Molt bona ubicació però una mica car. El personal és amable i servicial.', '{"neteja": 4, "seguretat": 5, "facilitat_acces": 5, "relacio_qualitat_preu": 3}', TRUE, 8);
+(6, 1, 4, 'Molt bona ubicació però una mica car. El personal és amable i servicial.', '{"neteja": 4, "seguretat": 5, "facilitat_acces": 5, "relacio_qualitat_preu": 3}', TRUE, 8),
 (7, 2, 3, 'Correcte per aparcar unes hores. Entrada una mica estreta si portes un SUV.', '{"neteja": 3, "seguretat": 4, "facilitat_acces": 2, "relacio_qualitat_preu": 3}', TRUE, 2),
 (8, 2, 4, 'Bona relació qualitat-preu i fàcil d’arribar. Senyalització interior milloraria.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 4, "relacio_qualitat_preu": 4}', FALSE, 0),
 
@@ -224,7 +224,7 @@ INSERT INTO valoracions (usuari_id, aparcament_id, puntuacio, comentari, aspecte
 
 -- 10. RESPOSTES A VALORACIONS
 INSERT INTO respostes_valoracions (valoracio_id, usuari_id, text) VALUES
-(1, 3, 'Moltes gràcies per la teva valoració! Ens alegra saber que l'experiència ha estat excel·lent.'),
+(1, 3, 'Moltes gràcies per la teva valoració! Ens alegra saber que l''experiència ha estat excel·lent.'),
 (2, 3, 'Agraïm els teus comentaris. Treballem per mantenir el millor equilibri qualitat-preu de la zona.'),
 (6, 3, 'Sentim les molèsties ocasionades. Estem millorant el sistema de gestió de flux en hores punta.'),
 (9, 3, 'Ho lamentem molt. Hem revisat el sistema de lectura i ja està operatiu. Disculpa les molèsties.');
@@ -287,18 +287,18 @@ INSERT INTO historic_disponibilitat (aparcament_id, places_disponibles, timestam
 
 -- 15. FOTOGRAFIES D'APARCAMENTS
 INSERT INTO fotografies_aparcaments (aparcament_id, usuari_id, url, descripcio, verificada, ordre) VALUES
-(1, 5, '/uploads/aparcaments/1/foto_entrada_principal.jpg', 'Entrada principal amb rampa d'accés', TRUE, 1),
+(1, 5, '/uploads/aparcaments/1/foto_entrada_principal.jpg', 'Entrada principal amb rampa d''accés', TRUE, 1),
 (1, 6, '/uploads/aparcaments/1/foto_interior_1.jpg', 'Interior planta -1 amb senyalització', TRUE, 2),
 (1, 5, '/uploads/aparcaments/1/foto_carregadors.jpg', 'Zona de càrrega elèctrica', TRUE, 3),
 
-(2, 7, '/uploads/aparcaments/2/foto_fachada.jpg', 'Façana de l'aparcament', TRUE, 1),
-(2, 8, '/uploads/aparcaments/2/foto_places.jpg', 'Places d'estacionament', FALSE, 2),
+(2, 7, '/uploads/aparcaments/2/foto_fachada.jpg', 'Façana de l''aparcament', TRUE, 1),
+(2, 8, '/uploads/aparcaments/2/foto_places.jpg', 'Places d''estacionament', FALSE, 2),
 
 (3, 9, '/uploads/aparcaments/3/foto_entrada_nit.jpg', 'Entrada il·luminada (nocturn)', TRUE, 1),
 (3, 10, '/uploads/aparcaments/3/foto_seguretat.jpg', 'Càmeres de videovigilància', TRUE, 2),
 (3, 9, '/uploads/aparcaments/3/foto_ascensor.jpg', 'Ascensors i accessibilitat', TRUE, 3),
 
-(4, 11, '/uploads/aparcaments/4/foto_general.jpg', 'Vista general de l'aparcament', TRUE, 1),
+(4, 11, '/uploads/aparcaments/4/foto_general.jpg', 'Vista general de l''aparcament', TRUE, 1),
 (5, 13, '/uploads/aparcaments/5/foto_panoramica.jpg', 'Panoràmica de la zona de parking', FALSE, 1);
 
 -- 16. RESERVES
@@ -318,7 +318,7 @@ INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, esta
 (12, 3, '2026-02-23 10:00:00', '2026-02-23 18:00:00', 'en_curs', 16.00, 1.50, 'RES-2026-000008', 'Descompte usuari premium'),
 
 -- Reserves cancel·lades
-(13, 1, '2026-02-22 14:00:00', '2026-02-22 18:00:00', 'cancel·lada', 8.00, 0.00, 'RES-2026-000009', 'Cancel·lada per l'usuari'),
+(13, 1, '2026-02-22 14:00:00', '2026-02-22 18:00:00', 'cancel·lada', 8.00, 0.00, 'RES-2026-000009', 'Cancel·lada per l''usuari'),
 (14, 4, '2026-02-21 11:00:00', '2026-02-21 15:00:00', 'cancel·lada', 8.00, 0.00, 'RES-2026-000010', 'Canvi de plans');
 
 -- 17. PAGAMENTS
@@ -355,10 +355,10 @@ INSERT INTO factures (pagament_id, usuari_id, numero_factura, import_subtotal, i
 -- 19. CONTRIBUCIONS D'USUARIS
 INSERT INTO contribucions (usuari_id, aparcament_id, tipus, estat_reportat, dades, validada, punts_guanyats, latitud, longitud) VALUES
 (5, 1, 'disponibilitat', 'parcial', '{"places_lliures_aproximades": 45, "comentari": "Planta -2 gairebé plena"}', TRUE, 10, 41.3851, 2.1734),
-(6, 2, 'foto', NULL, '{"url": "/uploads/contribucions/user6_parking2.jpg", "descripcio": "Foto actualitzada de l'entrada"}', TRUE, 15, 41.3879, 2.1699),
+(6, 2, 'foto', NULL, '{"url": "/uploads/contribucions/user6_parking2.jpg", "descripcio": "Foto actualitzada de l''entrada"}', TRUE, 15, 41.3879, 2.1699),
 (7, 3, 'informacio', NULL, '{"camp": "horari_tancament", "valor_nou": "23:00", "comentari": "Tanquen a les 23h, no 24h"}', FALSE, 0, 41.3917, 2.1649),
 (8, 4, 'disponibilitat', 'lliure', '{"places_lliures_aproximades": 30}', TRUE, 10, 41.3888, 2.1590),
-(9, 5, 'correccio', NULL, '{"camp": "altura_maxima", "valor_actual": "2.00", "valor_correcte": "2.10", "comentari": "He mesurat l'altura amb el meu vehicle"}', TRUE, 20, 41.3797, 2.1769),
+(9, 5, 'correccio', NULL, '{"camp": "altura_maxima", "valor_actual": "2.00", "valor_correcte": "2.10", "comentari": "He mesurat l''altura amb el meu vehicle"}', TRUE, 20, 41.3797, 2.1769),
 (10, 1, 'disponibilitat', 'ocupat', '{"comentari": "Completament ple a les 14h"}', TRUE, 10, 41.3851, 2.1734),
 (11, 3, 'foto', NULL, '{"url": "/uploads/contribucions/user11_parking3_seguretat.jpg", "descripcio": "Nova càmera de seguretat instal·lada"}', TRUE, 15, 41.3917, 2.1649);
 
@@ -372,7 +372,7 @@ INSERT INTO recompenses (nom, descripcio, tipus, requisit_punts, valor, icona_ur
 ('10% de descompte', 'Descompte del 10% en la propera reserva', 'descompte', 50, '{"percentatge": 10, "max_us": 1, "validesa_dies": 30}', '/icons/rewards/descompte_10.svg', TRUE),
 ('15% de descompte', 'Descompte del 15% en la propera reserva', 'descompte', 150, '{"percentatge": 15, "max_us": 1, "validesa_dies": 30}', '/icons/rewards/descompte_15.svg', TRUE),
 
-('Premium 1 mes gratis', 'Prova gratuïta d'1 mes de subscripció Premium', 'premium_temporal', 300, '{"dies": 30}', '/icons/rewards/premium_trial.svg', TRUE),
+('Premium 1 mes gratis', 'Prova gratuïta d''1 mes de subscripció Premium', 'premium_temporal', 300, '{"dies": 30}', '/icons/rewards/premium_trial.svg', TRUE),
 
 ('+50 punts extra', 'Bonus de 50 punts de gamificació', 'punts_extra', 100, '{"punts": 50}', '/icons/rewards/bonus_punts.svg', TRUE);
 
@@ -408,9 +408,9 @@ INSERT INTO articles_blog (titol, slug, contingut, resum, autor_id, categoria, i
     342
 ),
 (
-    'L'impacte de la mobilitat elèctrica als aparcaments urbans',
+    'L''impacte de la mobilitat elèctrica als aparcaments urbans',
     'mobilitat-electrica-aparcaments-urbans',
-    'L'augment de vehicles elèctrics està transformant els aparcaments urbans. Els punts de càrrega ja no són un luxe sinó una necessitat. Analitzem la situació actual a Catalunya...',
+    'L''augment de vehicles elèctrics està transformant els aparcaments urbans. Els punts de càrrega ja no són un luxe sinó una necessitat. Analitzem la situació actual a Catalunya...',
     'Com la mobilitat elèctrica està canviant els aparcaments a les ciutats catalanes',
     3,
     'sostenibilitat',
@@ -422,7 +422,7 @@ INSERT INTO articles_blog (titol, slug, contingut, resum, autor_id, categoria, i
 (
     'Novetats de Parklive: Reserva amb un clic',
     'novetats-parklive-reserva-rapida',
-    'Estem emocionats d'anunciar la nova funcionalitat de reserva ràpida que permet als usuaris reservar una plaça en menys de 30 segons. Descobreix com funciona...',
+    'Estem emocionats d''anunciar la nova funcionalitat de reserva ràpida que permet als usuaris reservar una plaça en menys de 30 segons. Descobreix com funciona...',
     'Presentem la nova funcionalitat de reserva express de Parklive',
     3,
     'novetats',
@@ -434,8 +434,8 @@ INSERT INTO articles_blog (titol, slug, contingut, resum, autor_id, categoria, i
 (
     '5 errors comuns en reservar aparcament online',
     '5-errors-comuns-reserva-aparcament',
-    'Evita aquestes trampes habituals quan reserves aparcament per Internet: des de no llegir la lletra petita fins a oblidar confirmar l'horari...',
-    'Guia per evitar els errors més freqüents en les reserves d'aparcament',
+    'Evita aquestes trampes habituals quan reserves aparcament per Internet: des de no llegir la lletra petita fins a oblidar confirmar l''horari...',
+    'Guia per evitar els errors més freqüents en les reserves d''aparcament',
     3,
     'consells',
     '/blog/images/errors-reserva.jpg',
@@ -459,8 +459,8 @@ INSERT INTO articles_blog (titol, slug, contingut, resum, autor_id, categoria, i
 -- 23. FAQS (Preguntes Freqüents)
 INSERT INTO faqs (pregunta, resposta, categoria, ordre, activa, visites) VALUES
 (
-    'Com puc reservar una plaça d'aparcament?',
-    'Per reservar una plaça, inicia sessió al teu compte, busca l'aparcament desitjat pel mapa o cercador, selecciona l'horari d'entrada i sortida, i completa el pagament. Rebràs un codi de reserva per correu electrònic.',
+    'Com puc reservar una plaça d''aparcament?',
+    'Per reservar una plaça, inicia sessió al teu compte, busca l''aparcament desitjat pel mapa o cercador, selecciona l''horari d''entrada i sortida, i completa el pagament. Rebràs un codi de reserva per correu electrònic.',
     'Reserves',
     1,
     TRUE,
@@ -468,7 +468,7 @@ INSERT INTO faqs (pregunta, resposta, categoria, ordre, activa, visites) VALUES
 ),
 (
     'Puc cancel·lar la meva reserva?',
-    'Sí, pots cancel·lar la teva reserva fins a 2 hores abans de l'hora d'entrada prevista. La cancel·lació es fa des del teu panell d'usuari. El reemborsament es processa en un termini de 3-5 dies laborables.',
+    'Sí, pots cancel·lar la teva reserva fins a 2 hores abans de l''hora d''entrada prevista. La cancel·lació es fa des del teu panell d''usuari. El reemborsament es processa en un termini de 3-5 dies laborables.',
     'Reserves',
     2,
     TRUE,
@@ -500,7 +500,7 @@ INSERT INTO faqs (pregunta, resposta, categoria, ordre, activa, visites) VALUES
 ),
 (
     'Què faig si no trobo el meu vehicle a la sortida?',
-    'Contacta immediatament amb el telèfon d'atenció de l'aparcament (apareix a la teva reserva) i també amb el nostre equip de suport des de l'app. Gestionarem la incidència amb màxima prioritat.',
+    'Contacta immediatament amb el telèfon d''atenció de l''aparcament (apareix a la teva reserva) i també amb el nostre equip de suport des de l''app. Gestionarem la incidència amb màxima prioritat.',
     'Incidències',
     6,
     TRUE,
@@ -524,15 +524,15 @@ INSERT INTO faqs (pregunta, resposta, categoria, ordre, activa, visites) VALUES
 ),
 (
     'Com puc contribuir amb informació sobre disponibilitat?',
-    'Des de l'app mòbil, pots reportar l'estat de disponibilitat dels aparcaments en temps real. Les contribucions validades et donen punts de gamificació.',
+    'Des de l''app mòbil, pots reportar l''estat de disponibilitat dels aparcaments en temps real. Les contribucions validades et donen punts de gamificació.',
     'Col·laboració',
     9,
     TRUE,
     178
 ),
 (
-    'On puc descarregar l'aplicació mòbil?',
-    'L'app de Parklive està disponible a l'App Store (iOS) i Google Play (Android). Cerca "Parklive" i descarrega-la gratuïtament. També pots usar la versió web des de qualsevol navegador.',
+    'On puc descarregar l''aplicació mòbil?',
+    'L''app de Parklive està disponible a l''App Store (iOS) i Google Play (Android). Cerca "Parklive" i descarrega-la gratuïtament. També pots usar la versió web des de qualsevol navegador.',
     'General',
     10,
     TRUE,
@@ -542,18 +542,18 @@ INSERT INTO faqs (pregunta, resposta, categoria, ordre, activa, visites) VALUES
 -- 24. NOTIFICACIONS
 INSERT INTO notificacions (usuari_id, tipus, titol, missatge, llegida, url_accio, data_llegida) VALUES
 -- Usuari 5
-(5, 'confirmacio', 'Reserva confirmada', 'La teva reserva RES-2026-000001 per al Parking Plaça Catalunya ha estat confirmada. T'esperem el 15/02/2026 a les 10:00h.', TRUE, '/reserves/1', '2026-02-15 09:57:00'),
+(5, 'confirmacio', 'Reserva confirmada', 'La teva reserva RES-2026-000001 per al Parking Plaça Catalunya ha estat confirmada. T''esperem el 15/02/2026 a les 10:00h.', TRUE, '/reserves/1', '2026-02-15 09:57:00'),
 (5, 'info', 'Nou article al blog', 'Hem publicat un nou article: "Com estalviar temps cercant aparcament a Barcelona". Llegeix-lo ara!', FALSE, '/blog/estalviar-temps-aparcament-barcelona', NULL),
 
 -- Usuari 6
-(6, 'confirmacio', 'Reserva confirmada', 'Reserva RES-2026-000002 confirmada correctament. Aparcament Les Corts t'espera el 18/02/2026.', TRUE, '/reserves/2', '2026-02-18 08:22:00'),
+(6, 'confirmacio', 'Reserva confirmada', 'Reserva RES-2026-000002 confirmada correctament. Aparcament Les Corts t''espera el 18/02/2026.', TRUE, '/reserves/2', '2026-02-18 08:22:00'),
 (6, 'promocio', 'Descompte exclusiu: 15% OFF', 'Com a usuari Premium, tens un 15% de descompte en la teva propera reserva. Codi: PREMIUM15. Vàlid fins al 28/02/2026.', FALSE, '/promocions', NULL),
 
 -- Usuari 7
-(7, 'confirmacio', 'Reserva finalitzada', 'Gràcies per usar Parklive! La teva reserva RES-2026-000003 s'ha finalitzat. Valora la teva experiència i guanya punts.', TRUE, '/valoracions/nova?aparcament=3', '2026-02-20 20:15:00'),
+(7, 'confirmacio', 'Reserva finalitzada', 'Gràcies per usar Parklive! La teva reserva RES-2026-000003 s''ha finalitzat. Valora la teva experiència i guanya punts.', TRUE, '/valoracions/nova?aparcament=3', '2026-02-20 20:15:00'),
 
 -- Usuari 8
-(8, 'confirmacio', 'Pagament processat', 'El pagament de 20,00€ per la reserva RES-2026-000004 s'ha completat amb èxit.', TRUE, '/pagaments/4', '2026-02-23 14:32:00'),
+(8, 'confirmacio', 'Pagament processat', 'El pagament de 20,00€ per la reserva RES-2026-000004 s''ha completat amb èxit.', TRUE, '/pagaments/4', '2026-02-23 14:32:00'),
 (8, 'alerta', 'Reserva demà', 'Recordatori: Tens una reserva demà 25/02 a les 9:00h al Parking Plaça Catalunya. Codi: RES-2026-000004.', FALSE, '/reserves/4', NULL),
 
 -- Usuari 9
@@ -566,7 +566,7 @@ INSERT INTO notificacions (usuari_id, tipus, titol, missatge, llegida, url_accio
 (12, 'sistema', 'Renovació Premium', 'La teva subscripció Premium Anual es renovarà automàticament el 10/06/2026. Preu: 59,99€.', FALSE, '/subscripcions', NULL),
 
 -- Usuari 13
-(13, 'confirmacio', 'Reemborsament processat', 'El reemborsament de 8,00€ de la reserva cancel·lada RES-2026-000009 s'ha processat. Rebràs els diners en 3-5 dies.', TRUE, '/pagaments/9', '2026-02-22 16:00:00');
+(13, 'confirmacio', 'Reemborsament processat', 'El reemborsament de 8,00€ de la reserva cancel·lada RES-2026-000009 s''ha processat. Rebràs els diners en 3-5 dies.', TRUE, '/pagaments/9', '2026-02-22 16:00:00');
 
 -- 25. MISSATGES DE SUPORT
 INSERT INTO missatges_suport (usuari_id, nom, email, assumpte, missatge, categoria, estat, prioritat) VALUES
@@ -575,7 +575,7 @@ INSERT INTO missatges_suport (usuari_id, nom, email, assumpte, missatge, categor
     'Marc Solà',
     'marc.sola@email.com',
     'Problema amb el lector de matrícules',
-    'Avui al matí (23/02) he tingut problemes per entrar al Parking Diagonal amb el meu codi de reserva. El lector no reconeixia la matrícula i he hagut d'esperar 10 minuts fins que algú m'ha obert manualment.',
+    'Avui al matí (23/02) he tingut problemes per entrar al Parking Diagonal amb el meu codi de reserva. El lector no reconeixia la matrícula i he hagut d''esperar 10 minuts fins que algú m''ha obert manualment.',
     'tecnic',
     'en_proces',
     'alta'
@@ -615,7 +615,7 @@ INSERT INTO missatges_suport (usuari_id, nom, email, assumpte, missatge, categor
     'Carles Font',
     'carles.font@email.com',
     'Suggeriment: afegir més aparcaments a Girona',
-    'Sóc usuari habitual a Barcelona però vivint a Girona. Seria genial tenir més opcions d'aparcament a la ciutat. Hi ha plans d'expansió?',
+    'Sóc usuari habitual a Barcelona però vivint a Girona. Seria genial tenir més opcions d''aparcament a la ciutat. Hi ha plans d''expansió?',
     'altres',
     'pendent',
     'baixa'
@@ -625,7 +625,7 @@ INSERT INTO missatges_suport (usuari_id, nom, email, assumpte, missatge, categor
     'Marta Roca',
     'marta.roca@email.com',
     'Cancel·lació de subscripció',
-    'Vull cancel·lar la meva subscripció mensual. Com puc fer-ho des de l'app? No trobo l'opció al menú.',
+    'Vull cancel·lar la meva subscripció mensual. Com puc fer-ho des de l''app? No trobo l''opció al menú.',
     'compte',
     'resolt',
     'mitjana'
@@ -633,20 +633,20 @@ INSERT INTO missatges_suport (usuari_id, nom, email, assumpte, missatge, categor
 
 -- 26. CONFIGURACIÓ DEL SISTEMA
 INSERT INTO configuracio_sistema (clau, valor, tipus, descripcio) VALUES
-('app_name', 'Parklive', 'string', 'Nom de l'aplicació'),
-('app_version', '2.4.1', 'string', 'Versió actual de l'aplicació'),
+('app_name', 'Parklive', 'string', 'Nom de l''aplicació'),
+('app_version', '2.4.1', 'string', 'Versió actual de l''aplicació'),
 ('maintenance_mode', 'false', 'boolean', 'Mode de manteniment activat'),
 ('max_reserves_per_user', '10', 'number', 'Nombre màxim de reserves actives per usuari'),
-('cancel_hours_before', '2', 'number', 'Hores mínimes abans de l'entrada per cancel·lar sense penalització'),
+('cancel_hours_before', '2', 'number', 'Hores mínimes abans de l''entrada per cancel·lar sense penalització'),
 ('punts_per_reserva', '10', 'number', 'Punts de gamificació per reserva completada'),
 ('punts_per_valoracio', '5', 'number', 'Punts de gamificació per valoració deixada'),
 ('punts_per_contribucio', '10', 'number', 'Punts base per contribució validada'),
-('iva_percentatge', '21', 'number', 'Percentatge d'IVA aplicable'),
+('iva_percentatge', '21', 'number', 'Percentatge d''IVA aplicable'),
 ('descompte_premium', '10', 'number', 'Percentatge de descompte per a usuaris Premium'),
 ('email_suport', 'suport@parklive.cat', 'string', 'Correu electrònic de suport'),
-('telefon_suport', '+34 932 000 000', 'string', 'Telèfon d'atenció al client'),
+('telefon_suport', '+34 932 000 000', 'string', 'Telèfon d''atenció al client'),
 ('max_foto_size_mb', '5', 'number', 'Mida màxima de fitxer de foto en MB'),
-('session_timeout_minutes', '120', 'number', 'Temps d'expiració de sessió en minuts'),
+('session_timeout_minutes', '120', 'number', 'Temps d''expiració de sessió en minuts'),
 ('enable_gamification', 'true', 'boolean', 'Sistema de gamificació activat'),
 ('enable_notifications_push', 'true', 'boolean', 'Notificacions push activades'),
 ('google_maps_api_key', 'AIzaSyXXXXXXXXXXXXXXXXXXXXXX', 'string', 'Clau API de Google Maps'),
@@ -661,7 +661,7 @@ INSERT INTO configuracio_sistema (clau, valor, tipus, descripcio) VALUES
     'working_hours',
     '{"start": "06:00", "end": "22:00"}',
     'json',
-    'Horari d'atenció al client'
+    'Horari d''atenció al client'
 );
 
 -- 27. LOGS DEL SISTEMA
@@ -696,7 +696,7 @@ INSERT INTO logs_sistema (nivell, missatge, context, usuari_id, ip_address) VALU
 ),
 (
     'info',
-    'Actualització d'històric de disponibilitat',
+    'Actualització d''històric de disponibilitat',
     '{"aparcament_id": 1, "places_disponibles": 45, "font": "sensor"}',
     NULL,
     '10.0.0.1'
