@@ -26,9 +26,6 @@ def health():
     return jsonify({'status': 'healthy'}), 200
 
 
-# Connectar a la base de dades a l'inici
-
-
 @app.before_request
 def before_request():
     if db.connection is None or not db.connection.is_connected():
