@@ -32,6 +32,7 @@ def crear_contribucio(data):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
+    # prova
     try:
         # Validar camps obligatoris
         required_fields = ['usuari_id', 'aparcament_id', 'tipus']
@@ -42,29 +43,36 @@ def crear_contribucio(data):
         # Validar tipus
         tipus_valids = ['disponibilitat', 'foto', 'informacio', 'correccio']
         if data['tipus'] not in tipus_valids:
-            raise ValueError(f"Tipus invàlid. Tipus vàlids: {', '.join(tipus_valids)}")
+            raise ValueError(
+                f"Tipus invàlid. Tipus vàlids: {', '.join(tipus_valids)}")
 
         # Validar que l'usuari existeix
-        cursor.execute("SELECT id, nom FROM usuaris WHERE id = %s", (data['usuari_id'],))
+        cursor.execute(
+            "SELECT id, nom FROM usuaris WHERE id = %s", (data['usuari_id'],))
         usuari = cursor.fetchone()
         if not usuari:
-            raise ValueError(f"L'usuari amb ID {data['usuari_id']} no existeix")
+            raise ValueError(
+                f"L'usuari amb ID {data['usuari_id']} no existeix")
 
         # Validar que l'aparcament existeix
-        cursor.execute("SELECT id, nom, latitud, longitud FROM aparcaments WHERE id = %s", (data['aparcament_id'],))
+        cursor.execute(
+            "SELECT id, nom, latitud, longitud FROM aparcaments WHERE id = %s", (data['aparcament_id'],))
         aparcament = cursor.fetchone()
         if not aparcament:
-            raise ValueError(f"L'aparcament amb ID {data['aparcament_id']} no existeix")
+            raise ValueError(
+                f"L'aparcament amb ID {data['aparcament_id']} no existeix")
 
         # Validar estat_reportat només per tipus 'disponibilitat'
         estat_reportat = None
         if data['tipus'] == 'disponibilitat':
             if 'estat_reportat' not in data or not data['estat_reportat']:
-                raise ValueError("El camp 'estat_reportat' és obligatori per tipus 'disponibilitat'")
+                raise ValueError(
+                    "El camp 'estat_reportat' és obligatori per tipus 'disponibilitat'")
 
             estats_valids = ['lliure', 'ocupat', 'parcial']
             if data['estat_reportat'] not in estats_valids:
-                raise ValueError(f"Estat reportat invàlid. Estats vàlids: {', '.join(estats_valids)}")
+                raise ValueError(
+                    f"Estat reportat invàlid. Estats vàlids: {', '.join(estats_valids)}")
 
             estat_reportat = data['estat_reportat']
 
