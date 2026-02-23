@@ -32,7 +32,6 @@ def crear_contribucio(data):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # prova
     try:
         # Validar camps obligatoris
         required_fields = ['usuari_id', 'aparcament_id', 'tipus']
