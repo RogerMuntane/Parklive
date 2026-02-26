@@ -101,37 +101,30 @@ def crear_contribucio(data):
         latitud = data.get('latitud') or aparcament['latitud']
         longitud = data.get('longitud') or aparcament['longitud']
 
-        # Inserir la nova contribució
-        insert_query = """
-            INSERT INTO contribucions (
-                usuari_id,
-                aparcament_id,
-                tipus,
-                estat_reportat,
-                dades,
-                validada,
-                punts_guanyats,
-                latitud,
-                longitud
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-
-        values = (
+        # Procedure equivalent: sp_crear_contribucio(..., OUT contribucio_id, OUT error_msg)
+        proc_args = [
             data['usuari_id'],
             data['aparcament_id'],
             data['tipus'],
             estat_reportat,
             dades_json,
-            False,  # Validada per defecte és FALSE
             punts_guanyats,
             latitud,
-            longitud
-        )
-
-        cursor.execute(insert_query, values)
+            longitud,
+            None,
+            None
+        ]
+        result_args = cursor.callproc('sp_crear_contribucio', proc_args)
         conn.commit()
 
-        contribucio_id = cursor.lastrowid
+        contribucio_id = result_args[8]
+        error_msg = result_args[9]
+
+        if error_msg:
+            raise ValueError(error_msg)
+
+        if not contribucio_id:
+            raise ValueError("No s'ha pogut crear la contribució")
 
         # Obtenir la contribució creada
         cursor.execute("""

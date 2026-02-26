@@ -21,10 +21,12 @@ def get_all_aparcaments():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    query = "SELECT * FROM aparcaments"
-    cursor.execute(query)
-
-    aparcaments = cursor.fetchall()
+    # Procedure equivalent: sp_llistar_aparcaments(limit, offset)
+    cursor.callproc('sp_llistar_aparcaments', [1000, 0])
+    aparcaments = []
+    for result in cursor.stored_results():
+        aparcaments = result.fetchall()
+        break
     cursor.close()
 
     # Serialitza cada valor de cada registre
@@ -42,10 +44,13 @@ def get_aparcament_by_id(aparcament_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    query = "SELECT * FROM aparcaments WHERE id = %s AND estat != 'eliminat'"
-    cursor.execute(query, (aparcament_id,))
-
-    aparcament = cursor.fetchone()
+    # Procedure equivalent: sp_obtenir_aparcament_detall(aparcament_id)
+    cursor.callproc('sp_obtenir_aparcament_detall', [aparcament_id])
+    aparcament = None
+    for idx, result in enumerate(cursor.stored_results()):
+        if idx == 0:
+            aparcament = result.fetchone()
+            break
     cursor.close()
 
     # Si no es troba, retorna None
@@ -67,6 +72,63 @@ def get_aparcaments_by_filters(filters):
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
+    # Si només s'usen filtres compatibles, delegar al procedure
+    procedure_supported_filters = {
+        'ciutat', 'tipus', 'accessibilitat', 'carrega_electrica',
+        'latitud', 'longitud', 'limite', 'offset'
+    }
+    unsupported_filters = {
+        key for key, value in filters.items()
+        if value is not None and key not in procedure_supported_filters
+    }
+
+    if not unsupported_filters:
+        limite = filters.get('limite', 20)
+        offset = filters.get('offset', 0)
+
+        if limite <= 0 or limite > 100:
+            limite = 20
+        if offset < 0:
+            offset = 0
+
+        # Procedure equivalent: sp_cercar_aparcaments(ciutat, tipus, accessibilitat,
+        # carrega_electrica, latitud, longitud, limit, offset)
+        cursor.callproc('sp_cercar_aparcaments', [
+            filters.get('ciutat'),
+            filters.get('tipus'),
+            filters.get('accessibilitat'),
+            filters.get('carrega_electrica'),
+            filters.get('latitud'),
+            filters.get('longitud'),
+            limite,
+            offset
+        ])
+
+        aparcaments = []
+        for result in cursor.stored_results():
+            aparcaments = result.fetchall()
+            break
+
+        cursor.close()
+        conn.close()
+
+        serialized_aparcaments = []
+        for aparcament in aparcaments:
+            serialized_aparcament = {key: serialize_value(value)
+                                     for key, value in aparcament.items()}
+            serialized_aparcaments.append(serialized_aparcament)
+
+        return {
+            'total': len(serialized_aparcaments),
+            'resultats': serialized_aparcaments,
+            'paginacio': {
+                'limit': limite,
+                'offset': offset,
+                'pagina_actual': (offset // limite) + 1 if limite > 0 else 1,
+                'total_pagines': 1
+            }
+        }
 
     # Construcció de la query base
     query = "SELECT * FROM aparcaments WHERE 1=1"
@@ -165,12 +227,6 @@ def get_aparcaments_by_filters(filters):
         ) <= %s
         """
         params.extend([lat, lat, lon, radi_km])
-
-    # Query per comptar el total
-    count_query = f"SELECT COUNT(*) as total FROM aparcaments WHERE 1=1"
-    # Afegir els mateixos filtres a la query de count
-    count_query_filtered = count_query
-    count_params = params.copy()
 
     # Construir la query de count amb els mateixos filtres
     cursor.execute(query.replace("SELECT * FROM",

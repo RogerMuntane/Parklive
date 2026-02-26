@@ -2,8 +2,6 @@ from models.db_connection import get_db_connection
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 import math
-import secrets
-import string
 
 
 def serialize_value(value):
@@ -34,6 +32,91 @@ def get_reserves_usuari(usuari_id, filters=None):
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
+    # Si només s'usen filtres compatibles, delegar al procedure
+    procedure_supported_filters = {'estat', 'limit', 'offset'}
+    unsupported_filters = {
+        key for key, value in filters.items()
+        if value is not None and key not in procedure_supported_filters
+    }
+
+    if not unsupported_filters:
+        estat = filters.get('estat')
+        valid_estats = ['pendent', 'confirmada',
+                        'en_curs', 'completada', 'cancel·lada']
+        if estat and estat not in valid_estats:
+            raise ValueError(
+                f"Estat invàlid. Estats vàlids: {', '.join(valid_estats)}")
+
+        limit = filters.get('limit', 20)
+        offset = filters.get('offset', 0)
+
+        if limit <= 0 or limit > 100:
+            limit = 20
+        if offset < 0:
+            offset = 0
+
+        # Procedure equivalent: sp_obtenir_historial_reserves(usuari_id, estat, limit, offset)
+        cursor.callproc('sp_obtenir_historial_reserves', [
+                        usuari_id, estat, limit, offset])
+
+        reserves_rows = []
+        for result in cursor.stored_results():
+            reserves_rows = result.fetchall()
+            break
+
+        cursor.close()
+        conn.close()
+
+        reserves = []
+        for row in reserves_rows:
+            pagaments = []
+            if row.get('pagament_id') is not None:
+                pagaments.append({
+                    'id': row['pagament_id'],
+                    'import': None,
+                    'metode': row['pagament_metode'],
+                    'estat': row['pagament_estat'],
+                    'data_pagament': serialize_value(row['data_pagament'])
+                })
+
+            reserves.append({
+                'id': row['id'],
+                'codi_reserva': row['codi_reserva'],
+                'usuari_id': usuari_id,
+                'aparcament': {
+                    'id': row['aparcament_id'],
+                    'nom': row['aparcament_nom'],
+                    'adreca': row['aparcament_adreca'],
+                    'ciutat': row['aparcament_ciutat'],
+                    'tipus': row['aparcament_tipus'],
+                    'latitud': serialize_value(row['aparcament_latitud']),
+                    'longitud': serialize_value(row['aparcament_longitud']),
+                    'tarifa_hora': None,
+                    'tarifa_dia': None
+                },
+                'data_entrada': serialize_value(row['data_entrada']),
+                'data_sortida': serialize_value(row['data_sortida']),
+                'estat': row['estat'],
+                'preu_total': serialize_value(row['preu_total']),
+                'descompte_aplicat': serialize_value(row['descompte_aplicat']),
+                'notes': row['notes'],
+                'pagaments': pagaments,
+                'created_at': serialize_value(row['created_at']),
+                'updated_at': serialize_value(row['updated_at'])
+            })
+
+        total = len(reserves)
+        return {
+            'total': total,
+            'reserves': reserves,
+            'paginacio': {
+                'limit': limit,
+                'offset': offset,
+                'pagina_actual': (offset // limit) + 1 if limit > 0 else 1,
+                'total_pagines': math.ceil(total / limit) if limit > 0 else 1
+            }
+        }
 
     # Query base amb informació de l'aparcament i pagament
     query = """
@@ -249,7 +332,7 @@ def get_totes_reserves(filters=None):
         valid_estats = ['pendent', 'confirmada',
                         'en_curs', 'completada', 'cancel·lada']
         if filters['estat'] not in valid_estats:
-            raise ValueError(f"Estat invàlid")
+            raise ValueError("Estat invàlid")
         query += " AND r.estat = %s"
         params.append(filters['estat'])
 
@@ -274,7 +357,8 @@ def get_totes_reserves(filters=None):
     count_query = query + " GROUP BY r.id"
     cursor.execute(
         f"SELECT COUNT(*) as total FROM ({count_query}) as subquery", params)
-    total = cursor.fetchone()['total'] if cursor.fetchone() else 0
+    total_row = cursor.fetchone()
+    total = total_row['total'] if total_row else 0
 
     query += " ORDER BY r.data_entrada DESC"
     query += " LIMIT %s OFFSET %s"
@@ -425,6 +509,7 @@ def obte_detall_reserva(reserva_id):
         'updated_at': serialize_value(row['updated_at'])
     }
 
+
 def crear_reserva(data):
     """
     Crea una nova reserva
@@ -446,111 +531,56 @@ def crear_reserva(data):
 
     try:
         # Validar camps obligatoris
-        required_fields = ['usuari_id', 'aparcament_id', 'data_entrada', 'data_sortida', 'preu_total']
+        required_fields = ['usuari_id', 'aparcament_id',
+                           'data_entrada', 'data_sortida', 'preu_total']
         for field in required_fields:
             if field not in data or data[field] is None:
                 raise ValueError(f"El camp '{field}' és obligatori")
 
         # Validar que l'usuari existeix
-        cursor.execute("SELECT id FROM usuaris WHERE id = %s", (data['usuari_id'],))
+        cursor.execute("SELECT id FROM usuaris WHERE id = %s",
+                       (data['usuari_id'],))
         if not cursor.fetchone():
-            raise ValueError(f"L'usuari amb ID {data['usuari_id']} no existeix")
-
-        # Validar que l'aparcament existeix i està actiu amb places disponibles
-        cursor.execute("""
-            SELECT id, estat, places_disponibles, capacitat_total
-            FROM aparcaments
-            WHERE id = %s
-        """, (data['aparcament_id'],))
-
-        aparcament = cursor.fetchone()
-        if not aparcament:
-            raise ValueError(f"L'aparcament amb ID {data['aparcament_id']} no existeix")
-
-        # Comprovar que l'aparcament està actiu (no en manteniment ni inactiu)
-        if aparcament['estat'] not in ('actiu', 'complet'):
-            raise ValueError(f"L'aparcament està en estat '{aparcament['estat']}' i no accepta reserves")
-
-        # Comprovar que hi ha places (opcional, depèn de la teva lògica de negoci)
-        # Pots comentar aquest check si vols permetre reserves encara que estigui "complet"
-        if aparcament['places_disponibles'] <= 0:
-            raise ValueError(f"L'aparcament no té places disponibles")
+            raise ValueError(
+                f"L'usuari amb ID {data['usuari_id']} no existeix")
 
         # Validar dates
         try:
-            data_entrada = datetime.strptime(data['data_entrada'], '%Y-%m-%d %H:%M:%S')
-            data_sortida = datetime.strptime(data['data_sortida'], '%Y-%m-%d %H:%M:%S')
+            data_entrada = datetime.strptime(
+                data['data_entrada'], '%Y-%m-%d %H:%M:%S')
+            data_sortida = datetime.strptime(
+                data['data_sortida'], '%Y-%m-%d %H:%M:%S')
         except ValueError:
-            raise ValueError("Format de data invàlid. Utilitzar: YYYY-MM-DD HH:MM:SS")
+            raise ValueError(
+                "Format de data invàlid. Utilitzar: YYYY-MM-DD HH:MM:SS")
 
         if data_sortida <= data_entrada:
-            raise ValueError("La data de sortida ha de ser posterior a la data d'entrada")
+            raise ValueError(
+                "La data de sortida ha de ser posterior a la data d'entrada")
 
-        # Comprovar si hi ha solapament amb altres reserves
-        cursor.execute("""
-            SELECT COUNT(*) as count
-            FROM reserves
-            WHERE aparcament_id = %s
-            AND estat NOT IN ('cancel·lada', 'finalitzada')
-            AND (
-                (data_entrada <= %s AND data_sortida > %s) OR
-                (data_entrada < %s AND data_sortida >= %s) OR
-                (data_entrada >= %s AND data_sortida <= %s)
-            )
-        """, (
-            data['aparcament_id'],
-            data['data_entrada'], data['data_entrada'],
-            data['data_sortida'], data['data_sortida'],
-            data['data_entrada'], data['data_sortida']
-        ))
-
-        if cursor.fetchone()['count'] > 0:
-            raise ValueError("L'aparcament ja té una reserva activa en aquest període")
-
-        # Generar codi de reserva únic (format: PR-XXXXXX)
-        def generate_codi_reserva():
-            chars = string.ascii_uppercase + string.digits
-            return 'PR-' + ''.join(secrets.choice(chars) for _ in range(6))
-
-        codi_reserva = generate_codi_reserva()
-
-        # Assegurar que el codi és únic
-        cursor.execute("SELECT id FROM reserves WHERE codi_reserva = %s", (codi_reserva,))
-        while cursor.fetchone():
-            codi_reserva = generate_codi_reserva()
-            cursor.execute("SELECT id FROM reserves WHERE codi_reserva = %s", (codi_reserva,))
-
-        # Inserir la nova reserva
-        insert_query = """
-            INSERT INTO reserves (
-                usuari_id,
-                aparcament_id,
-                data_entrada,
-                data_sortida,
-                estat,
-                preu_total,
-                descompte_aplicat,
-                codi_reserva,
-                notes
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-
-        values = (
+        # Procedure equivalent: sp_crear_reserva(..., OUT reserva_id, OUT codi_reserva, OUT error_msg)
+        proc_args = [
             data['usuari_id'],
             data['aparcament_id'],
             data['data_entrada'],
             data['data_sortida'],
-            'pendent',  # Estat inicial
             data['preu_total'],
             data.get('descompte_aplicat', 0.00),
-            codi_reserva,
-            data.get('notes', None)
-        )
-
-        cursor.execute(insert_query, values)
+            data.get('notes', None),
+            None,
+            None,
+            None
+        ]
+        result_args = cursor.callproc('sp_crear_reserva', proc_args)
         conn.commit()
 
-        reserva_id = cursor.lastrowid
+        reserva_id = result_args[7]
+        error_msg = result_args[9]
+
+        if error_msg:
+            raise ValueError(error_msg)
+        if not reserva_id:
+            raise ValueError("No s'ha pogut crear la reserva")
 
         # Obtenir la reserva creada amb tots els detalls
         reserva_creada = obte_detall_reserva(reserva_id)
