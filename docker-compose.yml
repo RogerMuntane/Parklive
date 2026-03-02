@@ -1,11 +1,10 @@
-version: '3.8'
-
 services:
   # Base de dades MySQL
   mysql:
     image: mysql:8.0
     container_name: parklive_mysql
     restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -19,7 +18,7 @@ services:
       - ./database:/docker-init:ro
       - ./database/init-db-container.sh:/docker-entrypoint-initdb.d/00-init-db.sh:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
     networks:
@@ -38,13 +37,14 @@ services:
       - ./services/php-service:/var/www/html
       - ./shared:/var/www/shared
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
+      - python-service
     environment:
       DB_HOST: mysql
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
+      PYTHON_SERVICE_URL: http://python-service:5000
     networks:
       - parklive_network
 
@@ -53,6 +53,8 @@ services:
     build:
       context: ./services/python-service
       dockerfile: Dockerfile
+      # Helps when BuildKit cannot resolve DNS inside the build container.
+      network: host
     container_name: parklive_python
     restart: always
     ports:
@@ -64,10 +66,16 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      PYTHONPATH: /app
       DB_HOST: mysql
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      smtp_mail: ${smtp_mail}
+      smtp_pasword: ${smtp_pasword}
+      RESET_CODE_TTL_MINUTES: 30
       FLASK_ENV: development
       PYTHONUNBUFFERED: 1
     networks:
@@ -99,10 +107,16 @@ services:
       PMA_HOST: mysql
       PMA_USER: ${MYSQL_USER}
       PMA_PASSWORD: ${MYSQL_PASSWORD}
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 300M
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
     depends_on:
       - mysql
     networks:
       - parklive_network
+    volumes:
+      - ./config/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
 
 volumes:
   mysql_data:
@@ -111,4 +125,3 @@ volumes:
 networks:
   parklive_network:
     driver: bridge
-  
