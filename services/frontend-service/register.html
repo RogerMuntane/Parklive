@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Registro en ParkLive para usuarios de gestión de parking.">
+    <title>ParkLive | Registro</title>
+    <link rel="stylesheet" href="src/sass/main.css">
+</head>
+
+<body class="page page-auth page-register">
+    <!-- Slot de plantilla: Header reutilizable -->
+    <div class="template-slot" data-template="components/header.html" aria-label="Header"></div>
+
+    <main class="main-content auth-layout" id="main-content">
+        <section class="auth-section section" aria-labelledby="register-title">
+            <div class="container auth-container">
+                <header class="auth-header">
+                    <h1 id="register-title" class="auth-title">Crear cuenta</h1>
+                    <p class="auth-subtitle">Regístrate para empezar a gestionar tu parking con ParkLive.</p>
+                </header>
+
+                <!-- Mensajes de feedback preparados para mostrar por backend o JS -->
+                <div class="alert alert-error is-hidden" role="alert" aria-live="polite">
+                    No se ha podido completar el registro. Revisa los campos.
+                </div>
+                <div class="alert alert-success is-hidden" role="status" aria-live="polite">
+                    Registro completado correctamente.
+                </div>
+
+                <!-- Formulario de registro preparado para backend PHP -->
+                <form class="form form-auth" action="/php-service/controllers/signin.php" method="post" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="full_name">Nombre completo</label>
+                        <input class="form-input" type="text" id="full_name" name="full_name" autocomplete="name"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="register_email">Correo electrónico</label>
+                        <input class="form-input" type="email" id="register_email" name="email" autocomplete="email"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="register_password">Contraseña</label>
+                        <input class="form-input" type="password" id="register_password" name="password"
+                            autocomplete="new-password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="confirm_password">Confirmar contraseña</label>
+                        <input class="form-input" type="password" id="confirm_password" name="confirm_password"
+                            autocomplete="new-password" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit">Crear cuenta</button>
+                        <a class="btn btn-secondary" href="login.html">Ya tengo cuenta</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Slot de plantilla: Footer reutilizable -->
+    <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div>
+
+    <script src="src/js/main.js" defer></script>
+</body>
+
+</html>
