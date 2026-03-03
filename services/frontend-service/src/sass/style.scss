@@ -1,24 +1,24 @@
-// 1. Funciones (primero siempre)
+// Funcions (primer sempre)
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/functions";
 
-// 2. Variables de Bootstrap (antes de las tuyas para poder sobreescribirlas)
+// Variables de Bootstrap
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/variables";
-@import "../../public/assets/vendor/node_modules/bootstrap/scss/variables-dark"; // ← esto te falta
+@import "../../public/assets/vendor/node_modules/bootstrap/scss/variables-dark";
 
-// 3. Tus variables personalizadas (aquí puedes sobreescribir las de Bootstrap)
+// Les nostres variables personalitzades (es pot sobreescriure les de bootstrap)
 @import "abstracts/variables";
 @import "abstracts/mixins";
 @import "abstracts/functions";
 @import "abstracts/placeholders";
 
-// 4. Maps (depende de variables + variables-dark)
+// Maps (depen de les variables + variables-dark)
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/maps";
 
-// 5. Mixins y root de Bootstrap
+// Mixins i root de Bootstrap
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/mixins";
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/root";
 
-// 6. Tu resto de archivos
+// La resta dels nostres imports
 @import "base/index";
 @import "components/index";
 @import "layout/index";
@@ -26,7 +26,7 @@
 @import "themes/index";
 @import "vendors/index";
 
-// 7. Componentes de Bootstrap que necesites
+// Components de bootstrap adicionals
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/grid";
 
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/reboot";
