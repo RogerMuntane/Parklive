@@ -34,4 +34,42 @@ async function loadTemplates() {
   });
 
   await Promise.all(fetches);
+  initThemeToggle();
+}
+
+function initThemeToggle() {
+  const darkButton = document.querySelector('[data-theme-toggle="dark"]');
+  const lightButton = document.querySelector('[data-theme-toggle="light"]');
+
+  if (!darkButton || !lightButton) {
+    return;
+  }
+
+  const getPreferredTheme = () => {
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      return storedTheme;
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  const applyTheme = (theme) => {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    if (theme === 'light') {
+      darkButton.classList.remove('d-none');
+      lightButton.classList.add('d-none');
+      return;
+    }
+
+    darkButton.classList.add('d-none');
+    lightButton.classList.remove('d-none');
+  };
+
+  applyTheme(getPreferredTheme());
+
+  darkButton.addEventListener('click', () => applyTheme('dark'));
+  lightButton.addEventListener('click', () => applyTheme('light'));
 }
