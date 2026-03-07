@@ -6,44 +6,55 @@
                     src="../assets/images/parklive_logo_grande.png" alt="Parklive logo" class="img-fluid"
                     style="max-height: 100px; width: auto;"></a>
 
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-                aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menú de navegación">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-label="Abrir menú de navegación">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="/index.html">Sobre Parklive</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Blog</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Contact Us</a>
-                    </li>
-                </ul>
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="mainNavbar" aria-labelledby="mainNavbarLabel">
+                <div class="offcanvas-header bg-primary">
+                    <h5 class="offcanvas-title text-white fs-2" id="mainNavbarLabel">Menú</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        aria-label="Cerrar menú"></button>
+                </div>
+                <div class="offcanvas-body bg-primary d-flex flex-column flex-lg-row align-items-lg-center">
+                    <div
+                        class="d-flex align-items-center justify-content-between justify-content-lg-center gap-4 gap-lg-3 mb-0 mb-lg-0 order-first order-lg-last ms-lg-3">
+                        <button class="btn btn-secondary btn-lg" type="button" aria-label="Activar tema oscuro"
+                            data-theme-toggle="dark">
+                            <i class="bi bi-moon"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-lg" type="button" aria-label="Activar tema claro"
+                            data-theme-toggle="light">
+                            <i class="bi bi-sun"></i>
+                        </button>
+                        <a class="btn btn-secondary btn-lg" href="/dashboard.html"
+                            aria-label="Acceder al perfil de usuario">
+                            <i class="bi bi-person"></i>
+                        </a>
+                    </div>
 
-                <form class="d-flex align-items-center me-lg-3 mb-3 mb-lg-0" role="search"
-                    aria-label="Buscar contenido">
-                    <label for="header-search" class="visually-hidden">Buscar</label>
-                    <input id="header-search" class="form-control bg-secondary text-white border-secondary"
-                        type="search" placeholder="Buscar" aria-label="Buscar">
-                    <button class="btn btn-secondary ms-2" type="submit">Buscar</button>
-                </form>
+                    <form
+                        class="d-flex align-items-center justify-content-end me-lg-0 mb-3 mb-lg-0 order-1 order-lg-2 d-lg-flex mt-3 mt-lg-0 ms-auto"
+                        role="search" aria-label="Buscar contenido">
+                        <label for="header-search" class="visually-hidden">Buscar</label>
+                        <input id="header-search"
+                            class="form-control form-control-lg bg-secondary text-white border-secondary" type="search"
+                            placeholder="Buscar" aria-label="Buscar">
+                        <button class="btn btn-secondary btn-lg ms-2" type="submit">Buscar</button>
+                    </form>
 
-                <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-secondary" type="button" aria-label="Activar tema oscuro"
-                        data-theme-toggle="dark">
-                        <i class="bi bi-moon"></i>
-                    </button>
-                    <button class="btn btn-secondary" type="button" aria-label="Activar tema claro"
-                        data-theme-toggle="light">
-                        <i class="bi bi-sun"></i>
-                    </button>
-                    <a class="btn btn-secondary" href="/dashboard.html" aria-label="Acceder al perfil de usuario">
-                        <i class="bi bi-person"></i>
-                    </a>
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 order-2 order-lg-first">
+                        <li class="nav-item">
+                            <a class="nav-link text-white fs-4" href="/index.html">Sobre Parklive</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white fs-4" href="#">Blog</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white fs-4" href="#">Contact Us</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
