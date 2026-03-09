@@ -76,6 +76,7 @@ services:
       smtp_mail: ${smtp_mail}
       smtp_pasword: ${smtp_pasword}
       RESET_CODE_TTL_MINUTES: 30
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       FLASK_ENV: development
       PYTHONUNBUFFERED: 1
     networks:
