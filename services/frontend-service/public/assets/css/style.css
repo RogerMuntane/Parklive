@@ -209,6 +209,16 @@
     max-height: 180px !important;
   }
 }
+#filtresSidepanel {
+  width: 90px;
+  height: 800px;
+  transition: width 0.3s ease;
+}
+
+#filtresSidepanel.filtresVisible {
+  width: 300px;
+}
+
 :root {
   --bs-breakpoint-xs: 0;
   --bs-breakpoint-sm: 576px;
