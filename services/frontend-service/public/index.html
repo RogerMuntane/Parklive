@@ -8,57 +8,20 @@
     <title>ParkLive | Gestión de Parking</title>
     <link rel="stylesheet" href="./assets/css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 
 <body class="page page-landing">
     <!-- Slot de plantilla: Header reutilizable -->
     <div class="template-slot" data-template="./components/header.html" aria-label="Header"></div>
 
-    <main class="main-content" id="main-content">
-        <!-- Hero principal -->
-        <section class="hero section" aria-labelledby="hero-title">
-            <div class="container">
-                <p class="hero-eyebrow">Solución de movilidad urbana</p>
-                <h1 id="hero-title" class="hero-title">Gestiona tu parking con ParkLive</h1>
-                <p class="hero-description">
-                    Controla plazas, reservas y pagos desde una única plataforma moderna, rápida y segura.
-                </p>
+    <main class="main-content d-flex" id="main-content">
+        <div id="filtresSidepanel" class="bg-secondary filtresSidepanel">
+            <h1 class="p-4" onclick="Filtres(this)">☰</h1>
+        </div>
+        <div id="map" class="flex-grow-1" style="height:800px;"></div>
 
-                <div class="hero-actions">
-                    <a class="btn btn-primary" href="register.html">Crear cuenta</a>
-                    <a class="btn btn-secondary" href="login.html">Iniciar sesión</a>
-                </div>
-
-                <div class="hero-media" role="img" aria-label="Vista previa de la aplicación ParkLive">
-                    <div class="placeholder-image">[ Placeholder imagen producto ]</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Beneficios principales -->
-        <section class="features section" aria-labelledby="features-title">
-            <div class="container">
-                <h2 id="features-title" class="section-title">¿Qué puedes hacer con ParkLive?</h2>
-
-                <div class="feature-grid">
-                    <article class="feature-card">
-                        <h3 class="feature-title">Control de plazas</h3>
-                        <p class="feature-text">Visualiza disponibilidad en tiempo real y optimiza la ocupación.</p>
-                    </article>
-
-                    <article class="feature-card">
-                        <h3 class="feature-title">Reservas rápidas</h3>
-                        <p class="feature-text">Permite reservas online con confirmación inmediata para tus usuarios.
-                        </p>
-                    </article>
-
-                    <article class="feature-card">
-                        <h3 class="feature-title">Gestión de pagos</h3>
-                        <p class="feature-text">Administra cobros y consulta histórico de transacciones fácilmente.</p>
-                    </article>
-                </div>
-            </div>
-        </section>
     </main>
 
     <!-- Slot de plantilla: Footer reutilizable -->
@@ -66,6 +29,24 @@
 
     <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="src/js/main.js"></script>
+    <script>
+var map = L.map('map').setView([41.3851, 2.1734], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+L.marker([41.3851, 2.1734]).addTo(map)
+  .bindPopup("Barcelona")
+  .openPopup();
+</script>
+<script>
+    function Filtres(element) {
+        const sidepanel = document.getElementById("filtresSidepanel");
+        sidepanel.classList.toggle("filtresVisible");
+        setTimeout(() =>map.invalidateSize(), 310)
+    }
+</script>
 </body>
 
 </html>
