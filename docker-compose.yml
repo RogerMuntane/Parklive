@@ -11,7 +11,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3307:3306"
+      - "${MYSQL_HOST_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       # Scripts d'inicialització de MySQL: es copien dins /docker-entrypoint-initdb.d i es crida un script que els agrupa
@@ -32,7 +32,7 @@ services:
     container_name: parklive_php
     restart: always
     ports:
-      - "8080:80"
+      - "${PHP_SERVICE_PORT}:80"
     volumes:
       - ./services/php-service:/var/www/html
       - ./shared:/var/www/shared
@@ -44,7 +44,7 @@ services:
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
-      PYTHON_SERVICE_URL: http://python-service:5000
+      PYTHON_SERVICE_URL: http://python-service:${FLASK_PORT}
     networks:
       - parklive_network
 
@@ -57,8 +57,13 @@ services:
       network: host
     container_name: parklive_python
     restart: always
+    #Dns configurat perque sino causa problemes en la red del thos i codina
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     ports:
-      - "5000:5000"
+      - "${PYTHON_SERVICE_PORT}:${FLASK_PORT}"
     volumes:
       - ./services/python-service:/app
       - ./shared:/app/shared
@@ -77,6 +82,8 @@ services:
       smtp_pasword: ${smtp_pasword}
       RESET_CODE_TTL_MINUTES: 30
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      FLASK_PORT: ${FLASK_PORT}
+      FRONTEND_PORT: ${FRONTEND_PORT}
       FLASK_ENV: development
       PYTHONUNBUFFERED: 1
     networks:
@@ -90,7 +97,10 @@ services:
     container_name: parklive_frontend
     restart: always
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT}:80"
+    environment:
+      PHP_SERVICE_PORT: ${PHP_SERVICE_PORT}
+      PYTHON_SERVICE_PORT: ${PYTHON_SERVICE_PORT}
     volumes:
       - ./services/frontend-service/src:/usr/share/nginx/html/src
       - ./services/frontend-service/public:/usr/share/nginx/html
@@ -103,7 +113,7 @@ services:
     container_name: parklive_phpmyadmin
     restart: always
     ports:
-      - "8081:80"
+      - "${PHPMYADMIN_PORT}:80"
     environment:
       PMA_HOST: mysql
       PMA_USER: ${MYSQL_USER}

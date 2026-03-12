@@ -2,22 +2,24 @@
  * ParkLive – config.js
  * Configuració centralitzada de l'aplicació.
  * Les URL base es construeixen dinàmicament segons el hostname del navegador
- * per funcionar tant en local com en producció.
+ * i els ports definits a env.js (injectats des del .env via Docker).
  */
+
+import { ENV } from './env.js';
 
 const { protocol, hostname } = window.location;
 
 /**
- * URL base del servei Python (Flask – port 5000).
- * En producció, canviar a una ruta relativa si Nginx fa de proxy invers.
+ * URL base del servei Python (Flask).
+ * El port es llegeix de ENV (originat al .env → docker-compose → env.js).
  */
-export const PYTHON_API_URL = `${protocol}//${hostname}:5000`;
+export const PYTHON_API_URL = `${protocol}//${hostname}:${ENV.PYTHON_SERVICE_PORT}`;
 
 /**
- * URL base del servei PHP (Apache – port 8080).
- * En producció, canviar a una ruta relativa si Nginx fa de proxy invers.
+ * URL base del servei PHP (Apache).
+ * El port es llegeix de ENV (originat al .env → docker-compose → env.js).
  */
-export const PHP_API_URL = `${protocol}//${hostname}:8080`;
+export const PHP_API_URL = `${protocol}//${hostname}:${ENV.PHP_SERVICE_PORT}`;
 
 /** Paginació per defecte */
 export const DEFAULT_LIMIT = 20;

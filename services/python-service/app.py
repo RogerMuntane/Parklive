@@ -15,8 +15,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
 
-# Habilitar CORS per permetre peticions del frontend (port 3000)
-CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000"])
+# Habilitar CORS per permetre peticions del frontend
+frontend_port = os.getenv('FRONTEND_PORT', '3000')
+CORS(app, origins=[
+    f"http://localhost:{frontend_port}",
+    f"http://127.0.0.1:{frontend_port}",
+])
 
 # Registrar les rutes
 app.register_blueprint(aparcament_routes)
@@ -39,4 +43,5 @@ def before_request():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    flask_port = int(os.getenv('FLASK_PORT', 5000))
+    app.run(host="0.0.0.0", port=flask_port, debug=True)

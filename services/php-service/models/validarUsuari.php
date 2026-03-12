@@ -143,9 +143,9 @@ class validarUsuari
 
     public function validarTelefono($telefono)
     {
+        // El telèfon és opcional; si s'omple, ha de tenir exactament 9 dígits
         if (empty($telefono)) {
-            $this->errors[] = "El telèfon és obligatori";
-            return false;
+            return true;
         }
 
         if (!preg_match("/^[0-9]{9}$/", $telefono)) {

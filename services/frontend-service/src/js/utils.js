@@ -5,9 +5,7 @@
 
 import { STORAGE_KEYS } from './config.js';
 
-/* ================================================================== */
 /*  1. GESTIÓ D'ALERTES                                                */
-/* ================================================================== */
 
 /**
  * Mostra un missatge d'alerta dins d'un contenidor.
@@ -24,7 +22,7 @@ export function showAlert(type, message, scope = document) {
   if (!alert) return;
 
   alert.textContent = message;
-  alert.classList.remove('is-hidden');
+  alert.classList.remove('d-none', 'is-hidden');
 
   // Amagar automàticament els missatges d'èxit al cap de 5 s
   if (type === 'success') {
@@ -41,7 +39,7 @@ export function hideAlert(type, scope = document) {
   const alert = scope.querySelector(`.alert.alert-${type}`);
   if (!alert) return;
 
-  alert.classList.add('is-hidden');
+  alert.classList.add('d-none');
 }
 
 /**
@@ -49,12 +47,10 @@ export function hideAlert(type, scope = document) {
  * @param {HTMLElement} [scope=document]
  */
 export function hideAllAlerts(scope = document) {
-  scope.querySelectorAll('.alert').forEach((el) => el.classList.add('is-hidden'));
+  scope.querySelectorAll('.alert').forEach((el) => el.classList.add('d-none'));
 }
 
-/* ================================================================== */
 /*  2. FORMULARIS                                                       */
-/* ================================================================== */
 
 /**
  * Serialitza un formulari HTML a un objecte pla.
@@ -123,9 +119,7 @@ export function setFormLoading(form, loading) {
   }
 }
 
-/* ================================================================== */
 /*  3. SESSIÓ / EMMAGATZEMATGE                                         */
-/* ================================================================== */
 
 /**
  * Guarda les dades de l'usuari autenticat a sessionStorage.
@@ -181,9 +175,7 @@ export function isAuthenticated() {
   return sessionStorage.getItem(STORAGE_KEYS.USER_ID) !== null;
 }
 
-/* ================================================================== */
 /*  4. FORMATADORS                                                      */
-/* ================================================================== */
 
 /**
  * Formata una data ISO a format local (dd/mm/yyyy HH:mm).
@@ -217,9 +209,7 @@ export function formatCurrency(amount) {
   }).format(amount);
 }
 
-/* ================================================================== */
 /*  5. UTILITATS GENERALS                                              */
-/* ================================================================== */
 
 /**
  * Debounce: retarda l'execució d'una funció fins que passin `delay` ms

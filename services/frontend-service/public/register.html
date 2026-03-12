@@ -12,10 +12,17 @@
 
 <body class="page page-auth page-register">
     <!-- Slot de plantilla: Header reutilizable -->
-    <div class="template-slot" data-template="components/header.html" aria-label="Header"></div>
+    <!-- <div class="template-slot" data-template="components/header.html" aria-label="Header"></div> -->
 
     <main class="main-content d-flex align-items-center justify-content-center min-vh-100" id="main-content"
-        style="background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%);">
+        style="background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-dark) 100%);">
+
+        <!-- Botó tornar enrere -->
+        <a href="javascript:history.back()"
+            class="btn btn-light btn-sm rounded-circle shadow position-absolute top-0 start-0 m-3 d-flex align-items-center justify-content-center"
+            style="width: 38px; height: 38px; z-index: 10;" aria-label="Tornar enrere">
+            <i class="bi bi-arrow-left"></i>
+        </a>
 
         <!-- Card de registre -->
         <div class="card shadow-lg border-0 rounded-4 mx-3" style="max-width: 420px; width: 100%;">
@@ -40,7 +47,7 @@
                 <!-- Formulari -->
                 <form class="form form-auth" action="/api/auth/register" method="post" novalidate>
                     <!-- Nom -->
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3 input-group-focus">
                         <span class="input-group-text bg-body border-end-0">
                             <i class="bi bi-person text-body-tertiary"></i>
                         </span>
@@ -49,7 +56,7 @@
                     </div>
 
                     <!-- Cognoms -->
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3 input-group-focus">
                         <span class="input-group-text bg-body border-end-0">
                             <i class="bi bi-person text-body-tertiary"></i>
                         </span>
@@ -58,7 +65,7 @@
                     </div>
 
                     <!-- Email -->
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3 input-group-focus">
                         <span class="input-group-text bg-body border-end-0">
                             <i class="bi bi-envelope text-body-tertiary"></i>
                         </span>
@@ -67,7 +74,7 @@
                     </div>
 
                     <!-- Telèfon -->
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3 input-group-focus">
                         <span class="input-group-text bg-body border-end-0">
                             <i class="bi bi-telephone text-body-tertiary"></i>
                         </span>
@@ -76,7 +83,7 @@
                     </div>
 
                     <!-- Password -->
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3 input-group-focus">
                         <span class="input-group-text bg-body border-end-0">
                             <i class="bi bi-lock text-body-tertiary"></i>
                         </span>
@@ -90,7 +97,7 @@
                     </div>
 
                     <!-- Confirmar password -->
-                    <div class="input-group mb-4">
+                    <div class="input-group mb-4 input-group-focus">
                         <span class="input-group-text bg-body border-end-0">
                             <i class="bi bi-lock text-body-tertiary"></i>
                         </span>
@@ -137,7 +144,7 @@
     </main>
 
     <!-- Slot de plantilla: Footer reutilizable -->
-    <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div>
+    <!-- <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div> -->
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

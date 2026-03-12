@@ -14,9 +14,7 @@ import {
   getQueryParam,
 } from '../utils.js';
 
-/* ================================================================== */
 /*  LLISTAR APARCAMENTS                                                */
-/* ================================================================== */
 
 /**
  * Obté tots els aparcaments disponibles.
@@ -32,9 +30,7 @@ export async function llistarAparcaments() {
   }
 }
 
-/* ================================================================== */
 /*  CERCA AMB FILTRES                                                   */
-/* ================================================================== */
 
 /**
  * Cerca aparcaments amb filtres opcionals.
@@ -62,9 +58,7 @@ export async function cercarAparcaments(filtres = {}) {
   }
 }
 
-/* ================================================================== */
 /*  DETALL D'APARCAMENT                                                */
-/* ================================================================== */
 
 /**
  * Obté el detall d'un aparcament per ID.
@@ -81,9 +75,7 @@ export async function obtenirAparcament(id) {
   }
 }
 
-/* ================================================================== */
 /*  RENDERITZACIÓ                                                       */
-/* ================================================================== */
 
 /**
  * Renderitza una llista d'aparcaments dins d'un contenidor DOM.
@@ -167,9 +159,7 @@ export function renderDetallAparcament(aparcament, container) {
     </div>`;
 }
 
-/* ================================================================== */
 /*  INICIALITZACIÓ DE LA PÀGINA                                        */
-/* ================================================================== */
 
 /**
  * Inicialitza la interfície d'aparcaments.
@@ -247,9 +237,7 @@ export async function initAparcaments() {
   }
 }
 
-/* ================================================================== */
 /*  HELPERS PRIVATS                                                     */
-/* ================================================================== */
 
 /**
  * Connecta events de clic als botons "Veure detall" dins d'un contenidor.

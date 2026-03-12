@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once "../models/validarUsuari.php";
-require_once "../models/guardarUsuari.php";
+require_once __DIR__ . "/../models/validarUsuari.php";
+require_once __DIR__ . "/../models/guardarUsuari.php";
 
 class Signin
 {
@@ -9,15 +9,31 @@ class Signin
     private $guardador;
     private $errors = array();
     private $success = false;
+    private $wantsJson = false;
 
     public function __construct()
     {
         $this->validador = new validarUsuari();
         $this->guardador = new guardarUsuari();
 
+        // Detectar si la petició ve del frontend (AJAX) i vol JSON
+        $this->wantsJson = isset($_SERVER['HTTP_ACCEPT'])
+            && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->processarFormulari();
         }
+    }
+
+    /**
+     * Retorna una resposta JSON i atura l'execució.
+     */
+    private function respondJson($data, $statusCode = 200)
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit();
     }
 
     private function processarFormulari()
@@ -35,6 +51,14 @@ class Signin
             // Si la validació és correcta, guardar l'usuari
             if ($this->guardador->guardarUsuari($nom, $cognom, $email, $contrasenya, $telefono)) {
                 $this->success = true;
+
+                if ($this->wantsJson) {
+                    $this->respondJson([
+                        'success' => true,
+                        'message' => 'Usuari registrat correctament!'
+                    ], 201);
+                }
+
                 $_SESSION['success_message'] = "Usuari registrat correctament!";
                 header('Location: ../views/signin.php?success=true');
                 exit();
@@ -43,6 +67,15 @@ class Signin
             }
         } else {
             $this->errors = $this->validador->getErrors();
+        }
+
+        // Resposta JSON amb errors per a peticions AJAX
+        if ($this->wantsJson) {
+            $this->respondJson([
+                'success' => false,
+                'error' => implode(', ', $this->errors),
+                'errors' => $this->errors
+            ], 422);
         }
 
         // Guardar errors en sessió per mostrar-los

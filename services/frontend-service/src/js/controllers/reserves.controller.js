@@ -19,9 +19,7 @@ import {
   getQueryParam,
 } from '../utils.js';
 
-/* ================================================================== */
 /*  FUNCIONS D'ACCÉS A L'API                                           */
-/* ================================================================== */
 
 /**
  * Obté l'historial de reserves d'un usuari.
@@ -138,9 +136,7 @@ export async function crearReserva(dades) {
   }
 }
 
-/* ================================================================== */
 /*  RENDERITZACIÓ                                                       */
-/* ================================================================== */
 
 /** Mapatge d'estats a classes CSS per badges */
 const ESTAT_CLASSES = {
@@ -229,9 +225,7 @@ export function renderDetallReserva(reserva, container) {
     </div>`;
 }
 
-/* ================================================================== */
 /*  INICIALITZACIÓ DE LA PÀGINA                                        */
-/* ================================================================== */
 
 /**
  * Punt d'entrada del controlador de reserves.
@@ -323,9 +317,7 @@ export async function initReserves() {
   }
 }
 
-/* ================================================================== */
 /*  HELPERS PRIVATS                                                     */
-/* ================================================================== */
 
 /**
  * Carrega i renderitza les reserves de l'usuari actual.

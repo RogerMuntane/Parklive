@@ -23,13 +23,12 @@ $body-tertiary-bg:  darken($off-white, 8%);
 $link-color:              $crimson;
 $link-hover-color:        $deep-red;
 
-// Inputs
-$input-bg:                  $off-white;
-$input-color:               $dark-navy;
-$input-border-color:        $slate-gray;
+// Borders global (s'adapta via --bs-border-color en dark mode)
+$border-color: $slate-gray;
+
+// Inputs (bg, color i placeholder hereten de --bs-body-bg/color, s'adapten sols)
 $input-focus-border-color:  $crimson;
 $input-focus-box-shadow:    0 0 0 .25rem rgba($crimson, .2);
-$input-placeholder-color:   $slate-gray;
 
 // Navbar
 $navbar-dark-color:               rgba($off-white, .85);
@@ -38,11 +37,7 @@ $navbar-dark-active-color:        $off-white;
 $navbar-dark-brand-color:         $off-white;
 $navbar-dark-toggler-border-color: rgba($off-white, .2);
 
-// Cards (tema claro)
-$card-bg:             $off-white;
-$card-border-color:   $slate-gray;
-$card-color:          $dark-navy;
-$card-cap-bg:         darken($off-white, 3%);
+// Cards (bg, color i cap hereten de --bs-body-bg/color, s'adapten sols)
 
 // Botones: ajuste para que btn-secondary sea visible sobre fondo oscuro
 $btn-secondary-color:         $off-white;
@@ -67,15 +62,8 @@ $body-tertiary-bg-dark:   lighten($dark-navy, 10%);
 
 $border-color-dark:       lighten($dark-navy, 15%);
 
-$card-bg-dark:            lighten($dark-navy, 5%);
-$card-border-color-dark:  lighten($dark-navy, 15%);
-
 $link-color-dark:         lighten($crimson, 20%);
 $link-hover-color-dark:   $crimson;
-
-$input-bg-dark:           lighten($dark-navy, 8%);
-$input-color-dark:        $off-white;
-$input-border-color-dark: lighten($dark-navy, 20%);
 
 // ─── Theme-colors: ampliar con deep-red ───────────────────────
 $theme-colors: map-merge(

@@ -17,9 +17,7 @@ import {
   getUserId,
 } from '../utils.js';
 
-/* ================================================================== */
 /*  FUNCIONS D'ACCÉS A L'API                                           */
-/* ================================================================== */
 
 /**
  * Obté l'historial de contribucions de l'usuari actual.
@@ -77,9 +75,7 @@ export async function crearContribucio(dades) {
   }
 }
 
-/* ================================================================== */
 /*  RENDERITZACIÓ                                                       */
-/* ================================================================== */
 
 /** Tipus de contribució amb icones */
 const TIPUS_ICONS = {
@@ -129,9 +125,7 @@ export function renderContribucions(contribucions, container) {
     </ul>`;
 }
 
-/* ================================================================== */
 /*  INICIALITZACIÓ DE LA PÀGINA                                        */
-/* ================================================================== */
 
 /**
  * Punt d'entrada del controlador de contribucions.
@@ -213,9 +207,7 @@ export async function initContribucions() {
   }
 }
 
-/* ================================================================== */
 /*  HELPERS PRIVATS                                                     */
-/* ================================================================== */
 
 /**
  * Carrega i renderitza les contribucions de l'usuari actual.

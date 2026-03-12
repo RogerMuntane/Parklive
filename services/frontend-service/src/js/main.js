@@ -39,36 +39,48 @@ async function loadTemplates() {
 
 /*  2. TEMA CLAR / FOSC                                                */
 
+function getPreferredTheme() {
+  const storedTheme = localStorage.getItem('theme');
+  if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  localStorage.setItem('theme', theme);
+}
+
 function initThemeToggle() {
+  // Sempre aplicar el tema, encara que no hi hagi botons de toggle
+  applyTheme(getPreferredTheme());
+
   const darkButton = document.querySelector('[data-theme-toggle="dark"]');
   const lightButton = document.querySelector('[data-theme-toggle="light"]');
 
+  // Si no hi ha botons de toggle (pàgines auth sense header), sortim
   if (!darkButton || !lightButton) return;
 
-  const getPreferredTheme = () => {
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  };
-
-  const applyTheme = (theme) => {
-    document.documentElement.setAttribute('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
-
-    if (theme === 'light') {
-      darkButton.classList.remove('d-none');
-      lightButton.classList.add('d-none');
-      return;
-    }
-
+  // Actualitzar visibilitat dels botons segons el tema actual
+  const theme = getPreferredTheme();
+  if (theme === 'light') {
+    darkButton.classList.remove('d-none');
+    lightButton.classList.add('d-none');
+  } else {
     darkButton.classList.add('d-none');
     lightButton.classList.remove('d-none');
-  };
+  }
 
-  applyTheme(getPreferredTheme());
+  darkButton.addEventListener('click', () => {
+    applyTheme('dark');
+    darkButton.classList.add('d-none');
+    lightButton.classList.remove('d-none');
+  });
 
-  darkButton.addEventListener('click', () => applyTheme('dark'));
-  lightButton.addEventListener('click', () => applyTheme('light'));
+  lightButton.addEventListener('click', () => {
+    applyTheme('light');
+    darkButton.classList.remove('d-none');
+    lightButton.classList.add('d-none');
+  });
 }
 
 /*  3. BOTÓ AUTH DEL HEADER (SESSIÓ)                                   */
@@ -87,20 +99,83 @@ function initAuthToggle() {
   const icon = btn.querySelector('i');
   if (!icon) return;
 
-  if (isAuthenticated()) {
-    // Canviar icona i comportament a "tancar sessió"
-    icon.className = 'bi bi-box-arrow-in-right';
-    btn.setAttribute('aria-label', 'Tancar sessió');
-    btn.setAttribute('href', '#');
-    btn.setAttribute('role', 'button');
+  // Encapsular el botó en un contenidor dropdown si no existeix
+  let dropdownWrapper = btn.closest('.dropdown');
+  if (!dropdownWrapper) {
+    dropdownWrapper = document.createElement('div');
+    dropdownWrapper.className = 'dropdown';
+    btn.parentNode.insertBefore(dropdownWrapper, btn);
+    dropdownWrapper.appendChild(btn);
+  }
 
-    btn.addEventListener('click', (e) => {
+  // Eliminar events anteriors per evitar duplicats
+  const newBtn = btn.cloneNode(true);
+  dropdownWrapper.replaceChild(newBtn, btn);
+
+  // Afegir icona fletxa si no existeix
+  let arrowIcon = newBtn.querySelector('.user-dropdown-arrow');
+  if (!arrowIcon) {
+    arrowIcon = document.createElement('i');
+    arrowIcon.className = 'bi bi-caret-down-fill user-dropdown-arrow ms-2';
+    newBtn.appendChild(arrowIcon);
+  }
+
+  if (isAuthenticated()) {
+    // Manté la icona original (bi-person)
+    icon.className = 'bi bi-person';
+    newBtn.setAttribute('aria-label', 'Opcions d\'usuari');
+    newBtn.setAttribute('href', '#');
+    newBtn.setAttribute('role', 'button');
+    newBtn.classList.add('dropdown-toggle');
+    newBtn.setAttribute('data-bs-toggle', 'dropdown');
+    newBtn.setAttribute('aria-expanded', 'false');
+
+    // Crear menú desplegable Bootstrap
+    let dropdownMenu = document.createElement('ul');
+    dropdownMenu.classList.add('dropdown-menu',"bg-secondary");
+
+    // Element: Perfil d'usuari
+    let profileItem = document.createElement('li');
+    let profileLink = document.createElement('a');
+    profileLink.classList.add('dropdown-item', "text-primary");
+    profileLink.href = '/perfil.html';
+    profileLink.textContent = 'Perfil d\'usuari';
+
+    profileItem.appendChild(profileLink);
+    dropdownMenu.appendChild(profileItem);
+
+    // Element: Tancar sessió
+    let logoutItem = document.createElement('li');
+    let logoutLink = document.createElement('a');
+    logoutLink.className = 'dropdown-item text-danger';
+    logoutLink.href = '#';
+    logoutLink.textContent = 'Tancar sessió';
+    logoutLink.addEventListener('click', (e) => {
       e.preventDefault();
       clearUserSession();
-      window.location.href = '/login.html';
+      window.location.href = '/index.html';
+    });
+    logoutItem.appendChild(logoutLink);
+    dropdownMenu.appendChild(logoutItem);
+
+    // Eliminar menú antic si existeix
+    const oldMenu = dropdownWrapper.querySelector('ul.dropdown-menu');
+    if (oldMenu) oldMenu.remove();
+
+    // Inserir el menú com a fill del contenidor dropdown
+    dropdownWrapper.appendChild(newBtn);
+    dropdownWrapper.appendChild(dropdownMenu);
+
+
+// Animació icona dropdown
+    // Animació fletxa: canvia quan el menú s'obre/tanca
+    dropdownWrapper.addEventListener('show.bs.dropdown', () => {
+      arrowIcon.className = 'bi bi-caret-up-fill user-dropdown-arrow ms-2';
+    });
+    dropdownWrapper.addEventListener('hide.bs.dropdown', () => {
+      arrowIcon.className = 'bi bi-caret-down-fill user-dropdown-arrow ms-2';
     });
   }
-  // Si no hi ha sessió, es manté l'icona bi-person i l'href original
 }
 
 /*  4. CÀRREGA DINÀMICA DE CONTROLADORS                                */

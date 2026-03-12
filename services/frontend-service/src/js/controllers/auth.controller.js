@@ -68,11 +68,10 @@ function initLogin() {
     setFormLoading(form, true);
 
     try {
-      const result = await phpApi.post('/controllers/login.php', payload);
+      const result = await postToPhp('/controllers/login.php', payload);
 
-      // Si PHP retorna dades d'usuari en JSON
-      if (result && (result.user || result.success)) {
-        saveUserSession(result.user || result);
+      if (result && result.success) {
+        if (result.user) saveUserSession(result.user);
         showAlert('success', result.message || 'Sessió iniciada correctament.');
         redirectAfterDelay('dashboard.html', REDIRECT_DELAY);
       }
@@ -122,9 +121,9 @@ function initRegister() {
     setFormLoading(form, true);
 
     try {
-      const result = await phpApi.post('/controllers/signin.php', payload);
+      const result = await postToPhp('/controllers/signin.php', payload);
 
-      if (result && (result.success || result.message)) {
+      if (result && result.success) {
         showAlert('success', result.message || 'Registre completat correctament.');
         redirectAfterDelay('login.html', REDIRECT_DELAY);
       }
@@ -140,6 +139,16 @@ function initRegister() {
 /* ================================================================== */
 /*  RESET CONTRASENYA – Pas 1: Sol·licitar codi                       */
 /* ================================================================== */
+
+/**
+ * Mostra un pas del formulari de reset i amaga els altres.
+ * @param {'step-request'|'step-verify'|'step-success'} stepId
+ */
+function showResetStep(stepId) {
+  document.querySelectorAll('.step').forEach((s) => s.classList.add('d-none'));
+  const target = document.getElementById(stepId);
+  if (target) target.classList.remove('d-none');
+}
 
 /**
  * Inicialitza la sol·licitud de codi de reset via el servei Python.
@@ -180,6 +189,9 @@ function initRequestResetCode() {
       );
 
       showAlert('success', result.message || 'Codi enviat al teu correu.');
+
+      // Transició al pas 2: verificar codi
+      showResetStep('step-verify');
     } catch (err) {
       const msg = err.message || 'No s\'ha pogut enviar el codi. Torna-ho a provar.';
       showAlert('error', msg);
@@ -187,6 +199,127 @@ function initRequestResetCode() {
       setFormLoading(form, false);
     }
   });
+}
+
+/* ================================================================== */
+/*  RESET CONTRASENYA – Pas 2: Verificar codi i canviar contrasenya   */
+/* ================================================================== */
+
+/**
+ * Inicialitza el formulari de verificació de codi i canvi de contrasenya.
+ */
+function initVerifyResetCode() {
+  const form = document.querySelector('.form-reset-verify, #reset-verify-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAllAlerts();
+
+    if (!validateForm(form)) return;
+
+    const data = serializeForm(form);
+    const code = (data.code || '').trim();
+    const newPassword = data.new_password || '';
+    const confirmPassword = data.confirm_new_password || '';
+
+    if (!code) {
+      showAlert('error', 'El codi de verificació és obligatori.');
+      return;
+    }
+
+    if (!newPassword || !confirmPassword) {
+      showAlert('error', 'La contrasenya i la confirmació són obligatòries.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showAlert('error', 'Les contrasenyes no coincideixen.');
+      return;
+    }
+
+    // Recuperar dades del pas 1
+    let resetData;
+    try {
+      resetData = JSON.parse(sessionStorage.getItem('parklive_reset_data') || '{}');
+    } catch {
+      resetData = {};
+    }
+
+    if (!resetData.email) {
+      showAlert('error', 'Sessió de reset caducada. Torna a sol·licitar el codi.');
+      showResetStep('step-request');
+      return;
+    }
+
+    setFormLoading(form, true);
+
+    try {
+      const result = await pythonApi.post('/api/auth/verify-and-change-password', {
+        email: resetData.email,
+        code,
+        verification_id: resetData.verification_id,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+
+      // Netejar dades de reset
+      sessionStorage.removeItem('parklive_reset_data');
+
+      showAlert('success', result.message || 'Contrasenya canviada correctament!');
+
+      // Transició al pas 3: confirmació d'èxit
+      showResetStep('step-success');
+    } catch (err) {
+      const msg = err.message || 'Error en verificar el codi o canviar la contrasenya.';
+      showAlert('error', msg);
+    } finally {
+      setFormLoading(form, false);
+    }
+  });
+
+  // Botó "Torna a enviar" codi
+  const resendLink = document.getElementById('resend-code');
+  if (resendLink) {
+    resendLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      hideAllAlerts();
+
+      let resetData;
+      try {
+        resetData = JSON.parse(sessionStorage.getItem('parklive_reset_data') || '{}');
+      } catch {
+        resetData = {};
+      }
+
+      if (!resetData.email) {
+        showAlert('error', 'Sessió de reset caducada. Torna a sol·licitar el codi.');
+        showResetStep('step-request');
+        return;
+      }
+
+      try {
+        const result = await pythonApi.post('/api/auth/send-reset-code', {
+          email: resetData.email,
+        });
+
+        // Actualitzar dades de sessió
+        sessionStorage.setItem(
+          'parklive_reset_data',
+          JSON.stringify({
+            email: resetData.email,
+            verification_id: result.verification_id || null,
+            expires_at: result.expires_at || null,
+          })
+        );
+
+        showAlert('success', 'Codi reenviat al teu correu.');
+      } catch (err) {
+        const msg = err.message || 'No s\'ha pogut reenviar el codi.';
+        showAlert('error', msg);
+      }
+    });
+  }
 }
 
 /* ================================================================== */
@@ -274,9 +407,68 @@ async function initGoogleSignIn() {
   setupGoogle();
 }
 
+/* ================================================================== *//*  HELPERS PHP                                                         */
 /* ================================================================== */
+
+/**
+ * Envia un formulari al servei PHP.
+ * Envia les dades com a FormData amb Accept: application/json
+ * perquè PHP retorni JSON en comptes de redirects.
+ *
+ * @param {string}   endpoint – Ruta relativa del controlador PHP
+ * @param {Object}   payload  – Dades clau-valor a enviar
+ * @returns {Promise<{success: boolean, message?: string}>}
+ */
+async function postToPhp(endpoint, payload) {
+  const { PHP_API_URL } = await import('../config.js');
+  const url = `${PHP_API_URL}${endpoint}`;
+
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(payload)) {
+    formData.append(key, value);
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Accept': 'application/json',
+    },
+    credentials: 'include',   // Enviar cookies de sessió PHP
+  });
+
+  console.log('[postToPhp]', endpoint, '→ status:', response.status, 'type:', response.type);
+
+  // Si retorna JSON (controlador modernitzat amb suport AJAX)
+  const contentType = response.headers.get('Content-Type') || '';
+  if (contentType.includes('application/json')) {
+    const data = await response.json();
+    console.log('[postToPhp] JSON response:', data);
+    if (!response.ok || data.success === false) {
+      throw new Error(data.error || data.message || `Error ${response.status}`);
+    }
+    return data;
+  }
+
+  // Resposta no-JSON: loguejar per debug
+  const body = await response.text();
+  console.warn('[postToPhp] Resposta no-JSON:', response.status, body.substring(0, 500));
+
+  // Fallback: PHP redirigeix (302) quan no detecta Accept JSON
+  if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+    return { success: true };
+  }
+
+  // Si retorna 200 amb HTML (redirect seguit), considerar èxit
+  if (response.ok) {
+    return { success: true };
+  }
+
+  throw new Error(`Error ${response.status}`);
+}
+
 /*  LOGOUT                                                              */
-/* ================================================================== */
+
 
 /**
  * Inicialitza els botons de logout a qualsevol pàgina.
@@ -321,6 +513,7 @@ export function initAuth() {
 
   // Reset code pot estar en qualsevol pàgina auth
   initRequestResetCode();
+  initVerifyResetCode();
 
   // Google Sign-In a pàgines amb botons de Google
   initGoogleSignIn();
