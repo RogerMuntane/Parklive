@@ -16,11 +16,30 @@
     <!-- Slot de plantilla: Header reutilizable -->
     <div class="template-slot" data-template="./components/header.html" aria-label="Header"></div>
 
-    <main class="main-content d-flex" id="main-content">
-        <div id="filtresSidepanel" class="bg-secondary filtresSidepanel">
+    <main class="d-flex layout" id="main-content">
+        <div id="sidepanel" class="sidepanel bg-primary flex-d flex-column overflow-hidden">
             <h1 class="p-4" onclick="Filtres(this)">☰</h1>
+            <div id="filtresContainer" class="mx-3 p-4">
+                <h2>Filtres</h2>
+                <hr>
+                <h3>Preu:</h3>
+                <input type="range">
+                <h3>Disponibilitat:</h3>
+                <input type="checkbox" id="lliure" name="lliure" value="lliure">
+                <label for="lliure">Lliure</label>
+                <input type="checkbox" id="mitja" name="mitja" value="mitja">
+                <label for="mitja">Mitja</label>
+                <input type="checkbox" id="ocupat" name="ocupat" value="ocupat">
+                <label for="ocupat">Ocupat</label>
+            </div>
+            <div class="bg-primary">
+                Resultados:
+            </div>
+
+
+
         </div>
-        <div id="map" class="flex-grow-1" style="height:800px;"></div>
+        <div id="map" class="flex-grow-1" style="height:100dvh;"></div>
 
     </main>
 
@@ -43,7 +62,9 @@ L.marker([41.3851, 2.1734]).addTo(map)
 <script>
     function Filtres(element) {
         const sidepanel = document.getElementById("filtresSidepanel");
+        const filtresContainer = document.getElementById("filtresContainer");
         sidepanel.classList.toggle("filtresVisible");
+        filtresContainer.classList.toggle("filtresVisible");
         setTimeout(() =>map.invalidateSize(), 310)
     }
 </script>

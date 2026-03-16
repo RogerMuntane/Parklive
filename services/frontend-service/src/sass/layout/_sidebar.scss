@@ -1,9 +1,12 @@
-#filtresSidepanel {
-    width: 90px;
-    height: 800px;
-    transition: width 0.3s ease;
+@import '../abstracts/variables';
 
-    &.filtresVisible {
-        width: 300px;
-    }
+.layout{
+    height: 100dvh;
+}
+
+.sidepanel{
+    width: 300px;
+    flex-shrink: 0;
+    border-right: 1px solid $dark-theme;
+    transition: width .28s cubic-bezier(.4,0,.2,1);
 }
