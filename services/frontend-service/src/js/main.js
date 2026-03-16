@@ -112,35 +112,44 @@ function initAuthToggle() {
   const newBtn = btn.cloneNode(true);
   dropdownWrapper.replaceChild(newBtn, btn);
 
-  // Afegir icona fletxa si no existeix
-  let arrowIcon = newBtn.querySelector('.user-dropdown-arrow');
-  if (!arrowIcon) {
-    arrowIcon = document.createElement('i');
-    arrowIcon.className = 'bi bi-caret-down-fill user-dropdown-arrow ms-2';
-    newBtn.appendChild(arrowIcon);
-  }
+  // Eliminar totes les fletxes del botó clonat
+  newBtn.querySelectorAll('.user-dropdown-arrow').forEach(el => el.remove());
 
   if (isAuthenticated()) {
     // Manté la icona original (bi-person)
     icon.className = 'bi bi-person';
     newBtn.setAttribute('aria-label', 'Opcions d\'usuari');
-    newBtn.setAttribute('href', '#');
+    newBtn.setAttribute('href', '../../public/perfil.html');
     newBtn.setAttribute('role', 'button');
     newBtn.classList.add('dropdown-toggle');
     newBtn.setAttribute('data-bs-toggle', 'dropdown');
     newBtn.setAttribute('aria-expanded', 'false');
 
+    // Afegir fletxa animada
+    let arrowIcon = newBtn.querySelector('.user-dropdown-arrow');
+
+
+    let arrowWrapper = newBtn.querySelector('.user-dropdown-arrow');
+    if (!arrowWrapper) {
+      arrowWrapper = document.createElement('span');
+      arrowWrapper.className = 'user-dropdown-arrow ms-2 d-inline-block';
+      
+      arrowIcon = document.createElement('i');
+      arrowIcon.className = 'bi bi-caret-down-fill';
+      arrowWrapper.appendChild(arrowIcon);
+      newBtn.appendChild(arrowWrapper);
+    }
+
     // Crear menú desplegable Bootstrap
     let dropdownMenu = document.createElement('ul');
-    dropdownMenu.classList.add('dropdown-menu',"bg-secondary");
+    dropdownMenu.classList.add('dropdown-menu', 'bg-secondary');
 
     // Element: Perfil d'usuari
     let profileItem = document.createElement('li');
     let profileLink = document.createElement('a');
-    profileLink.classList.add('dropdown-item', "text-primary");
+    profileLink.classList.add('dropdown-item', 'text-primary');
     profileLink.href = '/perfil.html';
     profileLink.textContent = 'Perfil d\'usuari';
-
     profileItem.appendChild(profileLink);
     dropdownMenu.appendChild(profileItem);
 
@@ -166,14 +175,19 @@ function initAuthToggle() {
     dropdownWrapper.appendChild(newBtn);
     dropdownWrapper.appendChild(dropdownMenu);
 
-
-// Animació icona dropdown
     // Animació fletxa: canvia quan el menú s'obre/tanca
     dropdownWrapper.addEventListener('show.bs.dropdown', () => {
-      arrowIcon.className = 'bi bi-caret-up-fill user-dropdown-arrow ms-2';
+      arrowIcon.className = 'bi bi-caret-up-fill';       
+      arrowWrapper.classList.remove('icon-flip-enter');
+      void arrowWrapper.offsetWidth;                      
+      arrowWrapper.classList.add('icon-flip-enter');      
     });
+
     dropdownWrapper.addEventListener('hide.bs.dropdown', () => {
-      arrowIcon.className = 'bi bi-caret-down-fill user-dropdown-arrow ms-2';
+      arrowIcon.className = 'bi bi-caret-down-fill';      
+      arrowWrapper.classList.remove('icon-flip-enter');
+      void arrowWrapper.offsetWidth;
+      arrowWrapper.classList.add('icon-flip-enter');
     });
   }
 }
@@ -263,4 +277,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 5. Inicialitzar controladors de la pàgina
   await initControllers();
+
+  // 6. Sidebar navigation for profile sections
+  // Wait for sidebar to be loaded
+  setTimeout(() => {
+    const sidebarBtns = document.querySelectorAll('.sidebar-nav-item[data-section]');
+    const sections = document.querySelectorAll('.profile-section');
+    const sectionTitle = document.getElementById('section-title');
+    const sectionTitles = {
+      info: 'Informació personal',
+      password: 'Canviar contrasenya',
+      history: 'Historial',
+      payment: 'Mètode de pagament',
+      plan: 'Millorar el pla',
+      notifications: 'Notificacions',
+    };
+    sidebarBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sec = btn.dataset.section;
+        if (sec === 'logout') {
+          if (confirm('Tancar sessió?')) window.location.href = '/index.html';
+          return;
+        }
+        sidebarBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        sections.forEach(s => s.classList.remove('active'));
+        const target = document.getElementById('section-' + sec);
+        if (target) target.classList.add('active');
+        if (sectionTitle) sectionTitle.textContent = sectionTitles[sec] || '';
+      });
+    });
+  }, 100);
 });

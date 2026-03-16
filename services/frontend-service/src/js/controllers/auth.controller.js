@@ -73,7 +73,7 @@ function initLogin() {
       if (result && result.success) {
         if (result.user) saveUserSession(result.user);
         showAlert('success', result.message || 'Sessió iniciada correctament.');
-        redirectAfterDelay('dashboard.html', REDIRECT_DELAY);
+        redirectAfterDelay('index.html', REDIRECT_DELAY);
       }
     } catch (err) {
       const msg = err.message || 'Error en iniciar sessió. Revisa les credencials.';

@@ -1,18 +1,17 @@
 // Funcions (primer sempre)
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/functions";
 
-// Variables de Bootstrap
+@import "abstracts/variables";
+
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/variables";
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/variables-dark";
 
-// Les nostres variables personalitzades (es pot sobreescriure les de bootstrap)
-@import "abstracts/variables";
 @import "abstracts/mixins";
 @import "abstracts/functions";
 @import "abstracts/placeholders";
 
-// Maps (depen de les variables + variables-dark)
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/maps";
+
 
 // Mixins i root de Bootstrap
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/mixins";

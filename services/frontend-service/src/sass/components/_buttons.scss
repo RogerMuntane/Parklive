@@ -15,3 +15,8 @@
     display: inline-block;
     animation: icon-flip-enter 0.2s ease-out forwards;
 }
+
+// Eliminar la fletxa automàtica del dropdown-toggle al botó auth
+[data-role="auth-toggle"].dropdown-toggle::after {
+    display: none !important;
+}
