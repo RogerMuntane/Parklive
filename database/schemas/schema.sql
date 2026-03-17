@@ -9,6 +9,7 @@ CREATE TABLE usuaris (
     nom VARCHAR(100) NOT NULL,
     cognoms VARCHAR(150) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
+    foto_perfil VARCHAR(100),
     contrasenya_hash VARCHAR(255) NOT NULL,
     telefon VARCHAR(20),
     data_registre TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -395,20 +396,6 @@ CREATE TABLE configuracio_sistema (
     tipus ENUM('string', 'number', 'boolean', 'json') DEFAULT 'string',
     descripcio VARCHAR(500),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
--- Taula de logs del sistema
-CREATE TABLE logs_sistema (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    nivell ENUM('debug', 'info', 'warning', 'error', 'critical') NOT NULL,
-    missatge TEXT NOT NULL,
-    context JSON,
-    usuari_id INT UNSIGNED,
-    ip_address VARCHAR(45),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE
-    SET NULL,
-        INDEX idx_nivell (nivell),
-        INDEX idx_created (created_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- VISTES ÚTILS
 -- Vista d'aparcaments amb informació completa
