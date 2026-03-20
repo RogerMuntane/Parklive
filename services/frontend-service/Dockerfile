@@ -6,8 +6,12 @@ FROM nginx:alpine
 # Crear directori per a l'aplicació
 RUN mkdir -p /usr/share/nginx/html/src
 
+# Copiar entrypoint que genera env.js amb les variables d'entorn
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Exposar port
 EXPOSE 80
 
-# Iniciar Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Iniciar amb l'entrypoint personalitzat
+ENTRYPOINT ["/docker-entrypoint.sh"]

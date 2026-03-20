@@ -15,7 +15,7 @@ class AuthMiddleware
     public static function verificarAutenticacio($redirectUrl = null)
     {
         if ($redirectUrl === null) {
-            $redirectUrl = '/services/php-service/views/login.php';
+            $redirectUrl = '/views/login.php';
         }
 
         SessionModel::requerirAutenticacio($redirectUrl);
@@ -30,6 +30,22 @@ class AuthMiddleware
     public static function verificarNoAutenticat($redirectUrl = '/services/php-service/views/dashboard.php')
     {
         if (SessionModel::estaAutenticat()) {
+            $wantsJson = isset($_SERVER['HTTP_ACCEPT'])
+                && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+
+            if ($wantsJson) {
+                http_response_code(200);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'already_authenticated' => true
+                ]);
+                exit();
+            }
+
+            if ($redirectUrl === '/services/php-service/views/dashboard.php') {
+                $redirectUrl = '/views/protected_example.php';
+            }
             header('Location: ' . $redirectUrl);
             exit();
         }
@@ -42,7 +58,7 @@ class AuthMiddleware
      * @param string $redirectUrl URL de redirecció si no és el propietari
      * @return bool
      */
-    public static function verificarPropietari($userId, $errorMessage = 'No tens permís per accedir a aquest recurs', $redirectUrl = '/services/php-service/views/dashboard.php')
+    public static function verificarPropietari($userId, $errorMessage = 'No tens permís per accedir a aquest recurs', $redirectUrl = '/views/protected_example.php')
     {
         self::verificarAutenticacio();
 

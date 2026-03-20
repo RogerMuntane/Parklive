@@ -6,14 +6,37 @@ require_once "../models/ResetPasswordModel.php";
 class CanviContrasenya
 {
     private $model;
+    private $wantsJson = false;
 
     public function __construct()
     {
         $this->model = new ResetPasswordModel();
 
+        if ($this->wantsJson) {
+            $errors = $this->model->getErrors();
+            $this->respondJson([
+                'success' => false,
+                'error' => implode(', ', $errors),
+                'errors' => $errors
+            ], 401);
+        }
+
+        SessionModel::iniciarSessio();
+        $_SESSION['errors'] = $this->model->getErrors();
+        header('Location: ../views/login.php');
+        exit();
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->processarFormulari();
         }
+    }
+
+    private function respondJson($data, $statusCode = 200)
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit();
     }
 
     /**
@@ -21,9 +44,25 @@ class CanviContrasenya
      */
     private function processarFormulari()
     {
+
         $email = isset($_POST['email']) ? trim($_POST['email']) : '';
         $contrasenyaNova = isset($_POST['contrasenya_nova']) ? $_POST['contrasenya_nova'] : '';
         $contrasenyaConfirmar = isset($_POST['contrasenya_confirmar']) ? $_POST['contrasenya_confirmar'] : '';
+
+        if (!$email) {
+            if ($this->wantsJson) {
+                $errors = $this->model->getErrors();
+                $this->respondJson([
+                    'success' => false,
+                    'error' => implode(', ', $errors),
+                    'errors' => $errors
+                ], 401);
+            }
+
+            SessionModel::iniciarSessio();
+            $_SESSION['errors'] = $this->model->getErrors();
+            exit();
+        }
 
         // Validar que s'ha verificat el codi
         $resetData = isset($_SESSION['password_reset']) ? $_SESSION['password_reset'] : null;

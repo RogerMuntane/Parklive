@@ -1,0 +1,16 @@
+// Footer styles
+.site-footer {
+    a.text-white-50 {
+        transition: color 0.2s ease-in-out;
+
+        &:hover {
+            color: #fff !important;
+        }
+    }
+
+    .footer-logo {
+        @media (max-width: 767.98px) {
+            max-height: 180px !important;
+        }
+    }
+}

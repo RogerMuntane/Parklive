@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ParkLive - Plataforma web para gestión inteligente de parking."
+    />
+    <title>ParkLive | Gestión de Parking</title>
+    <link rel="stylesheet" href="./assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  </head>
+
+  <body class="page page-landing">
+    <!-- Slot de plantilla: Header reutilizable -->
+    <div
+      class="template-slot"
+      data-template="./components/header.html"
+      aria-label="Header"
+    ></div>
+
+    <main class="layout map-layout" id="main-content">
+      <div class="map-search-wrapper" aria-label="Buscador de aparcamientos">
+        <form id="mapSearchBar" class="map-search-bar" role="search">
+          <div class="search-main">
+            <i class="bi bi-geo-alt search-main-icon" aria-hidden="true"></i>
+            <input
+              type="search"
+              id="mapSearchInput"
+              class="form-control"
+              placeholder="Buscar aparcamiento o dirección"
+              aria-label="Buscar aparcamiento"
+            />
+          </div>
+
+          <div class="search-meta">
+            <div class="search-meta-item">
+              <label for="entryDate">Entrada</label>
+              <div class="meta-input-group">
+                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                <input type="date" id="entryDate" name="entryDate" />
+                <i class="bi bi-clock" aria-hidden="true"></i>
+                <input type="time" id="entryTime" name="entryTime" />
+              </div>
+            </div>
+
+            <div class="search-meta-separator" aria-hidden="true">
+              <i class="bi bi-arrow-right"></i>
+            </div>
+
+            <div class="search-meta-item">
+              <label for="exitDate">Salida</label>
+              <div class="meta-input-group">
+                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                <input type="date" id="exitDate" name="exitDate" />
+                <i class="bi bi-clock" aria-hidden="true"></i>
+                <input type="time" id="exitTime" name="exitTime" />
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="mapFiltersBtn"
+            class="btn map-btn map-btn-filter"
+            onclick="Filtres()"
+            aria-label="Mostrar filtros"
+            aria-controls="filtresSidepanel"
+            aria-expanded="false"
+          >
+            <i class="bi bi-sliders"></i>
+          </button>
+
+          <button
+            type="submit"
+            class="btn map-btn map-btn-search"
+            aria-label="Buscar"
+          >
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+      </div>
+
+      <div
+        id="filtersBackdrop"
+        class="filters-backdrop"
+        aria-hidden="true"
+      ></div>
+
+      <aside
+        id="filtresSidepanel"
+        class="sidepanel filters-panel d-flex flex-column"
+        aria-label="Panel de filtros"
+        aria-hidden="true"
+      >
+        <div class="filters-header d-flex align-items-center px-3 py-3">
+          <h1 class="h5 mb-0 filters-title fw-semibold">Filtrar</h1>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary filters-close"
+            onclick="Filtres(false)"
+            aria-label="Cerrar filtros"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <form
+          id="filtresContainer"
+          class="filters-content px-3 pb-3 overflow-auto"
+          aria-label="Filtros de búsqueda"
+        >
+          <section class="mb-4" aria-labelledby="price-filter-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h2 id="price-filter-title" class="filter-section-title h6 mb-0">
+                Precio total
+              </h2>
+              <span id="priceRangeValue" class="filter-range-value"
+                >Hasta 0 €</span
+              >
+            </div>
+            <input
+              type="range"
+              class="form-range"
+              id="priceRange"
+              name="price"
+              min="0"
+              max="50"
+              step="1"
+              value="0"
+            />
+            <div class="grid-choices mt-3">
+              <button
+                type="button"
+                class="btn btn-outline-secondary quick-choice"
+                data-target="priceRange"
+                data-value="20"
+              >
+                Hasta 20 €
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary quick-choice"
+                data-target="priceRange"
+                data-value="40"
+              >
+                Hasta 40 €
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary quick-choice"
+                data-target="priceRange"
+                data-value="50"
+              >
+                Hasta 50 €
+              </button>
+            </div>
+          </section>
+
+          <section class="mb-4" aria-labelledby="distance-filter-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h2
+                id="distance-filter-title"
+                class="filter-section-title h6 mb-0"
+              >
+                Distancia
+              </h2>
+              <span id="distanceRangeValue" class="filter-range-value"
+                >Hasta 0 km</span
+              >
+            </div>
+            <input
+              type="range"
+              class="form-range"
+              id="distanceRange"
+              name="distance"
+              min="0"
+              max="5"
+              step="1"
+              value="0"
+            />
+            <div class="grid-choices mt-3">
+              <button
+                type="button"
+                class="btn btn-outline-secondary quick-choice"
+                data-target="distanceRange"
+                data-value="1"
+              >
+                Hasta 1 km
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary quick-choice"
+                data-target="distanceRange"
+                data-value="3"
+              >
+                Hasta 3 km
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary quick-choice"
+                data-target="distanceRange"
+                data-value="5"
+              >
+                Hasta 5 km
+              </button>
+            </div>
+          </section>
+
+          <section class="mb-4" aria-labelledby="vehicle-filter-title">
+            <h2 id="vehicle-filter-title" class="filter-section-title h6 mb-3">
+              Tipo de vehículo
+            </h2>
+            <div class="vehicle-grid">
+              <button
+                type="button"
+                class="btn vehicle-option"
+                data-vehicle="turismo"
+                aria-pressed="false"
+              >
+                <span class="vehicle-icon"
+                  ><i class="bi bi-car-front"></i
+                ></span>
+                <span class="vehicle-meta">
+                  <span class="vehicle-name">Turismo</span>
+                  <small>A &lt; 1.9m, L &lt; 5.0m</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                class="btn vehicle-option"
+                data-vehicle="furgoneta"
+                aria-pressed="false"
+              >
+                <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
+                <span class="vehicle-meta">
+                  <span class="vehicle-name">Furgoneta</span>
+                  <small>A &lt; 2.2m, L &lt; 6.5m</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                class="btn vehicle-option"
+                data-vehicle="autocaravana"
+                aria-pressed="false"
+              >
+                <span class="vehicle-icon"
+                  ><i class="bi bi-car-front"></i
+                ></span>
+                <span class="vehicle-meta">
+                  <span class="vehicle-name">Autocaravana</span>
+                  <small>A &lt; 3.6m, L &lt; 10.0m</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                class="btn vehicle-option"
+                data-vehicle="autobus"
+                aria-pressed="false"
+              >
+                <span class="vehicle-icon"
+                  ><i class="bi bi-bus-front"></i
+                ></span>
+                <span class="vehicle-meta">
+                  <span class="vehicle-name">Autobús</span>
+                  <small>A &lt; 5.0m, L &lt; 12.0m</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                class="btn vehicle-option"
+                data-vehicle="camion7"
+                aria-pressed="false"
+              >
+                <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
+                <span class="vehicle-meta">
+                  <span class="vehicle-name">Camión 7m</span>
+                  <small>A &lt; 3.6m, L &lt; 7.0m</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                class="btn vehicle-option"
+                data-vehicle="moto"
+                aria-pressed="false"
+              >
+                <span class="vehicle-icon"><i class="bi bi-scooter"></i></span>
+                <span class="vehicle-meta">
+                  <span class="vehicle-name">Moto</span>
+                  <small>A &lt; 2.2m</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                class="btn vehicle-option full-width"
+                data-vehicle="camion6"
+                aria-pressed="false"
+              >
+                <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
+                <span class="vehicle-meta">
+                  <span class="vehicle-name">Camión 6m</span>
+                  <small>A &lt; 2.7m, L &lt; 6.0m</small>
+                </span>
+              </button>
+            </div>
+          </section>
+
+          <section class="mb-4" aria-labelledby="availability-filter-title">
+            <h2
+              id="availability-filter-title"
+              class="filter-section-title h6 mb-3"
+            >
+              Disponibilidad
+            </h2>
+            <div class="availability-list d-flex flex-column gap-2">
+              <div class="form-check d-flex align-items-center gap-2">
+                <input
+                  type="checkbox"
+                  class="form-check-input m-0"
+                  id="available"
+                  name="availability"
+                  value="available"
+                />
+                <label
+                  class="form-check-label d-flex align-items-center gap-2"
+                  for="available"
+                >
+                  <span class="status-dot status-available"></span>
+                  Disponible
+                </label>
+              </div>
+              <div class="form-check d-flex align-items-center gap-2">
+                <input
+                  type="checkbox"
+                  class="form-check-input m-0"
+                  id="halfOccupied"
+                  name="availability"
+                  value="half"
+                />
+                <label
+                  class="form-check-label d-flex align-items-center gap-2"
+                  for="halfOccupied"
+                >
+                  <span class="status-dot status-half"></span>
+                  Medio ocupado
+                </label>
+              </div>
+              <div class="form-check d-flex align-items-center gap-2">
+                <input
+                  type="checkbox"
+                  class="form-check-input m-0"
+                  id="occupied"
+                  name="availability"
+                  value="occupied"
+                />
+                <label
+                  class="form-check-label d-flex align-items-center gap-2"
+                  for="occupied"
+                >
+                  <span class="status-dot status-occupied"></span>
+                  Ocupado
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="mb-4" aria-labelledby="electric-filter-title">
+            <h2 id="electric-filter-title" class="filter-section-title h6 mb-3">
+              Carga eléctrica
+            </h2>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="electricCharging"
+                name="electricCharging"
+              />
+              <label class="form-check-label" for="electricCharging"
+                >Solo plazas con carga eléctrica</label
+              >
+            </div>
+          </section>
+
+          <p class="filter-help-text mb-2">
+            * Comprueba las medidas específicas que acepta cada parking.
+          </p>
+        </form>
+
+        <div class="filters-actions d-flex gap-2 border-top p-3">
+          <button
+            type="reset"
+            form="filtresContainer"
+            class="btn btn-outline-secondary w-50"
+          >
+            Borrar filtros
+          </button>
+          <button type="button" class="btn btn-danger w-50">
+            Ver resultados
+          </button>
+        </div>
+      </aside>
+      <div id="map" class="flex-grow-1"></div>
+    </main>
+
+    <!-- Slot de plantilla: Footer reutilizable -->
+    <div
+      class="template-slot"
+      data-template="components/footer.html"
+      aria-label="Footer"
+    ></div>
+
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+    <script>
+      const map = L.map("map").setView([41.3851, 2.1734], 13);
+      globalThis.map = map;
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap",
+      }).addTo(map);
+
+      L.marker([41.3851, 2.1734]).addTo(map).bindPopup("Barcelona").openPopup();
+
+      function updateRangeValues() {
+        const priceRange = document.getElementById("priceRange");
+        const distanceRange = document.getElementById("distanceRange");
+        const priceRangeValue = document.getElementById("priceRangeValue");
+        const distanceRangeValue =
+          document.getElementById("distanceRangeValue");
+
+        if (priceRange && priceRangeValue) {
+          priceRangeValue.textContent = `Hasta ${priceRange.value} €`;
+        }
+
+        if (distanceRange && distanceRangeValue) {
+          distanceRangeValue.textContent = `Hasta ${distanceRange.value} km`;
+        }
+      }
+
+      function setupQuickChoices() {
+        const quickChoices = document.querySelectorAll(
+          ".quick-choice[data-target][data-value]",
+        );
+
+        quickChoices.forEach((button) => {
+          button.addEventListener("click", () => {
+            const target = document.getElementById(button.dataset.target);
+            if (!target) return;
+
+            target.value = button.dataset.value;
+            target.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+        });
+      }
+
+      function setupVehicleOptions() {
+        const vehicleOptions = document.querySelectorAll(
+          ".vehicle-option[data-vehicle]",
+        );
+        vehicleOptions.forEach((option) => {
+          option.addEventListener("click", () => {
+            const isActive = option.classList.toggle("active");
+            option.setAttribute("aria-pressed", String(isActive));
+          });
+        });
+      }
+
+      function setupFormReset() {
+        const filterForm = document.getElementById("filtresContainer");
+        const vehicleOptions = document.querySelectorAll(
+          ".vehicle-option[data-vehicle]",
+        );
+        if (!filterForm) return;
+
+        filterForm.addEventListener("reset", () => {
+          globalThis.setTimeout(() => {
+            vehicleOptions.forEach((option) => {
+              option.classList.remove("active");
+              option.setAttribute("aria-pressed", "false");
+            });
+            updateRangeValues();
+          }, 0);
+        });
+      }
+
+      function initFilterPanel() {
+        const priceRange = document.getElementById("priceRange");
+        const distanceRange = document.getElementById("distanceRange");
+
+        if (priceRange) {
+          priceRange.addEventListener("input", updateRangeValues);
+        }
+        if (distanceRange) {
+          distanceRange.addEventListener("input", updateRangeValues);
+        }
+
+        updateRangeValues();
+        setupQuickChoices();
+        setupVehicleOptions();
+        setupFormReset();
+      }
+
+      function setupSearchBar() {
+        const mapSearchBar = document.getElementById("mapSearchBar");
+        const backdrop = document.getElementById("filtersBackdrop");
+        if (!mapSearchBar) return;
+
+        mapSearchBar.addEventListener("submit", (event) => {
+          event.preventDefault();
+        });
+
+        if (backdrop) {
+          backdrop.addEventListener("click", () => {
+            Filtres(false);
+          });
+        }
+      }
+
+      function Filtres(forceState) {
+        const sidepanel = document.getElementById("filtresSidepanel");
+        const filtersButton = document.getElementById("mapFiltersBtn");
+        const backdrop = document.getElementById("filtersBackdrop");
+        if (!sidepanel) return;
+
+        const shouldOpen =
+          typeof forceState === "boolean"
+            ? forceState
+            : !sidepanel.classList.contains("filters-visible");
+
+        sidepanel.classList.toggle("filters-visible", shouldOpen);
+        sidepanel.setAttribute("aria-hidden", String(!shouldOpen));
+        document.body.classList.toggle("filters-open", shouldOpen);
+
+        if (backdrop) {
+          backdrop.classList.toggle("is-visible", shouldOpen);
+          backdrop.setAttribute("aria-hidden", String(!shouldOpen));
+        }
+
+        if (filtersButton) {
+          filtersButton.setAttribute("aria-expanded", String(shouldOpen));
+        }
+
+        setTimeout(() => {
+          if (
+            globalThis.map &&
+            typeof globalThis.map.invalidateSize === "function"
+          ) {
+            globalThis.map.invalidateSize();
+          }
+        }, 320);
+      }
+
+      globalThis.Filtres = Filtres;
+      initFilterPanel();
+      setupSearchBar();
+      Filtres(false);
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          Filtres(false);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+// Animació icona auth toggle
+@keyframes icon-flip-enter {
+    0% {
+        transform: translateY(3px) rotate(180deg);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.icon-flip-enter {
+    display: inline-block;
+    animation: icon-flip-enter 0.2s ease-out forwards;
+}
+
+// Eliminar la fletxa automàtica del dropdown-toggle al botó auth
+[data-role="auth-toggle"].dropdown-toggle::after {
+    display: none !important;
+}

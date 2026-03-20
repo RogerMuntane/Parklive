@@ -7,6 +7,7 @@ require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 class Login
 {
     private $model;
+    private $wantsJson = false;
 
     public function __construct()
     {
@@ -15,9 +16,24 @@ class Login
 
         $this->model = new LoginModel();
 
+        // Detectar si la petició ve del frontend (AJAX) i vol JSON
+        $this->wantsJson = isset($_SERVER['HTTP_ACCEPT'])
+            && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->processarFormulari();
         }
+    }
+
+    /**
+     * Retorna una resposta JSON i atura l'execució.
+     */
+    private function respondJson($data, $statusCode = 200)
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit();
     }
 
     private function processarFormulari()
@@ -28,6 +44,15 @@ class Login
         $usuari = $this->model->autenticar($email, $contrasenya);
 
         if (!$usuari) {
+            if ($this->wantsJson) {
+                $errors = $this->model->getErrors();
+                $this->respondJson([
+                    'success' => false,
+                    'error' => implode(', ', $errors),
+                    'errors' => $errors
+                ], 401);
+            }
+
             SessionModel::iniciarSessio();
             $_SESSION['errors'] = $this->model->getErrors();
             header('Location: ../views/login.php');
@@ -37,6 +62,14 @@ class Login
         // Guardar l'usuari a la sessió utilitzant el SessionModel
         SessionModel::guardarUsuari($usuari);
         SessionModel::setFlashMessage('success', 'Sessió iniciada correctament');
+
+        if ($this->wantsJson) {
+            $this->respondJson([
+                'success' => true,
+                'message' => 'Sessió iniciada correctament.',
+                'user' => $usuari
+            ]);
+        }
 
         // Comprovar si hi ha una URL de redirecció guardada
         SessionModel::iniciarSessio();

@@ -1,0 +1,12 @@
+@import '../abstracts/variables';
+
+.layout{
+    height: 100dvh;
+}
+
+.sidepanel{
+    width: 300px;
+    flex-shrink: 0;
+    border-right: 1px solid $dark-theme;
+    transition: width .28s cubic-bezier(.4,0,.2,1);
+}
