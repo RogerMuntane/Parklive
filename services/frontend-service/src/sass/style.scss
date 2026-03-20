@@ -18,16 +18,8 @@
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/root";
 
 // La resta dels nostres imports
-@import "base/index";
-@import "components/index";
-@import "layout/index";
-@import "pages/index";
-@import "themes/index";
-@import "vendors/index";
-
-// Components de bootstrap adicionals
+// ─── L'ordre és important: Bootstrap components primer, després els nostres ───
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/grid";
-
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/reboot";
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/type";
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/images";
@@ -57,6 +49,13 @@
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/spinners";
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/offcanvas";
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/placeholders";
+
+@import "base/index";
+@import "components/index";
+@import "layout/index";
+@import "pages/index";
+@import "themes/index";
+@import "vendors/index";
 
 // Helpers
 @import "../../public/assets/vendor/node_modules/bootstrap/scss/helpers";

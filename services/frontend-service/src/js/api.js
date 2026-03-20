@@ -90,7 +90,12 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Sempre incloure cookies per a backend PHP
     const config = { ...options, headers };
+    // Si la baseURL és PHP_API_URL, afegir credentials: 'include'
+    if (this.baseURL === PHP_API_URL.replace(/\/+$/, '')) {
+      config.credentials = 'include';
+    }
 
     try {
       const response = await fetch(url, config);

@@ -86,6 +86,8 @@ function initThemeToggle() {
 /*  3. BOTÓ AUTH DEL HEADER (SESSIÓ)                                   */
 
 import { isAuthenticated, clearUserSession } from './utils.js';
+import { phpApi } from './api.js';
+import { logoutUser } from './controllers/auth.controller.js';
 
 /**
  * Comprova si l'usuari té la sessió iniciada.
@@ -116,24 +118,26 @@ function initAuthToggle() {
   newBtn.querySelectorAll('.user-dropdown-arrow').forEach(el => el.remove());
 
   if (isAuthenticated()) {
+    // Comprova si l'usuari és OAuth Google
+    const isOAuth = sessionStorage.getItem('parklive_oauth') === 'google';
+
     // Manté la icona original (bi-person)
     icon.className = 'bi bi-person';
     newBtn.setAttribute('aria-label', 'Opcions d\'usuari');
-    newBtn.setAttribute('href', '../../public/perfil.html');
     newBtn.setAttribute('role', 'button');
     newBtn.classList.add('dropdown-toggle');
     newBtn.setAttribute('data-bs-toggle', 'dropdown');
     newBtn.setAttribute('aria-expanded', 'false');
 
+    // // L'usuari autenticat per email ha d'anar a perfil.html, l'OAuth també
+    // newBtn.setAttribute('href', '/perfil.html');
+
     // Afegir fletxa animada
     let arrowIcon = newBtn.querySelector('.user-dropdown-arrow');
-
-
     let arrowWrapper = newBtn.querySelector('.user-dropdown-arrow');
     if (!arrowWrapper) {
       arrowWrapper = document.createElement('span');
       arrowWrapper.className = 'user-dropdown-arrow ms-2 d-inline-block';
-      
       arrowIcon = document.createElement('i');
       arrowIcon.className = 'bi bi-caret-down-fill';
       arrowWrapper.appendChild(arrowIcon);
@@ -159,10 +163,10 @@ function initAuthToggle() {
     logoutLink.className = 'dropdown-item text-danger';
     logoutLink.href = '#';
     logoutLink.textContent = 'Tancar sessió';
-    logoutLink.addEventListener('click', (e) => {
+    logoutLink.addEventListener('click', async (e) => {
       e.preventDefault();
-      clearUserSession();
-      window.location.href = '/index.html';
+      // Utilitza la funció centralitzada de logout
+      await logoutUser('/index.html');
     });
     logoutItem.appendChild(logoutLink);
     dropdownMenu.appendChild(logoutItem);
@@ -177,14 +181,14 @@ function initAuthToggle() {
 
     // Animació fletxa: canvia quan el menú s'obre/tanca
     dropdownWrapper.addEventListener('show.bs.dropdown', () => {
-      arrowIcon.className = 'bi bi-caret-up-fill';       
+      arrowIcon.className = 'bi bi-caret-up-fill';
       arrowWrapper.classList.remove('icon-flip-enter');
-      void arrowWrapper.offsetWidth;                      
-      arrowWrapper.classList.add('icon-flip-enter');      
+      void arrowWrapper.offsetWidth;
+      arrowWrapper.classList.add('icon-flip-enter');
     });
 
     dropdownWrapper.addEventListener('hide.bs.dropdown', () => {
-      arrowIcon.className = 'bi bi-caret-down-fill';      
+      arrowIcon.className = 'bi bi-caret-down-fill';
       arrowWrapper.classList.remove('icon-flip-enter');
       void arrowWrapper.offsetWidth;
       arrowWrapper.classList.add('icon-flip-enter');
@@ -260,25 +264,27 @@ async function initControllers() {
   }
 }
 
-/*  Carregem els elements                                                          */
+/*  Carreguem els elements                                                          */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Carregar components HTML (header, footer, sidebar)
   await loadTemplates();
 
-  // 2. Inicialitzar toggle de tema (depèn del header carregat)
-  initThemeToggle();
-
-  // 3. Actualitzar botó auth del header (login / logout)
+  // Crida initAuthToggle després de carregar templates (header)
   initAuthToggle();
+  window.initAuthToggle = initAuthToggle;
 
-  // 4. Toggle mostrar/amagar contrasenya als formularis
+  initThemeToggle();
   initPasswordToggles();
-
-  // 5. Inicialitzar controladors de la pàgina
   await initControllers();
 
-  // 6. Sidebar navigation for profile sections
+  // Inicialitza el controlador de perfil només a la pàgina de perfil
+  if (document.body.classList.contains('page-profile')) {
+    const { initProfilePasswordForm, initProfileInfoForm, initProfileInfoSaveForm } = await import('./controllers/profile.controller.js');
+    initProfilePasswordForm();
+    initProfileInfoForm();
+    initProfileInfoSaveForm();
+  }
+
   // Wait for sidebar to be loaded
   setTimeout(() => {
     const sidebarBtns = document.querySelectorAll('.sidebar-nav-item[data-section]');
@@ -307,5 +313,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sectionTitle) sectionTitle.textContent = sectionTitles[sec] || '';
       });
     });
+
+    // Oculta el botó de sidebar si la secció de contrasenya està oculta o si l'usuari és OAuth
+    const passwordSection = document.getElementById('section-password');
+    const passwordBtn = document.querySelector('.sidebar-nav-item[data-section="password"]');
+    const isOAuth = sessionStorage.getItem('parklive_oauth') === 'google';
+    console.log('[ParkLive] OAuth a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
+    console.log('[ParkLive] isOAuth:', isOAuth);
+    if ((passwordSection && passwordSection.style.display === 'none') || isOAuth) {
+      if (passwordBtn) passwordBtn.style.display = 'none';
+    }
   }, 100);
 });

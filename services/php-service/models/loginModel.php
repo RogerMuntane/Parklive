@@ -5,6 +5,8 @@ require_once "validarUsuari.php";
 
 class LoginModel
 {
+
+
     private $validador;
     private $errors = array();
     private $conexio;
@@ -73,6 +75,54 @@ class LoginModel
         $stmt->close();
 
         return $usuari;
+    }
+
+    /**
+     * Obté l'usuari per ID
+     */
+    public function getUserById($id)
+    {
+        if (!$this->conexio) {
+            $this->conectarBaseDades();
+        }
+        $stmt = $this->conexio->prepare("SELECT * FROM usuaris WHERE id = ? LIMIT 1");
+        if (!$stmt) return null;
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $usuari = $result->fetch_assoc();
+        $stmt->close();
+        return $usuari;
+    }
+
+    /**
+     * Actualitza la contrasenya per ID d'usuari
+     */
+    public function updatePassword($id, $hashNova)
+    {
+        if (!$this->conexio) {
+            $this->conectarBaseDades();
+        }
+        // Obtenir email per ID
+        $user = $this->getUserById($id);
+        if (!$user || empty($user['email'])) return false;
+        $email = $user['email'];
+        // Cridar procedure d'actualització
+        $stmt = $this->conexio->prepare("CALL sp_actualitzar_contrasenya(?, ?, @actualitzat, @error_msg)");
+        if (!$stmt) return false;
+        $stmt->bind_param('ss', $email, $hashNova);
+        $ok = $stmt->execute();
+        $stmt->close();
+        // Comprovar resultat
+        $result = $this->conexio->query("SELECT @actualitzat as actualitzat, @error_msg as error_msg");
+        if ($result) {
+            $row = $result->fetch_assoc();
+            if (!$row['actualitzat']) {
+                $this->errors[] = $row['error_msg'] ?? 'Error al actualitzar contrasenya';
+                return false;
+            }
+        }
+        return $ok;
     }
 
     public function getErrors()

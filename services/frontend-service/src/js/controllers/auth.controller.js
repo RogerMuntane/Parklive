@@ -71,7 +71,13 @@ function initLogin() {
       const result = await postToPhp('/controllers/login.php', payload);
 
       if (result && result.success) {
-        if (result.user) saveUserSession(result.user);
+        if (result.user) {
+          saveUserSession(result.user);
+          if (typeof window.initAuthToggle === 'function') window.initAuthToggle();
+        }
+        // Neteja explícita de la sessió OAuth si NO és Google
+        sessionStorage.removeItem('parklive_oauth');
+        
         showAlert('success', result.message || 'Sessió iniciada correctament.');
         redirectAfterDelay('index.html', REDIRECT_DELAY);
       }
@@ -136,9 +142,9 @@ function initRegister() {
   });
 }
 
-/* ================================================================== */
+
+
 /*  RESET CONTRASENYA – Pas 1: Sol·licitar codi                       */
-/* ================================================================== */
 
 /**
  * Mostra un pas del formulari de reset i amaga els altres.
@@ -348,8 +354,13 @@ async function handleGoogleTokenResponse(tokenResponse) {
 
     if (result && result.success) {
       saveUserSession(result.user);
+      // Si és Google OAuth, crea cookie per ocultar canvi contrasenya
+      if (result.user && result.user.provider === 'google') {
+        sessionStorage.setItem('parklive_oauth', 'google');
+        console.log('[ParkLive] OAuth guardat a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
+      }
       showAlert('success', result.message || 'Sessió iniciada amb Google!');
-      redirectAfterDelay('dashboard.html', REDIRECT_DELAY);
+      redirectAfterDelay('index.html', REDIRECT_DELAY);
     }
   } catch (err) {
     const msg = err.message || 'Error en l\'autenticació amb Google.';
@@ -407,8 +418,7 @@ async function initGoogleSignIn() {
   setupGoogle();
 }
 
-/* ================================================================== *//*  HELPERS PHP                                                         */
-/* ================================================================== */
+/*  HELPERS PHP                                                         */
 
 /**
  * Envia un formulari al servei PHP.
@@ -471,6 +481,22 @@ async function postToPhp(endpoint, payload) {
 
 
 /**
+ * Fa logout de l'usuari: neteja sessió, crida backend i redirigeix.
+ */
+export async function logoutUser(redirectUrl = 'login.html') {
+  clearUserSession();
+  try {
+    // Elimina l'estat OAuth
+    sessionStorage.removeItem('parklive_oauth');
+    console.log('[ParkLive] Sessió OAuth eliminada en logout:', sessionStorage.getItem('parklive_oauth'));
+    await phpApi.get('/controllers/logout.php');
+  } catch {
+    // Ignorar errors de logout – la sessió client ja s'ha netejat
+  }
+  window.location.href = redirectUrl;
+}
+
+/**
  * Inicialitza els botons de logout a qualsevol pàgina.
  */
 function initLogout() {
@@ -479,15 +505,7 @@ function initLogout() {
   logoutBtns.forEach((btn) => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      clearUserSession();
-
-      try {
-        await phpApi.get('/controllers/logout.php');
-      } catch {
-        // Ignorar errors de logout – la sessió client ja s'ha netejat
-      }
-
-      window.location.href = 'login.html';
+      await logoutUser('login.html');
     });
   });
 }

@@ -48,6 +48,10 @@ def google_login():
         user = result["user"]
         is_new = result["is_new"]
 
+        # Marca el provider com a google
+        if user:
+            user["provider"] = "google"
+
         return jsonify({
             "success": True,
             "message": "Registre completat!" if is_new else "Sessió iniciada correctament",

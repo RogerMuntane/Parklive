@@ -65,14 +65,15 @@ $border-color-dark:       lighten($dark-navy, 15%);
 $link-color-dark:         lighten($crimson, 20%);
 $link-hover-color-dark:   $crimson;
 
-// ─── Theme-colors: ampliar con deep-red ───────────────────────
-$theme-colors: map-merge(
-  (
-    "primary":    $primary,
-    "secondary":  $secondary,
-    "danger":     $danger,
-    "light":      $light,
-    "dark":       $dark,
-  ),
-  ("deep-red": $deep-red)
+// ─── Theme-colors: ampliar con deep-red y mantener defaults ───
+$theme-colors: (
+  "primary":    $primary,
+  "secondary":  $secondary,
+  "success":    #198754,
+  "info":       #0dcaf0,
+  "warning":    #ffc107,
+  "danger":     $danger,
+  "light":      $light,
+  "dark":       $dark,
+  "deep-red":   $deep-red
 );

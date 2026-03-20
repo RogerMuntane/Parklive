@@ -16,19 +16,11 @@ class Logout
     {
         // Iniciar sessió per poder-la destruir
         SessionModel::iniciarSessio();
-
-        // Guardar missatge de confirmació abans de destruir la sessió
-        $missatge = 'Sessió tancada correctament';
-
-        // Tancar la sessió
+        // Tancar la sessió i eliminar la cookie
         SessionModel::tancarSessio();
-
-        // Iniciar una nova sessió per mostrar el missatge
-        SessionModel::iniciarSessio();
-        SessionModel::setFlashMessage('success', $missatge);
-
-        // Redirigir al login
-        header('Location: ../views/login.php'); //Canviar quan es fagi el frontend
+        // Retornar resposta JSON d'èxit
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Sessió tancada correctament']);
         exit();
     }
 }

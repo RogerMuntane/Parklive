@@ -40,34 +40,29 @@
                 <div class="col-sm-6">
                     <label class="form-label text-uppercase small fw-semibold text-secondary"
                         style="letter-spacing:.04em;font-size:.75rem!important;" for="p-nom">Nom</label>
-                    <input class="form-control" type="text" id="p-nom" value="Jordi" placeholder="Nom" />
+                    <input class="form-control" type="text" id="p-nom" placeholder="Nom" />
                 </div>
                 <div class="col-sm-6">
                     <label class="form-label text-uppercase small fw-semibold text-secondary"
                         style="letter-spacing:.04em;font-size:.75rem!important;" for="p-cognoms">Cognoms</label>
-                    <input class="form-control" type="text" id="p-cognoms" value="Puig Masó" placeholder="Cognoms" />
+                    <input class="form-control" type="text" id="p-cognoms" placeholder="Cognoms" />
                 </div>
                 <div class="col-sm-6">
                     <label class="form-label text-uppercase small fw-semibold text-secondary"
                         style="letter-spacing:.04em;font-size:.75rem!important;" for="p-email">Correu electrònic</label>
-                    <input class="form-control" type="email" id="p-email" value="jordi.puig@email.com"
-                        placeholder="email@exemple.com" />
+                    <input class="form-control" type="email" id="p-email" placeholder="email@exemple.com" />
                 </div>
                 <div class="col-sm-6">
                     <label class="form-label text-uppercase small fw-semibold text-secondary"
                         style="letter-spacing:.04em;font-size:.75rem!important;" for="p-tel">Telèfon</label>
-                    <input class="form-control" type="tel" id="p-tel" value="+34 612 345 678"
-                        placeholder="+34 6XX XXX XXX" />
+                    <input class="form-control" type="tel" id="p-tel" placeholder="+34 6XX XXX XXX" />
                 </div>
                 <div class="col-12">
-                    <label class="form-label text-uppercase small fw-semibold text-secondary"
-                        style="letter-spacing:.04em;font-size:.75rem!important;" for="p-bio">Biografia breu</label>
-                    <textarea class="form-control" id="p-bio" rows="2"
-                        placeholder="Explica breument qui ets…"></textarea>
                 </div>
+
                 <div class="col-12 d-flex gap-2 justify-content-end pt-1">
-                    <button class="btn btn-outline-secondary">Cancel·lar</button>
-                    <button class="btn btn-danger" onclick="showToast('Canvis desats correctament')">
+                    <button class="btn btn-outline-secondary" id="btn-cancel-profile">Cancel·lar</button>
+                    <button class="btn btn-danger" id="btn-save-profile">
                         <i class="bi bi-check2 me-1"></i> Desar canvis
                     </button>
                 </div>

@@ -16,9 +16,12 @@ class SessionModel
     {
         if (session_status() === PHP_SESSION_NONE) {
             // Configuració de seguretat per les sessions
+            $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                     || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
+
             ini_set('session.cookie_httponly', 1);
             ini_set('session.use_only_cookies', 1);
-            ini_set('session.cookie_secure', 1);
+            ini_set('session.cookie_secure', $isSecure ? 1 : 0);
 
             session_start();
         }
@@ -162,7 +165,7 @@ class SessionModel
      * Requereix autenticació - redirigeix si no està autenticat
      * @param string $redirectUrl URL de redirecció si no està autenticat
      */
-    public static function requerirAutenticacio($redirectUrl = '/services/php-service/views/login.php')
+    public static function requerirAutenticacio($redirectUrl = '/views/login.php')
     {
         if (!self::estaAutenticat()) {
             $_SESSION['error_message'] = 'Has d\'iniciar sessió per accedir a aquesta pàgina';

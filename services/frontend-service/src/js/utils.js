@@ -165,6 +165,8 @@ export function clearUserSession() {
   sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
   sessionStorage.removeItem(STORAGE_KEYS.USER_ID);
   sessionStorage.removeItem(STORAGE_KEYS.USER_DATA);
+  // Netejar estat OAuth i cookie relacionada per evitar falsos positius
+  sessionStorage.removeItem('parklive_oauth');
 }
 
 /**
