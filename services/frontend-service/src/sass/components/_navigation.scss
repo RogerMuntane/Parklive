@@ -1,0 +1,20 @@
+// Animació d'expansió del buscador del header
+#header-search {
+    width: 100%;
+    transition: none;
+
+    // Tablet (lg: 992px - 1199px)
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        width: 120px;
+    }
+
+    // Desktop (xl: 1200px+)
+    @media (min-width: 1200px) {
+        width: 50%;
+        transition: width 0.8s ease-in-out;
+
+        &:focus {
+            width: 120%;
+        }
+    }
+}

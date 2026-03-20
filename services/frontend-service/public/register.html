@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Registro en ParkLive para usuarios de gestión de parking.">
+    <title>ParkLive | Registro</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+
+<body class="page page-auth page-register">
+    <!-- Slot de plantilla: Header reutilizable -->
+    <!-- <div class="template-slot" data-template="components/header.html" aria-label="Header"></div> -->
+
+    <main class="main-content d-flex align-items-center justify-content-center min-vh-100" id="main-content"
+        style="background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-dark) 100%);">
+
+        <!-- Botó tornar enrere -->
+        <a href="javascript:history.back()"
+            class="btn btn-light btn-sm rounded-circle shadow position-absolute top-0 start-0 m-3 d-flex align-items-center justify-content-center"
+            style="width: 38px; height: 38px; z-index: 10;" aria-label="Tornar enrere">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+
+        <!-- Card de registre -->
+        <div class="card shadow-lg border-0 rounded-4 mx-3" style="max-width: 420px; width: 100%;">
+            <div class="card-body p-4 p-sm-5">
+
+                <!-- Alertas (dins la card, ocultes per defecte) -->
+                <div class="alert alert-danger alert-error d-none shadow-sm mb-3" role="alert" aria-live="polite"></div>
+                <div class="alert alert-success d-none shadow-sm mb-3" role="status" aria-live="polite"></div>
+
+                <!-- Icono superior -->
+                <div class="text-center mb-3">
+                    <span
+                        class="d-inline-flex align-items-center justify-content-center bg-body-secondary rounded-3 p-3">
+                        <i class="bi bi-person-plus fs-2 text-body-tertiary"></i>
+                    </span>
+                </div>
+
+                <!-- Títol i subtítol -->
+                <h1 id="register-title" class="fs-4 fw-bold text-center mb-1">Crea el teu compte</h1>
+                <p class="text-muted text-center small mb-4">Registra't per gestionar el teu parking amb ParkLive.</p>
+
+                <!-- Formulari -->
+                <form class="form form-auth" action="/api/auth/register" method="post" novalidate>
+                    <!-- Nom -->
+                    <div class="input-group mb-3 input-group-focus">
+                        <span class="input-group-text bg-body border-end-0">
+                            <i class="bi bi-person text-body-tertiary"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 ps-0" id="full_name" name="full_name"
+                            placeholder="Nom" autocomplete="given-name" required>
+                    </div>
+
+                    <!-- Cognoms -->
+                    <div class="input-group mb-3 input-group-focus">
+                        <span class="input-group-text bg-body border-end-0">
+                            <i class="bi bi-person text-body-tertiary"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 ps-0" id="last_name" name="last_name"
+                            placeholder="Cognoms" autocomplete="family-name" required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="input-group mb-3 input-group-focus">
+                        <span class="input-group-text bg-body border-end-0">
+                            <i class="bi bi-envelope text-body-tertiary"></i>
+                        </span>
+                        <input type="email" class="form-control border-start-0 ps-0" id="register_email" name="email"
+                            placeholder="Email" autocomplete="email" required>
+                    </div>
+
+                    <!-- Telèfon -->
+                    <div class="input-group mb-3 input-group-focus">
+                        <span class="input-group-text bg-body border-end-0">
+                            <i class="bi bi-telephone text-body-tertiary"></i>
+                        </span>
+                        <input type="tel" class="form-control border-start-0 ps-0" id="phone" name="phone"
+                            placeholder="Telèfon" autocomplete="tel">
+                    </div>
+
+                    <!-- Password -->
+                    <div class="input-group mb-3 input-group-focus">
+                        <span class="input-group-text bg-body border-end-0">
+                            <i class="bi bi-lock text-body-tertiary"></i>
+                        </span>
+                        <input type="password" class="form-control border-start-0 border-end-0 ps-0"
+                            id="register_password" name="password" placeholder="Contrasenya" autocomplete="new-password"
+                            required>
+                        <button class="input-group-text bg-body border-start-0" type="button"
+                            data-action="toggle-password" aria-label="Mostrar contrasenya">
+                            <i class="bi bi-eye-slash text-body-tertiary"></i>
+                        </button>
+                    </div>
+
+                    <!-- Confirmar password -->
+                    <div class="input-group mb-4 input-group-focus">
+                        <span class="input-group-text bg-body border-end-0">
+                            <i class="bi bi-lock text-body-tertiary"></i>
+                        </span>
+                        <input type="password" class="form-control border-start-0 border-end-0 ps-0"
+                            id="confirm_password" name="confirm_password" placeholder="Confirmar contrasenya"
+                            autocomplete="new-password" required>
+                        <button class="input-group-text bg-body border-start-0" type="button"
+                            data-action="toggle-password" aria-label="Mostrar contrasenya">
+                            <i class="bi bi-eye-slash text-body-tertiary"></i>
+                        </button>
+                    </div>
+
+                    <!-- Submit -->
+                    <button class="btn btn-primary btn-lg w-100 rounded-pill fw-semibold mb-3" type="submit">
+                        Crear compte
+                    </button>
+                </form>
+
+                <!-- Separador -->
+                <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1">
+                    <span class="mx-3 text-muted small">O registra't amb</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <!-- Botons socials -->
+                <div class="d-flex justify-content-center gap-3 mb-3">
+                    <button class="btn btn-outline-secondary btn-lg rounded-pill px-4" type="button"
+                        data-action="google-login" aria-label="Registrar-se amb Google">
+                        <i class="bi bi-google"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg rounded-pill px-4" type="button"
+                        aria-label="Registrar-se amb Apple">
+                        <i class="bi bi-apple"></i>
+                    </button>
+                </div>
+
+                <!-- Link a login -->
+                <p class="text-center text-muted small mb-0 mt-3">
+                    Ja tens compte? <a class="fw-semibold text-decoration-none" href="login.html">Inicia sessió</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Slot de plantilla: Footer reutilizable -->
+    <!-- <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div> -->
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>

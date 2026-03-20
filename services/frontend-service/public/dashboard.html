@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard principal de ParkLive para gestión de plazas, reservas y pagos.">
+    <title>ParkLive | Dashboard</title>
+    <link rel="stylesheet" href="src/sass/main.css">
+</head>
+
+<body class="page page-dashboard">
+    <!-- Slot de plantilla: Header reutilizable -->
+    <div class="template-slot" data-template="components/header.html" aria-label="Header"></div>
+
+    <div class="dashboard-layout">
+        <!-- Slot de plantilla: Sidebar reutilizable -->
+        <aside class="dashboard-sidebar" aria-label="Navegación lateral">
+            <div class="template-slot" data-template="components/sidebar.html"></div>
+        </aside>
+
+        <main class="dashboard-main" id="main-content">
+            <section class="dashboard-section" aria-labelledby="dashboard-title">
+                <div class="container">
+                    <header class="dashboard-header">
+                        <h1 id="dashboard-title" class="dashboard-title">Panel principal</h1>
+                        <p class="dashboard-subtitle">Resumen general del estado del parking.</p>
+                    </header>
+
+                    <!-- Mensajes de estado preparados para backend/API -->
+                    <div class="alert alert-danger alert-error d-none" role="alert" aria-live="polite"></div>
+                    <div class="alert alert-success d-none" role="status" aria-live="polite"></div>
+
+                    <section class="stats-grid" aria-label="Indicadores principales">
+                        <article class="stat-card">
+                            <h2 class="stat-title">Plazas disponibles</h2>
+                            <p class="stat-value">--</p>
+                        </article>
+                        <article class="stat-card">
+                            <h2 class="stat-title">Reservas activas</h2>
+                            <p class="stat-value">--</p>
+                        </article>
+                        <article class="stat-card">
+                            <h2 class="stat-title">Ingresos del día</h2>
+                            <p class="stat-value">--</p>
+                        </article>
+                    </section>
+
+                    <!-- Formulario de filtro preparado para integración API -->
+                    <form class="form form-inline" action="/python-service/routes/reserves" method="get">
+                        <div class="form-group">
+                            <label class="form-label" for="filter-date">Fecha</label>
+                            <input class="form-input" type="date" id="filter-date" name="date">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" type="submit">Aplicar filtro</button>
+                            <button class="btn btn-secondary" type="reset">Limpiar</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Slot de plantilla: Footer reutilizable -->
+    <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div>
+
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>

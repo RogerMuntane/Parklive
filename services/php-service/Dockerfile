@@ -3,8 +3,8 @@ FROM php:8.1-apache
 # Instal·lar extensions PHP necessàries
 RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-# Habilitar mod_rewrite per URLs amigables
-RUN a2enmod rewrite
+# Habilitar mod_rewrite per URLs amigables i mod_headers per CORS
+RUN a2enmod rewrite headers
 
 # Configurar Apache per permetre .htaccess sense sobreescriure la config de PHP
 RUN echo '<Directory /var/www/html>' > /etc/apache2/conf-available/parklive.conf && \

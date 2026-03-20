@@ -1,0 +1,55 @@
+<!-- Mètode de pagament Component -->
+<section class="profile-section" id="section-payment">
+    <div class="card shadow-sm border-0 rounded-4 mb-3" style="max-width:560px">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                <span class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger fs-5">
+                    <i class="bi bi-credit-card-2-front"></i>
+                </span>
+                <div>
+                    <h2 class="card-title h6 fw-bold mb-0">Mètode de pagament</h2>
+                    <p class="card-subtitle text-muted small mb-0">Targeta guardada per a pagaments ràpids</p>
+                </div>
+            </div>
+            <div class="payment-card-visual mb-4">
+                <div class="card-chip mb-3"></div>
+                <div class="fw-bold mb-2" style="letter-spacing:.2em;">•••• •••• •••• 4821</div>
+                <div class="d-flex justify-content-between small opacity-75">
+                    <span>Jordi Puig</span>
+                    <span>09 / 27</span>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label text-uppercase small fw-semibold text-secondary"
+                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-name">Titular de la
+                        targeta</label>
+                    <input class="form-control" type="text" id="card-name" placeholder="Nom i cognoms" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-uppercase small fw-semibold text-secondary"
+                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-num">Número de
+                        targeta</label>
+                    <input class="form-control" type="text" id="card-num" placeholder="•••• •••• •••• ••••"
+                        maxlength="19" />
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-uppercase small fw-semibold text-secondary"
+                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-exp">Caducitat</label>
+                    <input class="form-control" type="text" id="card-exp" placeholder="MM / AA" maxlength="7" />
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-uppercase small fw-semibold text-secondary"
+                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-cvv">CVV</label>
+                    <input class="form-control" type="password" id="card-cvv" placeholder="•••" maxlength="4" />
+                </div>
+                <div class="col-12 d-flex gap-2 justify-content-end pt-1">
+                    <button class="btn btn-outline-danger btn-sm">Eliminar targeta</button>
+                    <button class="btn btn-danger" onclick="showToast('Targeta desada correctament')">
+                        <i class="bi bi-lock me-1"></i> Desar targeta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

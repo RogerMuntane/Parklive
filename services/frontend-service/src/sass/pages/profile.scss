@@ -1,0 +1,220 @@
+@import "../abstracts/variables";
+@import "../../../public/assets/vendor/node_modules/bootstrap/scss/bootstrap";
+
+// _profile.scss
+
+.profile-sidebar {
+    background-color: $dark-navy;
+    color: $off-white;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .65rem 1rem;
+    border-radius: .5rem;
+    color: rgba($off-white, .65);
+    text-decoration: none;
+    font-size: .9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: background .2s ease, color .2s ease;
+
+    &:hover {
+        background: rgba($off-white, .08);
+        color: $off-white;
+    }
+
+    &.active {
+        background: rgba($crimson, .2);
+        color: $off-white;
+
+        .nav-icon {
+            background: rgba($crimson, .25);
+            color: $crimson;
+        }
+    }
+}
+
+.nav-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: .5rem;
+    background: rgba($off-white, .07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: background .2s ease;
+}
+
+.avatar-ring {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $crimson, $dark-theme);
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .avatar-inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: $dark-navy;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: $off-white;
+    }
+}
+
+.payment-card-visual {
+    background: linear-gradient(135deg, $dark-navy, $dark-theme);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    max-width: 340px;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: rgba($off-white, .05);
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -30px;
+        right: 40px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba($crimson, .15);
+    }
+}
+
+.strength-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bs-border-color);
+    overflow: hidden;
+
+    .strength-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width .4s ease, background .4s ease;
+        width: 0;
+    }
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    border-radius: 20px;
+    padding: .2rem .7rem;
+    font-size: .75rem;
+    font-weight: 600;
+
+    &.status-ok {
+        background: rgba($success, .12);
+        color: $success;
+    }
+
+    &.status-pend {
+        background: rgba($warning, .2);
+        color: darken($warning, 25%);
+    }
+
+    &.status-err {
+        background: rgba($crimson, .12);
+        color: $crimson;
+    }
+}
+
+.plan-item {
+    border: 2px solid var(--bs-border-color);
+    border-radius: .75rem;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: border-color .2s ease, transform .2s ease;
+
+    &:hover {
+        border-color: $crimson;
+        transform: translateY(-2px);
+    }
+
+    &.selected {
+        border-color: $crimson;
+        background: rgba($crimson, .04);
+
+        &::before {
+            content: '\F26E';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            top: .75rem;
+            right: .75rem;
+            color: $crimson;
+            font-size: 1.1rem;
+        }
+    }
+}
+
+.pl-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    border-radius: .75rem;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .35s cubic-bezier(.4, 0, .2, 1);
+    z-index: 9999;
+    pointer-events: none;
+
+    &.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.profile-section {
+    display: none;
+
+    &.active {
+        display: block;
+        animation: fadeUp .3s ease both;
+    }
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

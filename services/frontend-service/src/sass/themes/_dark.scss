@@ -1,0 +1,37 @@
+// ─── Ajustos dark mode per a pàgines d'auth ────────────────────
+[data-bs-theme="dark"] {
+
+    // Gradient auth: més subtil amb tons més foscos
+    .page-auth .main-content {
+        background: linear-gradient(135deg, lighten(#2b2d42, 4%) 0%, #434667 100%);
+    }
+
+    // Cards: ombra més subtil en dark
+    .card {
+        box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .3);
+    }
+
+    // Inputs: border visible en dark mode
+    .form-control,
+    .input-group-text {
+        border-color: var(--bs-border-color);
+    }
+
+    // Botons outline-secondary: adaptar border i text
+    .btn-outline-secondary {
+        --bs-btn-color: var(--bs-body-color);
+        --bs-btn-border-color: var(--bs-border-color);
+        --bs-btn-hover-bg: var(--bs-secondary-bg);
+        --bs-btn-hover-border-color: var(--bs-border-color);
+    }
+
+    // Botó tornar enrere (btn-light): adaptar a dark mode
+    .page-auth .btn-light {
+        --bs-btn-bg: var(--bs-tertiary-bg);
+        --bs-btn-border-color: var(--bs-border-color);
+        --bs-btn-color: var(--bs-body-color);
+        --bs-btn-hover-bg: var(--bs-secondary-bg);
+        --bs-btn-hover-border-color: var(--bs-border-color);
+        --bs-btn-hover-color: var(--bs-body-color);
+    }
+}
