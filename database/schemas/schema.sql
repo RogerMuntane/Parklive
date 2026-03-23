@@ -101,8 +101,6 @@ CREATE TABLE aparcaments (
     altura_maxima DECIMAL(4, 2),
     estat ENUM('actiu', 'inactiu', 'manteniment', 'complet') DEFAULT 'actiu',
     operador_id INT UNSIGNED,
-    valoracio_mitjana DECIMAL(3, 2) DEFAULT 0.00,
-    total_valoracions INT UNSIGNED DEFAULT 0,
     verificat BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
