@@ -148,6 +148,11 @@ function initAuthToggle() {
     let dropdownMenu = document.createElement('ul');
     dropdownMenu.classList.add('dropdown-menu', 'bg-secondary');
 
+    // Només a landing, obre el menú cap a l'esquerra per evitar overflow lateral.
+    if (document.body.classList.contains('page-landing')) {
+      dropdownMenu.classList.add('dropdown-menu-end');
+    }
+
     // Element: Perfil d'usuari
     let profileItem = document.createElement('li');
     let profileLink = document.createElement('a');

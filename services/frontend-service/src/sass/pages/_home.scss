@@ -3,6 +3,7 @@
   --availability-color-available: #13d509;
   --availability-color-half: #f0e442;
   --availability-color-occupied: #e3100c;
+  --results-panel-width: clamp(290px, 24vw, 360px);
 
   display: flex;
   flex-direction: column;
@@ -19,22 +20,212 @@
 
   .map-layout {
     position: relative;
+    display: flex;
     flex: 1 1 auto;
     min-height: 0;
     height: auto;
     overflow: hidden;
   }
 
+  .parking-results-panel {
+    flex: 0 0 var(--results-panel-width);
+    width: var(--results-panel-width);
+    min-width: 0;
+    background: var(--bs-body-bg);
+    border-right: 1px solid var(--bs-border-color);
+    overflow-y: auto;
+    padding: 0.95rem;
+    z-index: 10;
+  }
+
+  .parking-results-header {
+    margin-bottom: 0.85rem;
+  }
+
+  .parking-results-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--bs-body-color);
+  }
+
+  .parking-results-subtitle {
+    margin: 0.2rem 0 0;
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color);
+  }
+
+  .parking-result-card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.95rem;
+    overflow: hidden;
+    background: var(--bs-body-bg);
+    box-shadow: var(--bs-box-shadow-sm);
+  }
+
+  .parking-result-image {
+    display: block;
+    width: 100%;
+    height: 165px;
+    object-fit: cover;
+  }
+
+  .parking-result-content {
+    padding: 0.85rem;
+  }
+
+  .parking-result-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--bs-body-color);
+  }
+
+  .parking-result-address {
+    margin: 0.35rem 0 0;
+    color: var(--bs-secondary-color);
+    font-size: 0.92rem;
+  }
+
+  .parking-result-meta {
+    margin-top: 0.7rem;
+    display: grid;
+    gap: 0.45rem;
+    font-size: 0.9rem;
+    color: var(--bs-body-color);
+  }
+
+  .parking-result-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
   #map {
+    flex: 1 1 auto;
     width: 100%;
     height: 100%;
     min-height: 0;
+  }
+
+  #map .leaflet-tile-pane {
+    filter: brightness(0.82) contrast(1.2) saturate(0.92);
+  }
+
+  #map .leaflet-control-zoom {
+    border: 0;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 22px rgba(17, 24, 39, 0.22);
+  }
+
+  #map .leaflet-control-zoom a {
+    width: 34px;
+    height: 34px;
+    line-height: 34px;
+    color: var(--bs-body-color);
+    background: var(--bs-body-bg);
+    border: 0;
+  }
+
+  #map .leaflet-control-scale-line {
+    border-color: rgba(31, 41, 55, 0.55);
+    color: var(--bs-body-color);
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(3px);
+    box-sizing: border-box;
+    width: 6rem !important;
+    min-width: 6rem !important;
+    max-width: 6rem !important;
+    min-height: 1.5rem;
+    line-height: 1.2;
+    padding: 0.18rem 0.42rem 0.12rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.8rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.35rem;
+  }
+
+  #map .leaflet-popup-content-wrapper {
+    border-radius: 0.85rem;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.24);
+  }
+
+  #map .leaflet-popup-tip {
+    box-shadow: none;
+  }
+
+  .parking-popup {
+    min-width: 190px;
+    color: var(--bs-body-color);
+  }
+
+  .parking-popup strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.98rem;
+  }
+
+  .parking-popup p {
+    color: var(--bs-secondary-color);
+    font-size: 0.86rem;
+  }
+
+  .parking-marker-wrapper {
+    background: transparent;
+    border: 0;
+  }
+
+  .parking-marker {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bs-danger);
+    border: 3px solid var(--bs-body-bg);
+    box-shadow: 0 0 0 1px rgba(31, 41, 55, 0.18);
+  }
+
+  .parking-marker::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(var(--bs-danger-rgb), 0.35);
+    transform: translate(-50%, -50%);
+    animation: parking-pulse 1.9s ease-out infinite;
+  }
+
+  @keyframes parking-pulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.5);
+      opacity: 0.85;
+    }
+
+    100% {
+      transform: translate(-50%, -50%) scale(1.2);
+      opacity: 0;
+    }
   }
 
   .site-header .navbar {
     min-height: 3.4rem;
     padding-top: 0.2rem;
     padding-bottom: 0.2rem;
+  }
+
+  .site-header {
+    position: relative;
+    z-index: 1065;
   }
 
   .site-header .navbar .container {
@@ -102,7 +293,7 @@
   .map-search-wrapper {
     position: absolute;
     top: 1rem;
-    left: 1rem;
+    left: calc(var(--results-panel-width) + 1rem);
     right: 1rem;
     z-index: 1060;
     pointer-events: none;
@@ -399,6 +590,8 @@
   }
 
   @media (max-width: 991.98px) {
+    --results-panel-width: clamp(250px, 32vw, 300px);
+
     .filters-panel {
       width: min(92vw, 420px);
       min-width: min(92vw, 420px);
@@ -434,6 +627,8 @@
   }
 
   @media (max-width: 575.98px) {
+    --results-panel-width: clamp(220px, 40vw, 260px);
+
     .site-header .navbar {
       min-height: 3rem;
     }
@@ -482,6 +677,33 @@
 }
 
 [data-bs-theme="dark"] .page-landing {
+  #map .leaflet-tile-pane {
+    filter: brightness(0.68) contrast(1.28) saturate(0.88);
+  }
+
+  #map .leaflet-control-scale-line {
+    border-color: rgba(var(--bs-light-rgb), 0.55);
+    color: var(--bs-light);
+    background: rgba(17, 24, 39, 0.86);
+  }
+
+  #map .leaflet-popup-content-wrapper {
+    background: #1f2937;
+    color: var(--bs-light);
+  }
+
+  #map .leaflet-popup-tip {
+    background: #1f2937;
+  }
+
+  .parking-popup {
+    color: var(--bs-light);
+  }
+
+  .parking-popup p {
+    color: rgba(var(--bs-light-rgb), 0.82);
+  }
+
   .filters-backdrop {
     background: rgba(0, 0, 0, 0.62);
   }

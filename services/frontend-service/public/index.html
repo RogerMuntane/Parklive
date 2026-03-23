@@ -87,6 +87,44 @@
         </form>
       </div>
 
+      <aside
+        class="parking-results-panel"
+        aria-label="Resultados de aparcamientos"
+      >
+        <div class="parking-results-header">
+          <h2 class="parking-results-title">Resultados</h2>
+          <p class="parking-results-subtitle">1 parking encontrado</p>
+        </div>
+
+        <article class="parking-result-card" aria-label="Parking ejemplo">
+          <img
+            class="parking-result-image"
+            src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80"
+            alt="Foto del parking ParkLive Centro"
+            loading="lazy"
+          />
+
+          <div class="parking-result-content">
+            <h3 class="parking-result-name">ParkLive Centro</h3>
+            <p class="parking-result-address">C/ de Mallorca 401, Barcelona</p>
+
+            <div class="parking-result-meta" aria-label="Datos del parking">
+              <span><i class="bi bi-currency-euro"></i> 2,80 €/h</span>
+              <span><i class="bi bi-geo-alt"></i> 650 m</span>
+              <span><i class="bi bi-lightning-charge"></i> Carga EV</span>
+            </div>
+
+            <button
+              type="button"
+              id="openExampleParkingBtn"
+              class="btn btn-danger w-100 mt-3"
+            >
+              Ver detalle
+            </button>
+          </div>
+        </article>
+      </aside>
+
       <div
         id="filtersBackdrop"
         class="filters-backdrop"
@@ -418,14 +456,114 @@
     <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="src/js/main.js"></script>
     <script>
-      const map = L.map("map").setView([41.3851, 2.1734], 13);
+      const map = L.map("map", {
+        zoomControl: false,
+        attributionControl: false,
+        preferCanvas: true,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
+        zoomSnap: 0.25,
+        zoomDelta: 0.25,
+        wheelPxPerZoomLevel: 90,
+        wheelDebounceTime: 30,
+      }).setView([41.3872, 2.1703], 14);
       globalThis.map = map;
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap",
-      }).addTo(map);
+      L.control.zoom({ position: "bottomright" }).addTo(map);
+      L.control.scale({ imperial: false, position: "bottomright" }).addTo(map);
 
-      L.marker([41.3851, 2.1734]).addTo(map).bindPopup("Barcelona").openPopup();
+      L.control
+        .attribution({ position: "bottomleft", prefix: false })
+        .addTo(map)
+        .addAttribution("© OpenStreetMap contributors, © CARTO");
+
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+        {
+          subdomains: "abcd",
+          maxZoom: 20,
+          keepBuffer: 8,
+          updateWhenZooming: true,
+          updateInterval: 100,
+        },
+      ).addTo(map);
+
+      const parkingIcon = L.divIcon({
+        className: "parking-marker-wrapper",
+        html: '<span class="parking-marker" aria-hidden="true"></span>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -14],
+      });
+
+      const parkingSpots = [
+        {
+          id: "parklive-centro",
+          name: "ParkLive Centro",
+          coords: [41.3874, 2.1692],
+          price: "2,80 €/h",
+          distance: "650 m",
+          status: "Disponible",
+        },
+        {
+          id: "parklive-rambla",
+          name: "ParkLive Rambla",
+          coords: [41.3818, 2.173],
+          price: "3,10 €/h",
+          distance: "1,1 km",
+          status: "Pocas plazas",
+        },
+        {
+          id: "parklive-sagrada",
+          name: "ParkLive Sagrada",
+          coords: [41.4035, 2.1742],
+          price: "2,40 €/h",
+          distance: "2,0 km",
+          status: "Disponible",
+        },
+      ];
+
+      const parkingMarkers = new Map();
+
+      parkingSpots.forEach((parking) => {
+        const marker = L.marker(parking.coords, { icon: parkingIcon });
+
+        marker.bindPopup(
+          `
+            <div class="parking-popup">
+              <strong>${parking.name}</strong>
+              <p class="mb-2">${parking.price} · ${parking.distance}</p>
+              <span class="badge text-bg-success">${parking.status}</span>
+            </div>
+          `,
+          {
+            closeButton: false,
+            autoPanPadding: [30, 30],
+          },
+        );
+
+        marker.addTo(map);
+        parkingMarkers.set(parking.id, marker);
+      });
+
+      const markerGroup = L.featureGroup(Array.from(parkingMarkers.values()));
+      map.fitBounds(markerGroup.getBounds().pad(0.22));
+
+      const defaultMarker = parkingMarkers.get("parklive-centro");
+      if (defaultMarker) {
+        defaultMarker.openPopup();
+      }
+
+      const openExampleParkingBtn = document.getElementById(
+        "openExampleParkingBtn",
+      );
+      if (openExampleParkingBtn && defaultMarker) {
+        openExampleParkingBtn.addEventListener("click", () => {
+          map.flyTo(defaultMarker.getLatLng(), 16, { duration: 0.8 });
+          defaultMarker.openPopup();
+        });
+      }
 
       function updateRangeValues() {
         const priceRange = document.getElementById("priceRange");
