@@ -1,0 +1,51 @@
+@use '../abstracts/variables' as *;
+
+.page-legal {
+    .main-content {
+        line-height: 1.6;
+        color: $dark-navy;
+
+        h1, h2, h3 {
+            color: $primary;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            border-bottom: 2px solid $primary;
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        .legal-card {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+
+            [data-bs-theme="dark"] & {
+                background-color: lighten($dark-navy, 5%);
+                color: $off-white;
+                
+                h1, h2, h3 {
+                    color: lighten($slate-gray, 20%);
+                }
+                
+                h1 {
+                    border-bottom-color: $slate-gray;
+                }
+            }
+        }
+
+        ul {
+            padding-left: 1.5rem;
+            li {
+                margin-bottom: 0.5rem;
+            }
+        }
+    }
+}

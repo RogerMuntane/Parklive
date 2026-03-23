@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contacta amb ParkLive - Suport i informació">
+    <title>ParkLive | Contacta amb Nosaltres</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+
+<body class="page page-contacte">
+    <!-- Slot de plantilla: Header reutilizable -->
+    <div class="template-slot" data-template="./components/header.html" aria-label="Header"></div>
+
+    <main class="main-content py-5">
+        <div class="container">
+            <!-- Capçalera -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold mb-3">Estem aquí per ajudar-te</h1>
+                <p class="lead text-muted mx-auto" style="max-width: 700px;">
+                    Tens algun dubte, suggeriment o problema? Envia'ns un missatge i el nostre equip es posarà en
+                    contacte amb tu el més aviat possible.
+                </p>
+            </div>
+
+            <div class="row g-5">
+                <!-- Informació de Contacte -->
+                <div class="col-lg-4">
+                    <div class="contact-info-card card border-0 shadow-lg p-4 h-100">
+                        <h3 class="fw-bold mb-4">Informació de contacte</h3>
+
+                        <div class="d-flex align-items-start gap-3 mb-4">
+                            <div class="contact-icon-wrapper">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">La nostra seu</h5>
+                                <p class="text-muted mb-0">Carrer de la Diputació, 250<br>08007 Barcelona, Espanya</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 mb-4">
+                            <div class="contact-icon-wrapper">
+                                <i class="bi bi-envelope-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Correu electrònic</h5>
+                                <p class="text-muted mb-0">suport@parklive.com<br>info@parklive.com</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 mb-4">
+                            <div class="contact-icon-wrapper">
+                                <i class="bi bi-telephone-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Telèfon</h5>
+                                <p class="text-muted mb-0">+34 932 456 789<br>Dilluns a Divendres, 9h a 18h</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto pt-4 border-top">
+                            <h5 class="mb-3">Segueix-nos</h5>
+                            <div class="d-flex gap-3">
+                                <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+                                <a href="#" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+                                <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+                                <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulari de Contacte -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4">
+                        <form id="contact-form">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label for="nom" class="form-label fw-bold">Nom complet</label>
+                                    <input type="text" class="form-control form-control-lg" id="nom"
+                                        placeholder="Ex: Roger Muntané" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label fw-bold">Correu electrònic</label>
+                                    <input type="email" class="form-control form-control-lg" id="email"
+                                        placeholder="nom@exemple.com" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="assumpte" class="form-label fw-bold">Assumpte</label>
+                                    <select class="form-select form-select-lg" id="assumpte" required>
+                                        <option value="" selected disabled>Selecciona una opció</option>
+                                        <option value="suport">Suport tècnic</option>
+                                        <option value="facturacio">Facturació i pagaments</option>
+                                        <option value="suggeriment">Suggeriment o feedback</option>
+                                        <option value="altres">Altres consultes</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="missatge" class="form-label fw-bold">Missatge</label>
+                                    <textarea class="form-control" id="missatge" rows="6"
+                                        placeholder="Com et podem ajudar?" required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" value="" id="privacy" required>
+                                        <label class="form-check-label text-muted small" for="privacy">
+                                            Accepto la <a href="./politica_privacitat.html"
+                                                class="text-primary">política de privadesa</a> i el tractament de les
+                                            meves dades.
+                                        </label>
+                                    </div>
+                                    <button type="submit"
+                                        class="btn btn-parklive-action btn-lg px-5 py-3 w-100 w-md-auto">
+                                        Envia el missatge <i class="bi bi-send-fill ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapa / FAQ (Opcional) -->
+            <div class="row mt-5 pt-5">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm overflow-hidden rounded-4">
+                        <div id="contact-map" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Slot de plantilla: Footer reutilizable -->
+    <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div>
+
+    <!-- Scripts -->
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicialitzar mapa
+            var map = L.map('contact-map', {
+                scrollWheelZoom: false
+            }).setView([41.3851, 2.1734], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            var marker = L.marker([41.3851, 2.1734]).addTo(map);
+            marker.bindPopup("<b>La nostra seu central</b><br>ParkLive Barcelona").openPopup();
+        });
+    </script>
+</body>
+
+</html>

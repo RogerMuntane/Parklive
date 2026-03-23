@@ -1,0 +1,60 @@
+// ─── Pàgina de Nova Valoració ─────────────────────────────────────
+
+.page-nova-valoracio {
+
+  .card-custom {
+    border: none;
+    border-radius: 1.5rem;
+    background-color: var(--bs-body-bg);
+  }
+
+  .rating-stars {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+
+    label {
+      cursor: pointer;
+      color: var(--bs-border-color);
+      transition: color 0.1s ease, transform 0.2s ease;
+
+      &.bi-star-fill {
+        color: #ffc107; // Star color (warning)
+      }
+
+      &:hover {
+        transform: scale(1.2);
+      }
+    }
+  }
+
+  .upload-area {
+    border-color: var(--bs-border-color) !important;
+    background-color: rgba(var(--bs-primary-rgb), 0.02);
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(var(--bs-primary-rgb), 0.05);
+      cursor: pointer;
+    }
+  }
+
+  // Estil per als botons de selecció d'aspectes
+  .btn-check:checked + .btn-outline-secondary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+    box-shadow: 0 4px 8px rgba(var(--bs-primary-rgb), 0.2);
+  }
+
+  .btn-parklive-action {
+    background-color: var(--bs-danger);
+    color: white;
+    border: none;
+    font-weight: 600;
+    &:hover {
+      background-color: darken(#c1121f, 10%);
+      color: white;
+    }
+  }
+}

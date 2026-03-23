@@ -1,0 +1,92 @@
+// ─── Pàgina de Contacte ──────────────────────────────────────────
+
+.page-contacte {
+
+  .contact-info-card {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, darken(#2b2d42, 5%) 100%);
+    color: white !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+
+    h1, h2, h3, h4, h5, h6, p, span, i {
+      color: white !important;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -30px;
+      right: -30px;
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+    }
+    
+    .text-muted {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+  }
+
+  .contact-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .social-icon {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--bs-danger);
+      transform: translateY(-3px);
+      color: white;
+    }
+  }
+
+  .form-control, .form-select {
+    border: 1px solid var(--bs-border-color);
+    padding: 0.8rem 1.2rem;
+    border-radius: 0.75rem;
+    
+    &:focus {
+      border-color: var(--bs-primary);
+      box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
+    }
+  }
+
+  .btn-parklive-action {
+    background-color: var(--bs-danger);
+    color: white;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: darken(#c1121f, 10%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(193, 18, 31, 0.3);
+    }
+  }
+
+  #contact-map {
+    z-index: 1;
+  }
+}

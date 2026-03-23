@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.addEventListener('click', () => {
         const sec = btn.dataset.section;
         if (sec === 'logout') {
-          if (confirm('Tancar sessió?')) window.location.href = '/index.html';
+          logoutUser('/index.html');
           return;
         }
         sidebarBtns.forEach(b => b.classList.remove('active'));
