@@ -11,43 +11,46 @@
                     <p class="card-subtitle text-muted small mb-0">Targeta guardada per a pagaments ràpids</p>
                 </div>
             </div>
-            <div class="payment-card-visual mb-4">
-                <div class="card-chip mb-3"></div>
-                <div class="fw-bold mb-2" style="letter-spacing:.2em;">•••• •••• •••• 4821</div>
-                <div class="d-flex justify-content-between small opacity-75">
-                    <span>Jordi Puig</span>
-                    <span>09 / 27</span>
+            <div id="payment-methods-container">
+                <!-- Les targetes es carregaran aquí dinàmicament -->
+                <div class="text-center p-4">
+                    <div class="spinner-border text-danger spinner-border-sm" role="status">
+                        <span class="visually-hidden">Carregant...</span>
+                    </div>
+                    <p class="small text-muted mt-2">Carregant mètodes de pagament...</p>
                 </div>
             </div>
-            <div class="row g-3">
-                <div class="col-12">
-                    <label class="form-label text-uppercase small fw-semibold text-secondary"
-                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-name">Titular de la
-                        targeta</label>
-                    <input class="form-control" type="text" id="card-name" placeholder="Nom i cognoms" />
-                </div>
-                <div class="col-12">
-                    <label class="form-label text-uppercase small fw-semibold text-secondary"
-                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-num">Número de
-                        targeta</label>
-                    <input class="form-control" type="text" id="card-num" placeholder="•••• •••• •••• ••••"
-                        maxlength="19" />
-                </div>
-                <div class="col-6">
-                    <label class="form-label text-uppercase small fw-semibold text-secondary"
-                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-exp">Caducitat</label>
-                    <input class="form-control" type="text" id="card-exp" placeholder="MM / AA" maxlength="7" />
-                </div>
-                <div class="col-6">
-                    <label class="form-label text-uppercase small fw-semibold text-secondary"
-                        style="letter-spacing:.04em;font-size:.75rem!important;" for="card-cvv">CVV</label>
-                    <input class="form-control" type="password" id="card-cvv" placeholder="•••" maxlength="4" />
-                </div>
-                <div class="col-12 d-flex gap-2 justify-content-end pt-1">
-                    <button class="btn btn-outline-danger btn-sm">Eliminar targeta</button>
-                    <button class="btn btn-danger" onclick="showToast('Targeta desada correctament')">
-                        <i class="bi bi-lock me-1"></i> Desar targeta
-                    </button>
+
+            <div class="mt-4 pt-3 border-top">
+                <button class="btn btn-outline-danger w-100" id="btn-add-card">
+                    <i class="bi bi-plus-circle me-1"></i> Afegir nova targeta
+                </button>
+            </div>
+
+            <!-- Modal per afegir targeta -->
+            <div class="modal fade" id="addCardModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold">Nova targeta</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <form id="payment-form">
+                                <div id="link-authentication-element">
+                                    <!-- Stripe.js injects the Link Authentication Element -->
+                                </div>
+                                <div id="payment-element" class="mb-3">
+                                    <!-- Stripe.js injects the Payment Element -->
+                                </div>
+                                <button id="submit" class="btn btn-danger w-100 py-2 fw-bold">
+                                    <span id="button-text">Desar targeta</span>
+                                    <div class="spinner-border spinner-border-sm d-none" id="spinner" role="status"></div>
+                                </button>
+                                <div id="payment-message" class="alert alert-danger d-none mt-3 small"></div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

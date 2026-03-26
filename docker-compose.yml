@@ -45,6 +45,12 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
       PYTHON_SERVICE_URL: http://python-service:${FLASK_PORT}
+      STRIPE_APIPrivada: ${STRIPE_APIPrivada}
+      STRIPE_APIPublica: ${STRIPE_APIPublica}
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     networks:
       - parklive_network
 
@@ -86,6 +92,8 @@ services:
       FRONTEND_PORT: ${FRONTEND_PORT}
       FLASK_ENV: development
       PYTHONUNBUFFERED: 1
+      STRIPE_APIPrivada: ${STRIPE_APIPrivada}
+      STRIPE_APIPublica: ${STRIPE_APIPublica}
     networks:
       - parklive_network
 

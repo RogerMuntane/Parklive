@@ -7,6 +7,7 @@ DROP PROCEDURE IF EXISTS sp_actualitzar_contrasenya;
 DROP PROCEDURE IF EXISTS sp_obtenir_usuari_per_email;
 DROP PROCEDURE IF EXISTS sp_obtenir_usuari_per_id;
 DROP PROCEDURE IF EXISTS sp_actualitzar_ultima_connexio;
+DROP PROCEDURE IF EXISTS sp_actualitzar_stripe_customer_id;
 -- 1. COMPROVAR SI EXISTEIX EL EMAIL
 -- Retorna 1 si l'email existeix, 0 si no existeix
 -- Exemple: CALL sp_comprovar_email_existeix('joan@example.com', @existeix);
@@ -169,6 +170,7 @@ SELECT id,
     email_verificat,
     punts_gamificacio,
     preferencies,
+    stripe_customer_id,
     created_at,
     updated_at
 FROM usuaris
@@ -198,6 +200,7 @@ SELECT id,
     email_verificat,
     punts_gamificacio,
     preferencies,
+    stripe_customer_id,
     created_at,
     updated_at
 FROM usuaris
@@ -221,6 +224,15 @@ WHERE email = TRIM(LOWER(p_email))
 END//
 
 DELIMITER ;
+
+-- 7. ACTUALITZAR STRIPE CUSTOMER ID
+DELIMITER //
+CREATE PROCEDURE sp_actualitzar_stripe_customer_id(IN p_usuari_id INT, IN p_stripe_id VARCHAR(255))
+BEGIN
+UPDATE usuaris SET stripe_customer_id = p_stripe_id, updated_at = NOW() WHERE id = p_usuari_id;
+END//
+DELIMITER ;
+
 -- EXEMPLES D'ÚS
 /*
  

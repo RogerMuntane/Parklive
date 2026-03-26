@@ -1,3 +1,4 @@
+# Requeriments per Parklive
 Flask==3.0.0
 flask-cors==4.0.0
 bcrypt==5.0.0
@@ -5,3 +6,4 @@ mysql-connector-python==8.2.0
 python-dotenv==1.0.0
 cryptography==41.0.5
 requests==2.31.0
+stripe==8.11.0

@@ -85,7 +85,7 @@ function initThemeToggle() {
 
 /*  3. BOTÓ AUTH DEL HEADER (SESSIÓ)                                   */
 
-import { isAuthenticated, clearUserSession } from './utils.js';
+import { isAuthenticated, clearUserSession, getUserId } from './utils.js';
 import { phpApi } from './api.js';
 import { logoutUser } from './controllers/auth.controller.js';
 
@@ -283,6 +283,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfilePasswordForm();
     initProfileInfoForm();
     initProfileInfoSaveForm();
+
+    // Integració Stripe
+    const userId = getUserId();  // sessionStorage → 'parklive_user_id'
+    if (userId) {
+      import('./stripe-integration.js').then(async (module) => {
+        // Carregar targetes existents
+        await module.loadPaymentMethods(userId);
+        // Vincular botó "Afegir nova targeta" (gestiona internament la clau pública)
+        module.initStripeButton(userId);
+      }).catch(err => console.error('[ParkLive] Error carregant stripe-integration:', err));
+    }
   }
 
   // Wait for sidebar to be loaded

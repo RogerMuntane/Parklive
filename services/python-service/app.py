@@ -4,6 +4,7 @@ from routes.aparcament_routes import aparcament_routes
 from routes.reserves_routes import reserves_routes
 from routes.contribucions_routes import contribucions_routes
 from routes.google_auth_routes import google_auth_routes
+from routes.stripe_routes import stripe_routes
 from flask import Flask, jsonify
 from flask_cors import CORS
 import sys
@@ -28,6 +29,7 @@ app.register_blueprint(reset_routes)
 app.register_blueprint(reserves_routes)
 app.register_blueprint(contribucions_routes)
 app.register_blueprint(google_auth_routes)
+app.register_blueprint(stripe_routes)
 
 
 # Health check endpoint per Docker
