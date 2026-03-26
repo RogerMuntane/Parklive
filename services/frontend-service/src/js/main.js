@@ -261,8 +261,11 @@ async function initControllers() {
       initContribucions();
     }
 
-    // ── Pàgina Landing (index) – sense controladors addicionals ──
-    // Si en el futur cal funcionalitat a la landing, afegir aquí.
+    // ── Pàgina Landing (mapa, filtres, responsive map view) ─────
+    if (bodyClass.includes('page-landing')) {
+      const { initLanding } = await import('./controllers/landing.controller.js');
+      initLanding();
+    }
 
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
