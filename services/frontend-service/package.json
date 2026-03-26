@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend service for Parklive",
 "scripts": {
-  "sass:watch": "sass --watch src/sass:public/assets/css --style expanded --source-map",
+  "sass:watch": "sass --watch src/sass/style.scss:public/assets/css/style.css --style expanded --source-map",
   "sass:build": "sass src/sass/style.scss:public/assets/css/style.css --style expanded --source-map"
 },
   "devDependencies": {
