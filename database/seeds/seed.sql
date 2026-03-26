@@ -401,8 +401,6 @@ INSERT INTO aparcaments (
         altura_maxima,
         estat,
         operador_id,
-        valoracio_mitjana,
-        total_valoracions,
         verificat
     )
 VALUES -- Centre de Barcelona
@@ -429,8 +427,6 @@ VALUES -- Centre de Barcelona
         2.10,
         'actiu',
         3,
-        4.50,
-        0,
         TRUE
     ),
     (
@@ -456,8 +452,6 @@ VALUES -- Centre de Barcelona
         2.00,
         'actiu',
         3,
-        4.20,
-        0,
         TRUE
     ),
     (
@@ -483,8 +477,6 @@ VALUES -- Centre de Barcelona
         2.10,
         'actiu',
         3,
-        4.70,
-        0,
         TRUE
     ),
     -- Sagrada Família
@@ -511,8 +503,6 @@ VALUES -- Centre de Barcelona
         2.10,
         'actiu',
         4,
-        4.30,
-        0,
         TRUE
     ),
     (
@@ -538,8 +528,6 @@ VALUES -- Centre de Barcelona
         NULL,
         'actiu',
         4,
-        3.80,
-        0,
         TRUE
     ),
     -- Port Olímpic i Platja
@@ -566,8 +554,6 @@ VALUES -- Centre de Barcelona
         2.00,
         'actiu',
         3,
-        4.10,
-        0,
         TRUE
     ),
     (
@@ -593,8 +579,6 @@ VALUES -- Centre de Barcelona
         NULL,
         'actiu',
         NULL,
-        3.50,
-        0,
         TRUE
     ),
     -- Montjuïc i Fira
@@ -621,8 +605,6 @@ VALUES -- Centre de Barcelona
         2.50,
         'actiu',
         4,
-        4.40,
-        0,
         TRUE
     ),
     (
@@ -648,8 +630,6 @@ VALUES -- Centre de Barcelona
         2.00,
         'actiu',
         3,
-        4.00,
-        0,
         TRUE
     ),
     -- Eixample
@@ -676,8 +656,6 @@ VALUES -- Centre de Barcelona
         2.00,
         'actiu',
         4,
-        4.60,
-        0,
         TRUE
     ),
     (
@@ -703,8 +681,6 @@ VALUES -- Centre de Barcelona
         2.10,
         'actiu',
         3,
-        4.50,
-        0,
         TRUE
     ),
     -- Gràcia
@@ -731,8 +707,6 @@ VALUES -- Centre de Barcelona
         2.00,
         'actiu',
         4,
-        3.90,
-        0,
         TRUE
     ),
     -- Sants
@@ -759,8 +733,6 @@ VALUES -- Centre de Barcelona
         2.20,
         'actiu',
         3,
-        4.30,
-        0,
         TRUE
     ),
     -- Les Corts
@@ -787,8 +759,6 @@ VALUES -- Centre de Barcelona
         NULL,
         'actiu',
         4,
-        3.60,
-        0,
         TRUE
     ),
     -- Zona Universitària
@@ -815,8 +785,6 @@ VALUES -- Centre de Barcelona
         NULL,
         'actiu',
         NULL,
-        3.70,
-        0,
         TRUE
     );
 -- 4. HISTÒRIC DE DISPONIBILITAT (últimes 24h)

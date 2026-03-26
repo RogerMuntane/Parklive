@@ -29,7 +29,10 @@
       <div class="map-search-wrapper" aria-label="Buscador de aparcamientos">
         <form id="mapSearchBar" class="map-search-bar" role="search">
           <div class="search-main">
-            <i class="bi bi-geo-alt search-main-icon" aria-hidden="true"></i>
+            <i
+              class="bi bi-geo-alt search-main-icon text-body-secondary"
+              aria-hidden="true"
+            ></i>
             <input
               type="search"
               id="mapSearchInput"
@@ -41,7 +44,11 @@
 
           <div class="search-meta">
             <div class="search-meta-item">
-              <label for="entryDate">Entrada</label>
+              <label
+                for="entryDate"
+                class="d-block mb-0 small fw-semibold text-body-secondary"
+                >Entrada</label
+              >
               <div class="meta-input-group">
                 <i class="bi bi-calendar3" aria-hidden="true"></i>
                 <input type="date" id="entryDate" name="entryDate" />
@@ -50,12 +57,19 @@
               </div>
             </div>
 
-            <div class="search-meta-separator" aria-hidden="true">
+            <div
+              class="search-meta-separator text-body-secondary"
+              aria-hidden="true"
+            >
               <i class="bi bi-arrow-right"></i>
             </div>
 
             <div class="search-meta-item">
-              <label for="exitDate">Salida</label>
+              <label
+                for="exitDate"
+                class="d-block mb-0 small fw-semibold text-body-secondary"
+                >Salida</label
+              >
               <div class="meta-input-group">
                 <i class="bi bi-calendar3" aria-hidden="true"></i>
                 <input type="date" id="exitDate" name="exitDate" />
@@ -67,9 +81,20 @@
 
           <button
             type="button"
+            id="mapDateSheetBtn"
+            class="btn map-btn map-btn-dates"
+            aria-label="Seleccionar fechas"
+            aria-controls="dateMiniSheet"
+            aria-expanded="false"
+          >
+            <i class="bi bi-calendar3"></i>
+            <span>Fechas</span>
+          </button>
+
+          <button
+            type="button"
             id="mapFiltersBtn"
             class="btn map-btn map-btn-filter"
-            onclick="Filtres()"
             aria-label="Mostrar filtros"
             aria-controls="filtresSidepanel"
             aria-expanded="false"
@@ -88,6 +113,160 @@
       </div>
 
       <div
+        id="dateSheetBackdrop"
+        class="date-sheet-backdrop"
+        aria-hidden="true"
+      ></div>
+
+      <section
+        id="dateMiniSheet"
+        class="date-mini-sheet"
+        aria-label="Seleccionar fechas"
+        aria-hidden="true"
+      >
+        <div
+          class="date-sheet-header d-flex align-items-center justify-content-between mb-3"
+        >
+          <h2 class="h6 mb-0">Fechas</h2>
+          <button
+            type="button"
+            id="dateSheetCloseBtn"
+            class="btn btn-sm btn-outline-secondary"
+            aria-label="Cerrar selector de fechas"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="date-sheet-content d-grid gap-3">
+          <div class="date-sheet-row">
+            <label
+              for="dateSheetEntryDate"
+              class="d-block mb-1 small fw-semibold text-body-secondary"
+              >Entrada</label
+            >
+            <div class="date-sheet-inputs d-flex gap-2">
+              <input
+                type="date"
+                id="dateSheetEntryDate"
+                class="form-control form-control-sm flex-fill"
+              />
+              <input
+                type="time"
+                id="dateSheetEntryTime"
+                class="form-control form-control-sm flex-fill"
+              />
+            </div>
+          </div>
+
+          <div class="date-sheet-row">
+            <label
+              for="dateSheetExitDate"
+              class="d-block mb-1 small fw-semibold text-body-secondary"
+              >Salida</label
+            >
+            <div class="date-sheet-inputs d-flex gap-2">
+              <input
+                type="date"
+                id="dateSheetExitDate"
+                class="form-control form-control-sm flex-fill"
+              />
+              <input
+                type="time"
+                id="dateSheetExitTime"
+                class="form-control form-control-sm flex-fill"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="date-sheet-actions mt-3">
+          <button
+            type="button"
+            id="dateSheetApplyBtn"
+            class="btn btn-danger w-100"
+          >
+            Aplicar fechas
+          </button>
+        </div>
+      </section>
+
+      <aside
+        class="parking-results-panel"
+        aria-label="Resultados de aparcamientos"
+      >
+        <div
+          class="parking-results-header d-flex align-items-start justify-content-between gap-2 mb-3"
+        >
+          <div>
+            <h2 class="parking-results-title h5 mb-0 fw-bold text-body">
+              Resultados
+            </h2>
+            <p
+              class="parking-results-subtitle mb-0 mt-1 small text-body-secondary"
+            >
+              1 parking encontrado
+            </p>
+          </div>
+          <button
+            type="button"
+            id="toggleResultsPanelBtn"
+            class="btn btn-sm btn-outline-secondary parking-results-toggle flex-shrink-0"
+            aria-label="Encoger panel de resultados"
+            aria-expanded="true"
+          >
+            <i class="bi bi-layout-sidebar-inset"></i>
+          </button>
+        </div>
+
+        <article
+          class="parking-result-card border rounded-4 overflow-hidden bg-body shadow-sm"
+          aria-label="Parking ejemplo"
+        >
+          <img
+            class="parking-result-image d-block w-100 object-fit-cover"
+            src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80"
+            alt="Foto del parking ParkLive Centro"
+            loading="lazy"
+          />
+
+          <div class="parking-result-content p-3">
+            <h3 class="parking-result-name h6 mb-0 fw-bold text-body">
+              ParkLive Centro
+            </h3>
+            <p
+              class="parking-result-address mb-0 mt-1 small text-body-secondary"
+            >
+              C/ de Mallorca 401, Barcelona
+            </p>
+
+            <div
+              class="parking-result-meta d-grid gap-2 mt-3 small text-body"
+              aria-label="Datos del parking"
+            >
+              <span class="d-inline-flex align-items-center gap-2"
+                ><i class="bi bi-currency-euro"></i> 2,80 €/h</span
+              >
+              <span class="d-inline-flex align-items-center gap-2"
+                ><i class="bi bi-geo-alt"></i> 650 m</span
+              >
+              <span class="d-inline-flex align-items-center gap-2"
+                ><i class="bi bi-lightning-charge"></i> Carga EV</span
+              >
+            </div>
+
+            <button
+              type="button"
+              id="openExampleParkingBtn"
+              class="btn btn-danger w-100 mt-3"
+            >
+              Ver detalle
+            </button>
+          </div>
+        </article>
+      </aside>
+
+      <div
         id="filtersBackdrop"
         class="filters-backdrop"
         aria-hidden="true"
@@ -100,11 +279,10 @@
         aria-hidden="true"
       >
         <div class="filters-header d-flex align-items-center px-3 py-3">
-          <h1 class="h5 mb-0 filters-title fw-semibold">Filtrar</h1>
+          <h1 class="h5 mb-0 fw-semibold text-center w-100">Filtrar</h1>
           <button
             type="button"
             class="btn btn-sm btn-outline-secondary filters-close"
-            onclick="Filtres(false)"
             aria-label="Cerrar filtros"
           >
             <i class="bi bi-x-lg"></i>
@@ -113,15 +291,15 @@
 
         <form
           id="filtresContainer"
-          class="filters-content px-3 pb-3 overflow-auto"
+          class="px-3 pb-3 overflow-auto flex-fill"
           aria-label="Filtros de búsqueda"
         >
           <section class="mb-4" aria-labelledby="price-filter-title">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h2 id="price-filter-title" class="filter-section-title h6 mb-0">
+              <h2 id="price-filter-title" class="h6 mb-0 fw-semibold text-body">
                 Precio total
               </h2>
-              <span id="priceRangeValue" class="filter-range-value"
+              <span id="priceRangeValue" class="fw-semibold text-body-secondary"
                 >Hasta 0 €</span
               >
             </div>
@@ -167,11 +345,13 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h2
                 id="distance-filter-title"
-                class="filter-section-title h6 mb-0"
+                class="h6 mb-0 fw-semibold text-body"
               >
                 Distancia
               </h2>
-              <span id="distanceRangeValue" class="filter-range-value"
+              <span
+                id="distanceRangeValue"
+                class="fw-semibold text-body-secondary"
                 >Hasta 0 km</span
               >
             </div>
@@ -214,7 +394,7 @@
           </section>
 
           <section class="mb-4" aria-labelledby="vehicle-filter-title">
-            <h2 id="vehicle-filter-title" class="filter-section-title h6 mb-3">
+            <h2 id="vehicle-filter-title" class="h6 mb-3 fw-semibold text-body">
               Tipo de vehículo
             </h2>
             <div class="vehicle-grid">
@@ -228,8 +408,10 @@
                   ><i class="bi bi-car-front"></i
                 ></span>
                 <span class="vehicle-meta">
-                  <span class="vehicle-name">Turismo</span>
-                  <small>A &lt; 1.9m, L &lt; 5.0m</small>
+                  <span class="fw-semibold text-body">Turismo</span>
+                  <small class="text-body-secondary"
+                    >A &lt; 1.9m, L &lt; 5.0m</small
+                  >
                 </span>
               </button>
               <button
@@ -240,8 +422,10 @@
               >
                 <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
                 <span class="vehicle-meta">
-                  <span class="vehicle-name">Furgoneta</span>
-                  <small>A &lt; 2.2m, L &lt; 6.5m</small>
+                  <span class="fw-semibold text-body">Furgoneta</span>
+                  <small class="text-body-secondary"
+                    >A &lt; 2.2m, L &lt; 6.5m</small
+                  >
                 </span>
               </button>
               <button
@@ -254,8 +438,10 @@
                   ><i class="bi bi-car-front"></i
                 ></span>
                 <span class="vehicle-meta">
-                  <span class="vehicle-name">Autocaravana</span>
-                  <small>A &lt; 3.6m, L &lt; 10.0m</small>
+                  <span class="fw-semibold text-body">Autocaravana</span>
+                  <small class="text-body-secondary"
+                    >A &lt; 3.6m, L &lt; 10.0m</small
+                  >
                 </span>
               </button>
               <button
@@ -268,8 +454,10 @@
                   ><i class="bi bi-bus-front"></i
                 ></span>
                 <span class="vehicle-meta">
-                  <span class="vehicle-name">Autobús</span>
-                  <small>A &lt; 5.0m, L &lt; 12.0m</small>
+                  <span class="fw-semibold text-body">Autobús</span>
+                  <small class="text-body-secondary"
+                    >A &lt; 5.0m, L &lt; 12.0m</small
+                  >
                 </span>
               </button>
               <button
@@ -280,8 +468,10 @@
               >
                 <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
                 <span class="vehicle-meta">
-                  <span class="vehicle-name">Camión 7m</span>
-                  <small>A &lt; 3.6m, L &lt; 7.0m</small>
+                  <span class="fw-semibold text-body">Camión 7m</span>
+                  <small class="text-body-secondary"
+                    >A &lt; 3.6m, L &lt; 7.0m</small
+                  >
                 </span>
               </button>
               <button
@@ -292,8 +482,8 @@
               >
                 <span class="vehicle-icon"><i class="bi bi-scooter"></i></span>
                 <span class="vehicle-meta">
-                  <span class="vehicle-name">Moto</span>
-                  <small>A &lt; 2.2m</small>
+                  <span class="fw-semibold text-body">Moto</span>
+                  <small class="text-body-secondary">A &lt; 2.2m</small>
                 </span>
               </button>
               <button
@@ -304,8 +494,10 @@
               >
                 <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
                 <span class="vehicle-meta">
-                  <span class="vehicle-name">Camión 6m</span>
-                  <small>A &lt; 2.7m, L &lt; 6.0m</small>
+                  <span class="fw-semibold text-body">Camión 6m</span>
+                  <small class="text-body-secondary"
+                    >A &lt; 2.7m, L &lt; 6.0m</small
+                  >
                 </span>
               </button>
             </div>
@@ -314,12 +506,12 @@
           <section class="mb-4" aria-labelledby="availability-filter-title">
             <h2
               id="availability-filter-title"
-              class="filter-section-title h6 mb-3"
+              class="h6 mb-3 fw-semibold text-body"
             >
               Disponibilidad
             </h2>
             <div class="availability-list d-flex flex-column gap-2">
-              <div class="form-check d-flex align-items-center gap-2">
+              <div class="form-check d-flex align-items-center gap-2 mb-0">
                 <input
                   type="checkbox"
                   class="form-check-input m-0"
@@ -335,7 +527,7 @@
                   Disponible
                 </label>
               </div>
-              <div class="form-check d-flex align-items-center gap-2">
+              <div class="form-check d-flex align-items-center gap-2 mb-0">
                 <input
                   type="checkbox"
                   class="form-check-input m-0"
@@ -351,7 +543,7 @@
                   Medio ocupado
                 </label>
               </div>
-              <div class="form-check d-flex align-items-center gap-2">
+              <div class="form-check d-flex align-items-center gap-2 mb-0">
                 <input
                   type="checkbox"
                   class="form-check-input m-0"
@@ -371,7 +563,10 @@
           </section>
 
           <section class="mb-4" aria-labelledby="electric-filter-title">
-            <h2 id="electric-filter-title" class="filter-section-title h6 mb-3">
+            <h2
+              id="electric-filter-title"
+              class="h6 mb-3 fw-semibold text-body"
+            >
               Carga eléctrica
             </h2>
             <div class="form-check form-switch">
@@ -387,12 +582,12 @@
             </div>
           </section>
 
-          <p class="filter-help-text mb-2">
+          <p class="mb-2 text-body-secondary">
             * Comprueba las medidas específicas que acepta cada parking.
           </p>
         </form>
 
-        <div class="filters-actions d-flex gap-2 border-top p-3">
+        <div class="d-flex gap-2 border-top p-3 bg-body">
           <button
             type="reset"
             form="filtresContainer"
@@ -406,6 +601,15 @@
         </div>
       </aside>
       <div id="map" class="flex-grow-1"></div>
+
+      <button
+        type="button"
+        id="mobileMapViewBtn"
+        class="btn btn-danger mobile-map-view-btn"
+        aria-pressed="false"
+      >
+        Ver mapa
+      </button>
     </main>
 
     <!-- Slot de plantilla: Footer reutilizable -->
@@ -417,155 +621,5 @@
 
     <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="src/js/main.js"></script>
-    <script>
-      const map = L.map("map").setView([41.3851, 2.1734], 13);
-      globalThis.map = map;
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap",
-      }).addTo(map);
-
-      L.marker([41.3851, 2.1734]).addTo(map).bindPopup("Barcelona").openPopup();
-
-      function updateRangeValues() {
-        const priceRange = document.getElementById("priceRange");
-        const distanceRange = document.getElementById("distanceRange");
-        const priceRangeValue = document.getElementById("priceRangeValue");
-        const distanceRangeValue =
-          document.getElementById("distanceRangeValue");
-
-        if (priceRange && priceRangeValue) {
-          priceRangeValue.textContent = `Hasta ${priceRange.value} €`;
-        }
-
-        if (distanceRange && distanceRangeValue) {
-          distanceRangeValue.textContent = `Hasta ${distanceRange.value} km`;
-        }
-      }
-
-      function setupQuickChoices() {
-        const quickChoices = document.querySelectorAll(
-          ".quick-choice[data-target][data-value]",
-        );
-
-        quickChoices.forEach((button) => {
-          button.addEventListener("click", () => {
-            const target = document.getElementById(button.dataset.target);
-            if (!target) return;
-
-            target.value = button.dataset.value;
-            target.dispatchEvent(new Event("input", { bubbles: true }));
-          });
-        });
-      }
-
-      function setupVehicleOptions() {
-        const vehicleOptions = document.querySelectorAll(
-          ".vehicle-option[data-vehicle]",
-        );
-        vehicleOptions.forEach((option) => {
-          option.addEventListener("click", () => {
-            const isActive = option.classList.toggle("active");
-            option.setAttribute("aria-pressed", String(isActive));
-          });
-        });
-      }
-
-      function setupFormReset() {
-        const filterForm = document.getElementById("filtresContainer");
-        const vehicleOptions = document.querySelectorAll(
-          ".vehicle-option[data-vehicle]",
-        );
-        if (!filterForm) return;
-
-        filterForm.addEventListener("reset", () => {
-          globalThis.setTimeout(() => {
-            vehicleOptions.forEach((option) => {
-              option.classList.remove("active");
-              option.setAttribute("aria-pressed", "false");
-            });
-            updateRangeValues();
-          }, 0);
-        });
-      }
-
-      function initFilterPanel() {
-        const priceRange = document.getElementById("priceRange");
-        const distanceRange = document.getElementById("distanceRange");
-
-        if (priceRange) {
-          priceRange.addEventListener("input", updateRangeValues);
-        }
-        if (distanceRange) {
-          distanceRange.addEventListener("input", updateRangeValues);
-        }
-
-        updateRangeValues();
-        setupQuickChoices();
-        setupVehicleOptions();
-        setupFormReset();
-      }
-
-      function setupSearchBar() {
-        const mapSearchBar = document.getElementById("mapSearchBar");
-        const backdrop = document.getElementById("filtersBackdrop");
-        if (!mapSearchBar) return;
-
-        mapSearchBar.addEventListener("submit", (event) => {
-          event.preventDefault();
-        });
-
-        if (backdrop) {
-          backdrop.addEventListener("click", () => {
-            Filtres(false);
-          });
-        }
-      }
-
-      function Filtres(forceState) {
-        const sidepanel = document.getElementById("filtresSidepanel");
-        const filtersButton = document.getElementById("mapFiltersBtn");
-        const backdrop = document.getElementById("filtersBackdrop");
-        if (!sidepanel) return;
-
-        const shouldOpen =
-          typeof forceState === "boolean"
-            ? forceState
-            : !sidepanel.classList.contains("filters-visible");
-
-        sidepanel.classList.toggle("filters-visible", shouldOpen);
-        sidepanel.setAttribute("aria-hidden", String(!shouldOpen));
-        document.body.classList.toggle("filters-open", shouldOpen);
-
-        if (backdrop) {
-          backdrop.classList.toggle("is-visible", shouldOpen);
-          backdrop.setAttribute("aria-hidden", String(!shouldOpen));
-        }
-
-        if (filtersButton) {
-          filtersButton.setAttribute("aria-expanded", String(shouldOpen));
-        }
-
-        setTimeout(() => {
-          if (
-            globalThis.map &&
-            typeof globalThis.map.invalidateSize === "function"
-          ) {
-            globalThis.map.invalidateSize();
-          }
-        }, 320);
-      }
-
-      globalThis.Filtres = Filtres;
-      initFilterPanel();
-      setupSearchBar();
-      Filtres(false);
-
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          Filtres(false);
-        }
-      });
-    </script>
   </body>
 </html>
