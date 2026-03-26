@@ -21,7 +21,6 @@ TRUNCATE TABLE faqs;
 TRUNCATE TABLE sessions;
 TRUNCATE TABLE subscripcions;
 TRUNCATE TABLE usuaris;
-TRUNCATE TABLE logs_sistema;
 TRUNCATE TABLE configuracio_sistema;
 -- Reactivar comprovació de claus forànies
 SET FOREIGN_KEY_CHECKS = 1;

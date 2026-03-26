@@ -2,32 +2,12 @@ const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
 const MIN_ZOOM = 4;
 
-const PARKING_SPOTS = [
-  {
-    id: 'parklive-centro',
-    name: 'ParkLive Centro',
-    coords: [41.3874, 2.1692],
-    price: '2,80 €/h',
-    distance: '650 m',
-    status: 'Disponible',
-  },
-  {
-    id: 'parklive-rambla',
-    name: 'ParkLive Rambla',
-    coords: [41.3818, 2.173],
-    price: '3,10 €/h',
-    distance: '1,1 km',
-    status: 'Pocas plazas',
-  },
-  {
-    id: 'parklive-sagrada',
-    name: 'ParkLive Sagrada',
-    coords: [41.4035, 2.1742],
-    price: '2,40 €/h',
-    distance: '2,0 km',
-    status: 'Disponible',
-  },
-];
+function escapeHtml(value) {
+  if (!value) return '';
+  const div = document.createElement('div');
+  div.textContent = value;
+  return div.innerHTML;
+}
 
 export function initLandingMap() {
   const mapElement = document.getElementById('map');
@@ -84,29 +64,58 @@ export function initLandingMap() {
   });
 
   const parkingMarkers = new Map();
+  const markerGroup = leaflet.featureGroup().addTo(map);
 
-  PARKING_SPOTS.forEach((parking) => {
-    const marker = leaflet.marker(parking.coords, { icon: parkingIcon });
+  const updateMarkerGroup = () => {
+    markerGroup.clearLayers();
+    parkingMarkers.forEach((marker) => {
+      markerGroup.addLayer(marker);
+    });
+  };
 
-    marker.bindPopup(
-      `
-        <div class="parking-popup">
-          <strong class="d-block mb-1 small fw-semibold">${parking.name}</strong>
-          <p class="mb-2 small text-body-secondary">${parking.price} · ${parking.distance}</p>
-          <span class="badge text-bg-success">${parking.status}</span>
-        </div>
-      `,
-      {
-        closeButton: false,
-        autoPanPadding: [30, 30],
-      },
-    );
+  const setParkingSpots = (spots = []) => {
+    parkingMarkers.forEach((marker) => {
+      map.removeLayer(marker);
+    });
+    parkingMarkers.clear();
 
-    marker.addTo(map);
-    parkingMarkers.set(parking.id, marker);
-  });
+    spots.forEach((spot) => {
+      const marker = leaflet.marker(spot.coords, { icon: parkingIcon });
 
-  const markerGroup = leaflet.featureGroup(Array.from(parkingMarkers.values()));
+      marker.bindPopup(
+        `
+          <div class="parking-popup">
+            <strong class="d-block mb-1 small fw-semibold">${escapeHtml(spot.name)}</strong>
+            <p class="mb-2 small text-body-secondary">${escapeHtml(spot.priceLabel)} · ${escapeHtml(spot.distanceLabel)}</p>
+            <span class="badge text-bg-success">${escapeHtml(spot.statusLabel || 'Disponible')}</span>
+          </div>
+        `,
+        {
+          closeButton: false,
+          autoPanPadding: [30, 30],
+        },
+      );
+
+      marker.addTo(map);
+      parkingMarkers.set(String(spot.id), marker);
+    });
+
+    updateMarkerGroup();
+    fitToParkingSpots();
+
+    const firstMarker = parkingMarkers.values().next().value;
+    if (firstMarker) {
+      firstMarker.openPopup();
+    }
+  };
+
+  const focusParkingById = (parkingId) => {
+    const marker = parkingMarkers.get(String(parkingId));
+    if (!marker) return;
+
+    map.flyTo(marker.getLatLng(), 16, { duration: 0.8 });
+    marker.openPopup();
+  };
   const fitToParkingSpots = () => {
     if (markerGroup.getLayers().length === 0) {
       map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
@@ -132,8 +141,6 @@ export function initLandingMap() {
     }
   };
 
-  fitToParkingSpots();
-
   const updateOpenPopupsLayout = () => {
     parkingMarkers.forEach((marker) => {
       if (typeof marker.isPopupOpen !== 'function' || !marker.isPopupOpen()) {
@@ -147,16 +154,13 @@ export function initLandingMap() {
     });
   };
 
-  const defaultMarker = parkingMarkers.get('parklive-centro');
-  if (defaultMarker) {
-    defaultMarker.openPopup();
-  }
-
   const openExampleParkingBtn = document.getElementById('openExampleParkingBtn');
-  if (openExampleParkingBtn && defaultMarker) {
+  if (openExampleParkingBtn) {
     openExampleParkingBtn.addEventListener('click', () => {
-      map.flyTo(defaultMarker.getLatLng(), 16, { duration: 0.8 });
-      defaultMarker.openPopup();
+      const firstMarker = parkingMarkers.values().next().value;
+      if (!firstMarker) return;
+      map.flyTo(firstMarker.getLatLng(), 16, { duration: 0.8 });
+      firstMarker.openPopup();
     });
   }
 
@@ -173,6 +177,8 @@ export function initLandingMap() {
   return {
     map,
     markerGroup,
+    setParkingSpots,
+    focusParkingById,
     updateOpenPopupsLayout,
     fitToParkingSpots,
     ensureValidViewport,
