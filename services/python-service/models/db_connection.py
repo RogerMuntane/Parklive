@@ -21,6 +21,8 @@ class Database:
                 use_unicode=True
             )
             if self.connection.is_connected():
+                # Força charset/collation de sessió per evitar text mal decodificat.
+                self.connection.set_charset_collation('utf8mb4', 'utf8mb4_unicode_ci')
                 print("Connexió a la base de dades MySQL establerta amb èxit!")
         except Error as e:
             print(f"Error en connectar a MySQL: {e}")

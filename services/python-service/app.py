@@ -15,6 +15,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
+if hasattr(app, 'json'):
+    app.json.ensure_ascii = False
 
 # Habilitar CORS per permetre peticions del frontend
 frontend_port = os.getenv('FRONTEND_PORT', '3000')

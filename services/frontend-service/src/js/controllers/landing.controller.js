@@ -7,6 +7,7 @@ import {
 } from './landing/filters.module.js';
 import { setupDateMiniSheet } from './landing/date-sheet.module.js';
 import { setupMobileMapViewToggle } from './landing/mobile-view.module.js';
+import { initLandingSearch } from './landing/search.module.js';
 
 let landingInitialized = false;
 
@@ -21,6 +22,8 @@ export function initLanding() {
   const {
     map,
     markerGroup,
+    setParkingSpots,
+    focusParkingById,
     updateOpenPopupsLayout,
     ensureValidViewport,
     defaultCenter,
@@ -35,6 +38,11 @@ export function initLanding() {
   initFilterPanelControls();
   setupSearchBar({ closeFilters: toggleFilters });
   setupDateMiniSheet();
+  const { runSearch } = initLandingSearch({
+    setParkingSpots,
+    focusParkingById,
+    closeFilters: toggleFilters,
+  });
   setupMobileMapViewToggle({
     map,
     markerGroup,
@@ -45,6 +53,7 @@ export function initLanding() {
   });
 
   toggleFilters(false);
+  runSearch();
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {

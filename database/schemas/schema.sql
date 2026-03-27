@@ -419,8 +419,16 @@ SELECT a.id,
     a.accessibilitat,
     a.carrega_electrica,
     a.videovigilancia,
-    a.valoracio_mitjana,
-    a.total_valoracions,
+    COALESCE((
+        SELECT ROUND(AVG(v.puntuacio), 2)
+        FROM valoracions v
+        WHERE v.aparcament_id = a.id
+    ), 0) as valoracio_mitjana,
+    COALESCE((
+        SELECT COUNT(*)
+        FROM valoracions v
+        WHERE v.aparcament_id = a.id
+    ), 0) as total_valoracions,
     a.estat,
     u.nom as operador_nom,
     COUNT(DISTINCT f.id) as total_fotos
@@ -449,30 +457,8 @@ WHERE r.estat IN ('confirmada', 'en_curs');
 
 
 -- TRIGGERS ÚTILS
--- Trigger per actualitzar valoració mitjana de l'aparcament
--- TRIGGERS ÚTILS
--- Trigger per actualitzar valoració mitjana de l'aparcament
-DELIMITER //
-
-CREATE TRIGGER after_valoracio_insert
-AFTER INSERT ON valoracions
-FOR EACH ROW
-BEGIN
-    UPDATE aparcaments
-    SET valoracio_mitjana = (
-        SELECT AVG(puntuacio)
-        FROM valoracions
-        WHERE aparcament_id = NEW.aparcament_id
-    ),
-    total_valoracions = (
-        SELECT COUNT(*)
-        FROM valoracions
-        WHERE aparcament_id = NEW.aparcament_id
-    )
-    WHERE id = NEW.aparcament_id;
-END//
-
-DELIMITER ;
+-- Les valoracions agregades es calculen dinàmicament a consultes/vistes;
+-- no cal trigger per persistir valoracio_mitjana ni total_valoracions.
 
 -- Trigger per afegir punts quan es fa una contribució
 DELIMITER //

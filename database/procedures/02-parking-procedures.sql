@@ -43,8 +43,16 @@ BEGIN
         a.videovigilancia,
         a.altura_maxima,
         a.estat,
-        a.valoracio_mitjana,
-        a.total_valoracions,
+        COALESCE((
+            SELECT ROUND(AVG(v.puntuacio), 2)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS valoracio_mitjana,
+        COALESCE((
+            SELECT COUNT(*)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS total_valoracions,
         a.verificat,
         a.created_at,
         a.updated_at
@@ -92,8 +100,16 @@ BEGIN
         a.videovigilancia,
         a.altura_maxima,
         a.estat,
-        a.valoracio_mitjana,
-        a.total_valoracions,
+        COALESCE((
+            SELECT ROUND(AVG(v.puntuacio), 2)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS valoracio_mitjana,
+        COALESCE((
+            SELECT COUNT(*)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS total_valoracions,
         a.verificat,
         a.created_at,
         a.updated_at,
@@ -177,8 +193,16 @@ BEGIN
         a.videovigilancia,
         a.altura_maxima,
         a.estat,
-        a.valoracio_mitjana,
-        a.total_valoracions,
+        COALESCE((
+            SELECT ROUND(AVG(v.puntuacio), 2)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS valoracio_mitjana,
+        COALESCE((
+            SELECT COUNT(*)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS total_valoracions,
         a.verificat,
         -- Calcular distància si es proporcionen coordenades
         CASE
@@ -204,7 +228,7 @@ BEGIN
     ORDER BY
         CASE
             WHEN p_latitud IS NOT NULL AND p_longitud IS NOT NULL THEN distancia_km
-            ELSE a.valoracio_mitjana
+            ELSE valoracio_mitjana
         END ASC
     LIMIT p_limit OFFSET p_offset;
 END//
