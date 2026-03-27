@@ -1,0 +1,59 @@
+.page-landing {
+  .site-header {
+    position: relative;
+    z-index: 1065;
+  }
+
+  .site-header .navbar {
+    min-height: 3.4rem;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .site-header .navbar .container {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .site-header .navbar-brand img {
+    max-height: 3rem !important;
+    width: auto;
+  }
+
+  .site-header .nav-link {
+    font-size: 1rem !important;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .site-header .btn.btn-lg {
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0.42rem 0.65rem;
+    border-radius: 0.6rem;
+  }
+
+  .site-header .navbar-toggler {
+    padding: 0.2rem 0.4rem;
+  }
+
+  .site-header .offcanvas-title {
+    font-size: 1.4rem !important;
+  }
+
+  @media (max-width: 575.98px) {
+    .site-header .navbar {
+      min-height: 3rem;
+    }
+
+    .site-header .navbar .container {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    .site-header .navbar-brand img {
+      max-height: 2.5rem !important;
+    }
+  }
+}

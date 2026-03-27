@@ -148,6 +148,11 @@ function initAuthToggle() {
     let dropdownMenu = document.createElement('ul');
     dropdownMenu.classList.add('dropdown-menu', 'bg-secondary');
 
+    // Només a landing, obre el menú cap a l'esquerra per evitar overflow lateral.
+    if (document.body.classList.contains('page-landing')) {
+      dropdownMenu.classList.add('dropdown-menu-end');
+    }
+
     // Element: Perfil d'usuari
     let profileItem = document.createElement('li');
     let profileLink = document.createElement('a');
@@ -256,8 +261,11 @@ async function initControllers() {
       initContribucions();
     }
 
-    // ── Pàgina Landing (index) – sense controladors addicionals ──
-    // Si en el futur cal funcionalitat a la landing, afegir aquí.
+    // ── Pàgina Landing (mapa, filtres, responsive map view) ─────
+    if (bodyClass.includes('page-landing')) {
+      const { initLanding } = await import('./controllers/landing.controller.js');
+      initLanding();
+    }
 
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
