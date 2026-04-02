@@ -94,6 +94,8 @@ services:
       PYTHONUNBUFFERED: 1
       STRIPE_APIPrivada: ${STRIPE_APIPrivada}
       STRIPE_APIPublica: ${STRIPE_APIPublica}
+      STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID}
+      STRIPE_Anual_PREMIUM_PRICE_ID: ${STRIPE_Anual_PREMIUM_PRICE_ID}
     networks:
       - parklive_network
 

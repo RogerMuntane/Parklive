@@ -1,56 +1,131 @@
 <!-- Mètode de pagament Component -->
 <section class="profile-section" id="section-payment">
-    <div class="card shadow-sm border-0 rounded-4 mb-3" style="max-width:560px">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-                <span class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger fs-5">
-                    <i class="bi bi-credit-card-2-front"></i>
-                </span>
-                <div>
-                    <h2 class="card-title h6 fw-bold mb-0">Mètode de pagament</h2>
-                    <p class="card-subtitle text-muted small mb-0">Targeta guardada per a pagaments ràpids</p>
+    <div class="row g-4">
+        <!-- Columna Esquerra: Targetes guardades -->
+        <div class="col-12 col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-4 pb-1">
+                        <span class="icon-box-red">
+                            <i class="bi bi-credit-card-2-front-fill"></i>
+                        </span>
+                        <div>
+                            <h2 class="card-title h6 fw-bold mb-0">Mètodes de pagament</h2>
+                            <p class="card-subtitle text-body-secondary small mb-0">Targetes per a pagaments ràpids</p>
+                        </div>
+                    </div>
+
+                    <div id="payment-methods-container" class="row g-3">
+                        <!-- Les targetes es carregaran aquí dinàmicament -->
+                        <div class="col-12 text-center p-4">
+                            <div class="spinner-border text-danger spinner-border-sm" role="status">
+                                <span class="visually-hidden">Carregant...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top">
+                        <button class="btn btn-outline-danger w-100 py-2 rounded-pill fw-bold" id="btn-add-card">
+                            <i class="bi bi-plus-circle me-1"></i> Afegir nova targeta
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div id="payment-methods-container">
-                <!-- Les targetes es carregaran aquí dinàmicament -->
-                <div class="text-center p-4">
-                    <div class="spinner-border text-danger spinner-border-sm" role="status">
-                        <span class="visually-hidden">Carregant...</span>
+        </div>
+
+        <!-- Columna Dreta: Resum Pla i Seguretat -->
+        <div class="col-12 col-lg-5">
+            <!-- El teu pla actual -->
+            <div id="payment-plan-summary" class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <span class="text-danger"><i class="bi bi-award-fill"></i></span>
+                        <h3 class="h6 fw-bold mb-0">El teu pla actual</h3>
                     </div>
-                    <p class="small text-muted mt-2">Carregant mètodes de pagament...</p>
+
+                    <div class="d-grid gap-3 mb-4" id="plan-info-list">
+                        <!-- Info dinàmica del pla -->
+                        <div class="d-flex justify-content-between align-items-center" id="plan-name-row">
+                            <span class="text-body-secondary small">Pla</span>
+                            <span id="plan-badge-ui"
+                                class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-3">
+                                <i id="plan-icon-ui" class="bi bi-star-fill me-1"></i> <span id="plan-text-ui">Premium</span>
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" id="renew-row">
+                            <span class="text-body-secondary small">Renovació</span>
+                            <span id="renew-badge-ui" class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>
+                                Activa</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" id="next-invoice-row">
+                            <span class="text-body-secondary small">Propera factura</span>
+                            <span class="fw-bold small" id="next-invoice-date">--/--/----</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" id="amount-row">
+                            <span class="text-body-secondary small">Import</span>
+                            <span id="plan-amount-ui" class="fw-bold small">5,00 € / mes</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" id="active-card-row">
+                            <span class="text-body-secondary small">Targeta activa</span>
+                            <span class="text-body-secondary small font-monospace" id="active-card-last4">••••
+                                ----</span>
+                        </div>
+                    </div>
+
+                    <button id="btn-manage-subscription" class="btn btn-outline-danger w-100 rounded-pill fw-bold"
+                        onclick="document.querySelector('[data-section=\'manage\']').click()">
+                        Gestionar subscripció
+                    </button>
                 </div>
             </div>
 
-            <div class="mt-4 pt-3 border-top">
-                <button class="btn btn-outline-danger w-100" id="btn-add-card">
-                    <i class="bi bi-plus-circle me-1"></i> Afegir nova targeta
-                </button>
-            </div>
-
-            <!-- Modal per afegir targeta -->
-            <div class="modal fade" id="addCardModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content rounded-4 border-0 shadow">
-                        <div class="modal-header border-0 pb-0">
-                            <h5 class="modal-title fw-bold">Nova targeta</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body p-4">
-                            <form id="payment-form">
-                                <div id="link-authentication-element">
-                                    <!-- Stripe.js injects the Link Authentication Element -->
-                                </div>
-                                <div id="payment-element" class="mb-3">
-                                    <!-- Stripe.js injects the Payment Element -->
-                                </div>
-                                <button id="submit" class="btn btn-danger w-100 py-2 fw-bold">
-                                    <span id="button-text">Desar targeta</span>
-                                    <div class="spinner-border spinner-border-sm d-none" id="spinner" role="status"></div>
-                                </button>
-                                <div id="payment-message" class="alert alert-danger d-none mt-3 small"></div>
-                            </form>
-                        </div>
+            <!-- Pagaments segurs -->
+            <div class="card shadow-sm border-0 rounded-4 security-card overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="text-warning"><i class="bi bi-shield-lock-fill"></i></span>
+                        <h3 class="h6 fw-bold mb-0">Pagaments segurs</h3>
                     </div>
+
+                    <ul class="list-unstyled d-grid gap-3 mb-0">
+                        <li class="d-flex gap-3 align-items-start">
+                            <i class="bi bi-lock-fill text-success small mt-1"></i>
+                            <p class="small text-body-secondary mb-0">Les teves dades de targeta estan xifrades i mai
+                                s'emmagatzemen als nostres servidors.</p>
+                        </li>
+                        <li class="d-flex gap-3 align-items-start">
+                            <i class="bi bi-shield-check text-success small mt-1"></i>
+                            <p class="small text-body-secondary mb-0">Processament via Stripe amb certificació PCI-DSS
+                                nivell 1.</p>
+                        </li>
+                        <li class="d-flex gap-3 align-items-start">
+                            <i class="bi bi-trash-fill text-success small mt-1"></i>
+                            <p class="small text-body-secondary mb-0">Pots eliminar les teves targetes en qualsevol
+                                moment.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per afegir targeta (es manté igual de funcionalitat) -->
+    <div class="modal fade" id="addCardModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold">Nova targeta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="payment-form">
+                        <div id="payment-element" class="mb-3"></div>
+                        <button id="submit" class="btn btn-danger w-100 py-2 fw-bold rounded-pill">
+                            <span id="button-text">Desar targeta</span>
+                            <div class="spinner-border spinner-border-sm d-none" id="spinner" role="status"></div>
+                        </button>
+                        <div id="payment-message" class="alert alert-danger d-none mt-3 small"></div>
+                    </form>
                 </div>
             </div>
         </div>
