@@ -223,7 +223,9 @@ function renderResults({
 
   panel.querySelectorAll('[data-action="open-parking"]').forEach((button) => {
     button.addEventListener('click', () => {
-      onFocusParking(button.dataset.parkingId);
+      const id = button.dataset.parkingId;
+      onFocusParking(id);
+      window.location.href = `/detall_Aparcament.html?id=${encodeURIComponent(id)}`;
     });
   });
 

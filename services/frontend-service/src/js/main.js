@@ -324,6 +324,12 @@ async function initControllers() {
       initLanding();
     }
 
+    // ── Detall d'aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-detall-aparcament')) {
+      const { initDetallAparcament } = await import('./controllers/detall.controller.js');
+      initDetallAparcament();
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
   }

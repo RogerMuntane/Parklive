@@ -1,0 +1,65 @@
+@use '../abstracts/variables' as *;
+
+.page-reserva-aparcament {
+    .card-custom {
+        border-radius: 12px;
+        background-color: var(--bs-card-bg);
+        border: 0.75px solid $danger;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-control,
+    .form-select {
+        padding: 0.75rem 1rem;
+        border-color: #dee2e6;
+        border-radius: 8px;
+
+        &:focus {
+            border-color: $danger;
+            box-shadow: 0 0 0 0.25rem rgba($danger, 0.1);
+        }
+    }
+
+    .payment-method-card {
+        cursor: pointer;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+        border-width: 2px !important;
+
+        &.active {
+            border-color: $danger !important;
+            background-color: rgba($danger, 0.05);
+        }
+    }
+
+    .dashed-btn {
+        border-style: dashed !important;
+        background-color: transparent;
+        font-weight: 500;
+
+        &:hover {
+            background-color: rgba($danger, 0.05);
+        }
+    }
+
+    .btn-parklive-action {
+        background-color: $danger;
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: darken($danger, 10%);
+            color: white;
+        }
+    }
+
+    .summary-list {
+        span {
+            display: block;
+        }
+    }
+}

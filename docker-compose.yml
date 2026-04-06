@@ -99,6 +99,32 @@ services:
     networks:
       - parklive_network
 
+  # Servei Cron (Automatització de actualitzacio de subscripcions a la BDD)
+  cron-service:
+    build:
+      context: ./services/python-service
+      dockerfile: Dockerfile
+      network: host
+    container_name: parklive_cron
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./services/python-service:/app
+      - ./shared:/app/shared
+    environment:
+      PYTHONPATH: /app
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      STRIPE_APIPrivada: ${STRIPE_APIPrivada}
+      STRIPE_APIPublica: ${STRIPE_APIPublica}
+    entrypoint: [ "/bin/sh", "/app/scripts/cron_scheduler.sh" ]
+    networks:
+      - parklive_network
+
   # Servei Frontend
   frontend-service:
     build:
