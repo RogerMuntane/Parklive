@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="es">
+<html lang="ca">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="ParkLive - Plataforma web para gestión inteligente de parking."
+      content="ParkLive - Plataforma web per a la gestió intel·ligent d'aparcaments."
     />
-    <title>ParkLive | Gestión de Parking</title>
+    <title>ParkLive | Gestió d'aparcaments</title>
     <link rel="stylesheet" href="./assets/css/style.css" />
     <link
       rel="stylesheet"
@@ -18,15 +18,15 @@
   </head>
 
   <body class="page page-landing">
-    <!-- Slot de plantilla: Header reutilizable -->
+    <!-- Slot de plantilla: Capçalera reutilitzable -->
     <div
       class="template-slot"
       data-template="./components/header.html"
-      aria-label="Header"
+      aria-label="Capçalera"
     ></div>
 
     <main class="layout map-layout" id="main-content">
-      <div class="map-search-wrapper" aria-label="Buscador de aparcamientos">
+      <div class="map-search-wrapper" aria-label="Cercador d'aparcaments">
         <form id="mapSearchBar" class="map-search-bar" role="search">
           <div class="search-main">
             <i
@@ -37,8 +37,8 @@
               type="search"
               id="mapSearchInput"
               class="form-control"
-              placeholder="Buscar aparcamiento o dirección"
-              aria-label="Buscar aparcamiento"
+              placeholder="Cerca aparcament o adreça"
+              aria-label="Cerca aparcament"
             />
           </div>
 
@@ -68,7 +68,7 @@
               <label
                 for="exitDate"
                 class="d-block mb-0 small fw-semibold text-body-secondary"
-                >Salida</label
+                >Sortida</label
               >
               <div class="meta-input-group">
                 <i class="bi bi-calendar3" aria-hidden="true"></i>
@@ -83,19 +83,19 @@
             type="button"
             id="mapDateSheetBtn"
             class="btn map-btn map-btn-dates"
-            aria-label="Seleccionar fechas"
+            aria-label="Seleccionar dates"
             aria-controls="dateMiniSheet"
             aria-expanded="false"
           >
             <i class="bi bi-calendar3"></i>
-            <span>Fechas</span>
+            <span>Dates</span>
           </button>
 
           <button
             type="button"
             id="mapFiltersBtn"
             class="btn map-btn map-btn-filter"
-            aria-label="Mostrar filtros"
+            aria-label="Mostrar filtres"
             aria-controls="filtresSidepanel"
             aria-expanded="false"
           >
@@ -105,7 +105,7 @@
           <button
             type="submit"
             class="btn map-btn map-btn-search"
-            aria-label="Buscar"
+            aria-label="Cercar"
           >
             <i class="bi bi-search"></i>
           </button>
@@ -121,18 +121,18 @@
       <section
         id="dateMiniSheet"
         class="date-mini-sheet"
-        aria-label="Seleccionar fechas"
+        aria-label="Seleccionar dates"
         aria-hidden="true"
       >
         <div
           class="date-sheet-header d-flex align-items-center justify-content-between mb-3"
         >
-          <h2 class="h6 mb-0">Fechas</h2>
+          <h2 class="h6 mb-0">Dates</h2>
           <button
             type="button"
             id="dateSheetCloseBtn"
             class="btn btn-sm btn-outline-secondary"
-            aria-label="Cerrar selector de fechas"
+            aria-label="Tancar selector de dates"
           >
             <i class="bi bi-x-lg"></i>
           </button>
@@ -163,7 +163,7 @@
             <label
               for="dateSheetExitDate"
               class="d-block mb-1 small fw-semibold text-body-secondary"
-              >Salida</label
+              >Sortida</label
             >
             <div class="date-sheet-inputs d-flex gap-2">
               <input
@@ -186,33 +186,30 @@
             id="dateSheetApplyBtn"
             class="btn btn-danger w-100"
           >
-            Aplicar fechas
+            Aplicar dates
           </button>
         </div>
       </section>
 
-      <aside
-        class="parking-results-panel"
-        aria-label="Resultados de aparcamientos"
-      >
+      <aside class="parking-results-panel" aria-label="Resultats d'aparcaments">
         <div
           class="parking-results-header d-flex align-items-start justify-content-between gap-2 mb-3"
         >
           <div>
             <h2 class="parking-results-title h5 mb-0 fw-bold text-body">
-              Resultados
+              Resultats
             </h2>
             <p
               class="parking-results-subtitle mb-0 mt-1 small text-body-secondary"
             >
-              1 parking encontrado
+              1 aparcament trobat
             </p>
           </div>
           <button
             type="button"
             id="toggleResultsPanelBtn"
             class="btn btn-sm btn-outline-secondary parking-results-toggle flex-shrink-0"
-            aria-label="Encoger panel de resultados"
+            aria-label="Encongir panell de resultats"
             aria-expanded="true"
           >
             <i class="bi bi-layout-sidebar-inset"></i>
@@ -221,12 +218,12 @@
 
         <article
           class="parking-result-card border rounded-4 overflow-hidden bg-body shadow-sm"
-          aria-label="Parking ejemplo"
+          aria-label="Aparcament d'exemple"
         >
           <img
             class="parking-result-image d-block w-100 object-fit-cover"
             src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80"
-            alt="Foto del parking ParkLive Centro"
+            alt="Foto de l'aparcament ParkLive Centre"
             loading="lazy"
           />
 
@@ -242,7 +239,7 @@
 
             <div
               class="parking-result-meta d-grid gap-2 mt-3 small text-body"
-              aria-label="Datos del parking"
+              aria-label="Dades de l'aparcament"
             >
               <span class="d-inline-flex align-items-center gap-2"
                 ><i class="bi bi-currency-euro"></i> 2,80 €/h</span
@@ -251,7 +248,7 @@
                 ><i class="bi bi-geo-alt"></i> 650 m</span
               >
               <span class="d-inline-flex align-items-center gap-2"
-                ><i class="bi bi-lightning-charge"></i> Carga EV</span
+                ><i class="bi bi-lightning-charge"></i> Càrrega EV</span
               >
             </div>
 
@@ -260,7 +257,7 @@
               id="openExampleParkingBtn"
               class="btn btn-danger w-100 mt-3"
             >
-              Ver detalle
+              Veure detall
             </button>
           </div>
         </article>
@@ -275,15 +272,15 @@
       <aside
         id="filtresSidepanel"
         class="sidepanel filters-panel d-flex flex-column"
-        aria-label="Panel de filtros"
+        aria-label="Panell de filtres"
         aria-hidden="true"
       >
         <div class="filters-header d-flex align-items-center px-3 py-3">
-          <h1 class="h5 mb-0 fw-semibold text-center w-100">Filtrar</h1>
+          <h1 class="h5 mb-0 fw-semibold text-center w-100">Filtra</h1>
           <button
             type="button"
             class="btn btn-sm btn-outline-secondary filters-close"
-            aria-label="Cerrar filtros"
+            aria-label="Tancar filtres"
           >
             <i class="bi bi-x-lg"></i>
           </button>
@@ -292,15 +289,15 @@
         <form
           id="filtresContainer"
           class="px-3 pb-3 overflow-auto flex-fill"
-          aria-label="Filtros de búsqueda"
+          aria-label="Filtres de cerca"
         >
           <section class="mb-4" aria-labelledby="price-filter-title">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h2 id="price-filter-title" class="h6 mb-0 fw-semibold text-body">
-                Precio total
+                Preu total
               </h2>
               <span id="priceRangeValue" class="fw-semibold text-body-secondary"
-                >Hasta 0 €</span
+                >Fins a 0 €</span
               >
             </div>
             <input
@@ -320,7 +317,7 @@
                 data-target="priceRange"
                 data-value="20"
               >
-                Hasta 20 €
+                Fins a 20 €
               </button>
               <button
                 type="button"
@@ -328,7 +325,7 @@
                 data-target="priceRange"
                 data-value="40"
               >
-                Hasta 40 €
+                Fins a 40 €
               </button>
               <button
                 type="button"
@@ -336,7 +333,7 @@
                 data-target="priceRange"
                 data-value="50"
               >
-                Hasta 50 €
+                Fins a 50 €
               </button>
             </div>
           </section>
@@ -347,12 +344,12 @@
                 id="distance-filter-title"
                 class="h6 mb-0 fw-semibold text-body"
               >
-                Distancia
+                Distància
               </h2>
               <span
                 id="distanceRangeValue"
                 class="fw-semibold text-body-secondary"
-                >Hasta 0 km</span
+                >Fins a 0 km</span
               >
             </div>
             <input
@@ -372,7 +369,7 @@
                 data-target="distanceRange"
                 data-value="1"
               >
-                Hasta 1 km
+                Fins a 1 km
               </button>
               <button
                 type="button"
@@ -380,7 +377,7 @@
                 data-target="distanceRange"
                 data-value="3"
               >
-                Hasta 3 km
+                Fins a 3 km
               </button>
               <button
                 type="button"
@@ -388,14 +385,14 @@
                 data-target="distanceRange"
                 data-value="5"
               >
-                Hasta 5 km
+                Fins a 5 km
               </button>
             </div>
           </section>
 
           <section class="mb-4" aria-labelledby="vehicle-filter-title">
             <h2 id="vehicle-filter-title" class="h6 mb-3 fw-semibold text-body">
-              Tipo de vehículo
+              Tipus de vehicle
             </h2>
             <div class="vehicle-grid">
               <button
@@ -408,7 +405,7 @@
                   ><i class="bi bi-car-front"></i
                 ></span>
                 <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Turismo</span>
+                  <span class="fw-semibold text-body">Turisme</span>
                   <small class="text-body-secondary"
                     >A &lt; 1.9m, L &lt; 5.0m</small
                   >
@@ -468,7 +465,7 @@
               >
                 <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
                 <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Camión 7m</span>
+                  <span class="fw-semibold text-body">Camió 7m</span>
                   <small class="text-body-secondary"
                     >A &lt; 3.6m, L &lt; 7.0m</small
                   >
@@ -494,7 +491,7 @@
               >
                 <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
                 <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Camión 6m</span>
+                  <span class="fw-semibold text-body">Camió 6m</span>
                   <small class="text-body-secondary"
                     >A &lt; 2.7m, L &lt; 6.0m</small
                   >
@@ -508,7 +505,7 @@
               id="availability-filter-title"
               class="h6 mb-3 fw-semibold text-body"
             >
-              Disponibilidad
+              Disponibilitat
             </h2>
             <div class="availability-list d-flex flex-column gap-2">
               <div class="form-check d-flex align-items-center gap-2 mb-0">
@@ -540,7 +537,7 @@
                   for="halfOccupied"
                 >
                   <span class="status-dot status-half"></span>
-                  Medio ocupado
+                  Mig ocupat
                 </label>
               </div>
               <div class="form-check d-flex align-items-center gap-2 mb-0">
@@ -556,7 +553,7 @@
                   for="occupied"
                 >
                   <span class="status-dot status-occupied"></span>
-                  Ocupado
+                  Ocupat
                 </label>
               </div>
             </div>
@@ -567,7 +564,7 @@
               id="electric-filter-title"
               class="h6 mb-3 fw-semibold text-body"
             >
-              Carga eléctrica
+              Càrrega elèctrica
             </h2>
             <div class="form-check form-switch">
               <input
@@ -577,13 +574,13 @@
                 name="electricCharging"
               />
               <label class="form-check-label" for="electricCharging"
-                >Solo plazas con carga eléctrica</label
+                >Només places amb càrrega elèctrica</label
               >
             </div>
           </section>
 
           <p class="mb-2 text-body-secondary">
-            * Comprueba las medidas específicas que acepta cada parking.
+            * Comprova les mesures específiques que accepta cada aparcament.
           </p>
         </form>
 
@@ -593,10 +590,10 @@
             form="filtresContainer"
             class="btn btn-outline-secondary w-50"
           >
-            Borrar filtros
+            Esborra filtres
           </button>
           <button type="button" class="btn btn-danger w-50">
-            Ver resultados
+            Veure resultats
           </button>
         </div>
       </aside>
@@ -608,15 +605,15 @@
         class="btn btn-danger mobile-map-view-btn"
         aria-pressed="false"
       >
-        Ver mapa
+        Veure mapa
       </button>
     </main>
 
-    <!-- Slot de plantilla: Footer reutilizable -->
+    <!-- Slot de plantilla: Peu de pàgina reutilitzable -->
     <div
       class="template-slot"
       data-template="components/footer.html"
-      aria-label="Footer"
+      aria-label="Peu de pàgina"
     ></div>
 
     <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

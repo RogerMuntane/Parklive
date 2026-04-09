@@ -6853,6 +6853,10 @@ textarea.form-control-lg {
   height: 165px;
 }
 
+.page-landing .parking-result-card {
+  margin-block: 0.75rem;
+}
+
 .page-landing.results-collapsed .parking-results-panel {
   width: 64px;
   flex-basis: 64px;
@@ -6866,8 +6870,9 @@ textarea.form-control-lg {
 
 .page-landing.results-collapsed .parking-results-title,
 .page-landing.results-collapsed .parking-results-subtitle,
-.page-landing.results-collapsed .parking-result-card {
-  display: none;
+.page-landing.results-collapsed .parking-result-card,
+.page-landing.results-collapsed [data-role=parking-pagination] {
+  display: none !important;
 }
 
 .page-landing.results-collapsed .map-search-wrapper {
