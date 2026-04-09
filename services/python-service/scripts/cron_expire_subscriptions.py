@@ -17,7 +17,7 @@ def expire_subscriptions():
         # Cercar subscripcions que han arribat a la data final i no tenen autorenovació
         # O que estan marcades com a 'cancel·lada' però encara eren 'premium'
         query = """
-            SELECT s.id, s.usuari_id, s.stripe_subscription_id 
+            SELECT s.id, s.usuari_id
             FROM subscripcions s
             JOIN usuaris u ON s.usuari_id = u.id
             WHERE u.tipus_usuari = 'premium'

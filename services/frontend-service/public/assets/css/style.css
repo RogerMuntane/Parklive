@@ -20880,6 +20880,12 @@ textarea.form-control-lg {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+[data-bs-theme=dark] .page-reserva-aparcament .card-custom {
+  background-color: rgb(71.02, 74.2, 109.18);
+  border: 1px solid transparent;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
 .page-reserva-aparcament .form-control,
 .page-reserva-aparcament .form-select {
   padding: 0.75rem 1rem;

@@ -73,6 +73,7 @@ services:
     volumes:
       - ./services/python-service:/app
       - ./shared:/app/shared
+      - ./storage:/app/storage
     depends_on:
       mysql:
         condition: service_healthy
@@ -113,6 +114,7 @@ services:
     volumes:
       - ./services/python-service:/app
       - ./shared:/app/shared
+      - ./storage:/app/storage
     environment:
       PYTHONPATH: /app
       DB_HOST: mysql

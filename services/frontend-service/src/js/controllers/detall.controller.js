@@ -222,7 +222,7 @@ function renderDetall(a) {
   const reservaBtn = document.querySelector('[data-detall="reserva-btn"]');
   if (reservaBtn) {
     reservaBtn.addEventListener('click', () => {
-      alert('[ParkLive] Sistema de reserves properament disponible.');
+      window.location.href = `/reserva_Aparcament.html?id=${a.id}`;
     });
   }
 
@@ -251,6 +251,45 @@ function renderDetall(a) {
       window._detallMap = map;
     }
   }
+  /* ── Valoracions (Ressenyes) ─────────────────────────────────── */
+  renderValoracions(a.valoracions || []);
+}
+
+/** Renderitza la llista de ressenyes recents */
+function renderValoracions(valoracions) {
+  const container = document.querySelector('[data-detall-list="valoracions"]');
+  if (!container) return;
+
+  if (!valoracions || valoracions.length === 0) {
+    // Ja hi ha el missatge de "no hi ha valoracions" al HTML inicialment o si el volem forçar:
+    container.innerHTML = `
+      <div class="py-4 text-center text-muted">
+        <i class="bi bi-chat-left-text fs-2 d-block mb-2"></i>
+        <p>Encara no hi ha valoracions per aquest aparcament.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = ''; // Netejar
+
+  valoracions.forEach((v) => {
+    const data = v.created_at ? new Date(v.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'long' }) : 'Recent';
+    
+    const reviewHtml = `
+      <div class="border-bottom mb-4 pb-4">
+        <div class="d-flex gap-3 mb-2">
+          <div class="text-warning small text-nowrap">
+            ${buildStars(v.puntuacio)}
+          </div>
+          <span class="fw-bold">${esc(v.usuari_nom || 'Usuari')}</span>
+          <span class="text-muted small">${data}</span>
+        </div>
+        <p class="mb-0">${esc(v.comentari || '')}</p>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', reviewHtml);
+  });
 }
 
 /* ------------------------------------------------------------------ */

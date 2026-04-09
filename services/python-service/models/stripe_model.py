@@ -321,6 +321,67 @@ def get_active_subscription(user_id):
     finally:
         conn.close()
 
+def createPaymentIntent(amount, currency, customer_id, payment_method_id):
+    """Crea i confirma automàticament un intent de pagament a Stripe"""
+    try:
+        payment_intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency=currency,
+            customer=customer_id,
+            payment_method=payment_method_id,
+            confirm=True,
+            automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
+        )
+        return payment_intent
+    except stripe.error.CardError as e:
+        print(f"[Stripe] Targeta denegada ({e.user_message})")
+        raise Exception(e.user_message)
+    except Exception as e:
+        print(f"[Stripe] Error creant intent de pagament: {e}")
+        return None
+
+
+def registrar_pagament_db(reserva_id, usuari_id, import_pagament, metode, referencia_externa, estat='completat'):
+    """
+    Registra el pagament a la base de dades mitjançant el procedure sp_registrar_pagament
+    """
+    from models.db_connection import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Procedure params: p_reserva_id, p_usuari_id, p_import, p_metode, p_estat, p_referencia_externa, OUT p_id, OUT p_error
+        proc_args = [
+            reserva_id,
+            usuari_id,
+            import_pagament,
+            metode,
+            estat,
+            referencia_externa,
+            None,
+            None
+        ]
+        result_args = cursor.callproc('sp_registrar_pagament', proc_args)
+        conn.commit()
+
+        if isinstance(result_args, dict):
+            pagament_id = result_args.get('sp_registrar_pagament_arg7')
+            error_msg = result_args.get('sp_registrar_pagament_arg8')
+        else:
+            pagament_id = result_args[6]
+            error_msg = result_args[7]
+
+        if error_msg:
+            raise ValueError(error_msg)
+
+        return pagament_id  # Retorna el pagament_id
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+
 
 def log_failed_payment(stripe_customer_id, invoice_id, amount):
     """Registra un intent de pagament fallit"""

@@ -4,9 +4,15 @@
     .card-custom {
         border-radius: 12px;
         background-color: var(--bs-card-bg);
-        border: 0.75px solid $danger;
+        border: 1px solid $danger;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        [data-bs-theme="dark"] & {
+            background-color: lighten($dark-theme, 2%);
+            border: 1px solid transparent;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
     }
 
     .form-control,

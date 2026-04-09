@@ -326,8 +326,20 @@ async function initControllers() {
 
     // ── Detall d'aparcament ───────────────────────────────────
     if (bodyClass.includes('page-detall-aparcament')) {
-      const { initDetallAparcament } = await import('./controllers/detall.controller.js');
+      const { initDetallAparcament } = await import(`./controllers/detall.controller.js?v=${Date.now()}`);
       initDetallAparcament();
+    }
+
+    // ── Reseva d'aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-reserva-aparcament')) {
+      const { initReservaAparcament } = await import(`./controllers/reserva_aparcament.controller.js?v=${Date.now()}`);
+      initReservaAparcament();
+    }
+
+    // ── Tiquet d'Aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-tiquet')) {
+      const { initTiquetAparcament } = await import(`./controllers/tiquet.controller.js?v=${Date.now()}`);
+      initTiquetAparcament();
     }
 
   } catch (err) {
@@ -381,6 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sectionTitles = {
       info: 'Informació personal',
       password: 'Canviar contrasenya',
+      reservations: 'Les Teves Reserves Actives',
       history: 'Historial',
       payment: 'Mètode de pagament',
       plan: 'Millorar el pla',

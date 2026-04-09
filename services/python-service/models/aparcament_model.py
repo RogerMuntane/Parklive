@@ -20,25 +20,42 @@ def get_all_aparcaments():
 
 
 def get_aparcament_by_id(aparcament_id):
-    """Obté un aparcament per ID"""
+    """Obté un aparcament per ID amb les seves fotos i valoracions"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     # Procedure equivalent: sp_obtenir_aparcament_detall(aparcament_id)
     cursor.callproc('sp_obtenir_aparcament_detall', [aparcament_id])
+    
     aparcament = None
+    fotos = []
+    valoracions = []
+
+    # Iterar sobre tots els result sets retornats pel procedure
     for idx, result in enumerate(cursor.stored_results()):
         if idx == 0:
+            # Primer result set: Dades de l'aparcament
             aparcament = result.fetchone()
-            break
+        elif idx == 1:
+            # Segon result set: Fotografies
+            fotos = result.fetchall()
+        elif idx == 2:
+            # Tercer result set: Valoracions recents
+            valoracions = result.fetchall()
+
     cursor.close()
+    conn.close()
 
     # Si no es troba, retorna None
     if aparcament is None:
         return None
 
-    # Serialitzar les dades
-    return serialize_row(aparcament)
+    # Serialitzar les dades i afegir les llistes de fotos i valoracions
+    resultat = serialize_row(aparcament)
+    resultat['fotos'] = serialize_rows(fotos)
+    resultat['valoracions'] = serialize_rows(valoracions)
+
+    return resultat
 
 
 def get_aparcaments_by_filters(filters):

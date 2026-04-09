@@ -20,6 +20,7 @@
     background-color: var(--bs-primary);
     color: white;
     border: none;
+
     &:hover {
       background-color: var(--bs-primary-border-subtle);
       color: white;
@@ -31,8 +32,9 @@
     color: white;
     border: none;
     font-weight: 600;
+
     &:hover {
-      background-color: darken(#c1121f, 10%); // Usant el valor de $crimson aproximat si no tenim variables-dark a mà
+      background-color: darken(#c1121f, 10%);
       color: white;
     }
   }
