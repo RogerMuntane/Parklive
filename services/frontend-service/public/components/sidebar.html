@@ -1,19 +1,19 @@
 <!-- Sidebar Component -->
 <aside class="profile-sidebar d-flex flex-column p-3 p-lg-4" style="width:260px;min-width:260px;">
-    <a href="/index.html" class="d-flex align-items-center gap-2 mb-4 text-decoration-none text-light">
+    <!-- <a href="/index.html" class="d-flex align-items-center gap-2 mb-4 text-decoration-none text-light">
         <img src="/assets/images/parklive_logof.png" alt="ParkLive logo" class="profile-logo"
             style="max-width: 120px; height: auto;">
-    </a>
+    </a> -->
     <div class="d-flex flex-column align-items-center mb-4 gap-2">
         <div class="avatar-ring">
             <div class="avatar-inner">
                 <i class="bi bi-person-fill fs-2 text-light"></i>
             </div>
         </div>
-        <span class="fw-bold text-light">Jordi Puig</span>
-        <span class="badge rounded-pill text-danger"
+        <span class="fw-bold text-light" id="sidebar-user-name"></span>
+        <span class="badge rounded-pill text-danger" id="sidebar-user-plan-badge"
             style="background:rgba(193,18,31,.15);font-size:.7rem;letter-spacing:.07em;">
-            <i class="bi bi-star-fill" style="font-size:.6rem"></i> Bàsic
+            <i class="bi bi-star-fill" style="font-size:.6rem"></i> <span id="sidebar-user-plan"></span>
         </span>
     </div>
     <hr class="border-secondary opacity-25 my-1" />
@@ -25,6 +25,10 @@
         <button class="sidebar-nav-item" data-section="password">
             <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
             Canviar contrasenya
+        </button>
+        <button class="sidebar-nav-item" data-section="reservations">
+            <span class="nav-icon"><i class="bi bi-car-front"></i></span>
+            Les meves reserves
         </button>
         <button class="sidebar-nav-item" data-section="history">
             <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
@@ -39,12 +43,16 @@
             <span class="nav-icon"><i class="bi bi-rocket-takeoff"></i></span>
             Millorar el pla
         </button>
+        <button class="sidebar-nav-item" data-section="manage">
+            <span class="nav-icon"><i class="bi bi-star"></i></span>
+            Gestionar subscripció
+        </button>
         <button class="sidebar-nav-item" data-section="notifications">
             <span class="nav-icon"><i class="bi bi-bell"></i></span>
             Notificacions
         </button>
         <hr class="border-secondary opacity-25 my-1" />
-        <button class="sidebar-nav-item sidebar-logout mt-auto" data-section="logout">
+        <button class="sidebar-nav-item sidebar-logout btn-logout mt-auto" data-section="logout" data-action="logout">
             <span class="nav-icon"><i class="bi bi-box-arrow-left"></i></span>
             Tancar sessió
         </button>

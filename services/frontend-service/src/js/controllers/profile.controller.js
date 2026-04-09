@@ -3,27 +3,9 @@
  * Controlador per funcionalitats del perfil d'usuari (canvi de contrasenya)
  */
 
-import { hideAllAlerts, setFormLoading } from '../utils.js';
+import { hideAllAlerts, setFormLoading, showBootstrapAlert } from '../utils.js';
 import { PHP_API_URL } from '../config.js';
 
-// Bootstrap-styled alert helper
-function showBootstrapAlert(type, message, parent = document.body) {
-  hideAllAlerts();
-  const alert = document.createElement('div');
-  alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-  alert.style.zIndex = 9999;
-  alert.role = 'alert';
-  alert.innerHTML = `
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  parent.appendChild(alert);
-  setTimeout(() => {
-    alert.classList.remove('show');
-    alert.classList.add('hide');
-    setTimeout(() => alert.remove(), 500);
-  }, 3500);
-}
 
 /**
  * Inicialitza el formulari de canvi de contrasenya del perfil
@@ -36,52 +18,84 @@ export function initProfilePasswordForm() {
   const confirm = document.getElementById('pass-confirm');
   const btn = document.getElementById('btn-update-password');
   const section = document.getElementById('section-password');
-  const strengthFill = document.getElementById('strength-fill');
   const strengthLabel = document.getElementById('strength-label');
 
   if (!actual || !nova || !confirm || !btn || !section) return;
 
-  // Lògica del mesurador de força de la contrasenya
-  if (strengthFill && strengthLabel) {
+  // Lògica del mesurador de força (Segments i Requisits)
+  if (nova) {
     nova.addEventListener('input', (e) => {
-      const value = e.target.value;
-      if (!value) {
-        strengthFill.style.width = '0%';
-        strengthFill.className = 'strength-fill';
-        strengthLabel.textContent = 'Introdueix una contrasenya';
-        strengthLabel.className = 'text-secondary mt-1 d-block';
+      const val = e.target.value;
+      const segments = document.querySelectorAll('#strength-segments .strength-segment');
+      const reqLength = document.getElementById('req-length');
+      const reqUpper = document.getElementById('req-upper');
+      const reqNumber = document.getElementById('req-number');
+      const reqSymbol = document.getElementById('req-symbol');
+
+      if (!val) {
+        segments.forEach(s => s.className = 'strength-segment');
+        if (strengthLabel) {
+            strengthLabel.textContent = '--';
+            strengthLabel.className = 'small fw-bold text-secondary';
+        }
+        [reqLength, reqUpper, reqNumber, reqSymbol].forEach(req => {
+            if (req) {
+                req.classList.remove('met');
+                req.querySelector('i').className = 'bi bi-circle';
+            }
+        });
         return;
       }
 
-      let score = 0;
-      if (value.length > 7) score++;
-      if (value.length > 11) score++;
-      if (/[A-Z]/.test(value)) score++;
-      if (/[0-9]/.test(value)) score++;
-      if (/[^A-Za-z0-9]/.test(value)) score++;
+      // 1. Verificar requisits individuals
+      const isLength = val.length >= 8;
+      const isUpper = /[A-Z]/.test(val);
+      const isNumber = /[0-9]/.test(val);
+      const isSymbol = /[^A-Za-z0-9]/.test(val);
 
-      let width = '0%';
+      const updateReq = (el, met) => {
+        if (!el) return;
+        if (met) {
+          el.classList.add('met');
+          el.querySelector('i').className = 'bi bi-check-circle-fill';
+        } else {
+          el.classList.remove('met');
+          el.querySelector('i').className = 'bi bi-circle';
+        }
+      };
+
+      updateReq(reqLength, isLength);
+      updateReq(reqUpper, isUpper);
+      updateReq(reqNumber, isNumber);
+      updateReq(reqSymbol, isSymbol);
+
+      // 2. Calcular puntuació (0-4)
+      let score = 0;
+      if (isLength) score++;
+      if (isUpper) score++;
+      if (isNumber) score++;
+      if (isSymbol) score++;
+
+      // 3. Actualitzar segments i label
       let colorClass = '';
       let text = '';
+      if (score === 1) { colorClass = 'weak'; text = 'Feble'; }
+      else if (score === 2) { colorClass = 'medium'; text = 'Mitjana'; }
+      else if (score === 3) { colorClass = 'strong'; text = 'Forta'; }
+      else if (score === 4) { colorClass = 'expert'; text = 'Excel·lent'; }
 
-      if (score <= 2) {
-        width = '30%';
-        colorClass = 'bg-danger';
-        text = 'Feble';
-      } else if (score === 3 || score === 4) {
-        width = '50%';
-        colorClass = 'bg-warning';
-        text = 'Mitjana';
-      } else {
-        width = '100%';
-        colorClass = 'bg-success';
-        text = 'Forta';
+      segments.forEach((s, idx) => {
+        s.className = 'strength-segment';
+        if (idx < score) {
+          s.classList.add('active', colorClass);
+        }
+      });
+
+      if (strengthLabel) {
+        strengthLabel.textContent = text;
+        strengthLabel.className = `small fw-bold text-${(colorClass === 'strong') ? 'warning' : (colorClass === 'expert' ? 'success' : 'danger')}`;
+        if (colorClass === 'medium') strengthLabel.classList.replace('text-danger', 'text-warning');
       }
-
-      strengthFill.style.width = width;
-      strengthFill.className = `strength-fill ${colorClass}`;
-      strengthLabel.textContent = text;
-      strengthLabel.className = `mt-1 d-block text-${colorClass.replace('bg-', '')}`;
     });
   }
 
@@ -132,6 +146,16 @@ export function initProfilePasswordForm() {
       setFormLoading(btn, false);
     }
   });
+
+  // Botó Cancel·lar
+  const btnCancel = document.getElementById('btn-cancel-password');
+  if (btnCancel) {
+    btnCancel.addEventListener('click', () => {
+      actual.value = nova.value = confirm.value = '';
+      // Reset targets/requisits
+      nova.dispatchEvent(new Event('input'));
+    });
+  }
 }
 
 export async function initProfileInfoForm() {
@@ -259,6 +283,206 @@ export function initProfileInfoSaveForm() {
       btnSave.disabled = false;
       btnSave.innerHTML = originalText;
     }
+  });
+}
+
+/**
+ * Inicialitza la secció de Mètodes de Pagament
+ */
+export async function initProfilePaymentSection() {
+    const section = document.getElementById('section-payment');
+    if (!section) return;
+
+    let user = null;
+    try {
+        const raw = sessionStorage.getItem('parklive_user_data');
+        if (raw) user = JSON.parse(raw);
+    } catch (_) {}
+
+    if (!user || !user.id) return;
+
+    const { initProfilePaymentSection: initStripePayment } = await import('./stripe.controller.js');
+    initStripePayment(user.id);
+}
+
+/**
+ * Inicialitza la secció de Gestió del Pla
+ */
+export async function initProfilePlanSection() {
+  const btnUpdate = document.getElementById('btn-update-plan');
+  const btnAddCardPlan = document.getElementById('btn-add-card-plan');
+  const planSection = document.getElementById('section-plan');
+
+  if (!btnUpdate || !planSection) return;
+
+  // Obtenir user_id
+  let user = null;
+  try {
+    const raw = sessionStorage.getItem('parklive_user_data');
+    if (raw) user = JSON.parse(raw);
+  } catch (_) {}
+
+  if (!user || !user.id) return;
+
+  // 1. Carregar les targetes guardades per al pla
+  const { loadCardsForPlan, createSubscription, initStripeButton, updateSubscriptionAutorenewal } = await import('./stripe.controller.js');
+  try {
+      await loadCardsForPlan(user.id);
+  } catch (err) {
+      console.warn('[ParkLive] No s\'han pogut carregar les targetes:', err);
+  }
+
+  // 1.0 Lògica del Switcher Mensual/Anual
+  const btnMonthly = document.getElementById('btn-monthly-plan');
+  const btnAnnual = document.getElementById('btn-annual-plan');
+  let currentPlanType = 'monthly';
+
+  if (btnMonthly && btnAnnual && planSection) {
+      console.log('[ParkLive] Inicialitzant switcher de plans');
+      const updateSwitcherUI = (type) => {
+          currentPlanType = type;
+          if (type === 'annual') {
+              btnAnnual.classList.add('active');
+              btnMonthly.classList.remove('active');
+              planSection.classList.add('annual-plan-active');
+          } else {
+              btnMonthly.classList.add('active');
+              btnAnnual.classList.remove('active');
+              planSection.classList.remove('annual-plan-active');
+          }
+          console.log('[ParkLive] Pla canviat a:', type);
+      };
+
+      btnMonthly.addEventListener('click', (e) => {
+          e.preventDefault();
+          updateSwitcherUI('monthly');
+      });
+      btnAnnual.addEventListener('click', (e) => {
+          e.preventDefault();
+          updateSwitcherUI('annual');
+      });
+      
+      // Forçar estat inicial per si de cas
+      updateSwitcherUI('monthly');
+  } else {
+      console.warn('[ParkLive] No s\'han trobat els elements del switcher:', { btnMonthly: !!btnMonthly, btnAnnual: !!btnAnnual, planSection: !!planSection });
+  }
+
+  // 1.1 Lògica del nou Toggle de Renovació Automàtica
+  const toggleCard = document.getElementById('autorenovacio-toggle');
+  const toggleSwitch = document.getElementById('autorenovacio-switch');
+  const toggleCheckbox = document.getElementById('autorenovacio');
+  const toggleBadge = document.getElementById('autorenovacio-badge');
+  const toggleDesc = document.getElementById('autorenovacio-desc');
+
+  if (toggleCard && toggleSwitch && toggleCheckbox) {
+      // Inicialitzar estat segons checkbox (per si ve marcat per defecte o per la BD)
+      const updateToggleUI = (isActive) => {
+          if (isActive) {
+              toggleCard.classList.add('active');
+              toggleSwitch.classList.add('on');
+              toggleBadge.textContent = 'Actiu';
+              toggleBadge.className = 'toggle-badge';
+              toggleDesc.textContent = "S'utilitzarà la targeta seleccionada per als cobraments futurs.";
+          } else {
+              toggleCard.classList.remove('active');
+              toggleSwitch.classList.remove('on');
+              toggleBadge.textContent = 'Desactivat';
+              toggleBadge.className = 'toggle-badge bg-secondary bg-opacity-10 text-secondary';
+              toggleDesc.textContent = "La subscripció es cancel·larà al final del període actual.";
+          }
+      };
+
+      toggleCard.addEventListener('click', async () => {
+          const newState = !toggleCheckbox.checked;
+          toggleCheckbox.checked = newState;
+          updateToggleUI(newState);
+
+          // Si l'usuari ja és premium, sincronitzem en temps real amb Stripe
+          if (user.tipus_usuari === 'premium') {
+              toggleCard.style.pointerEvents = 'none';
+              toggleCard.style.opacity = '0.7';
+              
+              const result = await updateSubscriptionAutorenewal(user.id, newState);
+              
+              toggleCard.style.pointerEvents = 'auto';
+              toggleCard.style.opacity = '1';
+
+              if (!result.success) {
+                  // Revertir si falla
+                  toggleCheckbox.checked = !newState;
+                  updateToggleUI(!newState);
+                  showBootstrapAlert('danger', 'No s\'ha pogut actualitzar la renovació a Stripe.', planSection);
+              }
+          }
+      });
+  }
+
+  // 2. Vincular botó d'afegir targeta (obre el modal existent)
+  if (btnAddCardPlan) {
+    btnAddCardPlan.addEventListener('click', () => {
+      // Re-utilitzem el botó amagat o directament el modal de profile-payment si està carregat
+      const realBtnAdd = document.getElementById('btn-add-card');
+      if (realBtnAdd) {
+        realBtnAdd.click();
+      } else {
+        // Si no està el botó, inicialitzem el modal i el mostrem.
+        // Nota: addCardModal s'ha de carregar si s'inclou profile-payment.html
+        initStripeButton(user.id);
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addCardModal'));
+        modal.show();
+      }
+    });
+
+    // Escoltarem quan es tanqui el modal per recarregar les targetes del pla
+    const modalEl = document.getElementById('addCardModal');
+    if (modalEl) {
+      modalEl.addEventListener('hidden.bs.modal', () => {
+        loadCardsForPlan(user.id);
+      });
+    }
+  }
+
+  // 3. Lògica d'actualització del pla
+  btnUpdate.addEventListener('click', async () => {
+    const selectedCard = document.querySelector('input[name="plan-card"]:checked');
+    
+    // Si no hi ha targeta seleccionada, demanem afegir-ne una
+    if (!selectedCard) {
+      if (btnAddCardPlan) {
+        btnAddCardPlan.click();
+      } else {
+        showBootstrapAlert('warning', 'Si us plau, afegeix un mètode de pagament primer.', planSection);
+      }
+      return;
+    }
+
+    btnUpdate.disabled = true;
+    const originalText = btnUpdate.innerHTML;
+    btnUpdate.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processant...';
+
+    const autorenovacio = document.getElementById('autorenovacio')?.checked ?? true;
+    const result = await createSubscription(user.id, selectedCard.value, autorenovacio, currentPlanType);
+
+    if (result.success) {
+      // Actualitzar sessionStorage
+      try {
+        const raw = sessionStorage.getItem('parklive_user_data');
+        if (raw) {
+          const userData = JSON.parse(raw);
+          userData.tipus_usuari = 'premium';
+          sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
+        }
+      } catch (_) {}
+
+      showBootstrapAlert('success', 'Pla actualitzat a Premium! Gaudeix dels avantatges.', planSection);
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showBootstrapAlert('danger', 'Error en processar la subscripció: ' + result.error, planSection);
+    }
+
+    btnUpdate.disabled = false;
+    btnUpdate.innerHTML = originalText;
   });
 }
 

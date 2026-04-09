@@ -25,9 +25,31 @@ export function showAlert(type, message, scope = document) {
   alert.classList.remove('d-none', 'is-hidden');
 
   // Amagar automàticament els missatges d'èxit al cap de 5 s
-  if (type === 'success') {
-    setTimeout(() => hideAlert(type, scope), 5000);
-  }
+  alert.classList.add('d-none');
+}
+
+/**
+ * Mostra una alerta a l'estil Bootstrap que s'esvaeix automàticament.
+ * @param {string} type - 'success', 'danger', 'warning', 'info'
+ * @param {string} message - El missatge a mostrar
+ * @param {HTMLElement} parent - On penjar l'alerta (per defecte document.body)
+ */
+export function showBootstrapAlert(type, message, parent = document.body) {
+    // Intentar netejar alertes prèvies si el mètode existeix localment
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alert.style.zIndex = 9999;
+    alert.role = 'alert';
+    alert.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    parent.appendChild(alert);
+    setTimeout(() => {
+      alert.classList.remove('show');
+      alert.classList.add('hide');
+      setTimeout(() => alert.remove(), 500);
+    }, 3500);
 }
 
 /**

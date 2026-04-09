@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'parklive/php-service',
+        'pretty_version' => 'dev-develop',
+        'version' => 'dev-develop',
+        'reference' => '5cd3132d32f120e03577ee82ac09ce488450abc6',
+        'type' => 'project',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        'firebase/php-jwt' => array(
+            'pretty_version' => 'v6.11.1',
+            'version' => '6.11.1.0',
+            'reference' => 'd1e91ecf8c598d073d0995afa8cd5c75c6e19e66',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../firebase/php-jwt',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'parklive/php-service' => array(
+            'pretty_version' => 'dev-develop',
+            'version' => 'dev-develop',
+            'reference' => '5cd3132d32f120e03577ee82ac09ce488450abc6',
+            'type' => 'project',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'stripe/stripe-php' => array(
+            'pretty_version' => 'v10.21.0',
+            'version' => '10.21.0.0',
+            'reference' => 'b4ab319731958077227fad1874a3671458c5d593',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../stripe/stripe-php',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);

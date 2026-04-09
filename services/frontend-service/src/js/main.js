@@ -20,7 +20,7 @@ async function loadTemplates() {
     const url = slot.getAttribute('data-template');
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(`${url}?v=${Date.now()}`);
 
       if (!response.ok) {
         console.error(`[ParkLive] Error carregant plantilla "${url}": ${response.status}`);
@@ -85,7 +85,7 @@ function initThemeToggle() {
 
 /*  3. BOTÓ AUTH DEL HEADER (SESSIÓ)                                   */
 
-import { isAuthenticated, clearUserSession } from './utils.js';
+import { isAuthenticated, clearUserSession, getUserId } from './utils.js';
 import { phpApi } from './api.js';
 import { logoutUser } from './controllers/auth.controller.js';
 
@@ -201,6 +201,63 @@ function initAuthToggle() {
   }
 }
 
+/**
+ * Actualitza el nom i el pla de l'usuari al sidebar si existeix.
+ */
+function initSidebarData() {
+  const nameEl = document.getElementById('sidebar-user-name');
+  const planEl = document.getElementById('sidebar-user-plan');
+  if (!nameEl || !planEl) return;
+
+  try {
+    const raw = sessionStorage.getItem('parklive_user_data');
+    if (!raw) return;
+
+    const user = JSON.parse(raw);
+
+    // El nom pot venir en diferents formats segons si és OAuth o normal
+    const firstName = user.nom || user.given_name || (user.name ? user.name.split(' ')[0] : '');
+    const lastName = user.cognom || user.cognoms || user.family_name || (user.name ? user.name.split(' ').slice(1).join(' ') : '');
+
+    nameEl.textContent = `${firstName} ${lastName}`.trim() || 'Usuari';
+
+    // Mapeig de noms de plans per a la interfície
+    const plans = {
+      'basic': 'Bàsic',
+      'premium': 'Premium',
+      'operador': 'Operador',
+      'admin': 'Admin'
+    };
+
+    const rawPlan = (user.tipus_usuari || 'basic').toLowerCase();
+    planEl.textContent = plans[rawPlan] || rawPlan.charAt(0).toUpperCase() + rawPlan.slice(1);
+
+    // Actualitzar estils del badge segons el pla
+    const badge = document.getElementById('sidebar-user-plan-badge');
+    const badgeIcon = badge?.querySelector('i');
+
+    if (rawPlan === 'premium') {
+      badge?.classList.remove('text-danger');
+      badge?.classList.add('text-warning');
+      badge.style.background = 'rgba(255, 193, 7, 0.15)'; // Or similar gold color
+      if (badgeIcon) badgeIcon.className = 'bi bi-star-fill';
+    } else if (rawPlan === 'admin' || rawPlan === 'operador') {
+      badge?.classList.remove('text-danger');
+      badge?.classList.add('text-info');
+      badge.style.background = 'rgba(13, 202, 240, 0.15)';
+      if (badgeIcon) badgeIcon.className = 'bi bi-shield-check';
+    } else {
+      // Bàsic / per defecte
+      badge?.classList.add('text-danger');
+      badge.style.background = 'rgba(193, 18, 31, 0.15)';
+      if (badgeIcon) badgeIcon.className = 'bi bi-person-badge';
+    }
+
+  } catch (err) {
+    console.warn('[ParkLive] Error al carregar dades del sidebar:', err);
+  }
+}
+
 /*  4. CÀRREGA DINÀMICA DE CONTROLADORS                                */
 
 /**
@@ -267,6 +324,24 @@ async function initControllers() {
       initLanding();
     }
 
+    // ── Detall d'aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-detall-aparcament')) {
+      const { initDetallAparcament } = await import(`./controllers/detall.controller.js?v=${Date.now()}`);
+      initDetallAparcament();
+    }
+
+    // ── Reseva d'aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-reserva-aparcament')) {
+      const { initReservaAparcament } = await import(`./controllers/reserva_aparcament.controller.js?v=${Date.now()}`);
+      initReservaAparcament();
+    }
+
+    // ── Tiquet d'Aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-tiquet')) {
+      const { initTiquetAparcament } = await import(`./controllers/tiquet.controller.js?v=${Date.now()}`);
+      initTiquetAparcament();
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
   }
@@ -276,6 +351,7 @@ async function initControllers() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadTemplates();
+  initSidebarData();
 
   // Crida initAuthToggle després de carregar templates (header)
   initAuthToggle();
@@ -287,10 +363,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
   if (document.body.classList.contains('page-profile')) {
-    const { initProfilePasswordForm, initProfileInfoForm, initProfileInfoSaveForm } = await import('./controllers/profile.controller.js');
+    const { initProfilePasswordForm, initProfileInfoForm, initProfileInfoSaveForm, initProfilePlanSection } = await import('./controllers/profile.controller.js');
     initProfilePasswordForm();
     initProfileInfoForm();
     initProfileInfoSaveForm();
+    initProfilePlanSection();
+
+    // Integració Stripe
+    const userId = getUserId();  // sessionStorage → 'parklive_user_id'
+    if (userId) {
+      import('./controllers/stripe.controller.js').then(async (module) => {
+        // Inicialitzar instància de Stripe
+        await module.initStripe(userId);
+        // Carregar targetes existents
+        await module.loadPaymentMethods(userId);
+        // Vincular botó "Afegir nova targeta"
+        module.initStripeButton(userId);
+        // Actualitzar resum del pla
+        await module.updatePlanSummary(userId);
+      }).catch(err => console.error('[ParkLive] Error carregant stripe-integration:', err));
+    }
   }
 
   // Wait for sidebar to be loaded
@@ -301,16 +393,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sectionTitles = {
       info: 'Informació personal',
       password: 'Canviar contrasenya',
+      reservations: 'Les Teves Reserves Actives',
       history: 'Historial',
       payment: 'Mètode de pagament',
       plan: 'Millorar el pla',
+      manage: 'Gestionar subscripció',
       notifications: 'Notificacions',
     };
     sidebarBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const sec = btn.dataset.section;
         if (sec === 'logout') {
-          if (confirm('Tancar sessió?')) window.location.href = '/index.html';
+          logoutUser('/index.html');
           return;
         }
         sidebarBtns.forEach(b => b.classList.remove('active'));
@@ -330,6 +424,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[ParkLive] isOAuth:', isOAuth);
     if ((passwordSection && passwordSection.style.display === 'none') || isOAuth) {
       if (passwordBtn) passwordBtn.style.display = 'none';
+    }
+
+    // Oculta la pestanya "Millorar el pla" o "Gestionar subscripció" depenent si s'és premium
+    const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
+    const manageBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
+    try {
+      const storedUserData = sessionStorage.getItem('parklive_user_data');
+      if (storedUserData) {
+        const userData = JSON.parse(storedUserData);
+        if (userData.tipus_usuari === 'premium') {
+          if (planBtn) planBtn.style.display = 'none';
+        } else {
+          if (manageBtn) manageBtn.style.display = 'none';
+        }
+      } else {
+        if (manageBtn) manageBtn.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('[ParkLive] Error parsejant dades usuari per ocultar pla:', e);
     }
   }, 100);
 });

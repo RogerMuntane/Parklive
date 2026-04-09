@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Reserva el teu aparcaments - ParkLive">
+    <title>ParkLive | Reserva Aparcament</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+
+<body class="page page-reserva-aparcament">
+    <div class="template-slot" data-template="./components/header.html" aria-label="Header"></div>
+
+    <main class="main-content py-5">
+        <!-- Skeleton per quan està carregant -->
+        <div class="container text-center py-5" data-reserva-state="loading" style="display: none;">
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Carregant...</span>
+            </div>
+            <p class="mt-3 text-muted">Carregant la informació...</p>
+        </div>
+
+        <form id="form-reserva" class="container" data-reserva-state="content">
+            <div class="row g-4">
+
+                <!-- ── Columna Principal ───────────────────────── -->
+                <div class="col-lg-8">
+
+                    <!-- Capçalera de l'Aparcament -->
+                    <div class="card card-custom p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h1 class="h3 fw-bold mb-1" data-reserva="nom">Parking Temple Expiatori</h1>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-geo-alt me-1"></i> <span data-reserva="adreca">Carrer de Sardenya, 311, 08025 Barcelona</span>
+                                </p>
+                            </div>
+                            <span
+                                class="badge bg-success-subtle text-success px-3 py-2 rounded-pill border border-success-subtle">
+                                <i class="bi bi-circle-fill me-1 small"></i> Actiu
+                            </span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-4 text-muted small mt-3 pt-3 border-top">
+                            <span><i class="bi bi-building me-1"></i> Exterior · Aire lliure</span>
+                            <span><i class="bi bi-clock me-1"></i> Obert 24h</span>
+                            <span><i class="bi bi-currency-euro me-1"></i> <span data-reserva="tarifa">2,50 € / hora</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Data i hora d'entrada -->
+                    <div class="card card-custom p-4 mb-4">
+                        <h5 class="fw-bold mb-4">
+                            <i class="bi bi-calendar3 me-2 text-danger"></i> Data i hora d'entrada
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Data d'entrada</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="entrada-data" required>
+                                    <span class="input-group-text bg-body-tertiary border-start-0 text-muted">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Hora d'entrada</label>
+                                <input type="time" class="form-control" id="entrada-hora" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Data de sortida</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="sortida-data" required>
+                                    <span class="input-group-text bg-body-tertiary border-start-0 text-muted">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Hora de sortida</label>
+                                <input type="time" class="form-control" id="sortida-hora" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase d-block mb-3">Durada
+                                ràpida</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-hours-add="1">1 hora</button>
+                                <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-hours-add="2">2 hores</button>
+                                <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-hours-add="3">3 hores</button>
+                                <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-hours-add="4">4 hores</button>
+                                <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-hours-add="12">Mitja jornada</button>
+                                <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-hours-add="24">Tot el dia</button>
+                            </div>
+                        </div>
+
+                        <div
+                            class="alert alert-secondary border-0 mb-0 d-flex align-items-start gap-3 bg-body-tertiary rounded-3">
+                            <i class="bi bi-info-square text-danger fs-5 mt-1"></i>
+                            <p class="small text-muted mb-0">
+                                La reserva és vàlida des de l'hora d'entrada fins la sortida. Es cobrarà per hores
+                                completes.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Dades del vehicle -->
+                    <div class="card card-custom p-4 mb-4">
+                        <h5 class="fw-bold mb-4">
+                            <i class="bi bi-car-front me-2 text-danger"></i> Dades del vehicle
+                        </h5>
+                        <hr class="mb-4 text-muted opacity-25">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Matrícula</label>
+                                <input type="text" id="vehicle-matricula" class="form-control" placeholder="EX: 1234 ABC" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Tipus de
+                                    vehicle</label>
+                                <select class="form-select">
+                                    <option selected>Turisme</option>
+                                    <option>Moto</option>
+                                    <option>Furgoneta</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mètode de pagament -->
+                    <div class="card card-custom p-4 mb-4">
+                        <h5 class="fw-bold mb-4">
+                            <i class="bi bi-wallet2 me-2 text-danger"></i> Mètode de pagament
+                        </h5>
+                        <hr class="mb-4 text-muted opacity-25">
+
+                        <div id="payment-methods-container" class="d-grid gap-3 mb-4">
+                            <!-- Les targetes s'inseriran automàticament des del JS -->
+                        </div>
+
+                        <a href="/perfil.html" class="btn btn-outline-danger w-100 py-3 rounded-3">
+                            <i class="bi bi-plus-lg me-2"></i> Afegir nova targeta
+                        </a>
+                    </div>
+
+                </div>
+
+                <!-- ── Columna Lateral ────────────────────────── -->
+                <div class="col-lg-4">
+
+                    <!-- Disponibilitat -->
+                    <div class="card card-custom p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold small">Disponibilitat</span>
+                            <span class="text-muted small"><i class="bi bi-dot text-success fs-4 align-middle"></i> En
+                                temps real</span>
+                        </div>
+                        <div class="text-center mb-4">
+                            <div class="display-4 fw-bold" data-reserva="places-lliures">45</div>
+                            <div class="text-muted text-uppercase fw-bold x-small">Places lliures</div>
+                        </div>
+                        <div class="progress mb-2" style="height: 10px;">
+                            <div id="ocupacio-bar" class="progress-bar bg-warning" role="progressbar" style="width: 70%"
+                                aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between x-small text-muted mb-0">
+                            <span data-reserva="capacitat">Capacitat: 150</span>
+                            <span data-reserva="ocupacio">70% ple</span>
+                        </div>
+                    </div>
+
+                    <!-- Resum de la reserva -->
+                    <div class="card card-custom p-4 mb-4">
+                        <h5 class="fw-bold mb-4">
+                            <i class="bi bi-receipt me-2 text-danger"></i> Resum de la reserva
+                        </h5>
+                        <hr class="mb-4 text-muted opacity-25">
+
+                        <div class="summary-list d-grid gap-3 mb-4">
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Aparcament</span>
+                                <span class="fw-bold d-inline-block text-truncate" style="max-width: 150px;" data-reserva="nom">Temple Expiatori</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Entrada</span>
+                                <span class="fw-bold" data-reserva="resum-entrada">03/04/2026 · 10:00</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Sortida</span>
+                                <span class="fw-bold" data-reserva="resum-sortida">03/04/2026 · 12:00</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Durada</span>
+                                <span class="fw-bold" data-reserva="durada">2 hores</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Tarifa</span>
+                                <span class="fw-bold" data-reserva="tarifa">2,50 € / hora</span>
+                            </div>
+                            <div class="d-flex justify-content-between small border-top pt-2 mt-2">
+                                <span class="text-muted">Subtotal (Sense IVA)</span>
+                                <span class="fw-bold" data-reserva="subtotal">5,00 €</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">IVA (21%)</span>
+                                <span class="fw-bold" data-reserva="iva">1,05 €</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-secondary">Descompte Premium</span>
+                                <span class="fw-bold text-success" data-reserva="descompte">— 0,00 €</span>
+                            </div>
+                        </div>
+
+                        <hr class="mb-4 text-muted opacity-25">
+
+                        <div class="d-flex justify-content-between align-items-center mb-0">
+                            <span class="h5 fw-bold mb-0">Total</span>
+                            <span class="h3 fw-bold text-danger mb-0" data-reserva="total">6,05 €</span>
+                        </div>
+                    </div>
+
+                    <!-- Política -->
+                    <div class="card card-custom p-4 mb-4 shadow-sm">
+                        <h6 class="fw-bold mb-4">
+                            <i class="bi bi-shield-check me-2 text-danger"></i> Política de reserva
+                        </h6>
+                        <ul class="list-unstyled d-grid gap-3 mb-0 small">
+                            <li class="d-flex gap-3">
+                                <i class="bi bi-calendar-x text-danger mt-1"></i>
+                                <span class="text-muted">Cancel·lació gratuïta fins a 1 hora abans de l'entrada.</span>
+                            </li>
+                            <li class="d-flex gap-3">
+                                <i class="bi bi-envelope-check text-danger mt-1"></i>
+                                <span class="text-muted">Confirmació immediata per correu electrònic.</span>
+                            </li>
+                            <li class="d-flex gap-3">
+                                <i class="bi bi-camera-video text-danger mt-1"></i>
+                                <span class="text-muted">La matrícula s'utilitza per identificar el vehicle a
+                                    l'entrada.</span>
+                            </li>
+                            <li class="d-flex gap-3">
+                                <i class="bi bi-clock-history text-danger mt-1"></i>
+                                <span class="text-muted">Si superes el temps reservat, es cobrarà 2,50 € per cada hora
+                                    addicional.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Confirmar -->
+                    <button type="submit" id="btn-confirm-reserva" class="btn btn-parklive-action btn-lg w-100 py-3 shadow-lg mb-3">
+                        <i class="bi bi-check2-circle me-2"></i> Confirmar reserva
+                    </button>
+                    <p class="text-center x-small text-muted">
+                        <i class="bi bi-lock-fill me-1"></i> Pagament segur · PCI-DSS · Stripe
+                    </p>
+
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div>
+
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>

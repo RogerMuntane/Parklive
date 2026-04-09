@@ -18,12 +18,14 @@ CREATE TABLE usuaris (
     estat ENUM('actiu', 'inactiu', 'suspès', 'eliminat') DEFAULT 'actiu',
     email_verificat BOOLEAN DEFAULT FALSE,
     punts_gamificacio INT UNSIGNED DEFAULT 0,
+    stripe_customer_id VARCHAR(255) UNIQUE,
     preferencies JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email),
     INDEX idx_tipus_usuari (tipus_usuari),
-    INDEX idx_estat (estat)
+    INDEX idx_estat (estat),
+    INDEX idx_stripe_customer (stripe_customer_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de sessions
 CREATE TABLE sessions (
@@ -63,6 +65,7 @@ CREATE TABLE subscripcions (
     preu DECIMAL(10, 2) NOT NULL,
     metode_pagament ENUM('targeta', 'paypal', 'altres') NOT NULL,
     auto_renovacio BOOLEAN DEFAULT TRUE,
+    stripe_subscription_id VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
@@ -156,6 +159,7 @@ CREATE TABLE reserves (
     descompte_aplicat DECIMAL(10, 2) DEFAULT 0.00,
     codi_reserva VARCHAR(20) UNIQUE NOT NULL,
     notes TEXT,
+    tiquet_path VARCHAR(500) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,

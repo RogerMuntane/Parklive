@@ -123,6 +123,58 @@ END//
 DELIMITER ;
 
 -- ===========================================
+-- 3. Actualitzar estat de reserva (intern)
+-- ===========================================
+-- Canvia l'estat d'una reserva i allibera plaça si es cancel·la
+-- Exemple: CALL sp_actualitzar_estat_reserva(7, 'confirmada', @error_msg);
+
+DELIMITER //
+
+CREATE PROCEDURE sp_actualitzar_estat_reserva(
+    IN p_reserva_id INT,
+    IN p_nou_estat VARCHAR(50),
+    OUT p_error_msg VARCHAR(500)
+)
+BEGIN
+    DECLARE v_estat_actual VARCHAR(50);
+    DECLARE v_aparcament_id INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_error_msg = 'Error al actualitzar la reserva: Excepció SQL';
+    END;
+
+    START TRANSACTION;
+
+    SELECT estat, aparcament_id INTO v_estat_actual, v_aparcament_id
+    FROM reserves
+    WHERE id = p_reserva_id;
+
+    IF v_estat_actual IS NULL THEN
+        SET p_error_msg = 'Reserva no trobada';
+        ROLLBACK;
+    ELSE
+        -- Si estem cancel·lant una reserva que no estava ja cancel·lada, alliberem plaça
+        IF p_nou_estat = 'cancel·lada' AND v_estat_actual != 'cancel·lada' THEN
+            UPDATE aparcaments
+            SET places_disponibles = places_disponibles + 1
+            WHERE id = v_aparcament_id;
+        END IF;
+
+        UPDATE reserves
+        SET estat = p_nou_estat,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = p_reserva_id;
+
+        SET p_error_msg = NULL;
+        COMMIT;
+    END IF;
+END//
+
+DELIMITER ;
+
+-- ===========================================
 -- 2. GET /api/usuari/reserves (historial)
 -- ===========================================
 -- Obté l'historial de reserves d'un usuari

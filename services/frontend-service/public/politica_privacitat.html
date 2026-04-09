@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Política de Privacitat de ParkLive - Com tractem les teves dades">
+    <title>ParkLive | Política de Privacitat</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+
+<body class="page page-legal">
+    <!-- Slot de plantilla: Header reutilizable -->
+    <div class="template-slot" data-template="./components/header.html" aria-label="Header"></div>
+
+    <main class="main-content py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="legal-card shadow-sm mb-5">
+                        <section>
+                            <h1 class="fw-bold mb-4">Política de Privacitat</h1>
+                            <p class="lead">A ParkLive ens prenem molt seriosament la protecció de les teves dades personals. Aquesta política detalla quina informació recollim, com la fem servir i quins són els teus drets.</p>
+                        </section>
+
+                        <section>
+                            <h2 class="h3">1. Dades que recollim</h2>
+                            <p>ParkLive recull dades de diverses fonts per proporcionar un servei d'aparcament eficient i col·laboratiu:</p>
+                            <ul>
+                                <li><strong>Dades de registre:</strong> Nom, correu electrònic i contrasenya (sempre emmagatzemada de forma xifrada).</li>
+                                <li><strong>Geolocalització:</strong> Recollim la teva ubicació en temps real per localitzar els aparcaments més propers i guiar-te fins a ells. Aquesta dada només es recull amb el teu consentiment explícit.</li>
+                                <li><strong>Historial d’ús:</strong> Cerques d'aparcament, reserves realitzades i rutes preferides.</li>
+                                <li><strong>Contribucions col·laboratives:</strong> Informació reportada sobre disponibilitat, valoracions, fotos i ressenyes d'aparcaments.</li>
+                                <li><strong>Dades de pagament:</strong> Gestionades exclusivament per passarel·les de pagament externes certificades (SSL). ParkLive no emmagatzema les teves dades bancàries completes.</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h2 class="h3">2. Seguretat i Autenticació</h2>
+                            <p>Totes les comunicacions entre el teu dispositiu i els nostres servidors estan xifrades mitjançant <strong>SSL (Secure Sockets Layer)</strong>. Per a l'autenticació d'usuaris, utilitzem el protocol <strong>JWT (JSON Web Token)</strong>, garantint que només tu puguis accedir al teu compte de forma segura.</p>
+                        </section>
+
+                        <section>
+                            <h2 class="h3">3. Retenció i eliminació de dades</h2>
+                            <p>Seguim una política estricta de retenció de dades per minimitzar l'emmagatzematge d'informació innecessària:</p>
+                            <ul>
+                                <li><strong>Sessions:</strong> Les sessions caducades s'eliminen automàticament cada 24 hores.</li>
+                                <li><strong>Usuaris eliminats:</strong> Quan demanes l'eliminació del teu compte, apliquem un "soft delete" (període de gràcia) de 30 dies abans de l'esborrat definitiu.</li>
+                                <li><strong>Logs del sistema:</strong> Els registres d'activitat tècnica es conserven durant 90 dies per motius de seguretat i diagnòstic.</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h2 class="h3">4. Marc Legal</h2>
+                            <p>ParkLive compleix íntegrament amb la normativa vigent:</p>
+                            <ul>
+                                <li><strong>RGPD:</strong> Reglament General de Protecció de Dades (UE).</li>
+                                <li><strong>LSSI:</strong> Llei de Serveis de la Societat de la Informació i de Comerç Electrònic.</li>
+                                <li><strong>LPI:</strong> Llei de Propietat Intel·lectual.</li>
+                            </ul>
+                        </section>
+
+                         <p class="text-muted mt-5"><small>Última actualització: 21 de març de 2026</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Slot de plantilla: Footer reutilizable -->
+    <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div>
+
+    <!-- Scripts -->
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>

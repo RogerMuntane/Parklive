@@ -6,7 +6,8 @@
         "php": ">=8.1",
         "ext-mysqli": "*",
         "ext-pdo": "*",
-        "firebase/php-jwt": "^6.0"
+        "firebase/php-jwt": "^6.0",
+        "stripe/stripe-php": "^10.0"
     },
     "autoload": {
         "psr-4": {
