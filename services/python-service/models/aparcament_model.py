@@ -1,19 +1,6 @@
 from models.db_connection import get_db_connection
-from shared.serializers import serialize_row
-from datetime import datetime, date, timedelta
-from decimal import Decimal
+from shared.serializers import serialize_row, serialize_rows
 import math
-
-
-def serialize_value(value):
-    """Converteix tipus no serialitzables a formats JSON"""
-    if isinstance(value, (datetime, date)):
-        return value.isoformat()  # Converteix a string ISO format
-    elif isinstance(value, timedelta):
-        return str(value)  # Converteix timedelta a string
-    elif isinstance(value, Decimal):
-        return float(value)  # Converteix Decimal a float
-    return value
 
 
 def get_all_aparcaments():
@@ -29,36 +16,46 @@ def get_all_aparcaments():
         break
     cursor.close()
 
-    # Serialitza cada valor de cada registre
-    serialized_aparcaments = []
-    for aparcament in aparcaments:
-        serialized_aparcament = {key: serialize_value(
-            value) for key, value in aparcament.items()}
-        serialized_aparcaments.append(serialized_aparcament)
-
-    return serialized_aparcaments
+    return serialize_rows(aparcaments)
 
 
 def get_aparcament_by_id(aparcament_id):
-    """Obté un aparcament per ID"""
+    """Obté un aparcament per ID amb les seves fotos i valoracions"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     # Procedure equivalent: sp_obtenir_aparcament_detall(aparcament_id)
     cursor.callproc('sp_obtenir_aparcament_detall', [aparcament_id])
+    
     aparcament = None
+    fotos = []
+    valoracions = []
+
+    # Iterar sobre tots els result sets retornats pel procedure
     for idx, result in enumerate(cursor.stored_results()):
         if idx == 0:
+            # Primer result set: Dades de l'aparcament
             aparcament = result.fetchone()
-            break
+        elif idx == 1:
+            # Segon result set: Fotografies
+            fotos = result.fetchall()
+        elif idx == 2:
+            # Tercer result set: Valoracions recents
+            valoracions = result.fetchall()
+
     cursor.close()
+    conn.close()
 
     # Si no es troba, retorna None
     if aparcament is None:
         return None
 
-    # Serialitzar les dades
-    return serialize_row(aparcament)
+    # Serialitzar les dades i afegir les llistes de fotos i valoracions
+    resultat = serialize_row(aparcament)
+    resultat['fotos'] = serialize_rows(fotos)
+    resultat['valoracions'] = serialize_rows(valoracions)
+
+    return resultat
 
 
 def get_aparcaments_by_filters(filters):
@@ -113,15 +110,9 @@ def get_aparcaments_by_filters(filters):
         cursor.close()
         conn.close()
 
-        serialized_aparcaments = []
-        for aparcament in aparcaments:
-            serialized_aparcament = {key: serialize_value(value)
-                                     for key, value in aparcament.items()}
-            serialized_aparcaments.append(serialized_aparcament)
-
         return {
-            'total': len(serialized_aparcaments),
-            'resultats': serialized_aparcaments,
+            'total': len(aparcaments),
+            'resultats': serialize_rows(aparcaments),
             'paginacio': {
                 'limit': limite,
                 'offset': offset,
@@ -129,6 +120,11 @@ def get_aparcaments_by_filters(filters):
                 'total_pagines': 1
             }
         }
+
+    rating_expr = (
+        "COALESCE((SELECT AVG(v.puntuacio) "
+        "FROM valoracions v WHERE v.aparcament_id = aparcaments.id), 0)"
+    )
 
     # Construcció de la query base
     query = "SELECT * FROM aparcaments WHERE 1=1"
@@ -200,7 +196,7 @@ def get_aparcaments_by_filters(filters):
     if filters.get('valoracio_min') is not None:
         if filters['valoracio_min'] < 0 or filters['valoracio_min'] > 5:
             raise ValueError("Valoració mínima ha de ser entre 0 i 5")
-        query += " AND valoracio_mitjana >= %s"
+        query += f" AND {rating_expr} >= %s"
         params.append(filters['valoracio_min'])
 
     # Filtre de proximitat geogràfica (radi en km)
@@ -243,7 +239,7 @@ def get_aparcaments_by_filters(filters):
     if offset < 0:
         offset = 0
 
-    query += " ORDER BY valoracio_mitjana DESC, aparcaments.id ASC"
+    query += f" ORDER BY {rating_expr} DESC, aparcaments.id ASC"
     query += " LIMIT %s OFFSET %s"
     params.extend([limite, offset])
 
@@ -253,17 +249,10 @@ def get_aparcaments_by_filters(filters):
     cursor.close()
     conn.close()
 
-    # Serialitzar els resultats
-    serialized_aparcaments = []
-    for aparcament in aparcaments:
-        serialized_aparcament = {key: serialize_value(value)
-                                 for key, value in aparcament.items()}
-        serialized_aparcaments.append(serialized_aparcament)
-
     # Retornar resultats amb metadades de paginació
     return {
         'total': total,
-        'resultats': serialized_aparcaments,
+        'resultats': serialize_rows(aparcaments),
         'paginacio': {
             'limit': limite,
             'offset': offset,

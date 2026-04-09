@@ -140,16 +140,28 @@
     &.status-ok {
         background: rgba($success, .12);
         color: $success;
+        [data-bs-theme="dark"] & {
+            background: rgba($success, .2);
+            color: lighten($success, 10%);
+        }
     }
 
     &.status-pend {
         background: rgba($warning, .2);
         color: darken($warning, 25%);
+        [data-bs-theme="dark"] & {
+            background: rgba($warning, .15);
+            color: $warning;
+        }
     }
 
     &.status-err {
         background: rgba($crimson, .12);
         color: $crimson;
+        [data-bs-theme="dark"] & {
+            background: rgba($crimson, .2);
+            color: lighten($crimson, 15%);
+        }
     }
 }
 
@@ -158,7 +170,8 @@
     border-radius: .75rem;
     padding: 1.25rem;
     cursor: pointer;
-    transition: border-color .2s ease, transform .2s ease;
+    transition: border-color .2s ease, transform .2s ease, background .2s ease;
+    background: var(--bs-body-bg);
 
     &:hover {
         border-color: $crimson;
@@ -177,6 +190,36 @@
             right: .75rem;
             color: $crimson;
             font-size: 1.1rem;
+        }
+    }
+
+    // Variants
+    &.plan-premium {
+        border-color: rgba($crimson, 0.3);
+        background: linear-gradient(135deg, rgba($crimson, 0.03) 0%, rgba($crimson, 0.08) 100%);
+
+        .tipus-plan, .preu-plan {
+            color: $crimson;
+        }
+
+        [data-bs-theme="dark"] & {
+            border-color: rgba($crimson, 0.5);
+            background: linear-gradient(135deg, rgba($crimson, 0.1) 0%, rgba($crimson, 0.15) 100%);
+            
+            .tipus-plan, .preu-plan {
+                color: lighten($crimson, 15%);
+            }
+        }
+        
+        &.selected {
+            border-color: $crimson;
+            background: rgba($crimson, 0.1);
+        }
+    }
+
+    &.plan-free {
+        [data-bs-theme="dark"] & {
+            background: rgba($off-white, 0.02);
         }
     }
 }
@@ -198,6 +241,125 @@
     }
 }
 
+.btn-delete-card {
+    transition: all 0.2s ease;
+    &:hover {
+        opacity: 1 !important;
+        transform: scale(1.1);
+        color: #ff4757 !important;
+    }
+}
+
+// Estil de targeta Premium (Mockup)
+.payment-card-visual {
+    background: linear-gradient(135deg, darken($dark-navy, 5%) 0%, lighten($dark-navy, 5%) 100%);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        right: -20px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba($crimson, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    }
+
+    &.active-card {
+        border: 2px solid $crimson;
+        box-shadow: 0 0 15px rgba($crimson, 0.3);
+    }
+
+    .card-chip {
+        width: 45px;
+        height: 35px;
+        background: linear-gradient(135deg, #d4af37 0%, #f9e29c 50%, #d4af37 100%);
+        border-radius: 6px;
+        margin-bottom: 25px;
+        position: relative;
+        &::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+        }
+    }
+
+    .card-number {
+        font-size: 1.25rem;
+        letter-spacing: 0.15em;
+        margin-bottom: 30px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    .card-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        opacity: 0.6;
+        margin-bottom: 2px;
+    }
+
+    .card-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .card-brand-logo {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.8;
+    }
+}
+
+// Botó afegir targeta amb estil "dashed"
+.btn-add-card-dashed {
+    background: transparent;
+    border: 2px dashed rgba($crimson, 0.3);
+    color: $crimson;
+    transition: all 0.3s ease;
+    
+    [data-bs-theme="dark"] & {
+        border-color: rgba(lighten($crimson, 15%), 0.2);
+        color: lighten($crimson, 15%);
+    }
+
+    &:hover {
+        border-color: $crimson;
+        background-color: rgba($crimson, 0.05);
+        transform: translateY(-2px);
+    }
+}
+
+.security-card {
+    background-color: rgba($success, 0.03);
+    border-left: 4px solid $success !important;
+    
+    [data-bs-theme="dark"] & {
+        background-color: rgba($success, 0.05);
+    }
+}
+
 .profile-section {
     display: none;
 
@@ -207,14 +369,340 @@
     }
 }
 
+.btn-outline-danger {
+    [data-bs-theme="dark"] & {
+        color: lighten($crimson, 15%);
+        border-color: rgba(lighten($crimson, 15%), 0.5);
+        
+        &:hover {
+            background-color: lighten($crimson, 15%);
+            border-color: lighten($crimson, 15%);
+            color: $dark-navy;
+        }
+    }
+}
+
+// Suavitza la intensitat dels icones en mode fosc
+[data-bs-theme="dark"] {
+    .bi-check2-circle.text-success {
+        color: rgba($success, 0.75) !important;
+    }
+    
+    .bi-star-fill.text-danger {
+        color: rgba($crimson, 0.8) !important;
+    }
+
+    .profile-section {
+        .bg-danger.bg-opacity-10 {
+            background-color: rgba($crimson, 0.15) !important;
+            
+            &.text-danger {
+                color: rgba(lighten($crimson, 20%), 0.9) !important;
+            }
+        }
+        
+        // Icones de capçalera de card
+        span.rounded-3.p-2.bg-danger.bg-opacity-10.text-danger {
+            background-color: rgba($crimson, 0.1) !important;
+            color: lighten($crimson, 15%) !important;
+            border: 1px solid rgba($crimson, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        // Unificar fons per a qualsevol icona roja que demani el fons
+        .icon-box-red {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background-color: rgba($crimson, 0.1);
+            color: $crimson;
+            
+            [data-bs-theme="dark"] & {
+                background-color: rgba($crimson, 0.15) !important;
+                color: lighten($crimson, 15%) !important;
+                border: 1px solid rgba($crimson, 0.2);
+            }
+        }
+    }
+}
+
+// Intensificar ombres globals de les cards del perfil
+.profile-section .card {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+    transition: box-shadow 0.3s ease;
+    
+    [data-bs-theme="dark"] & {
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    &:hover {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12) !important;
+        [data-bs-theme="dark"] & {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35) !important;
+        }
+    }
+}
+
+// Password Strength Segments
+.strength-segments {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+
+    .strength-segment {
+        flex: 1;
+        height: 4px;
+        background-color: var(--bs-border-color);
+        border-radius: 2px;
+        transition: background-color 0.3s ease;
+
+        &.active {
+            &.weak { background-color: $danger; }
+            &.medium { background-color: $warning; }
+            &.strong { background-color: #f1c40f; } // Yellow
+            &.expert { background-color: $success; }
+        }
+        
+        [data-bs-theme="dark"] & {
+            background-color: rgba($off-white, 0.1);
+        }
+    }
+}
+
+.password-requirements {
+    background-color: rgba($off-white, 0.03);
+    border-radius: 12px;
+    padding: 16px;
+    
+    [data-bs-theme="dark"] & {
+        background-color: rgba($off-white, 0.05);
+    }
+
+    .requirement-item {
+        font-size: 0.75rem;
+        color: var(--bs-secondary-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: color 0.3s ease;
+
+        i {
+            font-size: 0.85rem;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        &.met {
+            color: var(--bs-body-color);
+            i {
+                color: $success;
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+    }
+}
+
+.security-sidebar-card {
+    &.dark-card {
+        background-color: $dark-navy;
+        color: rgba($off-white, 0.8);
+        
+        .card-title { color: $off-white; }
+        .small { color: rgba($off-white, 0.6); }
+        
+        [data-bs-theme="dark"] & {
+            background-color: rgba(darken($dark-navy, 5%), 0.5);
+        }
+    }
+}
+
+// Subscription Toggle Card (Premium)
+.subscription-toggle-card {
+    background-color: var(--bs-body-bg);
+    border: 1.5px solid var(--bs-border-color);
+    border-radius: 18px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
+    &.active {
+        border-color: rgba($crimson, 0.5);
+        background-color: rgba($crimson, 0.02);
+        
+        [data-bs-theme="dark"] & {
+            border-color: rgba($crimson, 0.4);
+            background-color: rgba($crimson, 0.05);
+        }
+
+        .toggle-icon-box {
+            background-color: rgba($crimson, 0.1);
+            color: $crimson;
+            border: 1px solid rgba($crimson, 0.2);
+        }
+
+        .toggle-badge {
+            background-color: rgba($crimson, 0.1);
+            color: $crimson;
+        }
+
+        .custom-switch {
+            background-color: $crimson;
+            &::after { transform: translateX(22px); }
+        }
+    }
+
+    &:not(.active) {
+        .toggle-icon-box {
+            background-color: rgba(var(--bs-secondary-rgb), 0.1);
+            color: var(--bs-secondary-color);
+            border: 1px solid var(--bs-border-color);
+        }
+
+        .toggle-badge {
+            background-color: rgba(var(--bs-secondary-rgb), 0.1);
+            color: var(--bs-secondary-color);
+        }
+
+        .custom-switch {
+            background-color: rgba(var(--bs-secondary-rgb), 0.3);
+            &::after { transform: translateX(0); }
+        }
+        
+        .toggle-desc { opacity: 0.6; }
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+}
+
+.toggle-icon-box {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.toggle-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+}
+
+.custom-switch {
+    width: 48px;
+    height: 26px;
+    border-radius: 30px;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        top: 3px;
+        left: 3px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+}
+
 @keyframes fadeUp {
     from {
         opacity: 0;
-        transform: translateY(12px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+    }
+}
+
+// Plan Switcher
+.plan-switcher-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.plan-switcher {
+    background: rgba(128, 128, 128, 0.05);
+    border: 1px solid var(--bs-border-color);
+    padding: 4px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    
+    [data-bs-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn {
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 8px 24px;
+        color: var(--bs-secondary-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px;
+        
+        &:hover {
+            color: var(--bs-body-color);
+        }
+
+        &.active {
+            background-color: $crimson !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba($crimson, 0.3);
+        }
+    }
+}
+
+// Utility to show/hide content based on monthly/annual
+#section-plan {
+    .annual-content {
+        display: none !important;
+    }
+
+    &.annual-plan-active {
+        .annual-content {
+            display: block !important;
+        }
+        .monthly-content {
+            display: none !important;
+        }
+    }
+}
+
+.text-success-custom {
+    color: #27ae60;
+    [data-bs-theme="dark"] & {
+        color: #2ecc71;
     }
 }

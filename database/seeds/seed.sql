@@ -21,7 +21,6 @@ TRUNCATE TABLE faqs;
 TRUNCATE TABLE sessions;
 TRUNCATE TABLE subscripcions;
 TRUNCATE TABLE usuaris;
-TRUNCATE TABLE logs_sistema;
 TRUNCATE TABLE configuracio_sistema;
 -- Reactivar comprovació de claus forànies
 SET FOREIGN_KEY_CHECKS = 1;
@@ -1300,7 +1299,7 @@ VALUES (
         11,
         4,
         4,
-        'Bon aparcament per deixar el cotxe tot el dia. Personal correcte.',
+        'Molt pràctic per visitar la Sagrada Família. Recomano reservar amb antelació.',
         '{"neteja": 4, "seguretat": 4, "facilitat_acces": 4, "relacio_qualitat_preu": 4}',
         TRUE,
         3
@@ -1309,10 +1308,64 @@ VALUES (
         12,
         4,
         5,
-        'Instal·lacions noves i molt netes. Punt de càrrega va funcionar perfectament.',
-        '{"neteja": 5, "seguretat": 5, "facilitat_acces": 4, "relacio_qualitat_preu": 4}',
+        'Excel·lent, molt a prop del temple i fàcil de trobar.',
+        '{"neteja": 5, "seguretat": 5, "facilitat_acces": 5, "relacio_qualitat_preu": 4}',
         TRUE,
-        9
+        1
+    ),
+    (
+        13,
+        5,
+        3,
+        'A l''aire lliure, una mica polsós però complia la seva funció per unes hores.',
+        '{"neteja": 2, "seguretat": 3, "facilitat_acces": 4, "relacio_qualitat_preu": 4}',
+        TRUE,
+        0
+    ),
+    (
+        14,
+        6,
+        5,
+        'Excel·lent ubicació al costat del Port Olímpic. Molt recomanable per anar als restaurants de la zona.',
+        '{"neteja": 5, "seguretat": 5, "facilitat_acces": 5, "relacio_qualitat_preu": 4}',
+        TRUE,
+        5
+    ),
+    (
+        15,
+        6,
+        4,
+        'Bona experiència, places àmplies i segur. Potser el preu una mica elevat el cap de setmana.',
+        '{"neteja": 4, "seguretat": 5, "facilitat_acces": 4, "relacio_qualitat_preu": 3}',
+        TRUE,
+        2
+    ),
+    (
+        16,
+        7,
+        2,
+        'Molt difícil de maniobrar, zona molt congestionada.',
+        '{"neteja": 3, "seguretat": 3, "facilitat_acces": 1, "relacio_qualitat_preu": 2}',
+        TRUE,
+        1
+    ),
+    (
+        13,
+        5,
+        1,
+        'Mala experiència: el lector de matrícula no funcionava i ningú responia al timbre.',
+        '{"neteja": 2, "seguretat": 2, "facilitat_acces": 1, "relacio_qualitat_preu": 1}',
+        FALSE,
+        0
+    ),
+    (
+        14,
+        5,
+        3,
+        'Aparcament correcte però cal millorar la sortida en hores punta.',
+        '{"neteja": 3, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 3}',
+        TRUE,
+        1
     ),
     (
         13,
@@ -1593,10 +1646,26 @@ VALUES (
     (
         5,
         13,
-        '/uploads/aparcaments/5/foto_panoramica.jpg',
+        'https://images.unsplash.com/photo-1590674867551-11c3a2df5dc4?auto=format&fit=crop&q=80&w=1200&h=600',
         'Panoràmica de la zona de parking',
         FALSE,
         1
+    ),
+    (
+        6,
+        1,
+        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=1200&h=600',
+        'Entrada Port Olímpic',
+        TRUE,
+        1
+    ),
+    (
+        6,
+        2,
+        'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?auto=format&fit=crop&q=80&w=1200&h=600',
+        'Vistes des de l''aparcament',
+        TRUE,
+        2
     );
 -- 16. RESERVES
 INSERT INTO reserves (

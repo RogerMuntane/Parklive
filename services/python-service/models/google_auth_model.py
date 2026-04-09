@@ -7,6 +7,7 @@ import os
 import requests
 from models.base_service import BaseService
 from shared.serializers import serialize_row
+from models.stripe_model import create_stripe_customer
 
 
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
@@ -67,6 +68,17 @@ class GoogleAuthService(BaseService):
         user = self._fetch_user_by_email(email)
 
         if user:
+            
+            # Si l'usuari ja existeix, comprovem si té stripe_customer_id
+            if not user.get("stripe_customer_id"):
+                create_stripe_customer(
+                    user["id"],
+                    email,
+                    google_data.get("name", f"{google_data.get('given_name', '')} {google_data.get('family_name', '')}".strip())
+                )
+                # Tornar a carregar l'usuari amb el nou stripe_customer_id
+                user = self._fetch_user_by_email(email)
+
             return {
                 "user": serialize_row(user),
                 "is_new": False,
@@ -76,33 +88,28 @@ class GoogleAuthService(BaseService):
         conn = self._get_connection()
         cursor = conn.cursor()
 
-        # Usar el stored procedure existent
+        # Usar el stored procedure existent i capturar els paràmetres de sortida directament
         # Passem un hash buit ja que l'auth és via Google
         google_password_placeholder = "GOOGLE_OAUTH_NO_PASSWORD"
-
-        cursor.callproc(
-            "sp_insertar_usuari",
-            (
-                google_data.get("given_name", google_data.get("name", "")),
-                google_data.get("family_name", ""),
-                email,
-                google_password_placeholder,
-                "",  # telefon buit
-                "basic",  # tipus_usuari
-                0,  # OUT p_nou_id
-                "",  # OUT p_error_msg
-            ),
+        
+        # callproc retorna una tupla amb els arguments (inclosos els OUT actualitzats)
+        args = (
+            google_data.get("given_name", google_data.get("name", "")),
+            google_data.get("family_name", ""),
+            email,
+            google_password_placeholder,
+            "",  # telefon buit
+            "basic",  # tipus_usuari
+            0,  # OUT p_nou_id (posició 6)
+            "",  # OUT p_error_msg (posició 7)
         )
-
-        # Llegir els paràmetres OUT
-        cursor.execute(
-            "SELECT @_sp_insertar_usuari_arg_6 AS nou_id, @_sp_insertar_usuari_arg_7 AS error_msg")
-        result = cursor.fetchone()
+        
+        result_args = cursor.callproc("sp_insertar_usuari", args)
         conn.commit()
         cursor.close()
 
-        nou_id = result[0] if result else None
-        error_msg = result[1] if result else None
+        nou_id = result_args[6]
+        error_msg = result_args[7]
 
         if not nou_id:
             return {
@@ -110,7 +117,14 @@ class GoogleAuthService(BaseService):
                 "status_code": 400,
             }
 
-        # 3. Obtenir l'usuari creat
+        # 3. Crear client de Stripe per al nou usuari
+        create_stripe_customer(
+            nou_id,
+            email,
+            google_data.get("name", f"{google_data.get('given_name', '')} {google_data.get('family_name', '')}".strip())
+        )
+
+        # 4. Obtenir l'usuari creat
         user = self._fetch_user_by_email(email)
 
         return {

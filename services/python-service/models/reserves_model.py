@@ -451,6 +451,7 @@ def obte_detall_reserva(reserva_id):
         r.preu_total,
         r.descompte_aplicat,
         r.notes,
+        r.tiquet_path,
         r.created_at,
         r.updated_at,
         p.id as pagament_id,
@@ -498,6 +499,7 @@ def obte_detall_reserva(reserva_id):
         'preu_total': serialize_value(row['preu_total']),
         'descompte_aplicat': serialize_value(row['descompte_aplicat']),
         'notes': row['notes'],
+        'tiquet_path': row['tiquet_path'],
         'pagament': {
             'id': row['pagament_id'],
             'import': serialize_value(row['pagament_import']),
@@ -574,8 +576,13 @@ def crear_reserva(data):
         result_args = cursor.callproc('sp_crear_reserva', proc_args)
         conn.commit()
 
-        reserva_id = result_args[7]
-        error_msg = result_args[9]
+        # El driver MySQL pot retornar una llista o un diccionari amb noms tipus sp_crear_reserva_argX
+        if isinstance(result_args, dict):
+            reserva_id = result_args.get('sp_crear_reserva_arg8')
+            error_msg = result_args.get('sp_crear_reserva_arg10')
+        else:
+            reserva_id = result_args[7]
+            error_msg = result_args[9]
 
         if error_msg:
             raise ValueError(error_msg)
@@ -595,3 +602,50 @@ def crear_reserva(data):
         cursor.close()
         conn.close()
         raise e
+
+
+def actualitzar_estat_reserva(reserva_id, nou_estat):
+    """
+    Actualitza l'estat d'una reserva mitjançant el procedure sp_actualitzar_estat_reserva
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Procedure params: p_reserva_id, p_nou_estat, OUT p_error_msg
+        proc_args = [reserva_id, nou_estat, None]
+        result_args = cursor.callproc('sp_actualitzar_estat_reserva', proc_args)
+        conn.commit()
+
+        if isinstance(result_args, dict):
+            error_msg = result_args.get('sp_actualitzar_estat_reserva_arg3')
+        else:
+            error_msg = result_args[2]
+
+        if error_msg:
+            raise ValueError(error_msg)
+
+        return True
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def actualitzar_tiquet_reserva(reserva_id, tiquet_path):
+    """Actualitza la ruta del tiquet PDF d'una reserva"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        query = "UPDATE reserves SET tiquet_path = %s WHERE id = %s"
+        cursor.execute(query, (tiquet_path, reserva_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
