@@ -9,6 +9,58 @@ function formatEuroPerHour(value) {
   return `${amount.toFixed(2).replace('.', ',')} €/h`;
 }
 
+function formatParkingType(value) {
+  const typeMap = {
+    carrer: 'Carrer',
+    cobert: 'Cobert',
+    aire_lliure: 'Aire lliure',
+    subterrani: 'Subterrani',
+    parking_public: 'Públic',
+    parking_privat: 'Privat',
+  };
+
+  return typeMap[value] || 'No indicat';
+}
+
+function formatMaxHeight(value) {
+  const height = Number(value);
+  if (!Number.isFinite(height) || height <= 0) return 'No indicada';
+  return `${height.toFixed(2).replace('.', ',')} m`;
+}
+
+function formatAvailabilitySummary(available, total, percent) {
+  const availableNum = Number(available);
+  const totalNum = Number(total);
+  const percentNum = Number(percent);
+
+  if (!Number.isFinite(availableNum) || !Number.isFinite(totalNum) || totalNum <= 0) {
+    return 'No disponible';
+  }
+
+  if (Number.isFinite(percentNum)) {
+    return `${availableNum}/${totalNum} (${Math.round(percentNum)}%)`;
+  }
+
+  return `${availableNum}/${totalNum}`;
+}
+
+function formatSchedule(open24h, openingTime, closingTime) {
+  if (open24h) return '24 h';
+  if (!openingTime || !closingTime) return 'No indicat';
+  return `${String(openingTime).slice(0, 5)}-${String(closingTime).slice(0, 5)}`;
+}
+
+function formatRatingSummary(avgRating, totalRatings) {
+  const avg = Number(avgRating);
+  const count = Number(totalRatings);
+
+  if (!Number.isFinite(avg) || !Number.isFinite(count) || count <= 0) {
+    return 'Sense valoracions';
+  }
+
+  return `${avg.toFixed(1).replace('.', ',')} (${count})`;
+}
+
 function computeDistanceKm(fromLat, fromLon, toLat, toLon) {
   const earthRadiusKm = 6371;
   const toRadians = (value) => (value * Math.PI) / 180;
@@ -41,11 +93,11 @@ function normalizeParking(raw, origin = null) {
   const status = raw.estat || 'actiu';
   let statusLabel = 'Disponible';
   if (status === 'complet') {
-    statusLabel = 'Ocupado';
+    statusLabel = 'Ocupat';
   } else if (status === 'manteniment') {
-    statusLabel = 'Pocas plazas';
+    statusLabel = 'Poques places';
   } else if (status === 'inactiu') {
-    statusLabel = 'Inactivo';
+    statusLabel = 'Inactiu';
   }
 
   let distanceLabel = '—';
@@ -59,13 +111,24 @@ function normalizeParking(raw, origin = null) {
 
   return {
     id: String(raw.id),
-    name: raw.nom || 'Parking',
+    name: raw.nom || 'Aparcament',
     address: [raw.adreca, raw.ciutat].filter(Boolean).join(', '),
     coords: [lat, lon],
     priceLabel: formatEuroPerHour(raw.tarifa_hora),
     distanceLabel,
     statusLabel,
     hasEv: Boolean(raw.carrega_electrica),
+    typeLabel: formatParkingType(raw.tipus),
+    maxHeightLabel: formatMaxHeight(raw.altura_maxima),
+    availabilitySummary: formatAvailabilitySummary(
+      raw.places_disponibles,
+      raw.capacitat_total,
+      raw.percentatge_disponibilitat,
+    ),
+    scheduleLabel: formatSchedule(raw.obert_24h, raw.horari_obertura, raw.horari_tancament),
+    ratingSummary: formatRatingSummary(raw.valoracio_mitjana, raw.total_valoracions),
+    isAccessible: Boolean(raw.accessibilitat),
+    hasCctv: Boolean(raw.videovigilancia),
     raw,
   };
 }
@@ -139,12 +202,12 @@ function renderPagination(panel, {
 
   const pageInfo = document.createElement('span');
   pageInfo.className = 'small text-body-secondary fw-semibold';
-  pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+  pageInfo.textContent = `Pàgina ${currentPage} de ${totalPages}`;
 
   const nextBtn = document.createElement('button');
   nextBtn.type = 'button';
   nextBtn.className = 'btn btn-outline-secondary btn-sm';
-  nextBtn.textContent = 'Siguiente';
+  nextBtn.textContent = 'Següent';
   nextBtn.disabled = currentPage >= totalPages;
 
   prevBtn.addEventListener('click', () => {
@@ -175,13 +238,13 @@ function renderResults({
   panel.querySelectorAll('[data-role="parking-pagination"]').forEach((node) => node.remove());
 
   if (subtitle) {
-    subtitle.textContent = total === 1 ? '1 parking encontrado' : `${total} parkings encontrados`;
+    subtitle.textContent = total === 1 ? '1 aparcament trobat' : `${total} aparcaments trobats`;
   }
 
   if (spots.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'parking-result-card border rounded-4 p-3 bg-body shadow-sm';
-    empty.innerHTML = '<p class="mb-0 text-body-secondary">No se han encontrado aparcamientos.</p>';
+    empty.innerHTML = '<p class="mb-0 text-body-secondary">No s\'han trobat aparcaments.</p>';
     panel.appendChild(empty);
     renderPagination(panel, { currentPage, totalPages, onChangePage });
     return;
@@ -192,26 +255,39 @@ function renderResults({
   spots.forEach((spot) => {
     const card = document.createElement('article');
     card.className = 'parking-result-card border rounded-4 overflow-hidden bg-body shadow-sm';
-    card.setAttribute('aria-label', `Parking ${spot.name}`);
+    card.setAttribute('aria-label', `Aparcament ${spot.name}`);
     card.innerHTML = `
       <img
         class="parking-result-image d-block w-100 object-fit-cover"
         src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80"
-        alt="Foto del parking ${escapeHtml(spot.name)}"
+        alt="Foto de l'aparcament ${escapeHtml(spot.name)}"
         loading="lazy"
       />
-      <div class="parking-result-content p-3">
-        <h3 class="parking-result-name h6 mb-0 fw-bold text-body">${escapeHtml(spot.name)}</h3>
-        <p class="parking-result-address mb-0 mt-1 small text-body-secondary">${escapeHtml(spot.address || 'Dirección no disponible')}</p>
-        <div class="parking-result-meta d-grid gap-2 mt-3 small text-body" aria-label="Datos del parking">
-          <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-currency-euro"></i> ${escapeHtml(spot.priceLabel)}</span>
-          <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(spot.distanceLabel)}</span>
-          ${spot.hasEv
-            ? '<span class="d-inline-flex align-items-center gap-2"><i class="bi bi-lightning-charge"></i> Carga EV</span>'
-            : '<span class="d-inline-flex align-items-center gap-2"><i class="bi bi-dash-circle"></i> Sin carga EV</span>'}
+      <div class="parking-result-content p-2">
+        <h3 class="parking-result-name h6 mb-1 fw-bold text-body">${escapeHtml(spot.name)}</h3>
+        <p class="parking-result-address mb-1 small text-body-secondary text-truncate">${escapeHtml(spot.address || 'Adreça no disponible')}</p>
+        <div class="parking-result-meta row row-cols-2 g-1 mt-1 small text-body" aria-label="Dades resumides del parking">
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-currency-euro"></i>${escapeHtml(spot.priceLabel)}</span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-geo-alt"></i>${escapeHtml(spot.distanceLabel)}</span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-house-door"></i>${escapeHtml(spot.typeLabel)}</span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-grid-3x3-gap"></i>Disp: ${escapeHtml(spot.availabilitySummary)}</span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-clock"></i>${escapeHtml(spot.scheduleLabel)}</span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
-        <button type="button" class="btn btn-danger w-100 mt-3" data-action="open-parking" data-parking-id="${escapeHtml(spot.id)}">
-          Ver detalle
+        <div class="d-flex flex-wrap gap-1 mt-1" aria-label="Serveis del parking">
+          <span class="badge rounded-pill text-bg-light border fw-normal">Alt: ${escapeHtml(spot.maxHeightLabel)}</span>
+          ${spot.hasEv
+            ? '<span class="badge rounded-pill text-bg-light border fw-normal">Elèctric</span>'
+            : ''}
+          ${spot.isAccessible
+            ? '<span class="badge rounded-pill text-bg-light border fw-normal">Accessible</span>'
+            : ''}
+          ${spot.hasCctv
+            ? '<span class="badge rounded-pill text-bg-light border fw-normal">CCTV</span>'
+            : ''}
+        </div>
+        <button type="button" class="btn btn-danger btn-sm w-100 mt-2" data-action="open-parking" data-parking-id="${escapeHtml(spot.id)}">
+          Veure detall
         </button>
       </div>
     `;
@@ -292,7 +368,7 @@ export function initLandingSearch({ setParkingSpots, focusParkingById, closeFilt
       });
       setParkingSpots(allSpots);
     } catch (error) {
-      console.error('[ParkLive] Error buscando aparcamientos:', error);
+      console.error('[ParkLive] Error cercant aparcaments:', error);
       renderResults({
         spots: [],
         total: 0,

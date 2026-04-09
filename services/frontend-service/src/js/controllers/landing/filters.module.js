@@ -6,11 +6,11 @@ export function initFilterPanelControls() {
     const distanceRangeValue = document.getElementById('distanceRangeValue');
 
     if (priceRange && priceRangeValue) {
-      priceRangeValue.textContent = `Hasta ${priceRange.value} €`;
+      priceRangeValue.textContent = `Fins a ${priceRange.value} €`;
     }
 
     if (distanceRange && distanceRangeValue) {
-      distanceRangeValue.textContent = `Hasta ${distanceRange.value} km`;
+      distanceRangeValue.textContent = `Fins a ${distanceRange.value} km`;
     }
   };
 
