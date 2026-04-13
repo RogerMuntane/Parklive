@@ -11,6 +11,10 @@ def expire_subscriptions():
     print(f"[{datetime.now()}] Iniciant verificació diària de subscripcions expirades...")
     
     conn = get_db_connection()
+    if not conn:
+        print(f"[{datetime.now()}] ERROR: No es pot connectar a la base de dades.")
+        return
+
     cursor = conn.cursor(dictionary=True)
     
     try:
@@ -57,11 +61,14 @@ def expire_subscriptions():
         print(f"[{datetime.now()}] Procés finalitzat correctament. Total expirats: {len(expired_subs)}")
         
     except Exception as e:
-        conn.rollback()
+        if 'conn' in locals() and conn:
+            conn.rollback()
         print(f"[{datetime.now()}] ERROR en el cron d'expiració: {e}")
     finally:
-        cursor.close()
-        conn.close()
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
 if __name__ == "__main__":
     expire_subscriptions()

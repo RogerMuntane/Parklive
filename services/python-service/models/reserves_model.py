@@ -458,7 +458,8 @@ def obte_detall_reserva(reserva_id):
         p.import as pagament_import,
         p.metode as pagament_metode,
         p.estat as pagament_estat,
-        p.data_pagament
+        p.data_pagament,
+        p.referencia_externa
     FROM reserves r
     JOIN usuaris u ON r.usuari_id = u.id
     JOIN aparcaments a ON r.aparcament_id = a.id
@@ -505,7 +506,8 @@ def obte_detall_reserva(reserva_id):
             'import': serialize_value(row['pagament_import']),
             'metode': row['pagament_metode'],
             'estat': row['pagament_estat'],
-            'data_pagament': serialize_value(row['data_pagament'])
+            'data_pagament': serialize_value(row['data_pagament']),
+            'referencia_externa': row['referencia_externa']
         } if row['pagament_id'] else None,
         'created_at': serialize_value(row['created_at']),
         'updated_at': serialize_value(row['updated_at'])

@@ -27,6 +27,14 @@ function formatCurrency(value) {
   return `${n.toFixed(2).replace('.', ',')} €`;
 }
 
+/** Retorna la data en format YYYY-MM-DD en hora local */
+function getLocalDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function fill(key, value) {
   document.querySelectorAll(`[data-reserva="${key}"]`).forEach((el) => {
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
@@ -126,8 +134,9 @@ function updateEndDateTime(hoursToAdd) {
   const currentStartDate = new Date(`${inDateEl.value}T${inTimeEl.value}`);
   const newEndDate = new Date(currentStartDate.getTime() + hoursToAdd * 60 * 60 * 1000);
 
-  const outD = newEndDate.toISOString().split('T')[0];
-  const outT = newEndDate.toTimeString().split(' ')[0].substring(0, 5);
+  const outD = getLocalDateString(newEndDate);
+  const outT = newEndDate.getHours().toString().padStart(2, '0') + ':' + 
+               newEndDate.getMinutes().toString().padStart(2, '0');
 
   outDateEl.value = outD;
   outTimeEl.value = outT;
@@ -241,10 +250,12 @@ export async function initReservaAparcament() {
         progressBar.style.backgroundColor = ocupats < 50 ? 'var(--bs-success)' : ocupats < 80 ? 'var(--bs-warning)' : 'var(--bs-danger)';
     }
 
-    // Initialize Dates safely
+    // Initialize Dates safely in local time
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const outStr = new Date(today.getTime() + 2 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const todayStr = getLocalDateString(today);
+    
+    const outDate = new Date(today.getTime() + 2 * 60 * 60 * 1000);
+    const outStr = getLocalDateString(outDate);
     
     let nowHours = today.getHours();
     nowHours = nowHours < 10 ? '0'+nowHours : nowHours;

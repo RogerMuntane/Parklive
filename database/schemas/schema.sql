@@ -184,6 +184,7 @@ CREATE TABLE pagaments (
     ) NOT NULL,
     estat ENUM(
         'pendent',
+        'autoritzat',
         'processat',
         'completat',
         'fallit',

@@ -1350,33 +1350,6 @@ VALUES (
         1
     ),
     (
-        13,
-        5,
-        1,
-        'Mala experiència: el lector de matrícula no funcionava i ningú responia al timbre.',
-        '{"neteja": 2, "seguretat": 2, "facilitat_acces": 1, "relacio_qualitat_preu": 1}',
-        FALSE,
-        0
-    ),
-    (
-        14,
-        5,
-        3,
-        'Aparcament correcte però cal millorar la sortida en hores punta.',
-        '{"neteja": 3, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 3}',
-        TRUE,
-        1
-    ),
-    (
-        13,
-        5,
-        1,
-        'Mala experiència: el lector de matrícula no funcionava i ningú responia al timbre.',
-        '{"neteja": 2, "seguretat": 2, "facilitat_acces": 1, "relacio_qualitat_preu": 1}',
-        FALSE,
-        0
-    ),
-    (
         14,
         5,
         3,

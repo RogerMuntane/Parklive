@@ -364,10 +364,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicialitza el controlador de perfil només a la pàgina de perfil
   if (document.body.classList.contains('page-profile')) {
     const { initProfilePasswordForm, initProfileInfoForm, initProfileInfoSaveForm, initProfilePlanSection } = await import('./controllers/profile.controller.js');
+    const { initReserves } = await import('./controllers/reserves.controller.js');
+    
     initProfilePasswordForm();
     initProfileInfoForm();
     initProfileInfoSaveForm();
     initProfilePlanSection();
+    initReserves();
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
