@@ -6,6 +6,7 @@
 import { showBootstrapAlert } from '../utils.js';
 import * as stripeService from './stripe/stripe.service.js';
 import * as stripeRender from './stripe/stripe.render.js';
+import { STRIPE_PUBLIC_KEY } from '../config.js';
 
 let stripeInstance = null;
 let elementsInstance = null;
@@ -14,13 +15,20 @@ let paymentElementMounted = false;
 /* ─── 1. INICIALITZACIÓ ────────────────────────────────────────────── */
 
 /**
- * Inicialitza la instància de Stripe amb la clau pública des del backend.
+ * Inicialitza la instància de Stripe amb la clau pública des de la configuració o el backend.
  * 
  * @param {string} userId - ID de l'usuari.
  * @returns {Promise<Object|null>} Instància de Stripe.
  */
 export async function initStripe(userId) {
     if (stripeInstance) return stripeInstance;
+
+    // Intentar usar el valor injectat des de l'entorn primer
+    if (STRIPE_PUBLIC_KEY && STRIPE_PUBLIC_KEY !== 'undefined' && STRIPE_PUBLIC_KEY !== '') {
+        stripeInstance = Stripe(STRIPE_PUBLIC_KEY);
+        return stripeInstance;
+    }
+
     try {
         const { stripe_publishable_key } = await stripeService.fetchSetupIntent(userId);
         if (stripe_publishable_key) {

@@ -152,7 +152,7 @@ CREATE TABLE reserves (
         'pendent',
         'confirmada',
         'en_curs',
-        'finalitzada',
+        'completada',
         'cancel·lada'
     ) DEFAULT 'pendent',
     preu_total DECIMAL(10, 2) NOT NULL,

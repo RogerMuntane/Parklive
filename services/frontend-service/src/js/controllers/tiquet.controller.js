@@ -8,10 +8,8 @@
  */
 
 import { obtenirDetallReserva } from './reserves.controller.js';
+import { pythonApi } from '../api.js';
 import { getQueryParam, showAlert } from '../utils.js';
-
-// URL de l'API Python: suporta variable d'entorn de Vite o fallback relatiu
-const PYTHON_API_BASE = import.meta.env?.VITE_PYTHON_API_URL ?? '/api';
 
 function fillTiquetData(key, value) {
   document.querySelectorAll(`[data-tiquet="${key}"]`).forEach((el) => {
@@ -229,19 +227,12 @@ async function generarIEnviarPDF(reservaId, codiReserva) {
     formData.append('tiquet', pdfBlob, `tiquet_${codiReserva}.pdf`);
 
     // Intentar URL relativa primer (/api) i fallback a la variable d'entorn
-    const uploadUrl = `${PYTHON_API_BASE}/reserves/${reservaId}/tiquet/pujar`;
-    console.log('[ParkLive] Pujant PDF a:', uploadUrl);
+    const endpoint = `/api/reserves/${reservaId}/tiquet/pujar`;
+    console.log('[ParkLive] Pujant PDF a:', endpoint);
 
-    const response = await fetch(uploadUrl, { method: 'POST', body: formData });
-
-    if (!response.ok) {
-      const errBody = await response.json().catch(() => ({}));
-      throw new Error(errBody.error ?? `HTTP ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('[ParkLive] PDF sincronitzat correctament:', result.path);
-
+    const data = await pythonApi.postForm(endpoint, formData);
+    console.log('[ParkLive] Tiquet pujat amb èxit:', data);
+    return data;
   } catch (err) {
     // Netejar el DOM fins i tot si hi ha error
     if (wrapper.parentNode) document.body.removeChild(wrapper);

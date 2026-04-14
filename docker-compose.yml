@@ -10,6 +10,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Europe/Madrid
     ports:
       - "${MYSQL_HOST_PORT}:3306"
     volumes:
@@ -47,6 +48,7 @@ services:
       PYTHON_SERVICE_URL: http://python-service:${FLASK_PORT}
       STRIPE_APIPrivada: ${STRIPE_APIPrivada}
       STRIPE_APIPublica: ${STRIPE_APIPublica}
+      TZ: Europe/Madrid
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -97,6 +99,7 @@ services:
       STRIPE_APIPublica: ${STRIPE_APIPublica}
       STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID}
       STRIPE_Anual_PREMIUM_PRICE_ID: ${STRIPE_Anual_PREMIUM_PRICE_ID}
+      TZ: Europe/Madrid
     networks:
       - parklive_network
 
@@ -108,6 +111,9 @@ services:
       network: host
     container_name: parklive_cron
     restart: always
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     depends_on:
       mysql:
         condition: service_healthy
@@ -123,6 +129,7 @@ services:
       DB_NAME: ${MYSQL_DATABASE}
       STRIPE_APIPrivada: ${STRIPE_APIPrivada}
       STRIPE_APIPublica: ${STRIPE_APIPublica}
+      TZ: Europe/Madrid
     entrypoint: [ "/bin/sh", "/app/scripts/cron_scheduler.sh" ]
     networks:
       - parklive_network
@@ -139,6 +146,11 @@ services:
     environment:
       PHP_SERVICE_PORT: ${PHP_SERVICE_PORT}
       PYTHON_SERVICE_PORT: ${PYTHON_SERVICE_PORT}
+      STRIPE_PUBLIC_KEY: ${STRIPE_APIPublica}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      IVA_PERCENTAGE: ${IVA_PERCENTAGE}
+      PREMIUM_DISCOUNT: ${PREMIUM_DISCOUNT}
+      TZ: Europe/Madrid
     volumes:
       - ./services/frontend-service/src:/usr/share/nginx/html/src
       - ./services/frontend-service/public:/usr/share/nginx/html
@@ -160,6 +172,7 @@ services:
       UPLOAD_LIMIT: 300M
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
+      TZ: Europe/Madrid
     depends_on:
       - mysql
     networks:

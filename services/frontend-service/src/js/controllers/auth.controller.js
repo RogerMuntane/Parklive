@@ -6,7 +6,7 @@
  */
 
 import { phpApi, pythonApi } from '../api.js';
-import { REDIRECT_DELAY } from '../config.js';
+import { REDIRECT_DELAY, GOOGLE_CLIENT_ID } from '../config.js';
 import {
   showAlert,
   hideAllAlerts,
@@ -23,11 +23,16 @@ import {
 let _googleClientId = null;
 
 /**
- * Obté el Google Client ID des del backend Python.
- * El valor es guarda en cache per no fer més d'una petició.
+ * Obté el Google Client ID des de la configuració o el backend Python.
  */
 async function getGoogleClientId() {
   if (_googleClientId) return _googleClientId;
+
+  // Intentar usar el valor injectat des de l'entorn primer
+  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID !== '') {
+    _googleClientId = GOOGLE_CLIENT_ID;
+    return _googleClientId;
+  }
 
   try {
     const result = await pythonApi.get('/api/config/google-client-id');

@@ -3,7 +3,8 @@
  * Controlador per funcionalitats del perfil d'usuari (canvi de contrasenya)
  */
 
-import { hideAllAlerts, setFormLoading, showBootstrapAlert } from '../utils.js';
+import { hideAllAlerts, setFormLoading, showBootstrapAlert, formatDate, formatCurrency, getUserId } from '../utils.js';
+import { obtenirReservesUsuari } from './reserves.controller.js';
 import { PHP_API_URL } from '../config.js';
 
 
@@ -179,6 +180,15 @@ export async function initProfileInfoForm() {
     cognomsInput.value = sessionData.cognom || sessionData.cognoms || sessionData.family_name || sessionData.name?.split(' ').slice(1).join(' ') || '';
     emailInput.value = sessionData.email || '';
     telInput.value = sessionData.telefon || sessionData.telefono || '';
+
+    // Mostrar imatge de perfil si existeix
+    if (sessionData.foto_perfil) {
+      const avatarContainer = document.getElementById('profile-avatar-container');
+      if (avatarContainer) {
+        const imageUrl = `${PHP_API_URL}/uploads/profiles/${sessionData.foto_perfil}`;
+        avatarContainer.innerHTML = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
+      }
+    }
     return; // Ja tenim les dades, no cal cridar PHP
   }
 }
@@ -486,3 +496,173 @@ export async function initProfilePlanSection() {
   });
 }
 
+
+/**
+ * Inicialitza l'historial de reserves del perfil
+ */
+export async function initProfileHistorySection() {
+    const tableBody = document.getElementById('history-table-body');
+    if (!tableBody) return;
+
+    try {
+        const userId = getUserId();
+        if (!userId) return;
+
+        // Obtenim totes les reserves per filtrar-les al client (permet més flexibilitat)
+        const data = await obtenirReservesUsuari();
+        const totesLesReserves = Array.isArray(data) ? data : (data.reserves || []);
+
+        // Filtrem per historial: completades i cancel·lades
+        const reserves = totesLesReserves.filter(r => 
+            ['completada', 'cancel·lada'].includes((r.estat || '').toLowerCase())
+        );
+
+        if (reserves.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        <i class="bi bi-info-circle me-1"></i> No s'han trobat reserves a l'historial.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        // Renderitzar files
+        tableBody.innerHTML = reserves.map(r => {
+            const dataFmt = formatDate(r.data_entrada);
+            const desc = `Aparcament – ${r.aparcament?.nom || 'Pàrquing'}`;
+            const preu = formatCurrency(r.preu_total);
+            
+            const estat = (r.estat || '').toLowerCase();
+            let badgeClass = 'bg-secondary';
+            let labelText = 'Desconegut';
+            let icon = 'bi-question-circle';
+            let potVeureTiquet = false;
+
+            if (estat === 'completada') {
+                badgeClass = 'status-ok';
+                labelText = 'Completat';
+                icon = 'bi-check-circle-fill';
+                potVeureTiquet = true;
+            } else if (estat === 'cancel·lada') {
+                badgeClass = 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25';
+                labelText = 'Cancel·lat';
+                icon = 'bi-x-circle-fill';
+                potVeureTiquet = false;
+            }
+            
+            return `
+                <tr>
+                    <td class="text-body-secondary small">${dataFmt}</td>
+                    <td>${desc}</td>
+                    <td><strong>${preu}</strong></td>
+                    <td>
+                        <span class="status-badge ${badgeClass}" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 2rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
+                            <i class="bi ${icon}"></i> ${labelText}
+                        </span>
+                    </td>
+                    <td>
+                        ${potVeureTiquet ? 
+                            `<a href="/tiquet_Aparcament.html?id=${r.id}" class="btn btn-outline-secondary btn-sm" title="Veure tiquet PDF">
+                                <i class="bi bi-file-earmark-pdf"></i> PDF
+                             </a>` : 
+                            `<button class="btn btn-outline-secondary btn-sm opacity-25" disabled title="Tiquet no disponible">
+                                <i class="bi bi-file-earmark-pdf"></i> PDF
+                             </button>`
+                        }
+                    </td>
+                </tr>`;
+        }).join('');
+
+    } catch (err) {
+        console.error('[ParkLive] Error carregant historial:', err);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Error al carregar les dades.
+                </td>
+            </tr>`;
+    }
+}
+
+/**
+ * Inicialitza la càrrega d'imatge de perfil
+ */
+export function initProfileImageUpload() {
+  const uploadInput = document.getElementById('profile-upload-input');
+  const uploadBtn = document.getElementById('btn-upload-avatar');
+  const avatarContainer = document.getElementById('profile-avatar-container');
+  const sidebarAvatarContainer = document.getElementById('sidebar-avatar-container');
+
+  if (!uploadInput || !uploadBtn || !avatarContainer) return;
+
+  uploadBtn.addEventListener('click', () => uploadInput.click());
+
+  uploadInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validació client
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showBootstrapAlert('danger', 'Tipus de fitxer no permès. Només JPG, PNG i WebP.', avatarContainer.closest('.card-body'));
+      return;
+    }
+    if (file['size'] > 2 * 1024 * 1024) {
+      showBootstrapAlert('danger', 'La imatge és massa gran. Màxim 2MB.', avatarContainer.closest('.card-body'));
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profile_image', file);
+    
+    // Obtenir user_id del sessionStorage (necessari per OAuth)
+    let userId = null;
+    try {
+      const raw = sessionStorage.getItem('parklive_user_data');
+      if (raw) userId = JSON.parse(raw)?.id;
+    } catch (_) {}
+    if (userId) formData.append('user_id', userId);
+
+    uploadBtn.disabled = true;
+    const originalContent = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Pujant…';
+
+    try {
+      const res = await fetch(`${PHP_API_URL}/controllers/update_profile_picture.php`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const imageUrl = `${PHP_API_URL}/uploads/profiles/${data.foto_perfil}`;
+        
+        // Actualitzar imatges a la UI
+        const imgHtml = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
+        avatarContainer.innerHTML = imgHtml;
+        if (sidebarAvatarContainer) sidebarAvatarContainer.innerHTML = imgHtml;
+
+        // Actualitzar sessionStorage
+        try {
+          const raw = sessionStorage.getItem('parklive_user_data');
+          const userData = raw ? JSON.parse(raw) : {};
+          userData.foto_perfil = data.foto_perfil;
+          sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
+        } catch (_) {}
+
+        showBootstrapAlert('success', 'Imatge de perfil actualitzada.', avatarContainer.closest('.card-body'));
+      } else {
+        showBootstrapAlert('danger', data.error || 'Error al pujar la imatge.', avatarContainer.closest('.card-body'));
+      }
+    } catch (err) {
+      console.error('[ParkLive] Error al pujar imatge:', err);
+      showBootstrapAlert('danger', 'Error de xarxa al pujar la imatge.', avatarContainer.closest('.card-body'));
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = originalContent;
+      uploadInput.value = ''; // Reset input
+    }
+  });
+}

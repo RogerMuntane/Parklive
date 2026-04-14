@@ -88,6 +88,7 @@ function initThemeToggle() {
 import { isAuthenticated, clearUserSession, getUserId } from './utils.js';
 import { phpApi } from './api.js';
 import { logoutUser } from './controllers/auth.controller.js';
+import { PHP_API_URL } from './config.js';
 
 /**
  * Comprova si l'usuari té la sessió iniciada.
@@ -253,6 +254,15 @@ function initSidebarData() {
       if (badgeIcon) badgeIcon.className = 'bi bi-person-badge';
     }
 
+    // Actualitzar avatar si existeix
+    if (user.foto_perfil) {
+      const avatarContainer = document.getElementById('sidebar-avatar-container');
+      if (avatarContainer) {
+        const imageUrl = `${PHP_API_URL}/uploads/profiles/${user.foto_perfil}`;
+        avatarContainer.innerHTML = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
+      }
+    }
+
   } catch (err) {
     console.warn('[ParkLive] Error al carregar dades del sidebar:', err);
   }
@@ -363,13 +373,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
   if (document.body.classList.contains('page-profile')) {
-    const { initProfilePasswordForm, initProfileInfoForm, initProfileInfoSaveForm, initProfilePlanSection } = await import('./controllers/profile.controller.js');
+    const { 
+      initProfilePasswordForm, 
+      initProfileInfoForm, 
+      initProfileInfoSaveForm, 
+      initProfilePlanSection,
+      initProfileHistorySection,
+      initProfileImageUpload
+    } = await import('./controllers/profile.controller.js');
     const { initReserves } = await import('./controllers/reserves.controller.js');
     
     initProfilePasswordForm();
     initProfileInfoForm();
+    initProfileImageUpload();
     initProfileInfoSaveForm();
     initProfilePlanSection();
+    initProfileHistorySection();
     initReserves();
 
     // Integració Stripe
