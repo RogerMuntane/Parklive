@@ -352,6 +352,12 @@ async function initControllers() {
       initTiquetAparcament();
     }
 
+    // ── Report de plaça en carrer ───────────────────────────────
+    if (bodyClass.includes('page-street-report')) {
+      const { initStreetReport } = await import('./controllers/street-report.controller.js');
+      initStreetReport();
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
   }

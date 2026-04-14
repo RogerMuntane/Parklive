@@ -1,12 +1,26 @@
 const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
 const MIN_ZOOM = 4;
+const OPEN_AIR_BASE_RADIUS_METERS = 45;
 
 function escapeHtml(value) {
   if (!value) return '';
   const div = document.createElement('div');
   div.textContent = value;
   return div.innerHTML;
+}
+
+function isOpenAirParking(spot) {
+  return spot?.raw?.tipus === 'aire_lliure';
+}
+
+function computeOpenAirRadius(spot) {
+  const totalCapacity = Number(spot?.raw?.capacitat_total);
+  if (!Number.isFinite(totalCapacity) || totalCapacity <= 0) {
+    return OPEN_AIR_BASE_RADIUS_METERS;
+  }
+
+  return Math.max(35, Math.min(95, Math.round(Math.sqrt(totalCapacity) * 3.2)));
 }
 
 export function initLandingMap() {
@@ -43,7 +57,7 @@ export function initLandingMap() {
 
   leaflet
     .tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       {
         subdomains: 'abcd',
         minZoom: MIN_ZOOM,
@@ -80,7 +94,16 @@ export function initLandingMap() {
     parkingMarkers.clear();
 
     spots.forEach((spot) => {
-      const marker = leaflet.marker(spot.coords, { icon: parkingIcon });
+      const marker = isOpenAirParking(spot)
+        ? leaflet.circle(spot.coords, {
+            radius: computeOpenAirRadius(spot),
+            color: '#b3261e',
+            weight: 2,
+            fillColor: '#dc3545',
+            fillOpacity: 0.24,
+            className: 'parking-open-air-area',
+          })
+        : leaflet.marker(spot.coords, { icon: parkingIcon });
 
       marker.bindPopup(
         `
@@ -88,6 +111,13 @@ export function initLandingMap() {
             <strong class="d-block mb-1 small fw-semibold">${escapeHtml(spot.name)}</strong>
             <p class="mb-2 small text-body-secondary">${escapeHtml(spot.priceLabel)} · ${escapeHtml(spot.distanceLabel)}</p>
             <span class="badge text-bg-success">${escapeHtml(spot.statusLabel || 'Disponible')}</span>
+            <a
+              href="/detall_Aparcament.html?id=${encodeURIComponent(String(spot.id))}"
+              class="btn btn-danger btn-sm w-100 mt-2"
+              aria-label="Veure detall de l'aparcament ${escapeHtml(spot.name)}"
+            >
+              Veure detall
+            </a>
           </div>
         `,
         {

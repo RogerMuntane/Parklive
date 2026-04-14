@@ -3,7 +3,7 @@
 # ParkLive – Frontend entrypoint
 # Genera /usr/share/nginx/html/src/js/env.js amb les variables d'entorn
 # injectades des de docker-compose, abans d'iniciar Nginx.
-# 
+#
 
 ENV_JS_PATH="/usr/share/nginx/html/src/js/env.js"
 
