@@ -46,11 +46,6 @@
     border-top-color: rgba(var(--bs-light-rgb), 0.2);
   }
 
-  .page-landing .map-btn-dates {
-    background: rgba(var(--bs-light-rgb), 0.16);
-    color: var(--bs-light);
-  }
-
   .page-landing .date-sheet-row label {
     color: rgba(var(--bs-light-rgb), 0.84);
   }
@@ -89,8 +84,51 @@
   }
 
   .page-landing .map-btn-filter {
-    background: rgba(var(--bs-light-rgb), 0.18);
-    color: var(--bs-light);
+    --bs-btn-color: var(--bs-light);
+    --bs-btn-bg: rgba(var(--bs-light-rgb), 0.16);
+    --bs-btn-border-color: rgba(var(--bs-light-rgb), 0.34);
+    --bs-btn-hover-color: #111827;
+    --bs-btn-hover-bg: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-hover-border-color: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-active-color: #111827;
+    --bs-btn-active-bg: rgba(var(--bs-light-rgb), 0.78);
+    --bs-btn-active-border-color: rgba(var(--bs-light-rgb), 0.78);
+  }
+
+  .page-landing .map-btn-dates {
+    --bs-btn-color: var(--bs-light);
+    --bs-btn-bg: rgba(var(--bs-light-rgb), 0.16);
+    --bs-btn-border-color: rgba(var(--bs-light-rgb), 0.34);
+    --bs-btn-hover-color: #111827;
+    --bs-btn-hover-bg: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-hover-border-color: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-active-color: #111827;
+    --bs-btn-active-bg: rgba(var(--bs-light-rgb), 0.78);
+    --bs-btn-active-border-color: rgba(var(--bs-light-rgb), 0.78);
+  }
+
+  .page-landing .map-btn-report {
+    --bs-btn-color: var(--bs-light);
+    --bs-btn-bg: rgba(var(--bs-success-rgb), 0.34);
+    --bs-btn-border-color: rgba(var(--bs-success-rgb), 0.58);
+    --bs-btn-hover-color: var(--bs-white);
+    --bs-btn-hover-bg: rgba(var(--bs-success-rgb), 0.52);
+    --bs-btn-hover-border-color: rgba(var(--bs-success-rgb), 0.75);
+    --bs-btn-active-color: var(--bs-white);
+    --bs-btn-active-bg: rgba(var(--bs-success-rgb), 0.62);
+    --bs-btn-active-border-color: rgba(var(--bs-success-rgb), 0.82);
+  }
+
+  .page-landing .map-btn-search {
+    --bs-btn-color: var(--bs-white);
+    --bs-btn-bg: rgba(var(--bs-danger-rgb), 0.88);
+    --bs-btn-border-color: rgba(var(--bs-danger-rgb), 0.95);
+    --bs-btn-hover-color: var(--bs-white);
+    --bs-btn-hover-bg: rgba(var(--bs-danger-rgb), 1);
+    --bs-btn-hover-border-color: rgba(var(--bs-danger-rgb), 1);
+    --bs-btn-active-color: var(--bs-white);
+    --bs-btn-active-bg: rgba(var(--bs-danger-rgb), 0.8);
+    --bs-btn-active-border-color: rgba(var(--bs-danger-rgb), 0.8);
   }
 
   .page-landing .filters-close {

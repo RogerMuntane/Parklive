@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Reporta disponibilitat de plaça al carrer amb la teva ubicació actual."
+    />
+    <title>ParkLive | Reportar plaça al carrer</title>
+    <link rel="stylesheet" href="./assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  </head>
+
+  <body class="page page-street-report">
+    <div
+      class="template-slot"
+      data-template="./components/header.html"
+      aria-label="Capçalera"
+    ></div>
+
+    <main class="street-report-layout container py-4 py-lg-5">
+      <section class="street-report-shell">
+        <header class="street-report-header mb-4">
+          <p class="street-report-eyebrow mb-2">Observador de zona</p>
+          <h1 class="street-report-title mb-2">Report de plaça al carrer</h1>
+          <p class="street-report-subtitle mb-0">
+            Informa de la disponibilitat a la teva ubicació actual. Aquest
+            report no està vinculat als aparcaments de la base de dades.
+          </p>
+        </header>
+
+        <div class="row g-4 align-items-stretch">
+          <div class="col-12 col-lg-4">
+            <form
+              id="streetReportForm"
+              class="street-report-panel h-100"
+              novalidate
+            >
+              <h2 class="street-panel-title">Estat de la plaça</h2>
+
+              <div
+                class="street-status-grid"
+                role="radiogroup"
+                aria-label="Estat reportat"
+              >
+                <button
+                  type="button"
+                  class="street-status-option is-active"
+                  data-status="available"
+                  aria-pressed="true"
+                >
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Lliure</span>
+                </button>
+                <button
+                  type="button"
+                  class="street-status-option"
+                  data-status="occupied"
+                  aria-pressed="false"
+                >
+                  <i class="bi bi-slash-circle-fill"></i>
+                  <span>Ocupada</span>
+                </button>
+              </div>
+
+              <label
+                for="streetReportComment"
+                class="form-label street-label mt-4"
+                >Informació addicional</label
+              >
+              <textarea
+                id="streetReportComment"
+                class="form-control"
+                rows="4"
+                maxlength="220"
+                placeholder="Afegeix observacions breus (opcional)..."
+              ></textarea>
+
+              <div
+                class="street-coords mt-3"
+                id="streetReportCoords"
+                aria-live="polite"
+              >
+                <i class="bi bi-geo-alt"></i>
+                <span>Obtenint la ubicació actual...</span>
+              </div>
+
+              <button
+                type="submit"
+                id="streetReportSubmit"
+                class="btn btn-primary street-submit-btn mt-4 w-100"
+              >
+                Enviar report
+              </button>
+            </form>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <section class="street-map-panel h-100">
+              <section
+                id="streetReportMap"
+                class="street-map"
+                aria-label="Mapa de la ubicació reportada"
+              ></section>
+              <div
+                id="streetReportToast"
+                class="street-toast"
+                aria-live="polite"
+              ></div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div
+      class="template-slot"
+      data-template="components/footer.html"
+      aria-label="Peu de pàgina"
+    ></div>
+
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+  </body>
+</html>

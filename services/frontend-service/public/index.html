@@ -27,18 +27,28 @@
 
     <main class="layout map-layout" id="main-content">
       <div class="map-search-wrapper" aria-label="Cercador d'aparcaments">
-        <form id="mapSearchBar" class="map-search-bar" role="search">
+        <form
+          id="mapSearchBar"
+          class="map-search-bar"
+          role="search"
+          autocomplete="off"
+        >
           <div class="search-main">
             <i
               class="bi bi-geo-alt search-main-icon text-body-secondary"
               aria-hidden="true"
             ></i>
             <input
-              type="search"
+              type="text"
               id="mapSearchInput"
               class="form-control"
+              name="map-search"
               placeholder="Cerca aparcament o adreça"
               aria-label="Cerca aparcament"
+              autocomplete="off"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
             />
           </div>
 
@@ -101,6 +111,15 @@
           >
             <i class="bi bi-sliders"></i>
           </button>
+
+          <a
+            href="/report_disponibilitat.html"
+            class="btn map-btn map-btn-report"
+            aria-label="Reportar disponibilitat de plaça en carrer"
+            title="Reportar plaça en carrer"
+          >
+            <i class="bi bi-broadcast-pin"></i>
+          </a>
 
           <button
             type="submit"
