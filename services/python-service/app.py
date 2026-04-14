@@ -5,6 +5,7 @@ from routes.reserves_routes import reserves_routes
 from routes.contribucions_routes import contribucions_routes
 from routes.google_auth_routes import google_auth_routes
 from routes.stripe_routes import stripe_routes
+from routes.street_reports_routes import street_reports_routes
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -35,6 +36,7 @@ app.register_blueprint(reserves_routes)
 app.register_blueprint(contribucions_routes)
 app.register_blueprint(google_auth_routes)
 app.register_blueprint(stripe_routes)
+app.register_blueprint(street_reports_routes)
 
 
 # Health check endpoint per Docker
@@ -49,7 +51,7 @@ def handle_exception(e):
     # Passa els errors HTTP (404, 405, etc.) tal qual
     if hasattr(e, 'code') and hasattr(e, 'description'):
         return jsonify(error=str(e.description)), e.code
-    
+
     # Per a errors no controlats (500)
     import traceback
     print(f"ERROR 500: {str(e)}")

@@ -32,7 +32,7 @@ export function setupMobileMapViewToggle({
 
   const syncButtonUi = () => {
     const mapVisible = document.body.classList.contains('mobile-map-view');
-    toggleBtn.textContent = mapVisible ? 'Ver resultados' : 'Ver mapa';
+    toggleBtn.textContent = mapVisible ? 'Veure resultats' : 'Veure mapa';
     toggleBtn.setAttribute('aria-pressed', String(mapVisible));
   };
 
