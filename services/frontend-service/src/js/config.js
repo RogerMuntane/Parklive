@@ -21,6 +21,16 @@ export const PYTHON_API_URL = `${protocol}//${hostname}:${ENV.PYTHON_SERVICE_POR
  */
 export const PHP_API_URL = `${protocol}//${hostname}:${ENV.PHP_SERVICE_PORT}`;
 
+/** Claus Públiques (Stripe/Google) */
+export const STRIPE_PUBLIC_KEY = ENV.STRIPE_PUBLIC_KEY;
+export const GOOGLE_CLIENT_ID = ENV.GOOGLE_CLIENT_ID;
+
+/** Constants Financeres */
+export const FINANCIAL_CONSTANTS = Object.freeze({
+  IVA_PERCENTAGE: parseFloat(ENV.IVA_PERCENTAGE || 0.21),
+  PREMIUM_DISCOUNT: parseFloat(ENV.PREMIUM_DISCOUNT || 0.10),
+});
+
 /** Paginació per defecte */
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 100;

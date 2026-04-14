@@ -4,7 +4,9 @@ from controllers.reserves_controller import (
     llistar_reserves,
     detall_reserva,
     crear_nova_reserva,
-    get_tiquet_pdf
+    get_tiquet_pdf,
+    cancelar_reserva_usuari,
+    pujar_tiquet_pdf
 )
 
 reserves_routes = Blueprint("reserves", __name__)
@@ -33,3 +35,13 @@ def create_reserva():
 def download_reserva_pdf(reserva_id):
     """Endpoint per descarregar el tiquet PDF de la reserva"""
     return get_tiquet_pdf(reserva_id)
+
+@reserves_routes.route("/api/reserves/<int:reserva_id>/tiquet/pujar", methods=["POST"])
+def upload_reserva_pdf(reserva_id):
+    """Endpoint per pujar el tiquet PDF generat al frontend"""
+    return pujar_tiquet_pdf(reserva_id)
+
+@reserves_routes.route("/api/reserves/<int:reserva_id>/cancel", methods=["POST"])
+def cancel_reserva(reserva_id):
+    """Endpoint per analitzar i cancel·lar una reserva"""
+    return cancelar_reserva_usuari(reserva_id)

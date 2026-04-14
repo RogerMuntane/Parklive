@@ -8,8 +8,9 @@
  */
 
 import { pythonApi } from '../api.js';
-import { getQueryParam, getUserId, showAlert, setFormLoading } from '../utils.js';
+import { getQueryParam, getUserId, showAlert, showBootstrapAlert, setFormLoading, formatCurrency } from '../utils.js';
 import { fetchPaymentMethods } from './stripe/stripe.service.js';
+import { FINANCIAL_CONSTANTS } from '../config.js';
 import { crearReserva } from './reserves.controller.js';
 
 let aparcamentData = null;
@@ -21,10 +22,13 @@ function esc(str) {
   return div.innerHTML;
 }
 
-function formatCurrency(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return '0,00 €';
-  return `${n.toFixed(2).replace('.', ',')} €`;
+
+/** Retorna la data en format YYYY-MM-DD en hora local */
+function getLocalDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function fill(key, value) {
@@ -84,12 +88,8 @@ function calculateCost() {
   const tarifaHora = parseFloat(aparcamentData.tarifa_hora) || 0;
   const subtotal = diffHours * tarifaHora;
   
-  // IVA es 21%
-  const iva = subtotal * 0.21;
-  const net = subtotal - iva; // Aquí simplificarem assumint que la tarifa_hora ja inclou IVA
-  // O calculem el total com math: si tarifa = X amb IVA, desfem. Si tarifa és sense IVA fem addició.
-  // Assumim que la tarifa és sense IVA pel preu final, donat que la UI mostra 'Subtotal', 'IVA' on Total = Sub + IVA
-  const subtotalSenseIva = subtotal / 1.21;
+  const ivaPercentage = FINANCIAL_CONSTANTS.IVA_PERCENTAGE;
+  const subtotalSenseIva = subtotal / (1 + ivaPercentage);
   const ivaCalculat = subtotal - subtotalSenseIva;
 
   fill('subtotal', formatCurrency(subtotalSenseIva));
@@ -102,7 +102,7 @@ function calculateCost() {
     
   let descompte = 0;
   if(isPremium) {
-     descompte = subtotal * 0.10; // 10% descompte
+     descompte = subtotal * FINANCIAL_CONSTANTS.PREMIUM_DISCOUNT;
      fill('descompte', `— ${formatCurrency(descompte)}`);
   } else {
      fill('descompte', `— 0,00 €`);
@@ -126,8 +126,9 @@ function updateEndDateTime(hoursToAdd) {
   const currentStartDate = new Date(`${inDateEl.value}T${inTimeEl.value}`);
   const newEndDate = new Date(currentStartDate.getTime() + hoursToAdd * 60 * 60 * 1000);
 
-  const outD = newEndDate.toISOString().split('T')[0];
-  const outT = newEndDate.toTimeString().split(' ')[0].substring(0, 5);
+  const outD = getLocalDateString(newEndDate);
+  const outT = newEndDate.getHours().toString().padStart(2, '0') + ':' + 
+               newEndDate.getMinutes().toString().padStart(2, '0');
 
   outDateEl.value = outD;
   outTimeEl.value = outT;
@@ -241,10 +242,12 @@ export async function initReservaAparcament() {
         progressBar.style.backgroundColor = ocupats < 50 ? 'var(--bs-success)' : ocupats < 80 ? 'var(--bs-warning)' : 'var(--bs-danger)';
     }
 
-    // Initialize Dates safely
+    // Initialize Dates safely in local time
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const outStr = new Date(today.getTime() + 2 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const todayStr = getLocalDateString(today);
+    
+    const outDate = new Date(today.getTime() + 2 * 60 * 60 * 1000);
+    const outStr = getLocalDateString(outDate);
     
     let nowHours = today.getHours();
     nowHours = nowHours < 10 ? '0'+nowHours : nowHours;
@@ -256,18 +259,43 @@ export async function initReservaAparcament() {
     let outHoursStr = outTimeObj.getHours() < 10 ? '0'+outTimeObj.getHours() : outTimeObj.getHours();
     const timeOut = `${outHoursStr}:${nowMinutes}`;
 
-    if(document.getElementById('entrada-data')) document.getElementById('entrada-data').value = todayStr;
+    // Initialize Flatpickr for Dates
+    const fpEntrada = flatpickr("#entrada-data", {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        defaultDate: todayStr,
+        onChange: function(selectedDates, dateStr) {
+            if (fpSortida) {
+                fpSortida.set("minDate", dateStr);
+                // Si la nova data d'entrada és posterior a la de sortida, forcem la de sortida
+                if (fpSortida.selectedDates[0] < selectedDates[0]) {
+                    fpSortida.setDate(dateStr);
+                }
+            }
+            calculateCost();
+            updateSummaryDates();
+        }
+    });
+
+    const fpSortida = flatpickr("#sortida-data", {
+        minDate: todayStr,
+        dateFormat: "Y-m-d",
+        defaultDate: outStr,
+        onChange: function() {
+            calculateCost();
+            updateSummaryDates();
+        }
+    });
+
     if(document.getElementById('entrada-hora')) document.getElementById('entrada-hora').value = timeIn;
-    if(document.getElementById('sortida-data')) document.getElementById('sortida-data').value = outStr;
     if(document.getElementById('sortida-hora')) document.getElementById('sortida-hora').value = timeOut;
 
     // Default calculations
     calculateCost();
     updateSummaryDates();
 
-    // Event listeners
-    const inputs = ['entrada-data', 'entrada-hora', 'sortida-data', 'sortida-hora'];
-    inputs.forEach(inputId => {
+    // Event listeners per hores (les dates ja van amb Flatpickr)
+    ['entrada-hora', 'sortida-hora'].forEach(inputId => {
         const el = document.getElementById(inputId);
         if (el) {
             el.addEventListener('change', () => {
@@ -321,6 +349,21 @@ export async function initReservaAparcament() {
                 return;
             }
 
+            // Validació final de seguretat: Data de sortida ha de ser posterior a entrada
+            const inDateTime = new Date(`${inDate}T${inTime}`);
+            const outDateTime = new Date(`${outDate}T${outTime}`);
+            const ara = new Date();
+
+            if (inDateTime < ara) {
+                showAlert('error', 'La data d\'entrada no pot ser anterior a l\'actual.');
+                return;
+            }
+
+            if (outDateTime <= inDateTime) {
+                showAlert('error', 'La data de sortida ha de ser posterior a la d\'entrada.');
+                return;
+            }
+
             const totalAmount = document.getElementById('form-reserva').dataset.total || 0;
             const btn = document.getElementById('btn-confirm-reserva');
             const originalText = btn.innerHTML;
@@ -350,7 +393,7 @@ export async function initReservaAparcament() {
                     throw new Error("La resposta del servidor no conté la reserva.");
                 }
             } catch (err) {
-                showAlert('error', err.response?.data?.error || err.message || 'El pagament ha fallat o la targeta ha estat denegada.');
+                showBootstrapAlert('danger', err.message || 'El pagament ha fallat o la targeta ha estat denegada.');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }

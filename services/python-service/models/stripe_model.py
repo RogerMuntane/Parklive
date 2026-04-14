@@ -3,8 +3,10 @@ import os
 from datetime import datetime
 from models.db_connection import get_new_connection
 
+
 # Configurar Stripe d'entrada
 stripe.api_key = os.getenv('STRIPE_APIPrivada', '').strip()
+stripe.max_network_retries = 3  # Activar retries automàtics de l'SDK de Stripe
 
 
 def get_user_stripe_id(user_id):
@@ -330,6 +332,7 @@ def createPaymentIntent(amount, currency, customer_id, payment_method_id):
             customer=customer_id,
             payment_method=payment_method_id,
             confirm=True,
+            capture_method='manual',
             automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
         )
         return payment_intent
@@ -386,3 +389,63 @@ def registrar_pagament_db(reserva_id, usuari_id, import_pagament, metode, refere
 def log_failed_payment(stripe_customer_id, invoice_id, amount):
     """Registra un intent de pagament fallit"""
     print(f"[Webhook] PAGAMENT FALLIT: Customer={stripe_customer_id}, Invoice={invoice_id}, Amount={amount}")
+
+
+def cancel_payment_intent(payment_intent_id):
+    """Cancel·la a Stripe un PaymentIntent autoritzat (un-captured)"""
+    try:
+        payment_intent = stripe.PaymentIntent.cancel(payment_intent_id)
+        return payment_intent
+    except Exception as e:
+        print(f"[Stripe] Error cancel·lant intent de pagament {payment_intent_id}: {e}")
+        return None
+
+
+def capture_payment_intent(payment_intent_id):
+    """
+    Captura a Stripe la totalitat d'un PaymentIntent autoritzat anteriorment.
+    Implementa una petita lògica de reintent per errors de connexió (DNS/Xarxa).
+    """
+    import time
+    max_retries = 3
+    retry_delay = 5  # segons entre reintents
+
+    for attempt in range(max_retries):
+        try:
+            payment_intent = stripe.PaymentIntent.capture(payment_intent_id)
+            return payment_intent
+        except stripe.error.APIConnectionError as e:
+            # Error de xarxa o DNS (com el NameResolutionError)
+            print(f"[Stripe] Error de connexió en capturar {payment_intent_id} (intent {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+            else:
+                return None
+        except Exception as e:
+            # Altres errors (targeta, estat invàlid, etc.) no els reintentem aquí
+            print(f"[Stripe] Error capturant intent de pagament {payment_intent_id}: {e}")
+            return None
+
+
+def actualitzar_estat_pagament_db(referencia_externa, nou_estat):
+    """Actualitza l'estat d'un pagament cercant-lo per la seva referència externa (Stripe PI ID)"""
+    conn = get_new_connection()
+    if not conn:
+        return False
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE pagaments SET estat = %s WHERE referencia_externa = %s",
+            (nou_estat, referencia_externa)
+        )
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"[DB] Error actualitzant estat pagament {referencia_externa}: {e}")
+        conn.rollback()
+        return False
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        conn.close()

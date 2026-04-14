@@ -44,7 +44,6 @@ def get_aparcament_by_id(aparcament_id):
             valoracions = result.fetchall()
 
     cursor.close()
-    conn.close()
 
     # Si no es troba, retorna None
     if aparcament is None:
@@ -108,7 +107,6 @@ def get_aparcaments_by_filters(filters):
             break
 
         cursor.close()
-        conn.close()
 
         return {
             'total': len(aparcaments),
@@ -247,7 +245,6 @@ def get_aparcaments_by_filters(filters):
     cursor.execute(query, params)
     aparcaments = cursor.fetchall()
     cursor.close()
-    conn.close()
 
     # Retornar resultats amb metadades de paginació
     return {

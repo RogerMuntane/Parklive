@@ -150,7 +150,6 @@ def crear_contribucio(data):
 
         contribucio = cursor.fetchone()
         cursor.close()
-        conn.close()
 
         if not contribucio:
             raise Exception("Error en recuperar la contribució creada")
@@ -181,7 +180,6 @@ def crear_contribucio(data):
     except Exception as e:
         conn.rollback()
         cursor.close()
-        conn.close()
         raise e
 
 
@@ -240,7 +238,6 @@ def get_contribucions_usuari(usuari_id, filters=None):
     cursor.execute(query, params)
     contribucions = cursor.fetchall()
     cursor.close()
-    conn.close()
 
     # Serialitzar
     result = []

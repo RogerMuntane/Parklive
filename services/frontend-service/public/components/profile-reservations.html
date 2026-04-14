@@ -2,97 +2,22 @@
 <section class="profile-section" id="section-reservations">
     <div class="card shadow-sm border-0 rounded-4 mb-3">
         <div class="card-body p-4">
-            <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                <span class="rounded-3 p-2 bg-primary bg-opacity-10 text-primary fs-5">
-                    <i class="bi bi-car-front"></i>
-                </span>
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="rounded-3 p-2 border bg-white shadow-sm d-flex align-items-center justify-content-center"
+                    style="width: 48px; height: 48px;">
+                    <i class="bi bi-calendar-event text-secondary fs-4"></i>
+                </div>
                 <div>
-                    <h2 class="card-title h6 fw-bold mb-0">Les Teves Reserves Actives</h2>
-                    <p class="card-subtitle text-body-secondary small mb-0">Consulta i gestiona les teves properes reserves</p>
+                    <h2 class="h5 fw-bold mb-0">Les teves reserves actives</h2>
+                    <p class="text-secondary small mb-0">Consulta i gestiona les teves properes reserves</p>
                 </div>
             </div>
 
-            <!-- Page reserves actives class ensures SCSS applies -->
-            <div class="page-reserves-actives">
-                <div class="row g-4">
-                    <!-- Reserva cancelable -->
-                    <div class="col-12 col-xl-6">
-                        <div class="reservation-card">
-                            <div class="reservation-header">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-car-front text-primary"></i>
-                                    <h5 class="mb-0 fw-bold">Parking Central</h5>
-                                </div>
-                                <span class="badge bg-success status-badge">Confirmada</span>
-                            </div>
-                            <div class="reservation-body">
-                                <div class="row mb-3 mt-1">
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">Entrada</p>
-                                        <p class="mb-0 fw-semibold"><i class="bi bi-calendar me-2"></i>15/04/2026, 10:00 h</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">Sortida</p>
-                                        <p class="mb-0 fw-semibold"><i class="bi bi-calendar me-2"></i>15/04/2026, 14:00 h</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-geo-alt text-muted me-2"></i>
-                                    <span class="text-body">Carrer de la Diputació, 250, Barcelona</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-upc-scan text-muted me-2"></i>
-                                    <span class="text-body font-monospace">REF-8493A</span>
-                                </div>
-                            </div>
-                            <div class="reservation-footer">
-                                <a href="/tiquet_Aparcament.html" class="btn btn-outline-primary btn-sm"><i class="bi bi-qr-code me-1"></i> Veure tiquet</a>
-                                <!-- Botó de cancelar habilitat -->
-                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal">Cancel·lar reserva</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Reserva No cancelable -->
-                    <div class="col-12 col-xl-6">
-                        <div class="reservation-card border-warning">
-                            <div class="reservation-header">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-car-front text-primary"></i>
-                                    <h5 class="mb-0 fw-bold">Pàrquing Estació</h5>
-                                </div>
-                                <span class="badge bg-warning text-dark status-badge">Imminent</span>
-                            </div>
-                            <div class="reservation-body">
-                                <div class="row mb-3 mt-1">
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">Entrada</p>
-                                        <p class="mb-0 fw-semibold"><i class="bi bi-calendar me-2"></i> Avui, 12:00 h</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted small mb-1">Sortida</p>
-                                        <p class="mb-0 fw-semibold"><i class="bi bi-calendar me-2"></i> Avui, 18:00 h</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-geo-alt text-muted me-2"></i>
-                                    <span class="text-body">Plaça Països Catalans, s/n</span>
-                                </div>
-                                <div class="d-flex align-items-center mb-3">
-                                    <i class="bi bi-upc-scan text-muted me-2"></i>
-                                    <span class="text-body font-monospace">REF-9021B</span>
-                                </div>
-                                <div class="alert alert-warning py-2 mb-0 d-flex align-items-center" role="alert">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <span class="small">No es pot cancel·lar, falten menys de 60 min.</span>
-                                </div>
-                            </div>
-                            <div class="reservation-footer">
-                                <a href="/tiquet_Aparcament.html" class="btn btn-primary btn-sm"><i class="bi bi-qr-code me-1"></i> Veure tiquet</a>
-                                <!-- Botó de cancelar deshabilitat -->
-                                <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Cancel·lar reserva</button>
-                            </div>
-                        </div>
+            <div class="page-reserves-actives" id="profile-reservations-container">
+                <!-- Les reserves es carregaran dinàmicament aquí -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregant...</span>
                     </div>
                 </div>
             </div>
@@ -103,21 +28,24 @@
     <!-- Modal de Cancel·lació -->
     <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-0">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1.2rem;">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold text-danger" id="cancelModalLabel">Cancel·lar Reserva</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tancar"></button>
                 </div>
-                <div class="modal-body py-4">
+                <div class="modal-body py-4 px-4">
                     <div class="text-center mb-3">
-                        <i class="bi bi-exclamation-circle text-danger" style="font-size: 3rem;"></i>
+                        <i class="bi bi-exclamation-circle text-danger" style="font-size: 3.5rem;"></i>
                     </div>
-                    <p class="text-center fs-5">Estàs segur que vols cancel·lar aquesta reserva?</p>
-                    <p class="text-muted text-center small mb-0">Aquesta acció no es pot desfer. El reemborsament s'aplicarà d'acord amb la nostra política.</p>
+                    <p class="text-center fs-5 fw-bold mb-2">Estàs segur que vols cancel·lar aquesta reserva?</p>
+                    <p class="text-secondary text-center small mb-0 px-3">Aquesta acció no es pot desfer. El
+                        reemborsament s'aplicarà d'acord amb la nostra política de cancel·lació.</p>
                 </div>
-                <div class="modal-footer border-top-0 justify-content-center">
-                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">No, mantenir reserva</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Sí, cancel·lar</button>
+                <div class="modal-footer border-top-0 pb-4 px-4 justify-content-center gap-2">
+                    <button type="button" class="btn btn-light px-4 py-2 border fw-semibold" 
+                        data-bs-dismiss="modal" style="border-radius: 0.6rem;">No, mantenir</button>
+                    <button type="button" class="btn btn-danger px-4 py-2 fw-semibold" id="confirmCancelBtn"
+                        style="border-radius: 0.6rem;">Sí, cancel·lar</button>
                 </div>
             </div>
         </div>
