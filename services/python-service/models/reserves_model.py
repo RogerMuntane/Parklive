@@ -62,17 +62,45 @@ def get_reserves_usuari(usuari_id, filters=None):
 
         reserves_rows = []
         for result in cursor.stored_results():
-            reserves_rows = result.fetchall()
-            break
+            rows = result.fetchall()
+            if not reserves_rows:
+                reserves_rows = rows
 
         cursor.close()
-        conn.close()
 
-        reserves = []
+        # Agrupar reserves amb els seus pagaments
+        reserves_dict = {}
         for row in reserves_rows:
-            pagaments = []
+            reserve_id = row['id']
+            if reserve_id not in reserves_dict:
+                reserves_dict[reserve_id] = {
+                    'id': row['id'],
+                    'codi_reserva': row['codi_reserva'],
+                    'usuari_id': usuari_id,
+                    'aparcament': {
+                        'id': row['aparcament_id'],
+                        'nom': row['aparcament_nom'],
+                        'adreca': row['aparcament_adreca'],
+                        'ciutat': row['aparcament_ciutat'],
+                        'tipus': row['aparcament_tipus'],
+                        'latitud': serialize_value(row['aparcament_latitud']),
+                        'longitud': serialize_value(row['aparcament_longitud']),
+                        'tarifa_hora': None,
+                        'tarifa_dia': None
+                    },
+                    'data_entrada': serialize_value(row['data_entrada']),
+                    'data_sortida': serialize_value(row['data_sortida']),
+                    'estat': row['estat'],
+                    'preu_total': serialize_value(row['preu_total']),
+                    'descompte_aplicat': serialize_value(row['descompte_aplicat']),
+                    'notes': row['notes'],
+                    'pagaments': [],
+                    'created_at': serialize_value(row['created_at']),
+                    'updated_at': serialize_value(row['updated_at'])
+                }
+
             if row.get('pagament_id') is not None:
-                pagaments.append({
+                reserves_dict[reserve_id]['pagaments'].append({
                     'id': row['pagament_id'],
                     'import': None,
                     'metode': row['pagament_metode'],
@@ -80,32 +108,7 @@ def get_reserves_usuari(usuari_id, filters=None):
                     'data_pagament': serialize_value(row['data_pagament'])
                 })
 
-            reserves.append({
-                'id': row['id'],
-                'codi_reserva': row['codi_reserva'],
-                'usuari_id': usuari_id,
-                'aparcament': {
-                    'id': row['aparcament_id'],
-                    'nom': row['aparcament_nom'],
-                    'adreca': row['aparcament_adreca'],
-                    'ciutat': row['aparcament_ciutat'],
-                    'tipus': row['aparcament_tipus'],
-                    'latitud': serialize_value(row['aparcament_latitud']),
-                    'longitud': serialize_value(row['aparcament_longitud']),
-                    'tarifa_hora': None,
-                    'tarifa_dia': None
-                },
-                'data_entrada': serialize_value(row['data_entrada']),
-                'data_sortida': serialize_value(row['data_sortida']),
-                'estat': row['estat'],
-                'preu_total': serialize_value(row['preu_total']),
-                'descompte_aplicat': serialize_value(row['descompte_aplicat']),
-                'notes': row['notes'],
-                'pagaments': pagaments,
-                'created_at': serialize_value(row['created_at']),
-                'updated_at': serialize_value(row['updated_at'])
-            })
-
+        reserves = list(reserves_dict.values())
         total = len(reserves)
         return {
             'total': total,
@@ -217,7 +220,8 @@ def get_reserves_usuari(usuari_id, filters=None):
     cursor.execute(query, params)
     reserves_raw = cursor.fetchall()
     cursor.close()
-    conn.close()
+    # No tanquem la connexió global 'conn' aquí per evitar el tancament prematur
+    # de la connexió compartida per altres fils/peticions.
 
     # Agrupar reserves amb els seus pagaments
     reserves_dict = {}
@@ -458,7 +462,8 @@ def obte_detall_reserva(reserva_id):
         p.import as pagament_import,
         p.metode as pagament_metode,
         p.estat as pagament_estat,
-        p.data_pagament
+        p.data_pagament,
+        p.referencia_externa
     FROM reserves r
     JOIN usuaris u ON r.usuari_id = u.id
     JOIN aparcaments a ON r.aparcament_id = a.id
@@ -505,7 +510,8 @@ def obte_detall_reserva(reserva_id):
             'import': serialize_value(row['pagament_import']),
             'metode': row['pagament_metode'],
             'estat': row['pagament_estat'],
-            'data_pagament': serialize_value(row['data_pagament'])
+            'data_pagament': serialize_value(row['data_pagament']),
+            'referencia_externa': row['referencia_externa']
         } if row['pagament_id'] else None,
         'created_at': serialize_value(row['created_at']),
         'updated_at': serialize_value(row['updated_at'])
@@ -574,6 +580,8 @@ def crear_reserva(data):
             None
         ]
         result_args = cursor.callproc('sp_crear_reserva', proc_args)
+        for result in cursor.stored_results():
+            result.fetchall()
         conn.commit()
 
         # El driver MySQL pot retornar una llista o un diccionari amb noms tipus sp_crear_reserva_argX
@@ -615,6 +623,8 @@ def actualitzar_estat_reserva(reserva_id, nou_estat):
         # Procedure params: p_reserva_id, p_nou_estat, OUT p_error_msg
         proc_args = [reserva_id, nou_estat, None]
         result_args = cursor.callproc('sp_actualitzar_estat_reserva', proc_args)
+        for result in cursor.stored_results():
+            result.fetchall()
         conn.commit()
 
         if isinstance(result_args, dict):

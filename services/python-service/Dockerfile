@@ -29,6 +29,7 @@ RUN python -m pip install --no-cache-dir --upgrade pip --default-timeout=20 --re
     pip install --no-cache-dir --default-timeout=100 --retries=5 -r requirements.txt
 
 COPY . .
+RUN chmod +x scripts/*.sh
 
 # Exposar port
 EXPOSE 5000

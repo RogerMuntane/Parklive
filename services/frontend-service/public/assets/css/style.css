@@ -21030,46 +21030,167 @@ textarea.form-control-lg {
   display: block;
 }
 
+.flatpickr-calendar {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  font-family: inherit;
+}
+
+.flatpickr-calendar.open {
+  z-index: 9999;
+}
+
+.flatpickr-calendar .flatpickr-months .flatpickr-month {
+  height: 40px;
+  color: #434667;
+}
+
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month, .flatpickr-calendar .flatpickr-months .flatpickr-next-month {
+  padding: 10px;
+}
+
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month:hover svg, .flatpickr-calendar .flatpickr-months .flatpickr-next-month:hover svg {
+  fill: #c1121f;
+}
+
+.flatpickr-calendar .flatpickr-day {
+  border-radius: 8px;
+}
+
+.flatpickr-calendar .flatpickr-day.today {
+  border-color: rgba(193, 18, 31, 0.3);
+}
+
+.flatpickr-calendar .flatpickr-day.today:hover {
+  background: rgba(193, 18, 31, 0.1);
+  border-color: #c1121f;
+}
+
+.flatpickr-calendar .flatpickr-day.selected, .flatpickr-calendar .flatpickr-day.startRange, .flatpickr-calendar .flatpickr-day.endRange {
+  background: #c1121f !important;
+  border-color: #c1121f !important;
+  color: white !important;
+  box-shadow: 0 4px 8px rgba(193, 18, 31, 0.3);
+}
+
+.flatpickr-calendar .flatpickr-day:hover {
+  background: rgba(193, 18, 31, 0.05);
+}
+
+.flatpickr-calendar .flatpickr-day.flatpickr-disabled {
+  color: rgba(0, 0, 0, 0.15);
+}
+
+.flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months {
+  font-weight: 700;
+}
+
+.flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+  background: transparent;
+}
+
 .page-reserves-actives .reservation-card {
   background-color: var(--bs-body-bg);
-  border: 1px solid var(--bs-border-color);
-  border-radius: var(--bs-border-radius-lg);
-  box-shadow: var(--bs-box-shadow-sm);
+  border: 1px solid var(--bs-border-color-translucent);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-reserves-actives .reservation-card:hover {
-  box-shadow: var(--bs-box-shadow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
-.page-reserves-actives .reservation-card .reservation-header {
-  background-color: var(--bs-tertiary-bg);
-  border-bottom: 1px solid var(--bs-border-color);
-  padding: 1rem 1.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.page-reserves-actives .reservation-card {
+  /* Left border accent */
+}
+
+.page-reserves-actives .reservation-card.border-confirmed {
+  border-left: 4px solid #10b981 !important;
+}
+
+.page-reserves-actives .reservation-card.border-imminent {
+  border-left: 4px solid #f59e0b !important;
 }
 
 .page-reserves-actives .reservation-card .reservation-body {
-  padding: 1.25rem;
-}
-
-.page-reserves-actives .reservation-card .reservation-footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--bs-border-color);
-  background-color: var(--bs-tertiary-bg);
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  padding: 1.5rem;
+  flex-grow: 1;
 }
 
 .page-reserves-actives .reservation-card .status-badge {
   font-weight: 600;
-  padding: 0.35em 0.65em;
-  border-radius: var(--bs-border-radius-pill);
+  padding: 0.4em 0.8em;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.page-reserves-actives .reservation-card .status-badge.badge-confirmed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.page-reserves-actives .reservation-card .status-badge.badge-imminent {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.page-reserves-actives .reservation-card .label-caps {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-secondary-color);
+}
+
+.page-reserves-actives .reservation-card .btn-dark-modern {
+  background-color: #111827;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.6rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-reserves-actives .reservation-card .btn-dark-modern:hover {
+  background-color: #1f2937;
+  color: white;
+}
+
+.page-reserves-actives .reservation-card .btn-outline-cancel {
+  background-color: transparent;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 0.5rem 1rem;
+  border-radius: 0.6rem;
+  font-weight: 500;
+}
+
+.page-reserves-actives .reservation-card .btn-outline-cancel:hover {
+  background-color: #fef2f2;
+  color: #7f1d1d;
+  border-color: #fca5a5;
+}
+
+.page-reserves-actives .reservation-card .alert-imminent {
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #7c2d12;
+  border-radius: 0.8rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .page-reserves-actives {
@@ -21077,165 +21198,207 @@ textarea.form-control-lg {
 }
 
 [data-bs-theme=dark] .page-reserves-actives .reservation-card {
-  background-color: var(--bs-dark);
-  border-color: var(--bs-border-color-translucent);
+  background-color: #1f2937;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-bs-theme=dark] .page-reserves-actives .reservation-card .reservation-header, [data-bs-theme=dark] .page-reserves-actives .reservation-card .reservation-footer {
-  background-color: rgba(255, 255, 255, 0.03);
+[data-bs-theme=dark] .page-reserves-actives .reservation-card .status-badge.badge-confirmed {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
 }
 
-.page-street-report {
-  background: radial-gradient(circle at 12% 18%, rgba(13, 110, 253, 0.08), transparent 40%), radial-gradient(circle at 90% 85%, rgba(25, 135, 84, 0.1), transparent 36%), var(--bs-body-bg);
+[data-bs-theme=dark] .page-reserves-actives .reservation-card .status-badge.badge-imminent {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
 }
 
-.page-street-report .street-report-shell {
-  max-width: 1180px;
+[data-bs-theme=dark] .page-reserves-actives .reservation-card .alert-imminent {
+  background-color: rgba(124, 45, 18, 0.2);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+[data-bs-theme=dark] .page-reserves-actives .reservation-card .btn-dark-modern {
+  background-color: #374151;
+}
+
+[data-bs-theme=dark] .page-reserves-actives .reservation-card .btn-dark-modern:hover {
+  background-color: #4b5563;
+}
+
+[data-bs-theme=dark] .page-reserves-actives .reservation-card .btn-outline-cancel {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+[data-bs-theme=dark] .page-reserves-actives .reservation-card .btn-outline-cancel:hover {
+  background-color: rgba(248, 113, 113, 0.1);
+}
+
+body.page-tiquet {
+  background-color: var(--bs-tertiary-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--bs-body-color);
+}
+
+.ticket-wrapper {
+  max-width: 450px;
   margin: 0 auto;
 }
 
-.page-street-report .street-report-eyebrow {
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--bs-secondary-color);
-  font-weight: 700;
-}
-
-.page-street-report .street-report-title {
-  font-size: clamp(1.75rem, 3.2vw, 2.6rem);
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--bs-body-color);
-}
-
-.page-street-report .street-report-subtitle {
-  max-width: 760px;
-  color: var(--bs-secondary-color);
-  font-size: 1rem;
-}
-
-.page-street-report .street-report-panel,
-.page-street-report .street-map-panel {
-  background: rgba(var(--bs-body-bg-rgb), 0.86);
-  border: 1px solid rgba(var(--bs-body-color-rgb), 0.08);
-  border-radius: 1rem;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
-  padding: 1.1rem;
-}
-
-.page-street-report .street-panel-title {
-  font-size: 0.82rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--bs-secondary-color);
-  margin-bottom: 0.8rem;
-  font-weight: 700;
-}
-
-.page-street-report .street-status-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-
-.page-street-report .street-status-option {
-  border: 1px solid rgba(var(--bs-body-color-rgb), 0.14);
-  background: rgba(var(--bs-tertiary-bg-rgb), 0.62);
-  border-radius: 0.8rem;
-  padding: 0.85rem 0.65rem;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.42rem;
-  color: var(--bs-body-color);
-  font-weight: 600;
-  transition: all 0.18s ease;
-}
-
-.page-street-report .street-status-option i {
-  font-size: 1.05rem;
-}
-
-.page-street-report .street-status-option.is-active[data-status=available] {
-  border-color: rgba(var(--bs-success-rgb), 0.55);
-  background: rgba(var(--bs-success-rgb), 0.12);
-  color: var(--bs-body-color);
-}
-
-.page-street-report .street-status-option.is-active[data-status=occupied] {
-  border-color: rgba(var(--bs-danger-rgb), 0.55);
-  background: rgba(var(--bs-danger-rgb), 0.12);
-  color: var(--bs-body-color);
-}
-
-.page-street-report .street-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--bs-secondary-color);
-  font-weight: 700;
-}
-
-.page-street-report .street-coords {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.87rem;
-  color: var(--bs-secondary-color);
-}
-
-.page-street-report .street-submit-btn {
-  border-radius: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  min-height: 46px;
-}
-
-.page-street-report .street-map {
-  min-height: 480px;
-  border-radius: 0.86rem;
+.ticket-card {
+  background-color: var(--bs-body-bg);
+  border-radius: 12px;
+  box-shadow: var(--bs-box-shadow);
+  position: relative;
   overflow: hidden;
+  border: 1px solid var(--bs-border-color-translucent);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.page-street-report .street-map-panel {
+.ticket-header {
+  background-color: var(--bs-primary);
+  color: var(--bs-white);
+  padding: 30px 20px 40px;
+  text-align: center;
+}
+
+.ticket-body {
+  padding: 30px 20px;
+  position: relative;
+  background-color: var(--bs-body-bg);
+}
+
+/* The dotted separator */
+.ticket-separator {
+  height: 0;
+  border-top: 2px dashed var(--bs-border-color);
+  margin: 0 20px;
   position: relative;
 }
 
-.page-street-report .street-toast {
+.ticket-separator::before,
+.ticket-separator::after {
+  content: "";
   position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
-  border-radius: 0.6rem;
-  padding: 0.75rem 0.9rem;
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.88rem;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: none;
-  transition: all 0.2s ease;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  background-color: var(--bs-tertiary-bg);
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
 }
 
-.page-street-report .street-toast.is-visible {
-  opacity: 1;
-  transform: translateY(0);
+.ticket-separator::before {
+  left: -30px;
 }
 
-.page-street-report .street-toast.is-success {
-  background: #157347;
+.ticket-separator::after {
+  right: -30px;
 }
 
-.page-street-report .street-toast.is-error {
-  background: #b02a37;
+.ticket-footer {
+  padding: 20px;
+  text-align: center;
+  background-color: var(--bs-tertiary-bg);
+  transition: background-color 0.3s ease;
 }
 
-@media (max-width: 991px) {
-  .page-street-report .street-map {
-    min-height: 340px;
+.qr-placeholder {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  background-color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.qr-placeholder i, .qr-placeholder img {
+  color: #000000 !important;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.success-checkmark {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+  background-color: var(--bs-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bs-white);
+  font-size: 2rem;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 10px rgba(var(--bs-success-rgb), 0.3);
+}
+
+/* Dark mode specific adjustments if needed beyond variables */
+[data-bs-theme=dark] .ticket-card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme=dark] .ticket-header {
+  background-color: rgb(32.9403669725, 34.4724770642, 50.5596330275);
+}
+
+[data-bs-theme=dark] .qr-placeholder {
+  background-color: #fff;
+  border-color: #444;
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+  body {
+    margin: 2cm !important;
+    background: none !important;
+    padding: 0;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .ticket-wrapper {
+    max-width: 100%;
+    margin: 0;
+    box-shadow: none;
+  }
+  .ticket-card {
+    box-shadow: none;
+    border: 1px solid #000;
+    background-color: #fff !important;
+  }
+  .ticket-header {
+    color: #000 !important;
+    background-color: #fff !important;
+    border-bottom: 2px solid #000;
+  }
+  .success-checkmark {
+    background-color: transparent !important;
+    color: #000 !important;
+    border: 2px solid #000;
+    box-shadow: none;
+  }
+  .ticket-body, .ticket-footer, .ticket-separator {
+    background-color: #fff !important;
+  }
+  .ticket-separator {
+    border-top: 2px dashed #000;
+  }
+  .ticket-separator::before, .ticket-separator::after {
+    background-color: #fff !important;
+    display: none;
   }
 }
 [data-bs-theme=dark] .page-auth .main-content {

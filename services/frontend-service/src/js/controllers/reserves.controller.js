@@ -33,7 +33,7 @@ export async function obtenirReservesUsuari(filtres = {}) {
   if (!usuariId) throw new Error('Usuari no autenticat');
 
   const params = {
-    usuari_id: usuariId,
+    user_id: usuariId,
     limit: DEFAULT_LIMIT,
     offset: 0,
     ...filtres,
@@ -136,6 +136,22 @@ export async function crearReserva(dades) {
   }
 }
 
+/**
+ * Cancel·la una reserva d'un usuari.
+ * @param {number|string} reservaId
+ * @returns {Promise<Object>}
+ */
+export async function cancelarReserva(reservaId) {
+  if (!reservaId) throw new Error('ID de reserva obligatori');
+
+  try {
+    return await pythonApi.post(`/api/reserves/${reservaId}/cancel`);
+  } catch (err) {
+    console.error(`[ParkLive] Error cancel·lant reserva ${reservaId}:`, err);
+    throw err;
+  }
+}
+
 /*  RENDERITZACIÓ                                                       */
 
 /** Mapatge d'estats a classes CSS per badges */
@@ -179,8 +195,8 @@ export function renderReserves(reserves, container) {
       </thead>
       <tbody>
         ${reserves
-          .map(
-            (r) => `
+      .map(
+        (r) => `
           <tr data-reserva-id="${r.id}">
             <td>${r.id}</td>
             <td>${escapeHtml(r.nom_aparcament || r.aparcament_id || '—')}</td>
@@ -190,8 +206,8 @@ export function renderReserves(reserves, container) {
             <td><span class="badge badge-${ESTAT_CLASSES[r.estat] || 'secondary'}">${escapeHtml(r.estat || '—')}</span></td>
             <td><button class="btn btn-sm btn-primary btn-detall-reserva" data-id="${r.id}">Detall</button></td>
           </tr>`,
-          )
-          .join('')}
+      )
+      .join('')}
       </tbody>
     </table>`;
 }
@@ -315,6 +331,76 @@ export async function initReserves() {
       }
     });
   }
+
+  // ── Secció de reserves del Perfil (Cards modernes) ────────────
+  const profileContainer = document.getElementById('profile-reservations-container');
+  if (profileContainer) {
+    await carregarReservesPerfil(profileContainer);
+
+    // Configurar botó de confirmació del modal
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    if (confirmCancelBtn) {
+      confirmCancelBtn.addEventListener('click', async () => {
+        const id = confirmCancelBtn.dataset.reservaId;
+        if (!id) return;
+
+        // Mostrar loading al botó
+        const originalText = confirmCancelBtn.innerHTML;
+        confirmCancelBtn.disabled = true;
+        confirmCancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processant...';
+
+        try {
+          await cancelarReserva(id);
+          showAlert('success', 'Reserva cancel·lada correctament.');
+
+          // Tancar modal
+          const modalEl = document.getElementById('cancelModal');
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) {
+            modal.hide();
+          }
+
+          // Forçar neteja del backdrop per si Bootstrap triga massa o es queda bloquejat
+          const backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) backdrop.remove();
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+
+          // Recarregar llista
+          await carregarReservesPerfil(profileContainer);
+        } catch (err) {
+          showAlert('error', err.response?.data?.error || 'Error al cancel·lar la reserva.');
+        } finally {
+          confirmCancelBtn.disabled = false;
+          confirmCancelBtn.innerHTML = originalText;
+        }
+      });
+    }
+  }
+}
+
+/**
+ * Carrega les reserves de l'usuari i les renderitza amb format profile.
+ */
+async function carregarReservesPerfil(container) {
+  try {
+    // Podem filtrar per mostrar només les que no estan cancel·lades o totes
+    const reserves = await obtenirReservesUsuari();
+
+    // Filtrar reserves actives (futures o en curs)
+    const ara = new Date();
+    const reservesActives = reserves.filter(r => {
+      const dataSortida = new Date(r.data_sortida);
+      const est = (r.estat || '').trim().toLowerCase();
+      return ['confirmada', 'en_curs', 'pendent'].includes(est) && dataSortida >= ara;
+    });
+
+    // Les reserves solen venir ordenades per data d'entrada desc
+    renderProfileReserves(reservesActives, container);
+  } catch (err) {
+    container.innerHTML = `<div class="alert alert-danger">Error carregant reserves: ${err.message}</div>`;
+  }
 }
 
 /*  HELPERS PRIVATS                                                     */
@@ -344,6 +430,150 @@ function attachReservaDetailListeners(container) {
       window.location.href = `?reserva_id=${id}`;
     });
   });
+}
+
+/**
+ * Renderitza la secció de reserves del perfil d'usuari (cards modernes).
+ * @param {Array} reserves 
+ * @param {HTMLElement} container 
+ */
+export function renderProfileReserves(reserves, container) {
+  if (!container) return;
+
+  if (!reserves || reserves.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-5">
+        <i class="bi bi-calendar-x text-light-gray display-1 mb-3"></i>
+        <h4 class="text-secondary">No tens reserves actives</h4>
+        <p class="text-muted">Troba un pàrquing i reserva la teva plaça ara mateix.</p>
+        <a href="/" class="btn btn-primary mt-3 px-4">Cercar pàrquing</a>
+      </div>`;
+    return;
+  }
+
+  // Filtrar només actives/confirmades per aquesta secció específica si es vol
+  // Per ara mostrem totes les que ens passin (el controller ja hauria de filtrar)
+
+  const html = reserves.map(r => {
+    const dataCarpentry = new Date(r.data_entrada);
+    const ara = new Date();
+    const difMs = dataCarpentry - ara;
+    const difMinuts = Math.floor(difMs / (1000 * 60));
+
+    const normalizedEstat = (r.estat || '').trim().toLowerCase();
+    const potSerCancelada = normalizedEstat === 'confirmada' || normalizedEstat === 'pendent';
+    const esCancelable = potSerCancelada && difMinuts > 60;
+    const esImminent = potSerCancelada && difMinuts <= 60 && difMinuts > 0;
+
+
+    let borderClass = 'border-secondary';
+    let badgeClass = 'bg-secondary';
+    let statusLabel = (r.estat || 'Desconegut').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    if (potSerCancelada) {
+      borderClass = 'border-confirmed';
+      badgeClass = 'badge-confirmed';
+      statusLabel = normalizedEstat === 'pendent' ? 'Pendent' : 'Confirmada';
+    } else if (normalizedEstat === 'cancel·lada') {
+      borderClass = 'border-danger';
+      badgeClass = 'bg-danger';
+      statusLabel = 'Cancel·lada';
+    } else if (normalizedEstat === 'en_curs') {
+      borderClass = 'border-primary';
+      badgeClass = 'bg-primary';
+      statusLabel = 'En curs';
+    }
+
+    if (esImminent) {
+      borderClass = 'border-imminent';
+      badgeClass = 'badge-imminent';
+      statusLabel = 'Imminent';
+    }
+
+    return `
+      <div class="col-12 col-xl-6">
+        <div class="reservation-card ${borderClass}">
+          <div class="reservation-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-briefcase text-secondary"></i>
+                <h5 class="mb-0 fw-bold">${escapeHtml(r.aparcament?.nom || 'Pàrquing')}</h5>
+              </div>
+              <span class="status-badge ${badgeClass}">${statusLabel}</span>
+            </div>
+
+            <div class="mb-4">
+              <p class="text-secondary small mb-1">
+                <i class="bi bi-geo-alt me-1"></i> ${escapeHtml(r.aparcament?.adreca || '')}, ${escapeHtml(r.aparcament?.ciutat || '')}
+              </p>
+            </div>
+
+            <div class="row g-2 mb-4">
+              <div class="col-6">
+                <div class="label-caps mb-1">ENTRADA</div>
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-calendar2-week text-secondary"></i>
+                  <span class="fw-bold fs-6">${new Date(r.data_entrada).toLocaleString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} h</span>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="label-caps mb-1">SORTIDA</div>
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-calendar2-week text-secondary"></i>
+                  <span class="fw-bold fs-6">${new Date(r.data_sortida).toLocaleString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} h</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4 d-flex align-items-center gap-2 text-secondary small">
+              <i class="bi bi-list-columns-reverse"></i>
+              <span class="font-monospace">${r.codi_reserva}</span>
+            </div>
+
+            ${esImminent ? `
+              <div class="alert-imminent mb-3">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>No es pot cancel·lar, falten menys de 60 min.</span>
+              </div>
+            ` : ''}
+
+            <div class="d-flex gap-2">
+              <a href="/tiquet_Aparcament.html?id=${r.id}" class="btn-dark-modern text-decoration-none">
+                <i class="bi bi-file-earmark-text"></i> Veure tiquet
+              </a>
+              ${potSerCancelada ? `
+                <button type="button" class="btn-outline-cancel ${!esCancelable ? 'opacity-50' : ''}" 
+                  ${!esCancelable ? 'disabled style="border-color: #e5e7eb; color: #9ca3af;"' : ''}
+                  onclick="setCancelReservationId(${r.id})">
+                  Cancel·lar reserva
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="row g-4">${html}</div>`;
+}
+
+// Funció global per gestionar el modal (centralitzada)
+if (typeof window !== 'undefined') {
+  window.setCancelReservationId = (id) => {
+    const modalEl = document.getElementById('cancelModal');
+    if (!modalEl) return;
+
+    if (modalEl.parentNode !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+
+    const confirmBtn = document.getElementById('confirmCancelBtn');
+    if (confirmBtn) confirmBtn.dataset.reservaId = id;
+
+    // Usar getOrCreateInstance evita duplicar backdrops i instàncies redundants
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  };
 }
 
 /**
