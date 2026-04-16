@@ -379,22 +379,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
   if (document.body.classList.contains('page-profile')) {
-    const { 
-      initProfilePasswordForm, 
-      initProfileInfoForm, 
-      initProfileInfoSaveForm, 
+    const {
+      initProfilePasswordForm,
+      initProfileInfoForm,
+      initProfileInfoSaveForm,
       initProfilePlanSection,
       initProfileHistorySection,
+      initProfileFavoritesSection,
       initProfileImageUpload
     } = await import('./controllers/profile.controller.js');
     const { initReserves } = await import('./controllers/reserves.controller.js');
-    
+
     initProfilePasswordForm();
     initProfileInfoForm();
     initProfileImageUpload();
     initProfileInfoSaveForm();
     initProfilePlanSection();
     initProfileHistorySection();
+    initProfileFavoritesSection();
     initReserves();
 
     // Integració Stripe
@@ -423,6 +425,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       password: 'Canviar contrasenya',
       reservations: 'Les Teves Reserves Actives',
       history: 'Historial',
+      favorites: 'Aparcaments favorits',
       payment: 'Mètode de pagament',
       plan: 'Millorar el pla',
       manage: 'Gestionar subscripció',

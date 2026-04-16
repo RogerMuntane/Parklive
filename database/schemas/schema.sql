@@ -114,6 +114,21 @@ CREATE TABLE aparcaments (
     FOREIGN KEY (operador_id) REFERENCES usuaris(id) ON DELETE
     SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- Taula de favorits d'usuaris (aparcaments preferits)
+CREATE TABLE usuaris_favorits_aparcaments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuari_id INT UNSIGNED NOT NULL,
+    aparcament_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
+    FOREIGN KEY (aparcament_id) REFERENCES aparcaments(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_usuari_aparcament_favorit (usuari_id, aparcament_id),
+    INDEX idx_favorits_usuari (usuari_id),
+    INDEX idx_favorits_aparcament (aparcament_id),
+    INDEX idx_favorits_created_at (created_at)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 -- Taula d'històric de disponibilitat
 CREATE TABLE historic_disponibilitat (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -425,6 +440,11 @@ SELECT a.id,
         FROM valoracions v
         WHERE v.aparcament_id = a.id
     ), 0) as total_valoracions,
+    COALESCE((
+        SELECT COUNT(*)
+        FROM usuaris_favorits_aparcaments ufa
+        WHERE ufa.aparcament_id = a.id
+    ), 0) as total_favorits,
     a.estat,
     u.nom as operador_nom,
     COUNT(DISTINCT f.id) as total_fotos

@@ -1,4 +1,9 @@
 import { pythonApi } from '../../api.js';
+import { isAuthenticated, showBootstrapAlert } from '../../utils.js';
+import {
+  loadFavoriteIds,
+  toggleFavoriteParking,
+} from '../favorits.service.js';
 
 const PAGE_SIZE = 5;
 const MAX_RESULTS_FOR_MAP = 1000;
@@ -596,6 +601,9 @@ function renderResults({
   totalPages,
   onFocusParking,
   onChangePage,
+  favoritesEnabled = false,
+  favoriteIds = new Set(),
+  onToggleFavorite = async () => false,
 }) {
   const panel = document.querySelector('.parking-results-panel');
   const subtitle = document.querySelector('.parking-results-subtitle');
@@ -620,6 +628,15 @@ function renderResults({
   const fragment = document.createDocumentFragment();
 
   spots.forEach((spot) => {
+    const spotId = String(spot.id);
+    const isSpotFavorite = favoriteIds.has(spotId);
+    const favoriteAriaLabel = isSpotFavorite
+      ? 'Eliminar de favorits'
+      : 'Afegir a favorits';
+    const favoriteIconClass = isSpotFavorite
+      ? 'bi-heart-fill'
+      : 'bi-heart';
+
     const card = document.createElement('article');
     card.className = 'parking-result-card border rounded-4 overflow-hidden bg-body shadow-sm';
     card.setAttribute('aria-label', `Aparcament ${spot.name}`);
@@ -653,9 +670,22 @@ function renderResults({
             ? '<span class="badge rounded-pill text-bg-light border fw-normal">CCTV</span>'
             : ''}
         </div>
-        <button type="button" class="btn btn-danger btn-sm w-100 mt-2" data-action="open-parking" data-parking-id="${escapeHtml(spot.id)}">
-          Veure detall
-        </button>
+        <div class="d-flex align-items-center gap-1 mt-2">
+          ${favoritesEnabled ? `
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm flex-shrink-0"
+              data-action="toggle-favorite"
+              data-parking-id="${escapeHtml(spotId)}"
+              aria-label="${favoriteAriaLabel}"
+            >
+              <i class="bi ${favoriteIconClass}"></i>
+            </button>
+          ` : ''}
+          <button type="button" class="btn btn-danger btn-sm w-100" data-action="open-parking" data-parking-id="${escapeHtml(spot.id)}">
+            Veure detall
+          </button>
+        </div>
       </div>
     `;
 
@@ -671,6 +701,31 @@ function renderResults({
       globalThis.location.href = `/detall_Aparcament.html?id=${encodeURIComponent(id)}`;
     });
   });
+
+  if (favoritesEnabled) {
+    panel.querySelectorAll('[data-action="toggle-favorite"]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const id = button.dataset.parkingId;
+        button.disabled = true;
+
+        try {
+          const nextIsFavorite = await onToggleFavorite(id);
+          const icon = button.querySelector('i');
+          if (icon) {
+            icon.className = `bi ${nextIsFavorite ? 'bi-heart-fill' : 'bi-heart'}`;
+          }
+          button.setAttribute(
+            'aria-label',
+            nextIsFavorite ? 'Eliminar de favorits' : 'Afegir a favorits',
+          );
+        } catch (error) {
+          showBootstrapAlert('danger', error?.message || 'No s\'ha pogut actualitzar el favorit');
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
+  }
 
   renderPagination(panel, { currentPage, totalPages, onChangePage });
 }
@@ -810,7 +865,7 @@ export function initLandingSearch({
     });
   };
 
-  const applyParkingSuggestion = ({ label, parkingId, parkingRaw }) => {
+  const applyParkingSuggestion = async ({ label, parkingId, parkingRaw }) => {
     if (!mapSearchInput) return;
 
     mapSearchInput.value = label;
@@ -829,6 +884,16 @@ export function initLandingSearch({
     });
 
     if (normalizedSpot) {
+      const favoritesEnabled = isAuthenticated();
+      let favoriteIds = new Set();
+      if (favoritesEnabled) {
+        try {
+          favoriteIds = await loadFavoriteIds();
+        } catch {
+          favoriteIds = new Set();
+        }
+      }
+
       renderResults({
         spots: [normalizedSpot],
         total: 1,
@@ -836,6 +901,16 @@ export function initLandingSearch({
         totalPages: 1,
         onFocusParking: focusParkingById,
         onChangePage: () => {},
+        favoritesEnabled,
+        favoriteIds,
+        onToggleFavorite: async (id) => {
+          const nextIsFavorite = await toggleFavoriteParking(id);
+          const msg = nextIsFavorite
+            ? 'Aparcament afegit a favorits'
+            : 'Aparcament eliminat de favorits';
+          showBootstrapAlert('success', msg);
+          return nextIsFavorite;
+        },
       });
       setParkingSpots([normalizedSpot]);
     }
@@ -861,8 +936,8 @@ export function initLandingSearch({
         optionBtn.type = 'button';
         optionBtn.className = 'list-group-item list-group-item-action small d-flex align-items-center gap-2';
         optionBtn.innerHTML = `<i class="bi bi-p-square"></i><span>${escapeHtml(item.label)}</span>`;
-        optionBtn.addEventListener('click', () => {
-          applyParkingSuggestion(item);
+        optionBtn.addEventListener('click', async () => {
+          await applyParkingSuggestion(item);
         });
         suggestionsMenu.appendChild(optionBtn);
       });
@@ -995,6 +1070,16 @@ export function initLandingSearch({
           return 0;
         });
 
+      const favoritesEnabled = isAuthenticated();
+      let favoriteIds = new Set();
+      if (favoritesEnabled) {
+        try {
+          favoriteIds = await loadFavoriteIds();
+        } catch {
+          favoriteIds = new Set();
+        }
+      }
+
       const total = allSpots.length;
       const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
       currentPage = Math.min(Math.max(1, targetPage), totalPages);
@@ -1010,6 +1095,16 @@ export function initLandingSearch({
         onFocusParking: focusParkingById,
         onChangePage: (nextPage) => {
           runSearch({ page: nextPage });
+        },
+        favoritesEnabled,
+        favoriteIds,
+        onToggleFavorite: async (parkingId) => {
+          const nextIsFavorite = await toggleFavoriteParking(parkingId);
+          const msg = nextIsFavorite
+            ? 'Aparcament afegit a favorits'
+            : 'Aparcament eliminat de favorits';
+          showBootstrapAlert('success', msg);
+          return nextIsFavorite;
         },
       });
       setParkingSpots(allSpots);

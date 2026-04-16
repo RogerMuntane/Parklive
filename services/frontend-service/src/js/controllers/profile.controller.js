@@ -6,6 +6,7 @@
 import { hideAllAlerts, setFormLoading, showBootstrapAlert, formatDate, formatCurrency, getUserId } from '../utils.js';
 import { obtenirReservesUsuari } from './reserves.controller.js';
 import { PHP_API_URL } from '../config.js';
+import { pythonApi } from '../api.js';
 
 
 /**
@@ -277,7 +278,7 @@ export function initProfileInfoSaveForm() {
           userData.email = email;
           userData.telefon = telefon;
           sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
-          
+
           // Actualitzar originals
           originalValues = { nom, cognom, email, telefon };
         } catch (_) {}
@@ -371,7 +372,7 @@ export async function initProfilePlanSection() {
           e.preventDefault();
           updateSwitcherUI('annual');
       });
-      
+
       // Forçar estat inicial per si de cas
       updateSwitcherUI('monthly');
   } else {
@@ -412,9 +413,9 @@ export async function initProfilePlanSection() {
           if (user.tipus_usuari === 'premium') {
               toggleCard.style.pointerEvents = 'none';
               toggleCard.style.opacity = '0.7';
-              
+
               const result = await updateSubscriptionAutorenewal(user.id, newState);
-              
+
               toggleCard.style.pointerEvents = 'auto';
               toggleCard.style.opacity = '1';
 
@@ -456,7 +457,7 @@ export async function initProfilePlanSection() {
   // 3. Lògica d'actualització del pla
   btnUpdate.addEventListener('click', async () => {
     const selectedCard = document.querySelector('input[name="plan-card"]:checked');
-    
+
     // Si no hi ha targeta seleccionada, demanem afegir-ne una
     if (!selectedCard) {
       if (btnAddCardPlan) {
@@ -513,7 +514,7 @@ export async function initProfileHistorySection() {
         const totesLesReserves = Array.isArray(data) ? data : (data.reserves || []);
 
         // Filtrem per historial: completades i cancel·lades
-        const reserves = totesLesReserves.filter(r => 
+        const reserves = totesLesReserves.filter(r =>
             ['completada', 'cancel·lada'].includes((r.estat || '').toLowerCase())
         );
 
@@ -532,7 +533,7 @@ export async function initProfileHistorySection() {
             const dataFmt = formatDate(r.data_entrada);
             const desc = `Aparcament – ${r.aparcament?.nom || 'Pàrquing'}`;
             const preu = formatCurrency(r.preu_total);
-            
+
             const estat = (r.estat || '').toLowerCase();
             let badgeClass = 'bg-secondary';
             let labelText = 'Desconegut';
@@ -550,7 +551,7 @@ export async function initProfileHistorySection() {
                 icon = 'bi-x-circle-fill';
                 potVeureTiquet = false;
             }
-            
+
             return `
                 <tr>
                     <td class="text-body-secondary small">${dataFmt}</td>
@@ -562,10 +563,10 @@ export async function initProfileHistorySection() {
                         </span>
                     </td>
                     <td>
-                        ${potVeureTiquet ? 
+                        ${potVeureTiquet ?
                             `<a href="/tiquet_Aparcament.html?id=${r.id}" class="btn btn-outline-secondary btn-sm" title="Veure tiquet PDF">
                                 <i class="bi bi-file-earmark-pdf"></i> PDF
-                             </a>` : 
+                             </a>` :
                             `<button class="btn btn-outline-secondary btn-sm opacity-25" disabled title="Tiquet no disponible">
                                 <i class="bi bi-file-earmark-pdf"></i> PDF
                              </button>`
@@ -583,6 +584,121 @@ export async function initProfileHistorySection() {
                 </td>
             </tr>`;
     }
+}
+
+/**
+ * Inicialitza la secció de favorits del perfil
+ */
+export async function initProfileFavoritesSection() {
+  const listEl = document.getElementById('favorites-list');
+  if (!listEl) return;
+
+  const userId = getUserId();
+  if (!userId) {
+    listEl.innerHTML = `
+      <div class="text-center py-4 text-muted">
+        <i class="bi bi-person-lock fs-4 d-block mb-2"></i>
+        Inicia sessió per veure els teus favorits.
+      </div>
+    `;
+    return;
+  }
+
+  const renderEmpty = () => {
+    listEl.innerHTML = `
+      <div class="text-center py-4 text-muted border rounded-3">
+        <i class="bi bi-heart fs-4 d-block mb-2"></i>
+        Encara no tens aparcaments favorits.
+      </div>
+    `;
+  };
+
+  const renderItems = (items) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      renderEmpty();
+      return;
+    }
+
+    listEl.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    items.forEach((item) => {
+      const parkingId = String(item.id || '');
+      const article = document.createElement('article');
+      article.className = 'border rounded-3 p-3 bg-body';
+
+      const nom = item.nom || 'Aparcament';
+      const adreca = [item.adreca, item.ciutat].filter(Boolean).join(', ') || 'Adreça no disponible';
+      const tarifaHora = (item.tarifa_hora === null || item.tarifa_hora === undefined)
+        ? 'Tarifa no disponible'
+        : `${Number(item.tarifa_hora).toFixed(2).replace('.', ',')} €/h`;
+
+      article.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div class="min-w-0">
+            <h3 class="h6 fw-bold mb-1 text-truncate">${nom}</h3>
+            <p class="small text-body-secondary mb-1">${adreca}</p>
+            <p class="small mb-0">${tarifaHora}</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-outline-secondary btn-sm" href="/detall_Aparcament.html?id=${encodeURIComponent(parkingId)}">
+              Veure
+            </a>
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm"
+              data-action="remove-favorite"
+              data-parking-id="${parkingId}"
+              aria-label="Eliminar de favorits"
+            >
+              <i class="bi bi-heartbreak"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      fragment.appendChild(article);
+    });
+
+    listEl.appendChild(fragment);
+
+    listEl.querySelectorAll('[data-action="remove-favorite"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+                const parkingId = btn.dataset.parkingId;
+        if (!parkingId) return;
+
+        btn.disabled = true;
+        try {
+          await pythonApi.delete(`/api/usuari/favorits/${encodeURIComponent(parkingId)}?usuari_id=${encodeURIComponent(String(userId))}`);
+          await loadFavorites();
+          showBootstrapAlert('success', 'Aparcament eliminat de favorits.');
+        } catch (error) {
+          showBootstrapAlert('danger', error?.message || 'No s\'ha pogut eliminar el favorit.');
+          btn.disabled = false;
+        }
+      });
+    });
+  };
+
+  const loadFavorites = async () => {
+    try {
+      const response = await pythonApi.get('/api/usuari/favorits', {
+        usuari_id: userId,
+        limit: 200,
+        offset: 0,
+      });
+      renderItems(response?.favorits || []);
+    } catch (error) {
+      listEl.innerHTML = `
+        <div class="alert alert-danger mb-0" role="alert">
+          No s'han pogut carregar els favorits.
+        </div>
+      `;
+      console.error('[ParkLive] Error carregant favorits del perfil:', error);
+    }
+  };
+
+  await loadFavorites();
 }
 
 /**
@@ -615,7 +731,7 @@ export function initProfileImageUpload() {
 
     const formData = new FormData();
     formData.append('profile_image', file);
-    
+
     // Obtenir user_id del sessionStorage (necessari per OAuth)
     let userId = null;
     try {
@@ -638,7 +754,7 @@ export function initProfileImageUpload() {
 
       if (data.success) {
         const imageUrl = `${PHP_API_URL}/uploads/profiles/${data.foto_perfil}`;
-        
+
         // Actualitzar imatges a la UI
         const imgHtml = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
         avatarContainer.innerHTML = imgHtml;
