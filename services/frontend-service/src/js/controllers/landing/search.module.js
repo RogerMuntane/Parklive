@@ -490,6 +490,73 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
   return { params, searchTerm };
 }
 
+function isFavoritesOnlyFilterEnabled() {
+  return document.getElementById('favoritesOnly')?.checked === true;
+}
+
+function resolveSearchOrigin(records) {
+  if (userLocation) {
+    return {
+      lat: Number(userLocation.lat),
+      lon: Number(userLocation.lon),
+    };
+  }
+
+  if (records.length > 0) {
+    return {
+      lat: Number(records[0].latitud),
+      lon: Number(records[0].longitud),
+    };
+  }
+
+  return null;
+}
+
+function normalizeAndSortSpots(records, origin) {
+  return records
+    .map((item) => normalizeParking(item, origin))
+    .filter(Boolean)
+    .sort((a, b) => {
+      const hasDistanceA = Number.isFinite(a.distanceKm);
+      const hasDistanceB = Number.isFinite(b.distanceKm);
+
+      if (hasDistanceA && hasDistanceB) {
+        return a.distanceKm - b.distanceKm;
+      }
+
+      if (hasDistanceA) return -1;
+      if (hasDistanceB) return 1;
+      return 0;
+    });
+}
+
+async function resolveFavoritesState(favoritesOnly) {
+  const favoritesEnabled = isAuthenticated();
+  let favoriteIds = new Set();
+  let effectiveFavoritesOnly = favoritesOnly;
+
+  if (favoritesOnly && !favoritesEnabled) {
+    const favoritesOnlyInput = document.getElementById('favoritesOnly');
+    if (favoritesOnlyInput) favoritesOnlyInput.checked = false;
+    showBootstrapAlert('warning', 'Inicia sessio per filtrar només per favorits');
+    effectiveFavoritesOnly = false;
+  }
+
+  if (favoritesEnabled) {
+    try {
+      favoriteIds = await loadFavoriteIds();
+    } catch {
+      favoriteIds = new Set();
+    }
+  }
+
+  return {
+    favoritesEnabled,
+    favoriteIds,
+    effectiveFavoritesOnly,
+  };
+}
+
 async function fetchRecordsByParams(params) {
   const response = await pythonApi.get('/api/aparcaments/cerca', params);
   return Array.isArray(response) ? response : response?.resultats || [];
@@ -1041,51 +1108,26 @@ export function initLandingSearch({
         expandLocationRadius: shouldExpandByLocation,
       });
 
-      let origin = null;
-      if (userLocation) {
-        origin = {
-          lat: Number(userLocation.lat),
-          lon: Number(userLocation.lon),
-        };
-      } else if (records.length > 0) {
-        origin = {
-          lat: Number(records[0].latitud),
-          lon: Number(records[0].longitud),
-        };
-      }
+      const favoritesOnly = isFavoritesOnlyFilterEnabled();
+      const origin = resolveSearchOrigin(records);
+      const allSpots = normalizeAndSortSpots(records, origin);
 
-      const allSpots = records
-        .map((item) => normalizeParking(item, origin))
-        .filter(Boolean)
-        .sort((a, b) => {
-          const hasDistanceA = Number.isFinite(a.distanceKm);
-          const hasDistanceB = Number.isFinite(b.distanceKm);
+      const {
+        favoritesEnabled,
+        favoriteIds,
+        effectiveFavoritesOnly,
+      } = await resolveFavoritesState(favoritesOnly);
 
-          if (hasDistanceA && hasDistanceB) {
-            return a.distanceKm - b.distanceKm;
-          }
+      const visibleSpots = effectiveFavoritesOnly
+        ? allSpots.filter((spot) => favoriteIds.has(String(spot.id)))
+        : allSpots;
 
-          if (hasDistanceA) return -1;
-          if (hasDistanceB) return 1;
-          return 0;
-        });
-
-      const favoritesEnabled = isAuthenticated();
-      let favoriteIds = new Set();
-      if (favoritesEnabled) {
-        try {
-          favoriteIds = await loadFavoriteIds();
-        } catch {
-          favoriteIds = new Set();
-        }
-      }
-
-      const total = allSpots.length;
+      const total = visibleSpots.length;
       const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
       currentPage = Math.min(Math.max(1, targetPage), totalPages);
 
       const start = (currentPage - 1) * PAGE_SIZE;
-      const paginatedSpots = allSpots.slice(start, start + PAGE_SIZE);
+      const paginatedSpots = visibleSpots.slice(start, start + PAGE_SIZE);
 
       renderResults({
         spots: paginatedSpots,
@@ -1104,10 +1146,15 @@ export function initLandingSearch({
             ? 'Aparcament afegit a favorits'
             : 'Aparcament eliminat de favorits';
           showBootstrapAlert('success', msg);
+
+          if (effectiveFavoritesOnly && !nextIsFavorite) {
+            await runSearch({ page: currentPage });
+          }
+
           return nextIsFavorite;
         },
       });
-      setParkingSpots(allSpots);
+      setParkingSpots(visibleSpots);
 
       const shouldCenterAfterRender = (centerOnUserLocation || locationResolvedFromTerm) && userLocation;
       if (shouldCenterAfterRender) {
