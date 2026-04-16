@@ -393,6 +393,7 @@ function normalizeParking(raw, origin = null) {
     address: [raw.adreca, raw.ciutat].filter(Boolean).join(', '),
     coords: [lat, lon],
     priceLabel: formatEuroPerHour(raw.tarifa_hora),
+    distanceKm,
     distanceLabel,
     statusLabel,
     hasEv: Boolean(raw.carrega_electrica),
@@ -804,6 +805,8 @@ export function initLandingSearch({
       resetPage: true,
       resolveSearchLocation: false,
       centerOnUserLocation: true,
+      forceIgnoreCityFilter: true,
+      expandRadiusFromUserLocation: true,
     });
   };
 
@@ -933,11 +936,13 @@ export function initLandingSearch({
     resetPage = false,
     resolveSearchLocation = false,
     centerOnUserLocation = false,
+    forceIgnoreCityFilter = false,
+    expandRadiusFromUserLocation = false,
   } = {}) => {
     const targetPage = resetPage ? 1 : page;
     const searchTerm = document.getElementById('mapSearchInput')?.value.trim() || '';
 
-    let ignoreCityFilter = false;
+    let ignoreCityFilter = forceIgnoreCityFilter;
     let locationResolvedFromTerm = false;
 
     if (resolveSearchLocation && searchTerm) {
@@ -955,21 +960,40 @@ export function initLandingSearch({
     }
 
     try {
+      const shouldExpandByLocation = locationResolvedFromTerm || expandRadiusFromUserLocation;
       const records = await fetchSearchResults({
         ignoreCityFilter,
-        expandLocationRadius: locationResolvedFromTerm,
+        expandLocationRadius: shouldExpandByLocation,
       });
 
-      const origin = records.length > 0
-        ? {
-            lat: Number(records[0].latitud),
-            lon: Number(records[0].longitud),
-          }
-        : null;
+      let origin = null;
+      if (userLocation) {
+        origin = {
+          lat: Number(userLocation.lat),
+          lon: Number(userLocation.lon),
+        };
+      } else if (records.length > 0) {
+        origin = {
+          lat: Number(records[0].latitud),
+          lon: Number(records[0].longitud),
+        };
+      }
 
       const allSpots = records
         .map((item) => normalizeParking(item, origin))
-        .filter(Boolean);
+        .filter(Boolean)
+        .sort((a, b) => {
+          const hasDistanceA = Number.isFinite(a.distanceKm);
+          const hasDistanceB = Number.isFinite(b.distanceKm);
+
+          if (hasDistanceA && hasDistanceB) {
+            return a.distanceKm - b.distanceKm;
+          }
+
+          if (hasDistanceA) return -1;
+          if (hasDistanceB) return 1;
+          return 0;
+        });
 
       const total = allSpots.length;
       const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));

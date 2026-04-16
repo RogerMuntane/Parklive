@@ -253,13 +253,7 @@ CREATE TABLE respostes_valoracions (
 CREATE TABLE contribucions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
-    aparcament_id INT UNSIGNED NOT NULL,
-    tipus ENUM(
-        'disponibilitat',
-        'foto',
-        'informacio',
-        'correccio'
-    ) NOT NULL,
+    aparcament_id INT UNSIGNED NULL,
     estat_reportat ENUM('lliure', 'ocupat', 'parcial') NULL,
     dades JSON,
     validada BOOLEAN DEFAULT FALSE,
@@ -270,8 +264,7 @@ CREATE TABLE contribucions (
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
     FOREIGN KEY (aparcament_id) REFERENCES aparcaments(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
-    INDEX idx_aparcament (aparcament_id),
-    INDEX idx_tipus (tipus)
+    INDEX idx_aparcament (aparcament_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de recompenses i insignies
 CREATE TABLE recompenses (

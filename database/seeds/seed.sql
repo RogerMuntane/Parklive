@@ -1965,7 +1965,6 @@ VALUES (
 INSERT INTO contribucions (
         usuari_id,
         aparcament_id,
-        tipus,
         estat_reportat,
         dades,
         validada,
@@ -1976,7 +1975,6 @@ INSERT INTO contribucions (
 VALUES (
         5,
         1,
-        'disponibilitat',
         'parcial',
         '{"places_lliures_aproximades": 45, "comentari": "Planta -2 gairebé plena"}',
         TRUE,
@@ -1987,8 +1985,7 @@ VALUES (
     (
         6,
         2,
-        'foto',
-        NULL,
+        'parcial',
         '{"url": "/uploads/contribucions/user6_parking2.jpg", "descripcio": "Foto actualitzada de l''entrada"}',
         TRUE,
         15,
@@ -1998,8 +1995,7 @@ VALUES (
     (
         7,
         3,
-        'informacio',
-        NULL,
+        'parcial',
         '{"camp": "horari_tancament", "valor_nou": "23:00", "comentari": "Tanquen a les 23h, no 24h"}',
         FALSE,
         0,
@@ -2009,7 +2005,6 @@ VALUES (
     (
         8,
         4,
-        'disponibilitat',
         'lliure',
         '{"places_lliures_aproximades": 30}',
         TRUE,
@@ -2020,8 +2015,7 @@ VALUES (
     (
         9,
         5,
-        'correccio',
-        NULL,
+        'parcial',
         '{"camp": "altura_maxima", "valor_actual": "2.00", "valor_correcte": "2.10", "comentari": "He mesurat l''altura amb el meu vehicle"}',
         TRUE,
         20,
@@ -2031,7 +2025,6 @@ VALUES (
     (
         10,
         1,
-        'disponibilitat',
         'ocupat',
         '{"comentari": "Completament ple a les 14h"}',
         TRUE,
@@ -2042,8 +2035,7 @@ VALUES (
     (
         11,
         3,
-        'foto',
-        NULL,
+        'parcial',
         '{"url": "/uploads/contribucions/user11_parking3_seguretat.jpg", "descripcio": "Nova càmera de seguretat instal·lada"}',
         TRUE,
         15,

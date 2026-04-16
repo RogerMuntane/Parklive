@@ -16,8 +16,7 @@ def create_contribucio():
     Body JSON:
     {
         "usuari_id": 1,
-        "aparcament_id": 5,
-        "tipus": "disponibilitat",
+        "aparcament_id": 5,  // opcional
         "estat_reportat": "lliure",
         "dades": {
             "comentari": "Places lliures"
@@ -36,7 +35,6 @@ def get_contribucions():
 
     Query params:
     - usuari_id: ID de l'usuari (obligatori)
-    - tipus: filtre per tipus (opcional)
     - validada: true/false (opcional)
     - limit: límit de resultats (opcional, per defecte 20)
     - offset: offset per paginació (opcional, per defecte 0)

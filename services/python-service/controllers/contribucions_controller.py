@@ -9,9 +9,8 @@ def crear_nova_contribucio():
     Espera un JSON amb:
     {
         "usuari_id": 1,
-        "aparcament_id": 5,
-        "tipus": "disponibilitat",  // 'disponibilitat', 'foto', 'informacio', 'correccio'
-        "estat_reportat": "lliure",  // només per tipus 'disponibilitat': 'lliure', 'ocupat', 'parcial'
+        "aparcament_id": 5,  // opcional
+        "estat_reportat": "lliure",  // 'lliure', 'ocupat', 'parcial'
         "dades": {  // opcional
             "comentari": "Hi ha 3 places lliures al segon pis",
             "foto_url": "https://..."
@@ -28,7 +27,7 @@ def crear_nova_contribucio():
         data = request.get_json()
 
         # Validar camps obligatoris
-        required_fields = ['usuari_id', 'aparcament_id', 'tipus']
+        required_fields = ['usuari_id', 'estat_reportat']
         missing_fields = [field for field in required_fields if field not in data]
 
         if missing_fields:
@@ -39,7 +38,9 @@ def crear_nova_contribucio():
         # Validar tipus de dades
         try:
             data['usuari_id'] = int(data['usuari_id'])
-            data['aparcament_id'] = int(data['aparcament_id'])
+
+            if 'aparcament_id' in data and data['aparcament_id'] is not None:
+                data['aparcament_id'] = int(data['aparcament_id'])
 
             if 'latitud' in data and data['latitud']:
                 data['latitud'] = float(data['latitud'])
@@ -69,7 +70,6 @@ def obtenir_contribucions_usuari():
 
     Query params:
     - usuari_id: ID de l'usuari (obligatori)
-    - tipus: filtre per tipus (opcional)
     - validada: true/false (opcional)
     - limit: límit de resultats (opcional)
     - offset: offset per paginació (opcional)
@@ -87,9 +87,6 @@ def obtenir_contribucions_usuari():
 
         # Construir filtres
         filters = {}
-
-        if request.args.get('tipus'):
-            filters['tipus'] = request.args.get('tipus')
 
         if request.args.get('validada'):
             filters['validada'] = request.args.get('validada').lower() == 'true'
