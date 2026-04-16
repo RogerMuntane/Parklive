@@ -39,7 +39,8 @@ class SessionModel
             'id' => $usuari['id'],
             'nom' => $usuari['nom'],
             'cognom' => $usuari['cognoms'] ?? $usuari['cognom'] ?? '',
-            'email' => $usuari['email']
+            'email' => $usuari['email'],
+            'rol' => $usuari['tipus_usuari'] ?? 'basic'
         ];
 
         $_SESSION[self::LAST_ACTIVITY_KEY] = time();

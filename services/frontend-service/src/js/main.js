@@ -358,6 +358,12 @@ async function initControllers() {
       initStreetReport();
     }
 
+    // ── Contacte ────────────────────────────────────────────────
+    if (bodyClass.includes('page-contacte')) {
+      const { initContacte } = await import(`./controllers/contacte.controller.js?v=${Date.now()}`);
+      initContacte();
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
   }
@@ -379,16 +385,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
   if (document.body.classList.contains('page-profile')) {
-    const { 
-      initProfilePasswordForm, 
-      initProfileInfoForm, 
-      initProfileInfoSaveForm, 
+    const {
+      initProfilePasswordForm,
+      initProfileInfoForm,
+      initProfileInfoSaveForm,
       initProfilePlanSection,
       initProfileHistorySection,
       initProfileImageUpload
     } = await import('./controllers/profile.controller.js');
     const { initReserves } = await import('./controllers/reserves.controller.js');
-    
+    const { initAdminUserCRUD } = await import('./controllers/profile-admin.controller.js');
+
     initProfilePasswordForm();
     initProfileInfoForm();
     initProfileImageUpload();
@@ -396,6 +403,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfilePlanSection();
     initProfileHistorySection();
     initReserves();
+    initAdminUserCRUD();
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
@@ -427,6 +435,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       plan: 'Millorar el pla',
       manage: 'Gestionar subscripció',
       notifications: 'Notificacions',
+      'admin-users': 'Admin: Gestió d\'Usuaris'
     };
     sidebarBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -465,6 +474,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (planBtn) planBtn.style.display = 'none';
         } else {
           if (manageBtn) manageBtn.style.display = 'none';
+        }
+
+        // Mostrar opcions d'administrador i ocultar coses d'usuari
+        if (userData.tipus_usuari === 'admin') {
+          document.querySelectorAll('.admin-only').forEach(el => {
+            el.classList.remove('d-none');
+          });
+
+          // Ocultar seccions que l'admin no necessita (reserves, historial, pagaments, etc.)
+          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications'];
+          sectionsToHide.forEach(sec => {
+            const btn = document.querySelector(`.sidebar-nav-item[data-section="${sec}"]`);
+            if (btn) btn.style.display = 'none';
+          });
         }
       } else {
         if (manageBtn) manageBtn.style.display = 'none';
