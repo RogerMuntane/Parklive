@@ -423,6 +423,8 @@ export async function initProfilePlanSection() {
                   toggleCheckbox.checked = !newState;
                   updateToggleUI(!newState);
                   showBootstrapAlert('danger', 'No s\'ha pogut actualitzar la renovació a Stripe.', planSection);
+              } else {
+                  showBootstrapAlert('success', newState ? 'Renovació automàtica activada correctament.' : 'Renovació automàtica desactivada correctament.', planSection);
               }
           }
       });

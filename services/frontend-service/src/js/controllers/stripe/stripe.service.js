@@ -26,7 +26,7 @@ export async function fetchSetupIntent(userId) {
  * @returns {Promise<Array>} Llista de mètodes de pagament.
  */
 export async function fetchPaymentMethods(userId) {
-    const response = await fetch(`${API_STRIPE_URL}/payment-methods?user_id=${userId}`);
+    const response = await fetch(`${API_STRIPE_URL}/payment-methods?user_id=${userId}&t=${Date.now()}`);
     if (!response.ok) throw new Error('Error obtenint mètodes de pagament');
     return await response.json();
 }
@@ -103,7 +103,25 @@ export async function updateStripeAutorenewal(userId, autorenovacio) {
  * @returns {Promise<Object>} Detalls de la subscripció.
  */
 export async function fetchSubscriptionDetails(userId) {
-    const response = await fetch(`${API_STRIPE_URL}/subscription?user_id=${userId}`);
+    const response = await fetch(`${API_STRIPE_URL}/subscription?user_id=${userId}&t=${Date.now()}`);
+    if (response.status === 404 || response.status === 204) return null;
     if (!response.ok) throw new Error('Error obtenint detalls de la subscripció');
+    return await response.json();
+}
+
+/**
+ * Sincronitza la subscripció activa de Stripe amb la BD local.
+ * Útil quan _persist_subscription_to_db va fallar en la compra inicial.
+ *
+ * @param {string} userId - ID de l'usuari.
+ * @returns {Promise<Object|null>} Resultat de la sincronització.
+ */
+export async function syncSubscription(userId) {
+    const response = await fetch(`${API_STRIPE_URL}/sync-subscription`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    });
+    if (!response.ok) return null;
     return await response.json();
 }

@@ -250,7 +250,7 @@ def update_subscription_autorenewal(user_id, autorenovacio):
     try:
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
-            "SELECT stripe_subscription_id FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' LIMIT 1",
+            "SELECT stripe_subscription_id FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' ORDER BY id DESC LIMIT 1",
             (user_id,)
         )
         row = cursor.fetchone()
@@ -305,17 +305,43 @@ def get_active_subscription(user_id):
         return None
     try:
         cursor = conn.cursor(dictionary=True)
+
+        # Intent 1: buscar subscripció amb estat 'activa'
         cursor.execute(
-            "SELECT stripe_subscription_id FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' LIMIT 1",
+            "SELECT stripe_subscription_id, estat FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' ORDER BY id DESC LIMIT 1",
             (user_id,)
         )
         row = cursor.fetchone()
+
+        # Si no trobem 'activa', fem un diagnòstic per saber quins estats hi ha
+        if not row:
+            cursor.execute(
+                "SELECT stripe_subscription_id, estat FROM subscripcions WHERE usuari_id = %s ORDER BY id DESC LIMIT 3",
+                (user_id,)
+            )
+            all_rows = cursor.fetchall()
+            if all_rows:
+                print(f"[DB][DIAG] Subscripcions trobades per usuari {user_id} (sense filtre d'estat):")
+                for r in all_rows:
+                    print(f"  -> stripe_id={r['stripe_subscription_id']}, estat='{r['estat']}'")
+                # Fallback: si hi ha alguna sub amb stripe_subscription_id, intentem recuperar-la de Stripe
+                # per a estats com 'pending', 'incomplete', etc. que poden significar premium de fet.
+                best_row = next((r for r in all_rows if r['stripe_subscription_id']), None)
+                if best_row:
+                    print(f"[DB][DIAG] Usant fallback amb stripe_id={best_row['stripe_subscription_id']} (estat BD: '{best_row['estat']}')")
+                    row = best_row
+            else:
+                print(f"[DB][DIAG] Cap subscripció trobada a la BD per a l'usuari {user_id}")
+        else:
+            print(f"[DB] Subscripció activa trobada per a l'usuari {user_id}: {row['stripe_subscription_id']}")
+
         cursor.close()
 
         if not row or not row['stripe_subscription_id']:
             return None
 
         subscription = stripe.Subscription.retrieve(row['stripe_subscription_id'])
+        print(f"[Stripe] Subscripció recuperada: id={subscription.id}, status={subscription.status}")
         return subscription
     except Exception as e:
         print(f"[Stripe] Error recuperant subscripció: {e}")
