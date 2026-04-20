@@ -41,6 +41,9 @@ export async function obtenirReservesUsuari(filtres = {}) {
 
   try {
     const data = await pythonApi.get('/api/usuari/reserves', params);
+    if (filtres.returnFullData) {
+        return data; // Retorna { reserves: [], total: X, paginacio: {} }
+    }
     return Array.isArray(data) ? data : (data?.reserves || []);
   } catch (err) {
     console.error('[ParkLive] Error obtenint reserves de l\'usuari:', err);

@@ -22,6 +22,7 @@ def reserves_usuari_historial():
         estat = request.args.get('estat') # Opcional: pendent, confirmada, etc.
         limit = request.args.get('limit', 20)
         offset = request.args.get('offset', 0)
+        search = request.args.get('search')
 
         if not usuari_id:
             return jsonify({"error": "Falta el paràmetre 'user_id'"}), 400
@@ -29,7 +30,8 @@ def reserves_usuari_historial():
         filters = {
             'estat': estat,
             'limit': int(limit),
-            'offset': int(offset)
+            'offset': int(offset),
+            'search': search
         }
         reserves = get_reserves_usuari(usuari_id, filters)
         return jsonify(reserves), 200

@@ -358,6 +358,12 @@ async function initControllers() {
       initStreetReport();
     }
 
+    // ── Contacte ────────────────────────────────────────────────
+    if (bodyClass.includes('page-contacte')) {
+      const { initContacte } = await import(`./controllers/contacte.controller.js?v=${Date.now()}`);
+      initContacte();
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
   }
@@ -379,16 +385,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
   if (document.body.classList.contains('page-profile')) {
-    const { 
-      initProfilePasswordForm, 
-      initProfileInfoForm, 
-      initProfileInfoSaveForm, 
+    const {
+      initProfilePasswordForm,
+      initProfileInfoForm,
+      initProfileInfoSaveForm,
       initProfilePlanSection,
       initProfileHistorySection,
       initProfileImageUpload
     } = await import('./controllers/profile.controller.js');
     const { initReserves } = await import('./controllers/reserves.controller.js');
-    
+    const { initAdminUserCRUD } = await import('./controllers/profile-admin.controller.js');
+    const { initEstadistiques } = await import('./controllers/estadistiques.controller.js');
+
     initProfilePasswordForm();
     initProfileInfoForm();
     initProfileImageUpload();
@@ -396,6 +404,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfilePlanSection();
     initProfileHistorySection();
     initReserves();
+    initAdminUserCRUD();
+    initEstadistiques();
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
@@ -404,11 +414,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Inicialitzar instància de Stripe
         await module.initStripe(userId);
         // Carregar targetes existents
-        await module.loadPaymentMethods(userId);
+        const methods = await module.loadPaymentMethods(userId);
         // Vincular botó "Afegir nova targeta"
         module.initStripeButton(userId);
-        // Actualitzar resum del pla
-        await module.updatePlanSummary(userId);
+        // Actualitzar resum del pla passant les targetes ja carregades
+        await module.updatePlanSummary(userId, methods);
       }).catch(err => console.error('[ParkLive] Error carregant stripe-integration:', err));
     }
   }
@@ -427,6 +437,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       plan: 'Millorar el pla',
       manage: 'Gestionar subscripció',
       notifications: 'Notificacions',
+      'admin-users': 'Admin: Gestió d\'Usuaris',
+      stadistics: 'Les teves estadístiques'
     };
     sidebarBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -457,6 +469,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Oculta la pestanya "Millorar el pla" o "Gestionar subscripció" depenent si s'és premium
     const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
     const manageBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
+    const stadisticsBtn = document.querySelector('.sidebar-nav-item[data-section="stadistics"]');
+
     try {
       const storedUserData = sessionStorage.getItem('parklive_user_data');
       if (storedUserData) {
@@ -465,6 +479,21 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (planBtn) planBtn.style.display = 'none';
         } else {
           if (manageBtn) manageBtn.style.display = 'none';
+          if (stadisticsBtn) stadisticsBtn.style.display = 'none';
+        }
+
+        // Mostrar opcions d'administrador i ocultar coses d'usuari
+        if (userData.tipus_usuari === 'admin') {
+          document.querySelectorAll('.admin-only').forEach(el => {
+            el.classList.remove('d-none');
+          });
+
+          // Ocultar seccions que l'admin no necessita (reserves, historial, pagaments, estadístiques, etc.)
+          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics'];
+          sectionsToHide.forEach(sec => {
+            const btn = document.querySelector(`.sidebar-nav-item[data-section="${sec}"]`);
+            if (btn) btn.style.display = 'none';
+          });
         }
       } else {
         if (manageBtn) manageBtn.style.display = 'none';

@@ -245,8 +245,15 @@ export function updateManageSectionUI(subscription, primaryCard, callbacks) {
         }
     }
 
+    const isVowelStr = /^(1\b|11|agost|octubre|abril)/i.test(renewalDateStr);
+    const prefix = isVowelStr ? "l'" : "el ";
+    
     const renewalHeader = document.getElementById('renewal-date-header');
-    if (renewalHeader) renewalHeader.textContent = subscription.cancel_at_period_end ? `Expira el ${renewalDateStr}` : `Renova l'${renewalDateStr}`;
+    if (renewalHeader) {
+        renewalHeader.textContent = subscription.cancel_at_period_end 
+            ? `Expira el ${renewalDateStr}` 
+            : `Renova ${prefix}${renewalDateStr}`;
+    }
 
     const nextInvoiceRowDetail = document.getElementById('next-invoice-row-detail');
     if (nextInvoiceRowDetail) {

@@ -1,4 +1,4 @@
-from models.db_connection import get_db_connection
+from models.db_connection import get_db_connection, get_new_connection
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 import math
@@ -30,7 +30,7 @@ def get_reserves_usuari(usuari_id, filters=None):
     if filters is None:
         filters = {}
 
-    conn = get_db_connection()
+    conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
     # Si només s'usen filtres compatibles, delegar al procedure
@@ -40,7 +40,7 @@ def get_reserves_usuari(usuari_id, filters=None):
         if value is not None and key not in procedure_supported_filters
     }
 
-    if not unsupported_filters:
+    if not unsupported_filters and not filters.get('search') and (not filters.get('estat') or ',' not in filters.get('estat', '')):
         estat = filters.get('estat')
         valid_estats = ['pendent', 'confirmada',
                         'en_curs', 'completada', 'cancel·lada']
@@ -67,6 +67,7 @@ def get_reserves_usuari(usuari_id, filters=None):
                 reserves_rows = rows
 
         cursor.close()
+        conn.close()
 
         # Agrupar reserves amb els seus pagaments
         reserves_dict = {}
@@ -161,11 +162,19 @@ def get_reserves_usuari(usuari_id, filters=None):
     if filters.get('estat'):
         valid_estats = ['pendent', 'confirmada',
                         'en_curs', 'completada', 'cancel·lada']
-        if filters['estat'] not in valid_estats:
-            raise ValueError(
-                f"Estat invàlid. Estats vàlids: {', '.join(valid_estats)}")
-        query += " AND r.estat = %s"
-        params.append(filters['estat'])
+        
+        # Suport per múltiples estats separats per coma
+        estats_req = filters['estat'].split(',')
+        estats_valids_req = []
+        for e in estats_req:
+            e = e.strip()
+            if e not in valid_estats:
+                raise ValueError(f"Estat invàlid: {e}. Estats vàlids: {', '.join(valid_estats)}")
+            estats_valids_req.append(e)
+            
+        placeholders = ', '.join(['%s'] * len(estats_valids_req))
+        query += f" AND r.estat IN ({placeholders})"
+        params.extend(estats_valids_req)
 
     # Filtre per data mínima
     if filters.get('data_desde'):
@@ -190,38 +199,34 @@ def get_reserves_usuari(usuari_id, filters=None):
         query += " AND r.aparcament_id = %s"
         params.append(filters['aparcament_id'])
 
-    # Ordenar per data més recent
-    query += " ORDER BY r.data_entrada DESC"
+    # Filtre de cerca per nom de l'aparcament
+    if filters.get('search'):
+        query += " AND a.nom LIKE %s"
+        params.append(f"%{filters['search']}%")
 
     # Paginació
     limit = filters.get('limit', 20)
     offset = filters.get('offset', 0)
+    if limit <= 0 or limit > 100: limit = 20
+    if offset < 0: offset = 0
 
-    if limit <= 0 or limit > 100:
-        limit = 20
-    if offset < 0:
-        offset = 0
-
-    # Contar total de resultats
-    count_query = query.replace(
-        "SELECT r.id, r.codi_reserva, r.usuari_id, r.aparcament_id, r.data_entrada, r.data_sortida, r.estat, r.preu_total, r.descompte_aplicat, r.notes, r.created_at, r.updated_at, a.nom as aparcament_nom, a.adreca, a.ciutat, a.tipus as aparcament_tipus, a.latitud, a.longitud, a.tarifa_hora, a.tarifa_dia, p.id as pagament_id, p.import as pagament_import, p.metode as pagament_metode, p.estat as pagament_estat, p.data_pagament",
-        "SELECT COUNT(DISTINCT r.id) as total"
-    ).split(" ORDER BY")[0]
-
+    where_index = query.find("WHERE")
+    from_where_clause = query[query.find("FROM"):where_index] + query[where_index:]
+    
+    count_query = f"SELECT COUNT(DISTINCT r.id) as total {from_where_clause}"
     cursor.execute(count_query, params)
     total_result = cursor.fetchone()
     total = total_result['total'] if total_result else 0
 
-    # Afegir límit i offset
+    query += " ORDER BY r.data_entrada DESC"
     query += " LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
-    # Executar query
+    # Executar query principal
     cursor.execute(query, params)
     reserves_raw = cursor.fetchall()
     cursor.close()
-    # No tanquem la connexió global 'conn' aquí per evitar el tancament prematur
-    # de la connexió compartida per altres fils/peticions.
+    conn.close()
 
     # Agrupar reserves amb els seus pagaments
     reserves_dict = {}
@@ -294,7 +299,7 @@ def get_totes_reserves(filters=None):
     if filters is None:
         filters = {}
 
-    conn = get_db_connection()
+    conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
     query = """
@@ -431,7 +436,7 @@ def get_reserves_per_estat(estat, filters=None):
 
 def obte_detall_reserva(reserva_id):
     """Obté el detall complet d'una reserva específica"""
-    conn = get_db_connection()
+    conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
     query = """
@@ -534,7 +539,7 @@ def crear_reserva(data):
     Retorna:
     - ID de la nova reserva i el codi de reserva generat
     """
-    conn = get_db_connection()
+    conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -616,7 +621,7 @@ def actualitzar_estat_reserva(reserva_id, nou_estat):
     """
     Actualitza l'estat d'una reserva mitjançant el procedure sp_actualitzar_estat_reserva
     """
-    conn = get_db_connection()
+    conn = get_new_connection()
     cursor = conn.cursor()
 
     try:
@@ -646,7 +651,7 @@ def actualitzar_estat_reserva(reserva_id, nou_estat):
 
 def actualitzar_tiquet_reserva(reserva_id, tiquet_path):
     """Actualitza la ruta del tiquet PDF d'una reserva"""
-    conn = get_db_connection()
+    conn = get_new_connection()
     cursor = conn.cursor()
     try:
         query = "UPDATE reserves SET tiquet_path = %s WHERE id = %s"

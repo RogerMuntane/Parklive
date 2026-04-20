@@ -37,8 +37,8 @@
                                 <i class="bi bi-geo-alt-fill"></i>
                             </div>
                             <div>
-                                <h5 class="mb-1">La nostra seu</h5>
-                                <p class="text-muted mb-0">Carrer de la Diputació, 250<br>08007 Barcelona, Espanya</p>
+                                <h5 class="mb-1">Institut Thos i Codina</h5>
+                                <p class="text-muted mb-0">Riera de Cirera, 57<br>08304 Mataró, Barcelona</p>
                             </div>
                         </div>
 
@@ -82,7 +82,7 @@
                                 <div class="col-md-6">
                                     <label for="nom" class="form-label fw-bold">Nom complet</label>
                                     <input type="text" class="form-control form-control-lg" id="nom"
-                                        placeholder="Ex: Roger Muntané" required>
+                                        placeholder="Ex: Joan Pérez" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="email" class="form-label fw-bold">Correu electrònic</label>
@@ -142,21 +142,5 @@
     <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script type="module" src="src/js/main.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Inicialitzar mapa
-            var map = L.map('contact-map', {
-                scrollWheelZoom: false
-            }).setView([41.3851, 2.1734], 15);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            var marker = L.marker([41.3851, 2.1734]).addTo(map);
-            marker.bindPopup("<b>La nostra seu central</b><br>ParkLive Barcelona").openPopup();
-        });
-    </script>
 </body>
-
 </html>

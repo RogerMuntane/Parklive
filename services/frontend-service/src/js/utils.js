@@ -25,7 +25,11 @@ export function showAlert(type, message, scope = document) {
   alert.classList.remove('d-none', 'is-hidden');
 
   // Amagar automàticament els missatges d'èxit al cap de 5 s
-  alert.classList.add('d-none');
+  if (type === 'success') {
+    setTimeout(() => {
+      alert.classList.add('d-none');
+    }, 5000);
+  }
 }
 
 /**
@@ -44,6 +48,7 @@ export function showBootstrapAlert(type, message, parent = document.body) {
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
+    console.log(`[ParkLive] Mostrant alerta: ${type} - ${message}`);
     parent.appendChild(alert);
     setTimeout(() => {
       alert.classList.remove('show');
