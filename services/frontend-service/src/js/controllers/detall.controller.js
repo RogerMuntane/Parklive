@@ -242,15 +242,56 @@ function renderDetall(a) {
 
     const mapEl = document.getElementById('map-detail');
     if (mapEl) {
-      const map = L.map('map-detail').setView([lat, lon], 16);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+      const map = L.map('map-detail', {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView([lat, lon], 16);
 
-      L.marker([lat, lon])
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      L.control
+        .attribution({ position: 'bottomleft', prefix: false })
         .addTo(map)
-        .bindPopup(`<b>${esc(a.nom)}</b><br>${esc(adreca)}`)
-        .openPopup();
+        .addAttribution('© OpenStreetMap contributors, © CARTO');
+
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        {
+          subdomains: 'abcd',
+          maxZoom: 20,
+        },
+      ).addTo(map);
+
+      let marker;
+      if (a.tipus === 'aire_lliure') {
+        const totalCapacity = Number(a.capacitat_total) || 50;
+        const radius = Math.max(35, Math.min(95, Math.round(Math.sqrt(totalCapacity) * 3.2)));
+        marker = L.circle([lat, lon], {
+          radius: radius,
+          color: '#b3261e',
+          weight: 2,
+          fillColor: '#dc3545',
+          fillOpacity: 0.24,
+          className: 'parking-open-air-area',
+        });
+      } else {
+        const parkingIcon = L.divIcon({
+          className: 'parking-marker-wrapper',
+          html: '<span class="parking-marker" aria-hidden="true"></span>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+          popupAnchor: [0, -14],
+        });
+        marker = L.marker([lat, lon], { icon: parkingIcon });
+      }
+
+      marker.addTo(map)
+        .bindPopup(`
+          <div class="parking-popup text-center">
+            <strong class="d-block mb-1 small fw-semibold">${esc(a.nom)}</strong>
+            <p class="mb-0 small text-body-secondary"><i class="bi bi-geo-alt me-1"></i>${esc(adreca)}</p>
+          </div>
+        `, { closeButton: false, autoPanPadding: [30, 30] });
 
       window._detallMap = map;
     }
@@ -387,6 +428,16 @@ export async function initDetallAparcament() {
     renderDetall(aparcament);
     await initDetallFavoriteButton(aparcament.id || id);
     showContent();
+
+
+    if (window._detallMap) {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          window._detallMap.invalidateSize();
+        });
+      });
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error carregant detall aparcament:', err);
     showError(err.message || "Error de connexió amb el servidor.");

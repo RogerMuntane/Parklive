@@ -424,6 +424,8 @@ export async function initProfilePlanSection() {
                   toggleCheckbox.checked = !newState;
                   updateToggleUI(!newState);
                   showBootstrapAlert('danger', 'No s\'ha pogut actualitzar la renovació a Stripe.', planSection);
+              } else {
+                  showBootstrapAlert('success', newState ? 'Renovació automàtica activada correctament.' : 'Renovació automàtica desactivada correctament.', planSection);
               }
           }
       });
@@ -501,89 +503,199 @@ export async function initProfilePlanSection() {
 /**
  * Inicialitza l'historial de reserves del perfil
  */
-export async function initProfileHistorySection() {
+export function initProfileHistorySection() {
     const tableBody = document.getElementById('history-table-body');
+    const searchInput = document.getElementById('input-search-history');
+    const statusSelect = document.getElementById('select-status-history');
+    const searchBtn = document.getElementById('btn-search-history-submit');
+    const paginationContainer = document.getElementById('history-pagination-container');
+    
     if (!tableBody) return;
 
-    try {
-        const userId = getUserId();
-        if (!userId) return;
+    let currentPage = 1;
+    let currentSearch = '';
+    const limit = 5;
 
-        // Obtenim totes les reserves per filtrar-les al client (permet més flexibilitat)
-        const data = await obtenirReservesUsuari();
-        const totesLesReserves = Array.isArray(data) ? data : (data.reserves || []);
-
-        // Filtrem per historial: completades i cancel·lades
-        const reserves = totesLesReserves.filter(r =>
-            ['completada', 'cancel·lada'].includes((r.estat || '').toLowerCase())
-        );
-
-        if (reserves.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
-                        <i class="bi bi-info-circle me-1"></i> No s'han trobat reserves a l'historial.
-                    </td>
-                </tr>`;
+    const renderPagination = (paginacio) => {
+        if (!paginationContainer) return;
+        if (!paginacio || paginacio.total_pagines <= 1) {
+            paginationContainer.innerHTML = '';
             return;
         }
 
-        // Renderitzar files
-        tableBody.innerHTML = reserves.map(r => {
-            const dataFmt = formatDate(r.data_entrada);
-            const desc = `Aparcament – ${r.aparcament?.nom || 'Pàrquing'}`;
-            const preu = formatCurrency(r.preu_total);
+        const isPrevDisabled = paginacio.pagina_actual === 1;
+        const isNextDisabled = paginacio.pagina_actual === paginacio.total_pagines;
 
-            const estat = (r.estat || '').toLowerCase();
-            let badgeClass = 'bg-secondary';
-            let labelText = 'Desconegut';
-            let icon = 'bi-question-circle';
-            let potVeureTiquet = false;
+        // Generar ítems de pàgina numerats
+        let pagesHtml = '';
+        for (let i = 1; i <= paginacio.total_pagines; i++) {
+            const isActive = i === paginacio.pagina_actual;
+            pagesHtml += `
+                <li class="page-item ${isActive ? 'active' : ''}">
+                    <button class="page-link" data-page="${i}" ${isActive ? 'aria-current="page"' : ''}>
+                        ${i}
+                    </button>
+                </li>`;
+        }
 
-            if (estat === 'completada') {
-                badgeClass = 'status-ok';
-                labelText = 'Completat';
-                icon = 'bi-check-circle-fill';
-                potVeureTiquet = true;
-            } else if (estat === 'cancel·lada') {
-                badgeClass = 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25';
-                labelText = 'Cancel·lat';
-                icon = 'bi-x-circle-fill';
-                potVeureTiquet = false;
-            }
+        // Estructura Bootstrap <ul class="pagination">
+        paginationContainer.innerHTML = `
+            <nav aria-label="Navegació historial de reserves">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item ${isPrevDisabled ? 'disabled' : ''}">
+                        <button class="page-link" data-page="${paginacio.pagina_actual - 1}"
+                            ${isPrevDisabled ? 'disabled aria-disabled="true"' : ''}
+                            aria-label="Pàgina anterior">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+                    ${pagesHtml}
+                    <li class="page-item ${isNextDisabled ? 'disabled' : ''}">
+                        <button class="page-link" data-page="${paginacio.pagina_actual + 1}"
+                            ${isNextDisabled ? 'disabled aria-disabled="true"' : ''}
+                            aria-label="Pàgina següent">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        `;
 
-            return `
-                <tr>
-                    <td class="text-body-secondary small">${dataFmt}</td>
-                    <td>${desc}</td>
-                    <td><strong>${preu}</strong></td>
-                    <td>
-                        <span class="status-badge ${badgeClass}" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 2rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
-                            <i class="bi ${icon}"></i> ${labelText}
-                        </span>
-                    </td>
-                    <td>
-                        ${potVeureTiquet ?
-                            `<a href="/tiquet_Aparcament.html?id=${r.id}" class="btn btn-outline-secondary btn-sm" title="Veure tiquet PDF">
-                                <i class="bi bi-file-earmark-pdf"></i> PDF
-                             </a>` :
-                            `<button class="btn btn-outline-secondary btn-sm opacity-25" disabled title="Tiquet no disponible">
-                                <i class="bi bi-file-earmark-pdf"></i> PDF
-                             </button>`
-                        }
-                    </td>
-                </tr>`;
-        }).join('');
+        // Afegir esdeveniments (només als botons no deshabitats)
+        paginationContainer.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const newPage = parseInt(btn.dataset.page);
+                if (newPage && newPage !== currentPage && newPage > 0 && newPage <= paginacio.total_pagines) {
+                    currentPage = newPage;
+                    fetchHistory();
+                }
+            });
+        });
+    };
 
-    } catch (err) {
-        console.error('[ParkLive] Error carregant historial:', err);
+    const fetchHistory = async () => {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="text-center py-4 text-danger">
-                    <i class="bi bi-exclamation-triangle me-1"></i> Error al carregar les dades.
+                <td colspan="5" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    Carregant historial...
                 </td>
             </tr>`;
+
+        try {
+            const userId = getUserId();
+            if (!userId) return;
+
+            const offset = (currentPage - 1) * limit;
+            
+            // Agafem l'estat del select o per defecte els d'historial
+            const estatFiltre = statusSelect ? statusSelect.value : 'completada,cancel·lada';
+
+            const params = {
+                estat: estatFiltre,
+                limit: limit,
+                offset: offset,
+                returnFullData: true
+            };
+            
+            if (currentSearch.trim() !== '') {
+                params.search = currentSearch.trim();
+            }
+
+            const data = await obtenirReservesUsuari(params);
+            const reserves = data.reserves || [];
+            
+            renderPagination(data.paginacio);
+
+            if (reserves.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-info-circle me-1"></i> No s'han trobat reserves a l'historial.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            // Renderitzar files
+            tableBody.innerHTML = reserves.map(r => {
+                const dataFmt = formatDate(r.data_entrada);
+                const desc = `Aparcament – ${r.aparcament?.nom || 'Pàrquing'}`;
+                const preu = formatCurrency(r.preu_total);
+                
+                const estat = (r.estat || '').toLowerCase();
+                let badgeClass = 'bg-secondary';
+                let labelText = 'Desconegut';
+                let icon = 'bi-question-circle';
+                let potVeureTiquet = false;
+
+                if (estat === 'completada') {
+                    badgeClass = 'status-ok';
+                    labelText = 'Completat';
+                    icon = 'bi-check-circle-fill';
+                    potVeureTiquet = true;
+                } else if (estat === 'cancel·lada') {
+                    badgeClass = 'status-err';
+                    labelText = 'Cancel·lat';
+                    icon = 'bi-x-circle-fill';
+                    potVeureTiquet = false;
+                }
+                
+                return `
+                    <tr>
+                        <td class="text-body-secondary small">${dataFmt}</td>
+                        <td class="fw-medium">${desc}</td>
+                        <td><span class="badge bg-light text-dark border px-2 py-1">${preu}</span></td>
+                        <td>
+                            <span class="status-badge ${badgeClass}">
+                                <i class="bi ${icon}"></i> ${labelText}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            ${potVeureTiquet ? 
+                                `<a href="/tiquet_Aparcament.html?id=${r.id}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Veure tiquet PDF">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                 </a>` : 
+                                `<button class="btn btn-outline-secondary btn-sm rounded-pill px-3 opacity-25" disabled title="Tiquet no disponible">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                 </button>`
+                            }
+                        </td>
+                    </tr>`;
+            }).join('');
+
+        } catch (err) {
+            console.error('[ParkLive] Error carregant historial:', err);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Error al carregar les dades.
+                    </td>
+                </tr>`;
+            if (paginationContainer) paginationContainer.innerHTML = '';
+        }
+    };
+
+    // Events de cerca
+    const performSearch = () => {
+        if (searchInput) currentSearch = searchInput.value;
+        currentPage = 1;
+        fetchHistory();
+    };
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
     }
+
+    if (searchInput) {
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    }
+
+    // Càrrega inicial
+    fetchHistory();
 }
 
 /**

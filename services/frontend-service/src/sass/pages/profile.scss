@@ -140,6 +140,7 @@
     &.status-ok {
         background: rgba($success, .12);
         color: $success;
+
         [data-bs-theme="dark"] & {
             background: rgba($success, .2);
             color: lighten($success, 10%);
@@ -149,6 +150,7 @@
     &.status-pend {
         background: rgba($warning, .2);
         color: darken($warning, 25%);
+
         [data-bs-theme="dark"] & {
             background: rgba($warning, .15);
             color: $warning;
@@ -158,6 +160,7 @@
     &.status-err {
         background: rgba($crimson, .12);
         color: $crimson;
+
         [data-bs-theme="dark"] & {
             background: rgba($crimson, .2);
             color: lighten($crimson, 15%);
@@ -198,19 +201,21 @@
         border-color: rgba($crimson, 0.3);
         background: linear-gradient(135deg, rgba($crimson, 0.03) 0%, rgba($crimson, 0.08) 100%);
 
-        .tipus-plan, .preu-plan {
+        .tipus-plan,
+        .preu-plan {
             color: $crimson;
         }
 
         [data-bs-theme="dark"] & {
             border-color: rgba($crimson, 0.5);
             background: linear-gradient(135deg, rgba($crimson, 0.1) 0%, rgba($crimson, 0.15) 100%);
-            
-            .tipus-plan, .preu-plan {
+
+            .tipus-plan,
+            .preu-plan {
                 color: lighten($crimson, 15%);
             }
         }
-        
+
         &.selected {
             border-color: $crimson;
             background: rgba($crimson, 0.1);
@@ -243,6 +248,7 @@
 
 .btn-delete-card {
     transition: all 0.2s ease;
+
     &:hover {
         opacity: 1 !important;
         transform: scale(1.1);
@@ -259,7 +265,7 @@
     position: relative;
     overflow: hidden;
     min-height: 200px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 
@@ -276,7 +282,7 @@
 
     &:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
     }
 
     &.active-card {
@@ -291,6 +297,7 @@
         border-radius: 6px;
         margin-bottom: 25px;
         position: relative;
+
         &::before {
             content: '';
             position: absolute;
@@ -298,7 +305,7 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.1);
         }
     }
 
@@ -338,7 +345,7 @@
     border: 2px dashed rgba($crimson, 0.3);
     color: $crimson;
     transition: all 0.3s ease;
-    
+
     [data-bs-theme="dark"] & {
         border-color: rgba(lighten($crimson, 15%), 0.2);
         color: lighten($crimson, 15%);
@@ -354,7 +361,7 @@
 .security-card {
     background-color: rgba($success, 0.03);
     border-left: 4px solid $success !important;
-    
+
     [data-bs-theme="dark"] & {
         background-color: rgba($success, 0.05);
     }
@@ -373,7 +380,7 @@
     [data-bs-theme="dark"] & {
         color: lighten($crimson, 15%);
         border-color: rgba(lighten($crimson, 15%), 0.5);
-        
+
         &:hover {
             background-color: lighten($crimson, 15%);
             border-color: lighten($crimson, 15%);
@@ -387,7 +394,7 @@
     .bi-check2-circle.text-success {
         color: rgba($success, 0.75) !important;
     }
-    
+
     .bi-star-fill.text-danger {
         color: rgba($crimson, 0.8) !important;
     }
@@ -395,12 +402,12 @@
     .profile-section {
         .bg-danger.bg-opacity-10 {
             background-color: rgba($crimson, 0.15) !important;
-            
+
             &.text-danger {
                 color: rgba(lighten($crimson, 20%), 0.9) !important;
             }
         }
-        
+
         // Icones de capçalera de card
         span.rounded-3.p-2.bg-danger.bg-opacity-10.text-danger {
             background-color: rgba($crimson, 0.1) !important;
@@ -421,7 +428,7 @@
             border-radius: 8px;
             background-color: rgba($crimson, 0.1);
             color: $crimson;
-            
+
             [data-bs-theme="dark"] & {
                 background-color: rgba($crimson, 0.15) !important;
                 color: lighten($crimson, 15%) !important;
@@ -435,13 +442,14 @@
 .profile-section .card {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
     transition: box-shadow 0.3s ease;
-    
+
     [data-bs-theme="dark"] & {
         box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25) !important;
     }
 
     &:hover {
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12) !important;
+
         [data-bs-theme="dark"] & {
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35) !important;
         }
@@ -462,12 +470,24 @@
         transition: background-color 0.3s ease;
 
         &.active {
-            &.weak { background-color: $danger; }
-            &.medium { background-color: $warning; }
-            &.strong { background-color: #f1c40f; } // Yellow
-            &.expert { background-color: $success; }
+            &.weak {
+                background-color: $danger;
+            }
+
+            &.medium {
+                background-color: $warning;
+            }
+
+            &.strong {
+                background-color: #f1c40f;
+            }
+
+            // Yellow
+            &.expert {
+                background-color: $success;
+            }
         }
-        
+
         [data-bs-theme="dark"] & {
             background-color: rgba($off-white, 0.1);
         }
@@ -478,7 +498,7 @@
     background-color: rgba($off-white, 0.03);
     border-radius: 12px;
     padding: 16px;
-    
+
     [data-bs-theme="dark"] & {
         background-color: rgba($off-white, 0.05);
     }
@@ -499,6 +519,7 @@
 
         &.met {
             color: var(--bs-body-color);
+
             i {
                 color: $success;
                 opacity: 1;
@@ -512,10 +533,15 @@
     &.dark-card {
         background-color: $dark-navy;
         color: rgba($off-white, 0.8);
-        
-        .card-title { color: $off-white; }
-        .small { color: rgba($off-white, 0.6); }
-        
+
+        .card-title {
+            color: $off-white;
+        }
+
+        .small {
+            color: rgba($off-white, 0.6);
+        }
+
         [data-bs-theme="dark"] & {
             background-color: rgba(darken($dark-navy, 5%), 0.5);
         }
@@ -539,7 +565,7 @@
     &.active {
         border-color: rgba($crimson, 0.5);
         background-color: rgba($crimson, 0.02);
-        
+
         [data-bs-theme="dark"] & {
             border-color: rgba($crimson, 0.4);
             background-color: rgba($crimson, 0.05);
@@ -558,7 +584,10 @@
 
         .custom-switch {
             background-color: $crimson;
-            &::after { transform: translateX(22px); }
+
+            &::after {
+                transform: translateX(22px);
+            }
         }
     }
 
@@ -576,15 +605,20 @@
 
         .custom-switch {
             background-color: rgba(var(--bs-secondary-rgb), 0.3);
-            &::after { transform: translateX(0); }
+
+            &::after {
+                transform: translateX(0);
+            }
         }
-        
-        .toggle-desc { opacity: 0.6; }
+
+        .toggle-desc {
+            opacity: 0.6;
+        }
     }
 
     &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
 }
 
@@ -629,7 +663,7 @@
         top: 3px;
         left: 3px;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
 }
 
@@ -657,8 +691,8 @@
     border-radius: 50px;
     display: inline-flex;
     align-items: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
     [data-bs-theme="dark"] & {
         background: rgba(255, 255, 255, 0.03);
     }
@@ -671,7 +705,7 @@
         color: var(--bs-secondary-color);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 50px;
-        
+
         &:hover {
             color: var(--bs-body-color);
         }
@@ -694,6 +728,7 @@
         .annual-content {
             display: block !important;
         }
+
         .monthly-content {
             display: none !important;
         }
@@ -702,7 +737,143 @@
 
 .text-success-custom {
     color: #27ae60;
+
     [data-bs-theme="dark"] & {
         color: #2ecc71;
+    }
+}
+
+
+// Input de cerca
+.history-search-input {
+    width: 170px;
+    flex-shrink: 0;
+    border-color: var(--bs-border-color);
+    border-radius: 0.5rem !important;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    font-size: 0.85rem;
+
+    &::placeholder {
+        color: $slate-gray;
+    }
+
+    &:focus {
+        border-color: $crimson;
+        box-shadow: 0 0 0 0.2rem rgba($crimson, 0.15);
+        background-color: var(--bs-body-bg);
+    }
+}
+
+// Select d'estats
+.history-status-select {
+    width: 150px;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    border-color: var(--bs-border-color);
+    border-radius: 0.5rem;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+
+    &:focus {
+        border-color: $crimson;
+        box-shadow: 0 0 0 0.2rem rgba($crimson, 0.15);
+    }
+}
+
+// Botó de cerca
+.history-search-btn {
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba($dark-navy, 0.25);
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+}
+
+// Capçalera de la taula d'historial
+#section-history table thead tr {
+    background-color: var(--bs-body-bg);
+
+    th {
+        padding: 0.75rem;
+        color: var(--bs-secondary-color);
+        font-size: 0.7rem;
+    }
+}
+
+// ── Paginació Bootstrap sobreescrita amb colors del projecte ─────────────────
+#history-pagination-container {
+    .pagination {
+        gap: 0.2rem;
+
+        .page-item {
+
+            .page-link {
+                border-radius: 0.45rem !important;
+                border-color: var(--bs-border-color);
+                background-color: transparent;
+                color: $dark-navy;
+                font-size: 0.85rem;
+                padding: 0.35rem 0.65rem;
+                transition: all 0.18s ease;
+                line-height: 1.4;
+
+                &:hover {
+                    background-color: rgba($dark-navy, 0.06);
+                    border-color: rgba($dark-navy, 0.4);
+                    color: $dark-navy;
+                    transform: translateY(-1px);
+                }
+
+                // Dark mode
+                [data-bs-theme="dark"] & {
+                    color: $off-white;
+                    border-color: rgba($off-white, 0.15);
+                    background-color: transparent;
+
+                    &:hover {
+                        background-color: rgba($off-white, 0.08);
+                        border-color: rgba($off-white, 0.3);
+                        color: $off-white;
+                    }
+                }
+            }
+
+            // Pàgina activa
+            &.active .page-link {
+                background-color: $dark-navy;
+                border-color: $dark-navy;
+                color: $off-white;
+                font-weight: 600;
+                box-shadow: 0 2px 8px rgba($dark-navy, 0.3);
+                transform: none;
+
+                [data-bs-theme="dark"] & {
+                    background-color: $crimson;
+                    border-color: $crimson;
+                    box-shadow: 0 2px 8px rgba($crimson, 0.4);
+                }
+            }
+
+            // Deshabilitades (Previous/Next quan no disponible)
+            &.disabled .page-link {
+                opacity: 0.35;
+                pointer-events: none;
+
+                [data-bs-theme="dark"] & {
+                    color: rgba($off-white, 0.35);
+                    border-color: rgba($off-white, 0.1);
+                }
+            }
+        }
     }
 }

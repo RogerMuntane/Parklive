@@ -214,7 +214,7 @@ async function renderPaymentMethods() {
 export async function initReservaAparcament() {
   const id = getQueryParam('id');
   if (!id) {
-    showAlert('error', "No s'ha especificat l'aparcament.");
+    showBootstrapAlert('danger', "No s'ha especificat l'aparcament.");
     return;
   }
 
@@ -328,7 +328,7 @@ export async function initReservaAparcament() {
             
             const userId = getUserId();
             if(!userId) {
-                showAlert('error', 'Inicia sessió per fer una reserva.');
+                showBootstrapAlert('warning', 'Inicia sessió per fer una reserva.');
                 return;
             }
 
@@ -339,13 +339,13 @@ export async function initReservaAparcament() {
             const matricula = document.getElementById('vehicle-matricula').value;
             
             if(!inDate || !inTime || !outDate || !outTime || !matricula) {
-                showAlert('error', 'Sisplau omple tots els camps (matrícula inclosa).');
+                showBootstrapAlert('warning', 'Sisplau omple tots els camps (matrícula inclosa).');
                 return;
             }
 
             const selectedCard = document.querySelector('.payment-radio:checked');
             if(!selectedCard) {
-                showAlert('error', 'Sisplau, selecciona un mètode de pagament per continuar.');
+                showBootstrapAlert('warning', 'Sisplau, selecciona un mètode de pagament per continuar.');
                 return;
             }
 
@@ -355,12 +355,12 @@ export async function initReservaAparcament() {
             const ara = new Date();
 
             if (inDateTime < ara) {
-                showAlert('error', 'La data d\'entrada no pot ser anterior a l\'actual.');
+                showBootstrapAlert('danger', 'La data d\'entrada no pot ser anterior a l\'actual.');
                 return;
             }
 
             if (outDateTime <= inDateTime) {
-                showAlert('error', 'La data de sortida ha de ser posterior a la d\'entrada.');
+                showBootstrapAlert('danger', 'La data de sortida ha de ser posterior a la d\'entrada.');
                 return;
             }
 
@@ -385,7 +385,7 @@ export async function initReservaAparcament() {
                 // Confirmació de reserva i càrrec a Stripe
                 const res = await crearReserva(reservaPayload);
                 if (res && res.reserva && res.reserva.id) {
-                    showAlert('success', 'Pagament autoritzat amb èxit! Generant tiquet...');
+                    showBootstrapAlert('success', 'Pagament autoritzat amb èxit! Generant tiquet...');
                     setTimeout(() => {
                         window.location.href = `/tiquet_Aparcament.html?id=${res.reserva.id}`;
                     }, 1500);
@@ -407,6 +407,6 @@ export async function initReservaAparcament() {
 
   } catch (err) {
     console.error('[ParkLive] Error carregant reserva d\'aparcament:', err);
-    showAlert('error', "No s'ha pogut carregar la informació de reserva.");
+    showBootstrapAlert('danger', "No s'ha pogut carregar la informació de reserva.");
   }
 }

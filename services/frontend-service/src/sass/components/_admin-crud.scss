@@ -1,0 +1,136 @@
+@use '../abstracts/variables' as v;
+
+#section-admin-users {
+  --bs-primary: #{v.$dark-navy};
+  // Aproximació de RGB per al dark-navy (2b2d42)
+  --bs-primary-rgb: 43, 45, 66;
+
+  .btn-primary {
+    background-color: v.$crimson;
+    border-color: v.$crimson;
+
+    &:hover {
+      background-color: v.$deep-red;
+      border-color: v.$deep-red;
+    }
+  }
+
+  // Badges per rol
+  .badge-basic { 
+    background: rgba(v.$slate-gray, 0.1); 
+    color: v.$slate-gray; 
+  }
+  .badge-premium { 
+    background: rgba(v.$crimson, 0.1); 
+    color: v.$crimson; 
+  }
+  .badge-admin { 
+    background: rgba(v.$dark-navy, 0.1); 
+    color: v.$dark-navy; 
+  }
+  .badge-operador { 
+    background: rgba(#007bff, 0.1); // Blau estàndard per a operador
+    color: #007bff; 
+  }
+
+  // Badges per estat
+  .badge-actiu { 
+    background: rgba(#28a745, 0.1); 
+    color: #28a745; 
+  }
+  .badge-inactiu { 
+    background: rgba(#6c757d, 0.1); 
+    color: #6c757d; 
+  }
+  .badge-suspès { 
+    background: rgba(#ffc107, 0.1); 
+    color: #ffc107; 
+  }
+  // Estils per a la barra de cerca unificada
+  .search-group {
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    overflow: hidden;
+
+    .input-group-text, .form-control {
+      border-color: rgba(v.$dark-navy, 0.1);
+      transition: all 0.2s ease;
+
+      [data-bs-theme="dark"] & {
+        border-color: rgba(v.$off-white, 0.1);
+        color: v.$off-white;
+      }
+    }
+
+    &:focus-within {
+      .input-group-text, .form-control {
+        border-color: v.$crimson;
+        box-shadow: none; // Treiem l'ombra individual de BS
+
+        [data-bs-theme="dark"] & {
+            border-color: lighten(v.$crimson, 15%);
+        }
+      }
+      box-shadow: 0 0 0 0.25rem rgba(v.$crimson, 0.2); // Ombra unificada per a tot el grup
+    }
+  }
+
+  // Ajustos per al Mode Fosc
+  [data-bs-theme="dark"] & {
+    .badge-admin {
+      background: rgba(v.$off-white, 0.1);
+      color: v.$off-white;
+    }
+    
+    .badge-premium {
+      background: rgba(v.$crimson, 0.2);
+      color: lighten(v.$crimson, 20%);
+    }
+
+    .badge-operador {
+      background: rgba(#007bff, 0.2);
+      color: lighten(#007bff, 20%);
+    }
+
+    .badge-actiu {
+      background: rgba(#28a745, 0.2);
+      color: lighten(#28a745, 20%);
+    }
+
+    // Botons d'accions
+    .btn-outline-primary {
+      color: lighten(v.$crimson, 15%);
+      &:hover {
+        background-color: v.$crimson;
+        color: white;
+      }
+    }
+
+    .btn-outline-danger {
+      color: #ff4d4d;
+      &:hover {
+        background-color: #ff4d4d;
+        color: white;
+      }
+    }
+
+    // Taula
+    .table {
+        color: v.$off-white;
+        border-color: rgba(v.$off-white, 0.05);
+        
+        thead {
+            background: rgba(v.$off-white, 0.03) !important;
+            color: rgba(v.$off-white, 0.6) !important;
+        }
+
+        td {
+            border-bottom-color: rgba(v.$off-white, 0.05);
+        }
+    }
+  }
+}
+
+.x-small { 
+  font-size: 0.75rem; 
+}

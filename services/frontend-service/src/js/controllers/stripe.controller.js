@@ -40,21 +40,22 @@ export async function initStripe(userId) {
     return stripeInstance;
 }
 
-/**
- * Carrega els mètodes de pagament i els renderitza.
- * 
- * @param {string} userId - ID de l'usuari.
- */
 export async function loadPaymentMethods(userId) {
     const container = document.getElementById('payment-methods-container');
-    if (!container) return;
+    if (!container) return [];
 
     try {
+        console.log('[Stripe] Iniciant càrrega de mètodes de pagament per a:', userId);
         const methods = await stripeService.fetchPaymentMethods(userId);
+        console.log('[Stripe] Mètodes rebuts:', methods.length);
         stripeRender.renderPaymentMethods(methods, (methodId) => deleteCard(methodId, userId));
+        return methods;
     } catch (error) {
-        console.error('[Stripe] loadPaymentMethods:', error);
-        container.innerHTML = `<div class="alert alert-warning small">No s'han pogut carregar les targetes.</div>`;
+        console.error('[Stripe] loadPaymentMethods ERROR:', error);
+        if (container) {
+            container.innerHTML = `<div class="alert alert-warning small">No s'han pogut carregar les targetes.</div>`;
+        }
+        return [];
     }
 }
 
@@ -129,7 +130,7 @@ export function initStripeButton(userId) {
                 layout: 'tabs',
                 paymentMethodOrder: ['card']
             });
-            
+
             paymentElement.mount('#payment-element');
             paymentElementMounted = true;
             modal.show();
@@ -169,6 +170,21 @@ export function initStripeButton(userId) {
 }
 
 /* ─── 3. SUBSCRIPCIÓ AL PLA ────────────────────────────────────────── */
+
+/**
+ * Actualitza els botons del sidebar quan es detecta que l'usuari ha passat
+ * a premium durant la sessió (sessionStorage estava desactualitzat).
+ * @private
+ */
+function _updateSidebarForPremium() {
+    const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
+    const manageBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
+    const stadisticsBtn = document.querySelector('.sidebar-nav-item[data-section="stadistics"]');
+
+    if (planBtn) planBtn.style.display = 'none';
+    if (manageBtn) manageBtn.style.display = '';
+    if (stadisticsBtn) stadisticsBtn.style.display = '';
+}
 
 /**
  * Carrega targetes per a la compra del pla.
@@ -232,47 +248,119 @@ export async function updateSubscriptionAutorenewal(userId, autorenovacio) {
  * 
  * @param {string} userId - ID de l'usuari.
  */
-export async function updatePlanSummary(userId) {
+export async function updatePlanSummary(userId, methods = null) {
     const summaryContainer = document.getElementById('payment-plan-summary');
     if (!summaryContainer) return;
 
     try {
+        console.log('[Stripe] Actualitzant resum del pla per a:', userId);
+
+        // Primer intentem obtenir la subscripció directament de l'API per tenir
+        // l'estat real (el sessionStorage pot estar desactualitzat si l'usuari
+        // acaba de comprar el pla sense recarregar la sessió).
+        let sub = null;
+        let fetchedMethods = methods;
+
+        try {
+            sub = await stripeService.fetchSubscriptionDetails(userId);
+        } catch (_) {
+            sub = null;
+        }
+
         const raw = sessionStorage.getItem('parklive_user_data');
         const user = raw ? JSON.parse(raw) : null;
 
-        if (!user || user.tipus_usuari !== 'premium') {
-            summaryContainer.classList.toggle('d-none', !user);
-            if (user) stripeRender.renderBasicPlanUI();
-            return;
+        // Si l'API confirma que té subscripció activa, actualitzem el sessionStorage
+        // perquè la resta de la UI (sidebar, etc.) reflecteixi el canvi.
+        // Stripe pot retornar 'active', 'trialing' o 'past_due' en subscripcions vigents
+        const ACTIVE_STATUSES = ['active', 'trialing', 'past_due'];
+        const isPremiumByApi = sub !== null && ACTIVE_STATUSES.includes(sub.status);
+        const isPremiumBySession = user && user.tipus_usuari === 'premium';
+
+        if (isPremiumByApi && !isPremiumBySession && user) {
+            console.log('[Stripe] Actualitzant sessionStorage: usuari ara és premium.');
+            user.tipus_usuari = 'premium';
+            sessionStorage.setItem('parklive_user_data', JSON.stringify(user));
+            _updateSidebarForPremium();
+        }
+
+        const isPremium = isPremiumByApi || isPremiumBySession;
+
+        // Si no hi ha cap subscripció vàlida (404 o error Stripe)
+        if (!sub) {
+            if (!user) {
+                summaryContainer.classList.add('d-none');
+                return;
+            }
+            if (!isPremium) {
+                // Usuari bàsic confirmat: mostrem el resum bàsic
+                summaryContainer.classList.remove('d-none');
+                stripeRender.renderBasicPlanUI();
+            } else {
+                // Usuari premium en sessió però sense sub vàlida a la BD:
+                // Intentem una sincronització automàtica des de Stripe
+                console.warn('[Stripe] Subscripció no trobada a la BD. Iniciant sincronització automàtica...');
+                summaryContainer.classList.remove('d-none');
+
+                const syncResult = await stripeService.syncSubscription(userId);
+                if (syncResult) {
+                    console.log('[Stripe] Sincronització completada. Tornant a carregar dades...');
+                    // showBootstrapAlert('info', 'Sincronitzant dades de subscripció...');
+                    sub = await stripeService.fetchSubscriptionDetails(userId);
+                }
+
+                if (!sub) {
+                    stripeRender.renderBasicPlanUI();
+                    console.error('[Stripe] No s\'ha pogut obtenir la subscripció ni de la BD ni de Stripe.');
+                    showBootstrapAlert('warning', ' No s\'han pogut carregar els detalls de la subscripció. Contacta amb suport.');
+                    return;
+                }
+
+                // Subscripció recuperada post-sync: actualitzem isPremiumByApi
+                const ACTIVE_STATUSES_SYNC = ['active', 'trialing', 'past_due'];
+                if (!ACTIVE_STATUSES_SYNC.includes(sub.status)) {
+                    stripeRender.renderBasicPlanUI();
+                    return;
+                }
+            }
+
+            if (!sub) return; // guard final
         }
 
         summaryContainer.classList.remove('d-none');
 
-        const [sub, methods] = await Promise.all([
-            stripeService.fetchSubscriptionDetails(userId),
-            stripeService.fetchPaymentMethods(userId)
-        ]);
+        // Carregem els mètodes de pagament si no s'han passat com a paràmetre
+        if (!fetchedMethods) {
+            console.log('[Stripe] Carregant mètodes de pagament...');
+            try {
+                fetchedMethods = await stripeService.fetchPaymentMethods(userId);
+            } catch (_) {
+                fetchedMethods = [];
+            }
+        }
 
-        const primaryCard = methods.length > 0 ? methods[0] : null;
+        const primaryCard = fetchedMethods && fetchedMethods.length > 0 ? fetchedMethods[0] : null;
 
         stripeRender.updatePlanSummaryUI(sub, primaryCard);
-        
+
         stripeRender.updateManageSectionUI(sub, primaryCard, {
             onAutorenewChange: async (newState) => {
                 const autoRenewSwitch = document.getElementById('autoRenewSwitch');
                 try {
                     autoRenewSwitch.disabled = true;
+                    console.log(`[Stripe] Canviant autorenovació a: ${newState}`);
                     const res = await updateSubscriptionAutorenewal(userId, newState);
+                    console.log('[Stripe] Resposta autorenovació:', res);
                     if (res.success) {
-                        showBootstrapAlert('success', newState ? 'Renovació activada' : 'Renovació desactivada');
+                        showBootstrapAlert('success', newState ? ' Renovació automàtica activada correctament.' : ' Renovació automàtica desactivada correctament.');
                         await updatePlanSummary(userId);
                     } else {
                         autoRenewSwitch.checked = !newState;
-                        showBootstrapAlert('danger', 'Error al actualitzar la renovació.');
+                        showBootstrapAlert('danger', `Error al actualitzar la renovació: ${res.error || 'error desconegut'}`);
                     }
                 } catch (err) {
                     autoRenewSwitch.checked = !newState;
-                    showBootstrapAlert('danger', 'Error de connexió.');
+                    showBootstrapAlert('danger', `Error de connexió: ${err.message}`);
                 } finally {
                     autoRenewSwitch.disabled = false;
                 }

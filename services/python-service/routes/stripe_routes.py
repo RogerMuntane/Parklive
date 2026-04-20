@@ -33,3 +33,8 @@ def subscription_details():
 @stripe_routes.route("/api/stripe/webhook", methods=["POST"])
 def stripe_webhook():
     return handle_stripe_webhook()
+
+@stripe_routes.route("/api/stripe/sync-subscription", methods=["POST"])
+def sync_subscription_route():
+    from controllers.stripe_controller import handle_sync_subscription
+    return handle_sync_subscription()
