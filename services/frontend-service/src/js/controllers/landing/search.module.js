@@ -577,40 +577,49 @@ async function fetchRecordsExpandingRadius(ignoreCityFilter) {
 async function fallbackToTextSearch(searchTerm) {
   if (!searchTerm) return [];
 
-  const fallback = await pythonApi.get('/api/aparcaments', {
-    limite: MAX_RESULTS_FOR_MAP,
-    offset: 0,
-  });
-  const lowered = searchTerm.toLowerCase();
+  try {
+    const fallback = await pythonApi.get('/api/aparcaments/cerca', {
+      limite: MAX_RESULTS_FOR_MAP,
+      offset: 0,
+    });
+    const lowered = searchTerm.toLowerCase();
+    const items = Array.isArray(fallback) ? fallback : fallback?.resultats || [];
 
-  return (Array.isArray(fallback) ? fallback : []).filter((item) => {
-    const haystack = `${item.nom || ''} ${item.adreca || ''} ${item.ciutat || ''}`.toLowerCase();
-    return haystack.includes(lowered);
-  });
+    return items.filter((item) => {
+      const haystack = `${item.nom || ''} ${item.adreca || ''} ${item.ciutat || ''}`.toLowerCase();
+      return haystack.includes(lowered);
+    });
+  } catch {
+    return [];
+  }
 }
 
 async function fallbackToNearestSearch(origin) {
   if (!origin) return [];
 
-  const fallback = await pythonApi.get('/api/aparcaments', {
-    limite: MAX_RESULTS_FOR_MAP,
-    offset: 0,
-  });
+  try {
+    const fallback = await pythonApi.get('/api/aparcaments/cerca', {
+      limite: MAX_RESULTS_FOR_MAP,
+      offset: 0,
+    });
 
-  const items = Array.isArray(fallback) ? fallback : [];
-  return items
-    .map((item) => {
-      const lat = Number(item?.latitud);
-      const lon = Number(item?.longitud);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    const items = Array.isArray(fallback) ? fallback : fallback?.resultats || [];
+    return items
+      .map((item) => {
+        const lat = Number(item?.latitud);
+        const lon = Number(item?.longitud);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
 
-      const distanceKm = computeDistanceKm(origin.lat, origin.lon, lat, lon);
-      return { item, distanceKm };
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, 100)
-    .map((entry) => entry.item);
+        const distanceKm = computeDistanceKm(origin.lat, origin.lon, lat, lon);
+        return { item, distanceKm };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.distanceKm - b.distanceKm)
+      .slice(0, 100)
+      .map((entry) => entry.item);
+  } catch {
+    return [];
+  }
 }
 
 function escapeHtml(value) {
@@ -870,11 +879,11 @@ export function initLandingSearch({
 
     parkingCatalogCache.pendingPromise = (async () => {
       try {
-        const response = await pythonApi.get('/api/aparcaments', {
+        const response = await pythonApi.get('/api/aparcaments/cerca', {
           limite: MAX_RESULTS_FOR_MAP,
           offset: 0,
         });
-        const items = Array.isArray(response) ? response : [];
+        const items = Array.isArray(response) ? response : response?.resultats || [];
 
         parkingCatalogCache = {
           items,

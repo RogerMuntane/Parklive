@@ -13,6 +13,19 @@ def serialize_value(value):
     return value
 
 
+def _extract_callproc_out_params(result_args):
+    """Extreu OUT params de callproc tolerant tuple/list/dict formats."""
+    if isinstance(result_args, (list, tuple)) and len(result_args) >= 2:
+        return result_args[-2], result_args[-1]
+
+    if isinstance(result_args, dict):
+        contribucio_id = result_args.get('p_contribucio_id')
+        error_msg = result_args.get('p_error_msg')
+        return contribucio_id, error_msg
+
+    return None, 'No s\'han pogut recuperar els OUT params de la procedure'
+
+
 def crear_contribucio(data):
     """
     Crea una nova contribució d'usuari
@@ -103,8 +116,13 @@ def crear_contribucio(data):
         result_args = cursor.callproc('sp_crear_contribucio', proc_args)
         conn.commit()
 
-        contribucio_id = result_args[7]
-        error_msg = result_args[8]
+        contribucio_id, error_msg = _extract_callproc_out_params(result_args)
+
+        # Alguns connectors no retornen els OUT params de forma consistent.
+        if (contribucio_id is None or str(contribucio_id).strip() in ('', '0')) and not error_msg:
+            cursor.execute("SELECT LAST_INSERT_ID() AS contribucio_id")
+            last_id_row = cursor.fetchone() or {}
+            contribucio_id = last_id_row.get('contribucio_id')
 
         if error_msg:
             raise ValueError(error_msg)

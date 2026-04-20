@@ -1,5 +1,10 @@
 from flask import jsonify, request
-from models.street_reports_model import create_street_report, CooldownError, COOLDOWN_SECONDS
+from models.street_reports_model import (
+    create_street_report,
+    list_street_reports,
+    CooldownError,
+    COOLDOWN_SECONDS,
+)
 
 
 def _resolve_reporter_key(payload):
@@ -17,11 +22,27 @@ def _resolve_reporter_key(payload):
     return f'ip:{remote_addr}'
 
 
+def _resolve_request_user_id(payload):
+    candidate = payload.get('usuari_id')
+    if candidate is None or str(candidate).strip() == '':
+        candidate = request.headers.get('X-User-ID')
+
+    if candidate is None or str(candidate).strip() == '':
+        return None
+
+    try:
+        return int(candidate)
+    except (TypeError, ValueError):
+        return None
+
+
 def create_street_availability_report():
     if not request.is_json:
         return jsonify({'error': 'El contingut ha de ser JSON'}), 400
 
     payload = request.get_json() or {}
+    resolved_user_id = _resolve_request_user_id(payload)
+    payload['usuari_id'] = resolved_user_id
     reporter_key = _resolve_reporter_key(payload)
 
     try:
@@ -40,3 +61,15 @@ def create_street_availability_report():
         return jsonify({'error': str(err)}), 400
     except Exception as err:
         return jsonify({'error': f'Error creando reporte: {str(err)}'}), 500
+
+
+def list_street_availability_reports():
+    try:
+        limit = request.args.get('limit', 100)
+        reports = list_street_reports(limit=limit)
+        return jsonify({
+            'total': len(reports),
+            'reports': reports,
+        }), 200
+    except Exception as err:
+        return jsonify({'error': f'Error obtenint reports: {str(err)}'}), 500
