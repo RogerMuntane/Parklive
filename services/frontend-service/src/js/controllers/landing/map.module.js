@@ -2,6 +2,7 @@ const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
 const MIN_ZOOM = 4;
 const OPEN_AIR_BASE_RADIUS_METERS = 45;
+const STREET_REPORT_MARKER_RADIUS = 7;
 
 function escapeHtml(value) {
   if (!value) return '';
@@ -79,11 +80,56 @@ export function initLandingMap() {
 
   const parkingMarkers = new Map();
   const markerGroup = leaflet.featureGroup().addTo(map);
+  const streetReportsLayer = leaflet.layerGroup().addTo(map);
 
   const updateMarkerGroup = () => {
     markerGroup.clearLayers();
     parkingMarkers.forEach((marker) => {
       markerGroup.addLayer(marker);
+    });
+  };
+
+  const renderStreetReportPopup = (report) => {
+    const statusLabel = report.status === 'occupied' ? 'Ocupada' : 'Disponible';
+    const createdAtDate = Date.parse(report.created_at);
+    const createdAtLabel = Number.isFinite(createdAtDate)
+      ? new Date(createdAtDate).toLocaleString('ca-ES')
+      : 'Ara mateix';
+    const comment = String(report.comment || '').trim();
+
+    return `
+      <div class="parking-popup">
+        <strong class="d-block mb-1 small fw-semibold">Contribució ciutadana</strong>
+        <p class="mb-1 small text-body-secondary">Estat reportat: ${escapeHtml(statusLabel)}</p>
+        ${comment ? `<p class="mb-1 small text-body">${escapeHtml(comment)}</p>` : ''}
+        <span class="small text-body-secondary">${escapeHtml(createdAtLabel)}</span>
+      </div>
+    `;
+  };
+
+  const setStreetReports = (reports = []) => {
+    streetReportsLayer.clearLayers();
+
+    reports.forEach((report) => {
+      const lat = Number(report?.latitud);
+      const lon = Number(report?.longitud);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+      const isOccupied = String(report?.status || '').toLowerCase() === 'occupied';
+      const marker = leaflet.circleMarker([lat, lon], {
+        radius: STREET_REPORT_MARKER_RADIUS,
+        color: isOccupied ? '#b42318' : '#15803d',
+        weight: 2,
+        fillColor: isOccupied ? '#ef4444' : '#22c55e',
+        fillOpacity: 0.85,
+      });
+
+      marker.bindPopup(renderStreetReportPopup(report), {
+        closeButton: false,
+        autoPanPadding: [30, 30],
+      });
+
+      streetReportsLayer.addLayer(marker);
     });
   };
 
@@ -208,6 +254,7 @@ export function initLandingMap() {
     map,
     markerGroup,
     setParkingSpots,
+    setStreetReports,
     focusParkingById,
     updateOpenPopupsLayout,
     fitToParkingSpots,

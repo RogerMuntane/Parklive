@@ -1,5 +1,12 @@
 from flask import Blueprint
-from controllers.aparcament_controller import list_aparcaments, get_aparcament_detail, search_aparcaments
+from controllers.aparcament_controller import (
+    list_aparcaments,
+    get_aparcament_detail,
+    search_aparcaments,
+    add_aparcament_favorit,
+    remove_aparcament_favorit,
+    list_aparcaments_favorits_usuari,
+)
 
 
 aparcament_routes = Blueprint("aparcaments", __name__)
@@ -21,7 +28,7 @@ def cerca_aparcaments():
     - estat: actiu, inactiu, manteniment, complet
     - tarifa_hora_min: preu mínim per hora
     - tarifa_hora_max: preu màxim per hora
-    - tarifa_dia_min: preu mínim per dia 
+    - tarifa_dia_min: preu mínim per dia
     - tarifa_dia_max: preu màxim per dia
     - accessibilitat: true/false
     - carrega_electrica: true/false
@@ -41,3 +48,21 @@ def cerca_aparcaments():
 def get_aparcament(id):
     """Endpoint GET per obtenir detall d'un aparcament"""
     return get_aparcament_detail(id)
+
+
+@aparcament_routes.route("/api/usuari/favorits", methods=["GET"])
+def get_usuari_favorits():
+    """Endpoint GET per llistar favorits d'un usuari autenticat"""
+    return list_aparcaments_favorits_usuari()
+
+
+@aparcament_routes.route("/api/usuari/favorits", methods=["POST"])
+def add_usuari_favorit():
+    """Endpoint POST per afegir un aparcament a favorits"""
+    return add_aparcament_favorit()
+
+
+@aparcament_routes.route("/api/usuari/favorits/<int:aparcament_id>", methods=["DELETE"])
+def delete_usuari_favorit(aparcament_id):
+    """Endpoint DELETE per eliminar un aparcament de favorits"""
+    return remove_aparcament_favorit(aparcament_id)

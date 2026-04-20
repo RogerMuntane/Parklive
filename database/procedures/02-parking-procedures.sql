@@ -7,6 +7,9 @@ DROP PROCEDURE IF EXISTS sp_cercar_aparcaments;
 DROP PROCEDURE IF EXISTS sp_crear_reserva;
 DROP PROCEDURE IF EXISTS sp_obtenir_historial_reserves;
 DROP PROCEDURE IF EXISTS sp_crear_contribucio;
+DROP PROCEDURE IF EXISTS sp_afegir_aparcament_favorit;
+DROP PROCEDURE IF EXISTS sp_eliminar_aparcament_favorit;
+DROP PROCEDURE IF EXISTS sp_llistar_aparcaments_favorits_usuari;
 
 -- ===========================================
 -- 1. GET /api/aparcaments (llistar tots)
@@ -59,6 +62,161 @@ BEGIN
     FROM aparcaments a
     WHERE a.estat = 'actiu'
     ORDER BY a.created_at DESC
+    LIMIT p_limit OFFSET p_offset;
+END//
+
+DELIMITER ;
+
+-- ===========================================
+-- 4. POST /api/usuari/favorits (afegir)
+-- ===========================================
+-- Afegeix un aparcament a favorits d'un usuari
+-- Exemple: CALL sp_afegir_aparcament_favorit(1, 10, @resultat, @error_msg);
+
+DELIMITER //
+
+CREATE PROCEDURE sp_afegir_aparcament_favorit(
+    IN p_usuari_id INT,
+    IN p_aparcament_id INT,
+    OUT p_resultat BOOLEAN,
+    OUT p_error_msg VARCHAR(500)
+)
+BEGIN
+    DECLARE v_usuari_existeix INT DEFAULT 0;
+    DECLARE v_aparcament_existeix INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultat = FALSE;
+        SET p_error_msg = 'Error SQL en afegir l\'aparcament a favorits';
+    END;
+
+    START TRANSACTION;
+
+    SELECT COUNT(*) INTO v_usuari_existeix
+    FROM usuaris
+    WHERE id = p_usuari_id;
+
+    IF v_usuari_existeix = 0 THEN
+        SET p_resultat = FALSE;
+        SET p_error_msg = 'Usuari no trobat';
+        ROLLBACK;
+    ELSE
+        SELECT COUNT(*) INTO v_aparcament_existeix
+        FROM aparcaments
+        WHERE id = p_aparcament_id;
+
+        IF v_aparcament_existeix = 0 THEN
+            SET p_resultat = FALSE;
+            SET p_error_msg = 'Aparcament no trobat';
+            ROLLBACK;
+        ELSE
+            INSERT IGNORE INTO usuaris_favorits_aparcaments (
+                usuari_id,
+                aparcament_id
+            ) VALUES (
+                p_usuari_id,
+                p_aparcament_id
+            );
+
+            SET p_resultat = TRUE;
+            SET p_error_msg = NULL;
+            COMMIT;
+        END IF;
+    END IF;
+END//
+
+DELIMITER ;
+
+-- ===========================================
+-- 5. DELETE /api/usuari/favorits/:aparcament_id (eliminar)
+-- ===========================================
+-- Elimina un aparcament de favorits d'un usuari
+-- Exemple: CALL sp_eliminar_aparcament_favorit(1, 10, @resultat, @files_afectades, @error_msg);
+
+DELIMITER //
+
+CREATE PROCEDURE sp_eliminar_aparcament_favorit(
+    IN p_usuari_id INT,
+    IN p_aparcament_id INT,
+    OUT p_resultat BOOLEAN,
+    OUT p_files_afectades INT,
+    OUT p_error_msg VARCHAR(500)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultat = FALSE;
+        SET p_files_afectades = 0;
+        SET p_error_msg = 'Error SQL en eliminar l\'aparcament de favorits';
+    END;
+
+    START TRANSACTION;
+
+    DELETE FROM usuaris_favorits_aparcaments
+    WHERE usuari_id = p_usuari_id
+      AND aparcament_id = p_aparcament_id;
+
+    SET p_files_afectades = ROW_COUNT();
+    SET p_resultat = TRUE;
+    SET p_error_msg = NULL;
+
+    COMMIT;
+END//
+
+DELIMITER ;
+
+-- ===========================================
+-- 6. GET /api/usuari/favorits (llistar)
+-- ===========================================
+-- Llista els aparcaments favorits d'un usuari, ordenats per data d'alta
+-- Exemple: CALL sp_llistar_aparcaments_favorits_usuari(1, 20, 0);
+
+DELIMITER //
+
+CREATE PROCEDURE sp_llistar_aparcaments_favorits_usuari(
+    IN p_usuari_id INT,
+    IN p_limit INT,
+    IN p_offset INT
+)
+BEGIN
+    SELECT
+        a.id,
+        a.nom,
+        a.tipus,
+        a.adreca,
+        a.ciutat,
+        a.codi_postal,
+        a.latitud,
+        a.longitud,
+        a.capacitat_total,
+        a.places_disponibles,
+        ROUND((a.places_disponibles / a.capacitat_total) * 100, 2) as percentatge_disponibilitat,
+        a.tarifa_hora,
+        a.tarifa_dia,
+        a.obert_24h,
+        a.accessibilitat,
+        a.carrega_electrica,
+        a.videovigilancia,
+        a.altura_maxima,
+        a.estat,
+        COALESCE((
+            SELECT ROUND(AVG(v.puntuacio), 2)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS valoracio_mitjana,
+        COALESCE((
+            SELECT COUNT(*)
+            FROM valoracions v
+            WHERE v.aparcament_id = a.id
+        ), 0) AS total_valoracions,
+        ufa.created_at AS data_favorit
+    FROM usuaris_favorits_aparcaments ufa
+    JOIN aparcaments a ON a.id = ufa.aparcament_id
+    WHERE ufa.usuari_id = p_usuari_id
+    ORDER BY ufa.created_at DESC
     LIMIT p_limit OFFSET p_offset;
 END//
 

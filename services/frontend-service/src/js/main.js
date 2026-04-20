@@ -391,6 +391,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       initProfileInfoSaveForm,
       initProfilePlanSection,
       initProfileHistorySection,
+      initProfileFavoritesSection,
       initProfileImageUpload
     } = await import('./controllers/profile.controller.js');
     const { initReserves } = await import('./controllers/reserves.controller.js');
@@ -403,6 +404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfileInfoSaveForm();
     initProfilePlanSection();
     initProfileHistorySection();
+    initProfileFavoritesSection();
     initReserves();
     initAdminUserCRUD();
     initEstadistiques();
@@ -433,6 +435,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       password: 'Canviar contrasenya',
       reservations: 'Les Teves Reserves Actives',
       history: 'Historial',
+      favorites: 'Aparcaments favorits',
       payment: 'Mètode de pagament',
       plan: 'Millorar el pla',
       manage: 'Gestionar subscripció',
