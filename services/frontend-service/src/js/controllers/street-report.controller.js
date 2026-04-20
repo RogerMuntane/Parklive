@@ -1,5 +1,6 @@
 import { pythonApi } from '../api.js';
 import { getUserId } from '../utils.js';
+import { appendStreetReportToCache } from './street-reports-cache.service.js';
 
 const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
@@ -200,6 +201,7 @@ export function initStreetReport() {
 
     try {
       const response = await pythonApi.post('/api/reports/street-availability', payload);
+      appendStreetReportToCache(response?.report);
       const successCooldownSeconds = Number(response?.cooldown_seconds);
       const cooldownSeconds = Number.isFinite(successCooldownSeconds) && successCooldownSeconds > 0
         ? successCooldownSeconds

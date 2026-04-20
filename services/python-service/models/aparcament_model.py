@@ -1,4 +1,4 @@
-from models.db_connection import get_db_connection
+from models.db_connection import get_db_connection, get_new_connection
 from shared.serializers import serialize_row, serialize_rows
 import math
 
@@ -26,7 +26,7 @@ def get_aparcament_by_id(aparcament_id):
 
     # Procedure equivalent: sp_obtenir_aparcament_detall(aparcament_id)
     cursor.callproc('sp_obtenir_aparcament_detall', [aparcament_id])
-    
+
     aparcament = None
     fotos = []
     valoracions = []
@@ -257,3 +257,77 @@ def get_aparcaments_by_filters(filters):
             'total_pagines': math.ceil(total / limite) if limite > 0 else 1
         }
     }
+
+
+def add_user_favorite_parking(usuari_id, aparcament_id):
+    """Afegeix un aparcament a favorits per un usuari."""
+    conn = get_new_connection() or get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        proc_args = [usuari_id, aparcament_id, None, None]
+        result_args = cursor.callproc('sp_afegir_aparcament_favorit', proc_args)
+        # Consumim qualsevol result set pendent per deixar la connexió neta.
+        for result in cursor.stored_results():
+            result.fetchall()
+        conn.commit()
+
+        resultat = bool(result_args[2])
+        error_msg = result_args[3]
+
+        if error_msg:
+            raise ValueError(error_msg)
+
+        return {'ok': resultat}
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def remove_user_favorite_parking(usuari_id, aparcament_id):
+    """Elimina un aparcament de favorits per un usuari."""
+    conn = get_new_connection() or get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        proc_args = [usuari_id, aparcament_id, None, None, None]
+        result_args = cursor.callproc('sp_eliminar_aparcament_favorit', proc_args)
+        # Consumim qualsevol result set pendent per deixar la connexió neta.
+        for result in cursor.stored_results():
+            result.fetchall()
+        conn.commit()
+
+        resultat = bool(result_args[2])
+        files_afectades = int(result_args[3] or 0)
+        error_msg = result_args[4]
+
+        if error_msg:
+            raise ValueError(error_msg)
+
+        return {
+            'ok': resultat,
+            'eliminat': files_afectades > 0,
+            'files_afectades': files_afectades,
+        }
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_user_favorite_parkings(usuari_id, limit=1000, offset=0):
+    """Llista els aparcaments favorits d'un usuari."""
+    conn = get_new_connection() or get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.callproc('sp_llistar_aparcaments_favorits_usuari', [usuari_id, limit, offset])
+        favorits = []
+        for result in cursor.stored_results():
+            rows = result.fetchall()
+            if rows:
+                favorits.extend(rows)
+
+        return serialize_rows(favorits)
+    finally:
+        cursor.close()
+        conn.close()

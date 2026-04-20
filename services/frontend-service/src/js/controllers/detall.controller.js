@@ -7,7 +7,11 @@
  */
 
 import { pythonApi } from '../api.js';
-import { getQueryParam } from '../utils.js';
+import { getQueryParam, isAuthenticated, showBootstrapAlert } from '../utils.js';
+import {
+  isFavoriteParking,
+  toggleFavoriteParking,
+} from './favorits.service.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -296,6 +300,54 @@ function renderDetall(a) {
   renderValoracions(a.valoracions || []);
 }
 
+async function initDetallFavoriteButton(aparcamentId) {
+  const favoriteBtn = document.querySelector('[data-detall="favorit-btn"]');
+  const favoriteIcon = document.querySelector('[data-detall="favorit-icon"]');
+  const favoriteText = document.querySelector('[data-detall="favorit-text"]');
+
+  if (!favoriteBtn || !favoriteIcon || !favoriteText) return;
+
+  if (!isAuthenticated()) {
+    favoriteBtn.classList.add('d-none');
+    return;
+  }
+
+  favoriteBtn.classList.remove('d-none');
+
+  const syncUi = (isFavorite) => {
+    favoriteIcon.className = `bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'} me-1`;
+    favoriteText.textContent = isFavorite ? 'Treure favorit' : 'Afegir favorit';
+    favoriteBtn.setAttribute(
+      'aria-label',
+      isFavorite ? 'Eliminar aparcament de favorits' : 'Afegir aparcament a favorits',
+    );
+  };
+
+  try {
+    syncUi(await isFavoriteParking(aparcamentId));
+  } catch {
+    syncUi(false);
+  }
+
+  favoriteBtn.addEventListener('click', async () => {
+    favoriteBtn.disabled = true;
+    try {
+      const nextIsFavorite = await toggleFavoriteParking(aparcamentId);
+      syncUi(nextIsFavorite);
+      showBootstrapAlert(
+        'success',
+        nextIsFavorite
+          ? 'Aparcament afegit a favorits'
+          : 'Aparcament eliminat de favorits',
+      );
+    } catch (error) {
+      showBootstrapAlert('danger', error?.message || 'No s\'ha pogut actualitzar el favorit');
+    } finally {
+      favoriteBtn.disabled = false;
+    }
+  });
+}
+
 /** Renderitza la llista de ressenyes recents */
 function renderValoracions(valoracions) {
   const container = document.querySelector('[data-detall-list="valoracions"]');
@@ -374,6 +426,7 @@ export async function initDetallAparcament() {
   try {
     const aparcament = await pythonApi.get(`/api/aparcaments/${encodeURIComponent(id)}`);
     renderDetall(aparcament);
+    await initDetallFavoriteButton(aparcament.id || id);
     showContent();
 
 
