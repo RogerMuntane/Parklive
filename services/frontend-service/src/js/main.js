@@ -491,8 +491,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             el.classList.remove('d-none');
           });
 
-          // Ocultar seccions que l'admin no necessita (reserves, historial, pagaments, estadístiques, etc.)
-          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics'];
+          // Ocultar seccions que l'admin no necessita (reserves, historial, pagaments, estadístiques, favorits, etc.)
+          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics', 'favorites'];
           sectionsToHide.forEach(sec => {
             const btn = document.querySelector(`.sidebar-nav-item[data-section="${sec}"]`);
             if (btn) btn.style.display = 'none';

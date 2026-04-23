@@ -117,13 +117,13 @@ def get_subscription_details():
         return jsonify({'error': 'No s\'ha trobat cap subscripció activa'}), 404
     
     return jsonify({
-        'subscription_id': sub.id,
-        'status': sub.status,
-        'current_period_end': sub.current_period_end,  # timestamp
-        'cancel_at_period_end': sub.cancel_at_period_end,
-        'plan_amount': sub.plan.amount / 100,
-        'plan_interval': sub.plan.interval,
-        'created': sub.start_date if hasattr(sub, 'start_date') and sub.start_date else sub.created  # timestamp d'inici real
+        'subscription_id': sub['id'] if isinstance(sub, dict) else sub.id,
+        'status': sub['status'] if isinstance(sub, dict) else sub.status,
+        'current_period_end': sub['current_period_end'] if isinstance(sub, dict) else sub.current_period_end,
+        'cancel_at_period_end': sub['cancel_at_period_end'] if isinstance(sub, dict) else sub.cancel_at_period_end,
+        'plan_amount': (sub['plan'].amount if isinstance(sub, dict) else sub.plan.amount) / 100,
+        'plan_interval': sub['plan'].interval if isinstance(sub, dict) else sub.plan.interval,
+        'created': sub['created'] if isinstance(sub, dict) else (sub.start_date if hasattr(sub, 'start_date') and sub.start_date else sub.created)
     }), 200
 
 
