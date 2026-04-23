@@ -706,6 +706,7 @@ function renderResults({
   spots.forEach((spot) => {
     const spotId = String(spot.id);
     const isSpotFavorite = favoriteIds.has(spotId);
+    const favoriteStateClass = isSpotFavorite ? 'is-active' : '';
     const favoriteAriaLabel = isSpotFavorite
       ? 'Eliminar de favorits'
       : 'Afegir a favorits';
@@ -734,7 +735,7 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-clock"></i>${escapeHtml(spot.scheduleLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
-        <div class="d-flex flex-wrap gap-1 mt-1" aria-label="Serveis del parking">
+        <div class="parking-result-tags d-flex flex-wrap gap-1 mt-1" aria-label="Serveis del parking">
           <span class="badge rounded-pill text-bg-light border fw-normal">Alt: ${escapeHtml(spot.maxHeightLabel)}</span>
           ${spot.hasEv
             ? '<span class="badge rounded-pill text-bg-light border fw-normal">Elèctric</span>'
@@ -746,19 +747,20 @@ function renderResults({
             ? '<span class="badge rounded-pill text-bg-light border fw-normal">CCTV</span>'
             : ''}
         </div>
-        <div class="d-flex align-items-center gap-1 mt-2">
+        <div class="parking-result-actions d-flex align-items-center gap-2 mt-2">
           ${favoritesEnabled ? `
             <button
               type="button"
-              class="btn btn-outline-danger btn-sm flex-shrink-0"
+              class="btn parking-favorite-btn btn-sm flex-shrink-0 ${favoriteStateClass}"
               data-action="toggle-favorite"
               data-parking-id="${escapeHtml(spotId)}"
               aria-label="${favoriteAriaLabel}"
+              title="${favoriteAriaLabel}"
             >
               <i class="bi ${favoriteIconClass}"></i>
             </button>
           ` : ''}
-          <button type="button" class="btn btn-danger btn-sm w-100" data-action="open-parking" data-parking-id="${escapeHtml(spot.id)}">
+          <button type="button" class="btn btn-danger btn-sm w-100 parking-detail-btn" data-action="open-parking" data-parking-id="${escapeHtml(spot.id)}">
             Veure detall
           </button>
         </div>
@@ -790,8 +792,14 @@ function renderResults({
           if (icon) {
             icon.className = `bi ${nextIsFavorite ? 'bi-heart-fill' : 'bi-heart'}`;
           }
+
+          button.classList.toggle('is-active', nextIsFavorite);
           button.setAttribute(
             'aria-label',
+            nextIsFavorite ? 'Eliminar de favorits' : 'Afegir a favorits',
+          );
+          button.setAttribute(
+            'title',
             nextIsFavorite ? 'Eliminar de favorits' : 'Afegir a favorits',
           );
         } catch (error) {
@@ -1089,6 +1097,7 @@ export function initLandingSearch({
     centerOnUserLocation = false,
     forceIgnoreCityFilter = false,
     expandRadiusFromUserLocation = false,
+    preserveViewport = false,
   } = {}) => {
     const targetPage = resetPage ? 1 : page;
     const searchTerm = document.getElementById('mapSearchInput')?.value.trim() || '';
@@ -1163,7 +1172,10 @@ export function initLandingSearch({
           return nextIsFavorite;
         },
       });
-      setParkingSpots(visibleSpots);
+      setParkingSpots(visibleSpots, {
+        fitBounds: !preserveViewport,
+        openFirstPopup: !preserveViewport,
+      });
 
       const shouldCenterAfterRender = (centerOnUserLocation || locationResolvedFromTerm) && userLocation;
       if (shouldCenterAfterRender) {

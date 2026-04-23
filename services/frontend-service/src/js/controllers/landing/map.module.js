@@ -133,7 +133,7 @@ export function initLandingMap() {
     });
   };
 
-  const setParkingSpots = (spots = []) => {
+  const setParkingSpots = (spots = [], { fitBounds = true, openFirstPopup = true } = {}) => {
     parkingMarkers.forEach((marker) => {
       map.removeLayer(marker);
     });
@@ -177,10 +177,12 @@ export function initLandingMap() {
     });
 
     updateMarkerGroup();
-    fitToParkingSpots();
+    if (fitBounds) {
+      fitToParkingSpots();
+    }
 
     const firstMarker = parkingMarkers.values().next().value;
-    if (firstMarker) {
+    if (firstMarker && openFirstPopup) {
       firstMarker.openPopup();
     }
   };
