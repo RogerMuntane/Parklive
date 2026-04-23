@@ -268,7 +268,6 @@ CREATE TABLE respostes_valoracions (
 CREATE TABLE contribucions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
-    aparcament_id INT UNSIGNED NULL,
     estat_reportat ENUM('lliure', 'ocupat', 'parcial') NULL,
     dades JSON,
     estat_validacio ENUM('pendent', 'validada', 'rebutjada') DEFAULT 'pendent',
@@ -281,9 +280,7 @@ CREATE TABLE contribucions (
     longitud DECIMAL(11, 8),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
-    FOREIGN KEY (aparcament_id) REFERENCES aparcaments(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
-    INDEX idx_aparcament (aparcament_id),
     INDEX idx_estat_validacio (estat_validacio),
     INDEX idx_created_at (created_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
