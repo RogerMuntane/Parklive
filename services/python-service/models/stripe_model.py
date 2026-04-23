@@ -308,7 +308,7 @@ def get_active_subscription(user_id):
 
         # Intent 1: buscar subscripció amb estat 'activa'
         cursor.execute(
-            "SELECT stripe_subscription_id, estat FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' ORDER BY id DESC LIMIT 1",
+            "SELECT id, stripe_subscription_id, estat FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' ORDER BY id DESC LIMIT 1",
             (user_id,)
         )
         row = cursor.fetchone()
@@ -316,7 +316,7 @@ def get_active_subscription(user_id):
         # Si no trobem 'activa', fem un diagnòstic per saber quins estats hi ha
         if not row:
             cursor.execute(
-                "SELECT stripe_subscription_id, estat FROM subscripcions WHERE usuari_id = %s ORDER BY id DESC LIMIT 3",
+                "SELECT id, stripe_subscription_id, estat FROM subscripcions WHERE usuari_id = %s ORDER BY id DESC LIMIT 3",
                 (user_id,)
             )
             all_rows = cursor.fetchall()
@@ -332,19 +332,52 @@ def get_active_subscription(user_id):
                     row = best_row
             else:
                 print(f"[DB][DIAG] Cap subscripció trobada a la BD per a l'usuari {user_id}")
-        else:
-            print(f"[DB] Subscripció activa trobada per a l'usuari {user_id}: {row['stripe_subscription_id']}")
-
-        cursor.close()
 
         if not row or not row['stripe_subscription_id']:
+            if row:
+                # Fallback a dades locals si tenim registre a la BD però no ID de Stripe
+                print(f"[Stripe][Fallback] Usuari {user_id} té subscripció a la BD ({row['estat']}) però sense ID de Stripe.")
+                # Obtenim dades extres per completar el mock
+                cursor.execute("SELECT * FROM subscripcions WHERE id = %s", (row['id'],))
+                full_row = cursor.fetchone()
+                cursor.close()
+                return {
+                    'id': f"local_{full_row['id']}",
+                    'status': full_row['estat'],
+                    'current_period_end': int(datetime.combine(full_row['data_final'], datetime.min.time()).timestamp()),
+                    'cancel_at_period_end': not full_row['auto_renovacio'],
+                    'plan': type('obj', (object,), {'amount': float(full_row['preu']) * 100, 'interval': full_row['tipus']}),
+                    'created': int(datetime.combine(full_row['data_inici'], datetime.min.time()).timestamp()),
+                    'is_local': True
+                }
+            cursor.close()
             return None
 
-        subscription = stripe.Subscription.retrieve(row['stripe_subscription_id'])
-        print(f"[Stripe] Subscripció recuperada: id={subscription.id}, status={subscription.status}")
-        return subscription
+        try:
+            subscription = stripe.Subscription.retrieve(row['stripe_subscription_id'])
+            print(f"[Stripe] Subscripció recuperada: id={subscription.id}, status={subscription.status}")
+            cursor.close()
+            return subscription
+        except Exception as e:
+            print(f"[Stripe][Error] Error recuperant de Stripe ({row['stripe_subscription_id']}): {e}")
+            # Fallback a dades locals si Stripe falla però tenim el registre
+            cursor.execute("SELECT * FROM subscripcions WHERE id = %s", (row['id'],))
+            full_row = cursor.fetchone()
+            cursor.close()
+            return {
+                'id': row['stripe_subscription_id'],
+                'status': full_row['estat'],
+                'current_period_end': int(datetime.combine(full_row['data_final'], datetime.min.time()).timestamp()),
+                'cancel_at_period_end': not full_row['auto_renovacio'],
+                'plan': type('obj', (object,), {'amount': float(full_row['preu']) * 100, 'interval': full_row['tipus']}),
+                'created': int(datetime.combine(full_row['data_inici'], datetime.min.time()).timestamp()),
+                'is_local': True
+            }
     except Exception as e:
-        print(f"[Stripe] Error recuperant subscripció: {e}")
+        print(f"[Stripe] Error general en get_active_subscription: {e}")
+        if 'cursor' in locals() and cursor:
+            try: cursor.close()
+            except: pass
         return None
     finally:
         conn.close()
