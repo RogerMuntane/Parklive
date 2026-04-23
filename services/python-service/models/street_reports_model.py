@@ -135,7 +135,6 @@ def _parse_user_id(raw_user_id):
 def _insert_street_report_row(user_id, status, report_payload, lat, lon):
     contribucio = crear_contribucio({
         'usuari_id': user_id,
-        'aparcament_id': None,
         'estat_reportat': STATUS_TO_DB[status],
         'dades': report_payload,
         'latitud': lat,
@@ -216,10 +215,24 @@ def list_street_reports(limit=100):
     cursor = conn.cursor(dictionary=True)
     rows = []
     try:
-        proc_args = [safe_limit, 0]
-        cursor.callproc('sp_llistar_contribucions_street_reports', proc_args)
-        for result in cursor.stored_results():
-            rows.extend(result.fetchall())
+        cursor.execute(
+            """
+            SELECT
+                c.id,
+                c.usuari_id,
+                c.estat_reportat,
+                c.dades,
+                c.latitud,
+                c.longitud,
+                c.created_at
+            FROM contribucions c
+            WHERE JSON_UNQUOTE(JSON_EXTRACT(c.dades, '$.source')) = 'street_report'
+            ORDER BY c.created_at DESC
+            LIMIT %s OFFSET 0
+            """,
+            (safe_limit,),
+        )
+        rows = cursor.fetchall()
     finally:
         cursor.close()
 

@@ -219,6 +219,7 @@ BEGIN
     SELECT
         c.id,
         c.usuari_id,
+        c.aparcament_id,
         c.estat_reportat,
         c.dades,
         c.latitud,
@@ -226,6 +227,7 @@ BEGIN
         c.created_at
     FROM contribucions c
     WHERE JSON_UNQUOTE(JSON_EXTRACT(c.dades, '$.source')) = 'street_report'
+      AND c.aparcament_id IS NULL
     ORDER BY c.created_at DESC
     LIMIT p_limit OFFSET p_offset;
 END//

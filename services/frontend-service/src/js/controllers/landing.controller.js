@@ -20,14 +20,67 @@ let landingInitialized = false;
 const GEOLOCATION_ZOOM = 15;
 const GEOLOCATION_TIMEOUT_MS = 6000;
 const SEARCH_LOCATION_ZOOM = 15;
+const MAP_DYNAMIC_LOAD_DEBOUNCE_MS = 380;
+const MAP_DYNAMIC_MIN_ZOOM = 12;
 
-async function refreshStreetReportsFromApi(setStreetReports) {
+function computeDistanceKm(from, to) {
+  const earthRadiusKm = 6371;
+  const toRad = (value) => (value * Math.PI) / 180;
+
+  const dLat = toRad(to.lat - from.lat);
+  const dLon = toRad(to.lon - from.lon);
+  const lat1 = toRad(from.lat);
+  const lat2 = toRad(to.lat);
+
+  const a =
+    Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+
+  return earthRadiusKm * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function getMapViewportContext(map) {
+  if (!map || typeof map.getCenter !== 'function' || typeof map.getBounds !== 'function') {
+    return null;
+  }
+
+  const center = map.getCenter();
+  const bounds = map.getBounds();
+  if (!center || !bounds) return null;
+
+  const northEast = bounds.getNorthEast();
+  const centerPoint = { lat: Number(center.lat), lon: Number(center.lng) };
+  const northEastPoint = { lat: Number(northEast.lat), lon: Number(northEast.lng) };
+
+  const radiusKm = computeDistanceKm(centerPoint, northEastPoint);
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0) return null;
+
+  return {
+    center: centerPoint,
+    radiusKm: Math.max(0.3, Math.min(radiusKm, 50)),
+  };
+}
+
+async function refreshStreetReportsFromApi(setStreetReports, viewport = null) {
   try {
     const response = await pythonApi.get('/api/reports/street-availability', {
-      limit: 200,
+      limit: 500,
     });
     const reports = Array.isArray(response?.reports) ? response.reports : [];
-    const merged = mergeStreetReportsIntoCache(reports);
+
+    let visibleReports = reports;
+    if (viewport?.center && Number.isFinite(viewport?.radiusKm)) {
+      visibleReports = reports.filter((report) => {
+        const lat = Number(report?.latitud);
+        const lon = Number(report?.longitud);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+
+        const distanceKm = computeDistanceKm(viewport.center, { lat, lon });
+        return distanceKm <= viewport.radiusKm;
+      });
+    }
+
+    const merged = mergeStreetReportsIntoCache(visibleReports);
     setStreetReports(merged);
   } catch {
     // Si falla l'API, mantenim els reports de cache local.
@@ -120,6 +173,49 @@ export function initLanding() {
 
   toggleFilters(false);
   tryAutoLocateAndSearch({ map, setUserLocation, runSearch });
+
+  let mapDynamicLoadTimerId = null;
+  let mapDynamicRequestId = 0;
+
+  const scheduleMapDynamicLoad = () => {
+    if (map.getZoom() < MAP_DYNAMIC_MIN_ZOOM) {
+      if (mapDynamicLoadTimerId) {
+        globalThis.clearTimeout(mapDynamicLoadTimerId);
+        mapDynamicLoadTimerId = null;
+      }
+
+      mapDynamicRequestId += 1;
+      setParkingSpots([], { fitBounds: false, openFirstPopup: false });
+      setStreetReports([]);
+      return;
+    }
+
+    if (mapDynamicLoadTimerId) {
+      globalThis.clearTimeout(mapDynamicLoadTimerId);
+    }
+
+    mapDynamicLoadTimerId = globalThis.setTimeout(async () => {
+      mapDynamicLoadTimerId = null;
+      const viewport = getMapViewportContext(map);
+      if (!viewport) return;
+
+      const currentRequestId = ++mapDynamicRequestId;
+      setUserLocation(viewport.center);
+
+      await runSearch({
+        resetPage: true,
+        forceIgnoreCityFilter: true,
+        expandRadiusFromUserLocation: true,
+        preserveViewport: true,
+      });
+
+      if (currentRequestId !== mapDynamicRequestId) return;
+      await refreshStreetReportsFromApi(setStreetReports, viewport);
+    }, MAP_DYNAMIC_LOAD_DEBOUNCE_MS);
+  };
+
+  map.on('zoomend', scheduleMapDynamicLoad);
+  map.on('moveend', scheduleMapDynamicLoad);
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
