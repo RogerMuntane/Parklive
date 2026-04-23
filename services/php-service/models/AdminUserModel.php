@@ -17,22 +17,42 @@ class AdminUserModel
     }
 
     /**
-     * Obté tots els usuaris amb opció de cerca
+     * Obté els usuaris amb opció de cerca, filtre per rol i paginació
      */
-    public function getAllUsers($search = '')
+    public function getAllUsers($search = '', $role = '', $limit = 10, $offset = 0)
     {
         try {
             $query = "SELECT id, nom, cognoms, email, telefon, tipus_usuari, estat, data_registre, foto_perfil 
                       FROM usuaris 
                       WHERE estat != 'eliminat'";
             
+            $params = [];
+            $types = '';
+
             if (!empty($search)) {
-                $search = "%$search%";
+                $searchParam = "%$search%";
                 $query .= " AND (nom LIKE ? OR cognoms LIKE ? OR email LIKE ?)";
-                $stmt = $this->conexio->prepare($query);
-                $stmt->bind_param('sss', $search, $search, $search);
-            } else {
-                $stmt = $this->conexio->prepare($query);
+                $params[] = $searchParam;
+                $params[] = $searchParam;
+                $params[] = $searchParam;
+                $types .= 'sss';
+            }
+
+            if (!empty($role)) {
+                $query .= " AND tipus_usuari = ?";
+                $params[] = $role;
+                $types .= 's';
+            }
+
+            // Paginació
+            $query .= " ORDER BY id DESC LIMIT ? OFFSET ?";
+            $params[] = $limit;
+            $params[] = $offset;
+            $types .= 'ii';
+
+            $stmt = $this->conexio->prepare($query);
+            if (!empty($params)) {
+                $stmt->bind_param($types, ...$params);
             }
 
             $stmt->execute();
@@ -44,6 +64,49 @@ class AdminUserModel
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
             return [];
+        }
+    }
+
+    /**
+     * Compta el nombre total d'usuaris per a una cerca i rol específics
+     */
+    public function getTotalUsersCount($search = '', $role = '')
+    {
+        try {
+            $query = "SELECT COUNT(*) as total FROM usuaris WHERE estat != 'eliminat'";
+            
+            $params = [];
+            $types = '';
+
+            if (!empty($search)) {
+                $searchParam = "%$search%";
+                $query .= " AND (nom LIKE ? OR cognoms LIKE ? OR email LIKE ?)";
+                $params[] = $searchParam;
+                $params[] = $searchParam;
+                $params[] = $searchParam;
+                $types .= 'sss';
+            }
+
+            if (!empty($role)) {
+                $query .= " AND tipus_usuari = ?";
+                $params[] = $role;
+                $types .= 's';
+            }
+
+            $stmt = $this->conexio->prepare($query);
+            if (!empty($params)) {
+                $stmt->bind_param($types, ...$params);
+            }
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+            
+            return (int) $row['total'];
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+            return 0;
         }
     }
 

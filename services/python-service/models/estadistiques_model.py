@@ -207,13 +207,13 @@ def get_contribucions_per_tipus(usuari_id):
     try:
         cursor.execute("""
             SELECT
-                tipus,
+                estat_reportat AS tipus,
                 validada,
                 COUNT(*) AS count
             FROM contribucions
             WHERE usuari_id = %s
-            GROUP BY tipus, validada
-            ORDER BY tipus
+            GROUP BY estat_reportat, validada
+            ORDER BY estat_reportat
         """, (usuari_id,))
 
         rows = cursor.fetchall()

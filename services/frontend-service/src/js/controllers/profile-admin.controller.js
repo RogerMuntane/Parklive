@@ -46,34 +46,44 @@ export function initAdminUserCRUD() {
     });
 }
 
-async function loadUsers() {
+let currentPage = 1;
+
+async function loadUsers(page = 1) {
+    currentPage = page;
     const tableBody = document.getElementById('users-table-body');
     const searchTerm = document.getElementById('user-search')?.value || '';
     const roleFilter = document.getElementById('filter-role')?.value || '';
 
     if (!tableBody) return;
 
+    tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregant...</span></div></td></tr>`;
+
     try {
-        const response = await fetch(`${PHP_API_URL}/controllers/AdminUserController.php?search=${encodeURIComponent(searchTerm)}`, {
+        const queryParams = new URLSearchParams({
+            search: searchTerm,
+            role: roleFilter,
+            page: currentPage,
+            limit: 10
+        });
+
+        const response = await fetch(`${PHP_API_URL}/controllers/AdminUserController.php?${queryParams.toString()}`, {
             credentials: 'include'
         });
         const result = await response.json();
 
         if (result.success) {
-            let users = result.data;
-
-            // Filtre local per rol (si no està implementat al backend)
-            if (roleFilter) {
-                users = users.filter(u => u.tipus_usuari === roleFilter);
+            renderUsers(result.data);
+            if (result.pagination) {
+                renderPagination(result.pagination);
             }
-
-            renderUsers(users);
         } else {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${result.error || 'Error al carregar usuaris'}</td></tr>`;
+            document.getElementById('users-pagination').innerHTML = '';
         }
     } catch (err) {
         console.error('[ParkLive] Error carregant usuaris:', err);
         tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error de connexió</td></tr>`;
+        document.getElementById('users-pagination').innerHTML = '';
     }
 }
 
@@ -129,6 +139,60 @@ function renderUsers(users) {
             </td>
         </tr>
     `).join('');
+}
+
+function renderPagination(pagination) {
+    const paginationContainer = document.getElementById('users-pagination');
+    if (!paginationContainer) return;
+
+    if (pagination.total_pages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    const { page: currentPage, total_pages: totalPages } = pagination;
+    const isPrevDisabled = currentPage === 1;
+    const isNextDisabled = currentPage === totalPages;
+
+    let pagesHtml = '';
+    for (let i = 1; i <= totalPages; i++) {
+        const isActive = i === currentPage;
+        pagesHtml += `
+            <li class="page-item ${isActive ? 'active' : ''}">
+                <button class="page-link" data-page="${i}" ${isActive ? 'aria-current="page"' : ''}>
+                    ${i}
+                </button>
+            </li>`;
+    }
+
+    paginationContainer.innerHTML = `
+        <li class="page-item ${isPrevDisabled ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage - 1}"
+                ${isPrevDisabled ? 'disabled aria-disabled="true"' : ''}
+                aria-label="Pàgina anterior">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </li>
+        ${pagesHtml}
+        <li class="page-item ${isNextDisabled ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage + 1}"
+                ${isNextDisabled ? 'disabled aria-disabled="true"' : ''}
+                aria-label="Pàgina següent">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </li>
+    `;
+
+    // Add event listeners to buttons
+    paginationContainer.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const newPage = parseInt(btn.dataset.page);
+            if (newPage && newPage !== currentPage && newPage > 0 && newPage <= totalPages) {
+                loadUsers(newPage);
+            }
+        });
+    });
 }
 
 async function handleFormSubmit(e) {

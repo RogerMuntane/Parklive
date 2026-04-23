@@ -35,9 +35,28 @@ class AdminUserController
 
         switch ($method) {
             case 'GET':
-                $search = $_GET['search'] ?? '';
-                $users = $this->model->getAllUsers($search);
-                $this->respond(['success' => true, 'data' => $users]);
+                $search = trim($_GET['search'] ?? '');
+                $role = trim($_GET['role'] ?? '');
+                
+                $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+                $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
+                $offset = ($page - 1) * $limit;
+
+                $total = $this->model->getTotalUsersCount($search, $role);
+                $users = $this->model->getAllUsers($search, $role, $limit, $offset);
+                
+                $totalPages = ceil($total / $limit);
+
+                $this->respond([
+                    'success' => true, 
+                    'data' => $users,
+                    'pagination' => [
+                        'total' => $total,
+                        'page' => $page,
+                        'limit' => $limit,
+                        'total_pages' => $totalPages
+                    ]
+                ]);
                 break;
 
             case 'POST':
