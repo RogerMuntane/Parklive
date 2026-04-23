@@ -3,5 +3,3 @@
 *.pyc
 *.pyc
 googleAuth.json
-.env
-*.env
