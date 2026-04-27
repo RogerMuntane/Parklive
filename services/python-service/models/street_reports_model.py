@@ -175,7 +175,7 @@ def _build_street_report_response(created, reporter_key, fallback_created_at):
         'status': DB_TO_STATUS.get(created.get('estat_reportat'), 'available'),
         'latitud': round(float(lat), 6),
         'longitud': round(float(lon), 6),
-        'comment': _normalize_comment(details.get('comment')),
+        'comment': _normalize_comment(details.get('comment') or details.get('comentari')),
         'usuari_id': created.get('usuari_id'),
         'reporter_key': reporter_key,
         'created_at': created_at or fallback_created_at,
@@ -193,7 +193,6 @@ def create_street_report(data, reporter_key=None):
     _validate_cooldown(reporter_key, now_dt)
 
     report_payload = {
-        'source': 'street_report',
         'comment': comment,
         'reporter_key': reporter_key,
     }
@@ -226,7 +225,6 @@ def list_street_reports(limit=100):
                 c.longitud,
                 c.created_at
             FROM contribucions c
-            WHERE JSON_UNQUOTE(JSON_EXTRACT(c.dades, '$.source')) = 'street_report'
             ORDER BY c.created_at DESC
             LIMIT %s OFFSET 0
             """,

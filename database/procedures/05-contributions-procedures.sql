@@ -56,7 +56,6 @@ BEGIN
         -- Insertar la contribució
         INSERT INTO contribucions (
             usuari_id,
-            aparcament_id,
             estat_reportat,
             dades,
             estat_validacio,
@@ -66,7 +65,6 @@ BEGIN
             longitud
         ) VALUES (
             p_usuari_id,
-            p_aparcament_id,
             p_estat_reportat,
             p_dades,
             'pendent',
@@ -219,15 +217,12 @@ BEGIN
     SELECT
         c.id,
         c.usuari_id,
-        c.aparcament_id,
         c.estat_reportat,
         c.dades,
         c.latitud,
         c.longitud,
         c.created_at
     FROM contribucions c
-    WHERE JSON_UNQUOTE(JSON_EXTRACT(c.dades, '$.source')) = 'street_report'
-      AND c.aparcament_id IS NULL
     ORDER BY c.created_at DESC
     LIMIT p_limit OFFSET p_offset;
 END//

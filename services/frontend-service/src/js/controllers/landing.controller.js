@@ -9,11 +9,6 @@ import {
 import { setupDateMiniSheet } from './landing/date-sheet.module.js';
 import { setupMobileMapViewToggle } from './landing/mobile-view.module.js';
 import { initLandingSearch } from './landing/search.module.js';
-import {
-  getCachedStreetReports,
-  getStreetReportsCacheKey,
-  mergeStreetReportsIntoCache,
-} from './street-reports-cache.service.js';
 
 let landingInitialized = false;
 
@@ -61,29 +56,15 @@ function getMapViewportContext(map) {
   };
 }
 
-async function refreshStreetReportsFromApi(setStreetReports, viewport = null) {
+async function refreshStreetReportsFromApi(setStreetReports) {
   try {
     const response = await pythonApi.get('/api/reports/street-availability', {
       limit: 500,
     });
     const reports = Array.isArray(response?.reports) ? response.reports : [];
-
-    let visibleReports = reports;
-    if (viewport?.center && Number.isFinite(viewport?.radiusKm)) {
-      visibleReports = reports.filter((report) => {
-        const lat = Number(report?.latitud);
-        const lon = Number(report?.longitud);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
-
-        const distanceKm = computeDistanceKm(viewport.center, { lat, lon });
-        return distanceKm <= viewport.radiusKm;
-      });
-    }
-
-    const merged = mergeStreetReportsIntoCache(visibleReports);
-    setStreetReports(merged);
+    setStreetReports(reports);
   } catch {
-    // Si falla l'API, mantenim els reports de cache local.
+    // Si falla l'API, no actualitzem el mapa.
   }
 }
 
@@ -138,13 +119,8 @@ export function initLanding() {
     defaultZoom,
   } = mapState;
 
-  setStreetReports(getCachedStreetReports());
+  setStreetReports([]);
   refreshStreetReportsFromApi(setStreetReports);
-
-  globalThis.addEventListener('storage', (event) => {
-    if (event.key !== getStreetReportsCacheKey()) return;
-    setStreetReports(getCachedStreetReports());
-  });
 
   const toggleFilters = createFiltersController({ map, updateOpenPopupsLayout });
 
@@ -210,7 +186,7 @@ export function initLanding() {
       });
 
       if (currentRequestId !== mapDynamicRequestId) return;
-      await refreshStreetReportsFromApi(setStreetReports, viewport);
+      await refreshStreetReportsFromApi(setStreetReports);
     }, MAP_DYNAMIC_LOAD_DEBOUNCE_MS);
   };
 

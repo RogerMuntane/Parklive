@@ -39,6 +39,7 @@ function readCacheRows() {
 function writeCacheRows(rows) {
   try {
     globalThis.localStorage.setItem(STREET_REPORTS_CACHE_KEY, JSON.stringify(rows));
+    globalThis.dispatchEvent(new CustomEvent('street-reports-updated', { detail: { rows } }));
   } catch {
     // Ignorem errors d'escriptura en localStorage.
   }
