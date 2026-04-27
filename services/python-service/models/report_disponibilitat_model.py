@@ -11,9 +11,8 @@ STATUS_TO_DB = {
 DB_TO_STATUS = {
     'lliure': 'available',
     'ocupat': 'occupied',
-    'parcial': 'available',
 }
-DEFAULT_STREET_REPORT_USER_ID = 1
+DEFAULT_REPORT_DISPONIBILITAT_USER_ID = 1
 
 COOLDOWN_SECONDS = 60
 
@@ -65,8 +64,7 @@ def _get_last_report_for_reporter(reporter_key):
                 id,
                 created_at
             FROM contribucions
-            WHERE JSON_UNQUOTE(JSON_EXTRACT(dades, '$.source')) = 'street_report'
-              AND JSON_UNQUOTE(JSON_EXTRACT(dades, '$.reporter_key')) = %s
+            WHERE JSON_UNQUOTE(JSON_EXTRACT(dades, '$.reporter_key')) = %s
             ORDER BY created_at DESC
             LIMIT 1
             """,
@@ -129,10 +127,10 @@ def _parse_user_id(raw_user_id):
         except (TypeError, ValueError):
             raise ValueError('usuari_id ha de ser numèric')
 
-    return DEFAULT_STREET_REPORT_USER_ID
+    return DEFAULT_REPORT_DISPONIBILITAT_USER_ID
 
 
-def _insert_street_report_row(user_id, status, report_payload, lat, lon):
+def _insert_report_disponibilitat_row(user_id, status, report_payload, lat, lon):
     contribucio = crear_contribucio({
         'usuari_id': user_id,
         'estat_reportat': STATUS_TO_DB[status],
@@ -152,7 +150,7 @@ def _insert_street_report_row(user_id, status, report_payload, lat, lon):
     }
 
 
-def _build_street_report_response(created, reporter_key, fallback_created_at):
+def _build_report_disponibilitat_response(created, reporter_key, fallback_created_at):
     details = created.get('dades')
     if isinstance(details, str):
         try:
@@ -182,7 +180,7 @@ def _build_street_report_response(created, reporter_key, fallback_created_at):
     }
 
 
-def create_street_report(data, reporter_key=None):
+def create_report_disponibilitat(data, reporter_key=None):
     status = _parse_status(data.get('status'))
     lat, lon = _parse_coordinates(data.get('latitud'), data.get('longitud'))
 
@@ -197,11 +195,11 @@ def create_street_report(data, reporter_key=None):
         'reporter_key': reporter_key,
     }
 
-    created = _insert_street_report_row(user_id, status, report_payload, lat, lon)
-    return _build_street_report_response(created, reporter_key, now_dt.isoformat())
+    created = _insert_report_disponibilitat_row(user_id, status, report_payload, lat, lon)
+    return _build_report_disponibilitat_response(created, reporter_key, now_dt.isoformat())
 
 
-def list_street_reports(limit=100):
+def list_report_disponibilitat(limit=100):
     """Retorna reports recents de disponibilitat al carrer des de la BD."""
     try:
         parsed_limit = int(limit)
@@ -240,6 +238,6 @@ def list_street_reports(limit=100):
         if status not in VALID_STATUS:
             continue
 
-        reports.append(_build_street_report_response(row, None, datetime.now(timezone.utc).isoformat()))
+        reports.append(_build_report_disponibilitat_response(row, None, datetime.now(timezone.utc).isoformat()))
 
     return reports

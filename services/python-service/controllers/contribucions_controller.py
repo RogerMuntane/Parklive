@@ -9,8 +9,7 @@ def crear_nova_contribucio():
     Espera un JSON amb:
     {
         "usuari_id": 1,
-        "aparcament_id": 5,  // opcional
-        "estat_reportat": "lliure",  // 'lliure', 'ocupat', 'parcial'
+        "estat_reportat": "lliure",  // 'lliure' o 'ocupat'
         "dades": {  // opcional
             "comentari": "Hi ha 3 places lliures al segon pis",
             "foto_url": "https://..."
@@ -38,9 +37,6 @@ def crear_nova_contribucio():
         # Validar tipus de dades
         try:
             data['usuari_id'] = int(data['usuari_id'])
-
-            if 'aparcament_id' in data and data['aparcament_id'] is not None:
-                data['aparcament_id'] = int(data['aparcament_id'])
 
             if 'latitud' in data and data['latitud']:
                 data['latitud'] = float(data['latitud'])

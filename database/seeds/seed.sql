@@ -2038,6 +2038,7 @@ VALUES (
         '/factures/2026/02/FACT-2026-000008.pdf'
     );
 -- 19. CONTRIBUCIONS D'USUARIS
+-- Dades de contribucions independents d'aparcaments.
 INSERT INTO contribucions (
         usuari_id,
         estat_reportat,
@@ -2049,7 +2050,7 @@ INSERT INTO contribucions (
     )
 VALUES (
         5,
-        'parcial',
+        'ocupat',
         '{"places_lliures_aproximades": 45, "comentari": "Planta -2 gairebé plena"}',
         TRUE,
         10,
@@ -2058,7 +2059,7 @@ VALUES (
     ),
     (
         6,
-        'parcial',
+        'ocupat',
         '{"url": "/uploads/contribucions/user6_parking2.jpg", "descripcio": "Foto actualitzada de l''entrada"}',
         TRUE,
         15,
@@ -2067,7 +2068,7 @@ VALUES (
     ),
     (
         7,
-        'parcial',
+        'ocupat',
         '{"camp": "horari_tancament", "valor_nou": "23:00", "comentari": "Tanquen a les 23h, no 24h"}',
         FALSE,
         0,
@@ -2085,7 +2086,7 @@ VALUES (
     ),
     (
         9,
-        'parcial',
+        'ocupat',
         '{"camp": "altura_maxima", "valor_actual": "2.00", "valor_correcte": "2.10", "comentari": "He mesurat l''altura amb el meu vehicle"}',
         TRUE,
         20,
@@ -2103,7 +2104,7 @@ VALUES (
     ),
     (
         11,
-        'parcial',
+        'ocupat',
         '{"url": "/uploads/contribucions/user11_parking3_seguretat.jpg", "descripcio": "Nova càmera de seguretat instal·lada"}',
         TRUE,
         15,

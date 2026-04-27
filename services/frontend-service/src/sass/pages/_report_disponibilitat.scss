@@ -1,4 +1,4 @@
-.page-street-report {
+.page-report-disponibilitat {
   background:
     radial-gradient(
       circle at 12% 18%,
@@ -8,12 +8,12 @@
     radial-gradient(circle at 90% 85%, rgba(25, 135, 84, 0.1), transparent 36%),
     var(--bs-body-bg);
 
-  .street-report-shell {
+  .report-disponibilitat-shell {
     max-width: 1180px;
     margin: 0 auto;
   }
 
-  .street-report-eyebrow {
+  .report-disponibilitat-eyebrow {
     font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -21,21 +21,21 @@
     font-weight: 700;
   }
 
-  .street-report-title {
+  .report-disponibilitat-title {
     font-size: clamp(1.75rem, 3.2vw, 2.6rem);
     font-weight: 800;
     line-height: 1.1;
     color: var(--bs-body-color);
   }
 
-  .street-report-subtitle {
+  .report-disponibilitat-subtitle {
     max-width: 760px;
     color: var(--bs-secondary-color);
     font-size: 1rem;
   }
 
-  .street-report-panel,
-  .street-map-panel {
+  .report-disponibilitat-panel,
+  .report-map-panel {
     background: rgba(var(--bs-body-bg-rgb), 0.86);
     border: 1px solid rgba(var(--bs-body-color-rgb), 0.08);
     border-radius: 1rem;
@@ -43,7 +43,7 @@
     padding: 1.1rem;
   }
 
-  .street-panel-title {
+  .report-panel-title {
     font-size: 0.82rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -52,13 +52,13 @@
     font-weight: 700;
   }
 
-  .street-status-grid {
+  .report-status-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.7rem;
   }
 
-  .street-status-option {
+  .report-status-option {
     border: 1px solid rgba(var(--bs-body-color-rgb), 0.14);
     background: rgba(var(--bs-tertiary-bg-rgb), 0.62);
     border-radius: 0.8rem;
@@ -73,23 +73,23 @@
     transition: all 0.18s ease;
   }
 
-  .street-status-option i {
+  .report-status-option i {
     font-size: 1.05rem;
   }
 
-  .street-status-option.is-active[data-status="available"] {
+  .report-status-option.is-active[data-status="available"] {
     border-color: rgba(var(--bs-success-rgb), 0.55);
     background: rgba(var(--bs-success-rgb), 0.12);
     color: var(--bs-body-color);
   }
 
-  .street-status-option.is-active[data-status="occupied"] {
+  .report-status-option.is-active[data-status="occupied"] {
     border-color: rgba(var(--bs-danger-rgb), 0.55);
     background: rgba(var(--bs-danger-rgb), 0.12);
     color: var(--bs-body-color);
   }
 
-  .street-label {
+  .report-label {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -97,7 +97,7 @@
     font-weight: 700;
   }
 
-  .street-coords {
+  .report-coords {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
@@ -105,24 +105,24 @@
     color: var(--bs-secondary-color);
   }
 
-  .street-submit-btn {
+  .report-submit-btn {
     border-radius: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.01em;
     min-height: 46px;
   }
 
-  .street-map {
+  .report-map {
     min-height: 480px;
     border-radius: 0.86rem;
     overflow: hidden;
   }
 
-  .street-map-panel {
+  .report-map-panel {
     position: relative;
   }
 
-  .street-toast {
+  .report-toast {
     position: absolute;
     left: 1rem;
     right: 1rem;
@@ -139,21 +139,21 @@
     transition: all 0.2s ease;
   }
 
-  .street-toast.is-visible {
+  .report-toast.is-visible {
     opacity: 1;
     transform: translateY(0);
   }
 
-  .street-toast.is-success {
+  .report-toast.is-success {
     background: #157347;
   }
 
-  .street-toast.is-error {
+  .report-toast.is-error {
     background: #b02a37;
   }
 
   @media (max-width: 991px) {
-    .street-map {
+    .report-map {
       min-height: 340px;
     }
   }

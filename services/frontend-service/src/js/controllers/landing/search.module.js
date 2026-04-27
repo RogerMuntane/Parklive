@@ -20,6 +20,9 @@ const PARKING_CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
 const LOCATION_EXPANSION_RADII_KM = [5, 15, 40, 120, 300];
 
 let userLocation = null;
+let setUserLocationMarker = () => {};
+let setSearchAnchor = () => {};
+let searchAnchorLocation = null;
 
 function setUserLocation(nextLocation) {
   if (
@@ -31,10 +34,30 @@ function setUserLocation(nextLocation) {
       lat: Number(nextLocation.lat),
       lon: Number(nextLocation.lon),
     };
+    setUserLocationMarker(userLocation);
+    setSearchAnchor(userLocation);
     return;
   }
 
   userLocation = null;
+  setUserLocationMarker(null);
+  setSearchAnchor(null);
+}
+
+function updateSearchAnchor(nextLocation) {
+  if (
+    nextLocation
+    && Number.isFinite(nextLocation.lat)
+    && Number.isFinite(nextLocation.lon)
+  ) {
+    searchAnchorLocation = {
+      lat: Number(nextLocation.lat),
+      lon: Number(nextLocation.lon),
+    };
+    return;
+  }
+
+  searchAnchorLocation = null;
 }
 
 function buildLocationLabelFromPhotonProperties(properties = {}) {
@@ -440,10 +463,11 @@ function addRadiusParam(params, distanceRange, radiusOverrideKm) {
 }
 
 function addUserLocationParams(params, selectedRadiusKm) {
-  if (!userLocation) return;
+  const anchor = searchAnchorLocation || userLocation;
+  if (!anchor) return;
 
-  params.latitud = userLocation.lat;
-  params.longitud = userLocation.lon;
+  params.latitud = anchor.lat;
+  params.longitud = anchor.lon;
 
   // Si tenim ubicació, fem servir un radi per defecte per prioritzar aparcaments propers.
   if (!selectedRadiusKm) {
@@ -499,7 +523,7 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
       turismo: 1.9,
       furgoneta: 2.2,
       autocaravana: 3.6,
-      autobus: 5.0,
+      autobus: 5,
       camion7: 3.6,
       moto: 2.2,
       camion6: 2.7,
@@ -517,10 +541,11 @@ function isFavoritesOnlyFilterEnabled() {
 }
 
 function resolveSearchOrigin(records) {
-  if (userLocation) {
+  const anchor = searchAnchorLocation || userLocation;
+  if (anchor) {
     return {
-      lat: Number(userLocation.lat),
-      lon: Number(userLocation.lon),
+      lat: Number(anchor.lat),
+      lon: Number(anchor.lon),
     };
   }
 
@@ -753,7 +778,7 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-currency-euro"></i>${escapeHtml(spot.priceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-geo-alt"></i>${escapeHtml(spot.distanceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-house-door"></i>${escapeHtml(spot.typeLabel)}</span>
-          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-grid-3x3-gap"></i>Disp: ${escapeHtml(spot.availabilitySummary)}</span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-check2-circle"></i>Disp: ${escapeHtml(spot.availabilitySummary)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-clock"></i>${escapeHtml(spot.scheduleLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
@@ -838,7 +863,7 @@ function renderResults({
 
 async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadius = false } = {}) {
   const { searchTerm } = buildSearchParams({ ignoreCityFilter });
-  const shouldExpandRadius = expandLocationRadius && Boolean(userLocation);
+  const shouldExpandRadius = expandLocationRadius && Boolean(searchAnchorLocation || userLocation);
 
   let records = shouldExpandRadius
     ? await fetchRecordsExpandingRadius(ignoreCityFilter)
@@ -849,7 +874,7 @@ async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadi
   }
 
   if (records.length === 0 && shouldExpandRadius) {
-    records = await fallbackToNearestSearch(userLocation);
+    records = await fallbackToNearestSearch(searchAnchorLocation || userLocation);
   }
 
   return records;
@@ -860,7 +885,11 @@ export function initLandingSearch({
   focusParkingById,
   closeFilters,
   onSearchLocationResolved = () => {},
+  setUserLocationMarker: updateUserLocationMarker = () => {},
+  setSearchAnchor: updateSearchAnchor = () => {},
 }) {
+  setUserLocationMarker = updateUserLocationMarker;
+  setSearchAnchor = updateSearchAnchor;
   const mapSearchBar = document.getElementById('mapSearchBar');
   const mapSearchInput = document.getElementById('mapSearchInput');
   const applyFiltersBtn = document.querySelector('#filtresSidepanel .btn-danger.w-50');
@@ -1176,7 +1205,7 @@ export function initLandingSearch({
         totalPages,
         onFocusParking: focusParkingById,
         onChangePage: (nextPage) => {
-          runSearch({ page: nextPage });
+          runSearch({ page: nextPage, preserveViewport: true });
         },
         favoritesEnabled,
         favoriteIds,
@@ -1188,7 +1217,7 @@ export function initLandingSearch({
           showBootstrapAlert('success', msg);
 
           if (effectiveFavoritesOnly && !nextIsFavorite) {
-            await runSearch({ page: currentPage });
+            await runSearch({ page: currentPage, preserveViewport: true });
           }
 
           return nextIsFavorite;

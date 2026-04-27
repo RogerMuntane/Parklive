@@ -16,7 +16,6 @@ def create_contribucio():
     Body JSON:
     {
         "usuari_id": 1,
-        "aparcament_id": 5,  // opcional
         "estat_reportat": "lliure",
         "dades": {
             "comentari": "Places lliures"
