@@ -785,6 +785,57 @@ VALUES -- Centre de Barcelona
         'actiu',
         NULL,
         TRUE
+    ),
+    -- Aparcaments sense disponibilitat per a tests
+    (
+        16,
+        'Aparcament Full Center',
+        'subterrani',
+        'Carrer de Balmes, 10',
+        'Barcelona',
+        '08007',
+        41.388900,
+        2.166100,
+        100,
+        0,
+        4.00,
+        30.00,
+        NULL,
+        NULL,
+        TRUE,
+        '{"complet": true, "wifi": true}',
+        TRUE,
+        TRUE,
+        TRUE,
+        2.10,
+        'actiu',
+        3,
+        TRUE
+    ),
+    (
+        17,
+        'Parking Mataró Centre (Ple)',
+        'cobert',
+        'La Riera, 100',
+        'Mataró',
+        '08301',
+        41.539200,
+        2.444600,
+        50,
+        0,
+        2.50,
+        18.00,
+        '08:00:00',
+        '22:00:00',
+        FALSE,
+        '{"complet": true, "centre": true}',
+        TRUE,
+        FALSE,
+        TRUE,
+        2.40,
+        'actiu',
+        4,
+        TRUE
     );
 -- 4. HISTÒRIC DE DISPONIBILITAT (últimes 24h)
 INSERT INTO historic_disponibilitat (
@@ -1357,6 +1408,24 @@ VALUES (
         '{"neteja": 3, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 3}',
         TRUE,
         1
+    ),
+    (
+        16,
+        2,
+        4,
+        'Molt cèntric, ideal si trobes lloc, però sol estar ple.',
+        '{"neteja": 4, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 4}',
+        TRUE,
+        3
+    ),
+    (
+        17,
+        3,
+        3,
+        'Bé de preu per ser Mataró centre, però estava ple quan vaig arribar.',
+        '{"neteja": 3, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 4}',
+        TRUE,
+        1
     );
 -- 10. RESPOSTES A VALORACIONS
 INSERT INTO respostes_valoracions (valoracio_id, usuari_id, text)
@@ -1534,7 +1603,14 @@ VALUES -- Aparcament 1 (evolució durant el dia)
     (5, 310, '2026-02-23 07:30:00', 'sistema'),
     (5, 201, '2026-02-23 11:30:00', 'sensor'),
     (5, 156, '2026-02-23 16:00:00', 'usuari'),
-    (5, 278, '2026-02-23 23:00:00', 'sistema');
+    (5, 278, '2026-02-23 23:00:00', 'sistema'),
+    -- Aparcament 16
+    (16, 20, '2026-02-23 08:00:00', 'sistema'),
+    (16, 5, '2026-02-23 09:00:00', 'sensor'),
+    (16, 0, '2026-02-23 10:00:00', 'sensor'),
+    -- Aparcament 17
+    (17, 10, '2026-02-23 08:30:00', 'sistema'),
+    (17, 0, '2026-02-23 09:30:00', 'sensor');
 -- 15. FOTOGRAFIES D'APARCAMENTS
 INSERT INTO fotografies_aparcaments (
         aparcament_id,

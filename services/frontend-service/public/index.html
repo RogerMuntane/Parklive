@@ -1,661 +1,357 @@
 <!doctype html>
 <html lang="ca">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="ParkLive - Plataforma web per a la gestió intel·ligent d'aparcaments."
-    />
-    <title>ParkLive | Gestió d'aparcaments</title>
-    <link rel="stylesheet" href="./assets/css/style.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-    />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  </head>
 
-  <body class="page page-landing">
-    <!-- Slot de plantilla: Capçalera reutilitzable -->
-    <div
-      class="template-slot"
-      data-template="./components/header.html"
-      aria-label="Capçalera"
-    ></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ParkLive - Plataforma web per a la gestió intel·ligent d'aparcaments." />
+  <title>ParkLive | Gestió d'aparcaments</title>
+  <link rel="stylesheet" href="./assets/css/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+</head>
 
-    <main class="layout map-layout" id="main-content">
-      <div class="map-search-wrapper" aria-label="Cercador d'aparcaments">
-        <form
-          id="mapSearchBar"
-          class="map-search-bar"
-          role="search"
-          autocomplete="off"
-        >
-          <div class="search-main">
-            <i
-              class="bi bi-geo-alt search-main-icon text-body-secondary"
-              aria-hidden="true"
-            ></i>
-            <input
-              type="text"
-              id="mapSearchInput"
-              class="form-control"
-              name="map-search"
-              placeholder="Cerca aparcament o adreça"
-              aria-label="Cerca aparcament"
-              autocomplete="off"
-              autocapitalize="off"
-              autocorrect="off"
-              spellcheck="false"
-            />
-          </div>
+<body class="page page-landing">
+  <!-- Slot de plantilla: Capçalera reutilitzable -->
+  <div class="template-slot" data-template="./components/header.html" aria-label="Capçalera"></div>
 
-          <div class="search-meta">
-            <div class="search-meta-item">
-              <label
-                for="entryDate"
-                class="d-block mb-0 small fw-semibold text-body-secondary"
-                >Entrada</label
-              >
-              <div class="meta-input-group">
-                <i class="bi bi-calendar3" aria-hidden="true"></i>
-                <input type="date" id="entryDate" name="entryDate" />
-                <i class="bi bi-clock" aria-hidden="true"></i>
-                <input type="time" id="entryTime" name="entryTime" />
-              </div>
-            </div>
+  <main class="layout map-layout" id="main-content">
+    <div class="map-search-wrapper" aria-label="Cercador d'aparcaments">
+      <form id="mapSearchBar" class="map-search-bar" role="search" autocomplete="off">
+        <div class="search-main">
+          <i class="bi bi-geo-alt search-main-icon text-body-secondary" aria-hidden="true"></i>
+          <input type="text" id="mapSearchInput" class="form-control" name="map-search"
+            placeholder="Cerca aparcament o adreça" aria-label="Cerca aparcament" autocomplete="off"
+            autocapitalize="off" autocorrect="off" spellcheck="false" />
+        </div>
 
-            <div
-              class="search-meta-separator text-body-secondary"
-              aria-hidden="true"
-            >
-              <i class="bi bi-arrow-right"></i>
-            </div>
-
-            <div class="search-meta-item">
-              <label
-                for="exitDate"
-                class="d-block mb-0 small fw-semibold text-body-secondary"
-                >Sortida</label
-              >
-              <div class="meta-input-group">
-                <i class="bi bi-calendar3" aria-hidden="true"></i>
-                <input type="date" id="exitDate" name="exitDate" />
-                <i class="bi bi-clock" aria-hidden="true"></i>
-                <input type="time" id="exitTime" name="exitTime" />
-              </div>
+        <div class="search-meta">
+          <div class="search-meta-item">
+            <label for="entryDate" class="d-block mb-0 small fw-semibold text-body-secondary">Entrada</label>
+            <div class="meta-input-group">
+              <i class="bi bi-calendar3" aria-hidden="true"></i>
+              <input type="date" id="entryDate" name="entryDate" />
+              <i class="bi bi-clock" aria-hidden="true"></i>
+              <input type="time" id="entryTime" name="entryTime" />
             </div>
           </div>
 
-          <button
-            type="button"
-            id="mapDateSheetBtn"
-            class="btn map-btn map-btn-dates"
-            aria-label="Seleccionar dates"
-            aria-controls="dateMiniSheet"
-            aria-expanded="false"
-          >
-            <i class="bi bi-calendar3"></i>
-            <span>Dates</span>
-          </button>
+          <div class="search-meta-separator text-body-secondary" aria-hidden="true">
+            <i class="bi bi-arrow-right"></i>
+          </div>
 
-          <button
-            type="button"
-            id="mapFiltersBtn"
-            class="btn map-btn map-btn-filter"
-            aria-label="Mostrar filtres"
-            aria-controls="filtresSidepanel"
-            aria-expanded="false"
-          >
-            <i class="bi bi-sliders"></i>
-          </button>
+          <div class="search-meta-item">
+            <label for="exitDate" class="d-block mb-0 small fw-semibold text-body-secondary">Sortida</label>
+            <div class="meta-input-group">
+              <i class="bi bi-calendar3" aria-hidden="true"></i>
+              <input type="date" id="exitDate" name="exitDate" />
+              <i class="bi bi-clock" aria-hidden="true"></i>
+              <input type="time" id="exitTime" name="exitTime" />
+            </div>
+          </div>
+        </div>
 
-          <a
-            href="/report_disponibilitat.html"
-            class="btn map-btn map-btn-report"
-            aria-label="Reportar disponibilitat de plaça en carrer"
-            title="Reportar plaça en carrer"
-          >
-            <i class="bi bi-broadcast-pin"></i>
-          </a>
+        <button type="button" id="mapDateSheetBtn" class="btn map-btn map-btn-dates" aria-label="Seleccionar dates"
+          aria-controls="dateMiniSheet" aria-expanded="false">
+          <i class="bi bi-calendar3"></i>
+          <span>Dates</span>
+        </button>
 
-          <button
-            type="submit"
-            class="btn map-btn map-btn-search"
-            aria-label="Cercar"
-          >
-            <i class="bi bi-search"></i>
-          </button>
-        </form>
+        <button type="button" id="mapFiltersBtn" class="btn map-btn map-btn-filter" aria-label="Mostrar filtres"
+          aria-controls="filtresSidepanel" aria-expanded="false">
+          <i class="bi bi-sliders"></i>
+        </button>
+
+        <a href="/report_disponibilitat.html" class="btn map-btn map-btn-report"
+          aria-label="Reportar disponibilitat de plaça en carrer" title="Reportar plaça en carrer">
+          <i class="bi bi-broadcast-pin"></i>
+        </a>
+
+        <button type="submit" class="btn map-btn map-btn-search" aria-label="Cercar">
+          <i class="bi bi-search"></i>
+        </button>
+      </form>
+    </div>
+
+    <div id="dateSheetBackdrop" class="date-sheet-backdrop" aria-hidden="true"></div>
+
+    <section id="dateMiniSheet" class="date-mini-sheet" aria-label="Seleccionar dates" aria-hidden="true">
+      <div class="date-sheet-header d-flex align-items-center justify-content-between mb-3">
+        <h2 class="h6 mb-0">Dates</h2>
+        <button type="button" id="dateSheetCloseBtn" class="btn btn-sm btn-outline-secondary"
+          aria-label="Tancar selector de dates">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
 
-      <div
-        id="dateSheetBackdrop"
-        class="date-sheet-backdrop"
-        aria-hidden="true"
-      ></div>
-
-      <section
-        id="dateMiniSheet"
-        class="date-mini-sheet"
-        aria-label="Seleccionar dates"
-        aria-hidden="true"
-      >
-        <div
-          class="date-sheet-header d-flex align-items-center justify-content-between mb-3"
-        >
-          <h2 class="h6 mb-0">Dates</h2>
-          <button
-            type="button"
-            id="dateSheetCloseBtn"
-            class="btn btn-sm btn-outline-secondary"
-            aria-label="Tancar selector de dates"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-
-        <div class="date-sheet-content d-grid gap-3">
-          <div class="date-sheet-row">
-            <label
-              for="dateSheetEntryDate"
-              class="d-block mb-1 small fw-semibold text-body-secondary"
-              >Entrada</label
-            >
-            <div class="date-sheet-inputs d-flex gap-2">
-              <input
-                type="date"
-                id="dateSheetEntryDate"
-                class="form-control form-control-sm flex-fill"
-              />
-              <input
-                type="time"
-                id="dateSheetEntryTime"
-                class="form-control form-control-sm flex-fill"
-              />
-            </div>
-          </div>
-
-          <div class="date-sheet-row">
-            <label
-              for="dateSheetExitDate"
-              class="d-block mb-1 small fw-semibold text-body-secondary"
-              >Sortida</label
-            >
-            <div class="date-sheet-inputs d-flex gap-2">
-              <input
-                type="date"
-                id="dateSheetExitDate"
-                class="form-control form-control-sm flex-fill"
-              />
-              <input
-                type="time"
-                id="dateSheetExitTime"
-                class="form-control form-control-sm flex-fill"
-              />
-            </div>
+      <div class="date-sheet-content d-grid gap-3">
+        <div class="date-sheet-row">
+          <label for="dateSheetEntryDate" class="d-block mb-1 small fw-semibold text-body-secondary">Entrada</label>
+          <div class="date-sheet-inputs d-flex gap-2">
+            <input type="date" id="dateSheetEntryDate" class="form-control form-control-sm flex-fill" />
+            <input type="time" id="dateSheetEntryTime" class="form-control form-control-sm flex-fill" />
           </div>
         </div>
 
-        <div class="date-sheet-actions mt-3">
-          <button
-            type="button"
-            id="dateSheetApplyBtn"
-            class="btn btn-danger w-100"
-          >
-            Aplicar dates
+        <div class="date-sheet-row">
+          <label for="dateSheetExitDate" class="d-block mb-1 small fw-semibold text-body-secondary">Sortida</label>
+          <div class="date-sheet-inputs d-flex gap-2">
+            <input type="date" id="dateSheetExitDate" class="form-control form-control-sm flex-fill" />
+            <input type="time" id="dateSheetExitTime" class="form-control form-control-sm flex-fill" />
+          </div>
+        </div>
+      </div>
+
+      <div class="date-sheet-actions mt-3">
+        <button type="button" id="dateSheetApplyBtn" class="btn btn-danger w-100">
+          Aplicar dates
+        </button>
+      </div>
+    </section>
+
+    <aside class="parking-results-panel" aria-label="Resultats d'aparcaments">
+      <div class="parking-results-header d-flex align-items-start justify-content-between gap-2 mb-3">
+        <div>
+          <h2 class="parking-results-title h5 mb-0 fw-bold text-body">
+            Resultats
+          </h2>
+          <p class="parking-results-subtitle mb-0 mt-1 small text-body-secondary">
+            1 aparcament trobat
+          </p>
+        </div>
+        <button type="button" id="toggleResultsPanelBtn"
+          class="btn btn-sm btn-outline-secondary parking-results-toggle flex-shrink-0"
+          aria-label="Encongir panell de resultats" aria-expanded="true">
+          <i class="bi bi-layout-sidebar-inset"></i>
+        </button>
+      </div>
+
+      <article class="parking-result-card border rounded-4 overflow-hidden bg-body shadow-sm"
+        aria-label="Aparcament d'exemple">
+        <img class="parking-result-image d-block w-100 object-fit-cover"
+          src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80"
+          alt="Foto de l'aparcament ParkLive Centre" loading="lazy" />
+
+        <div class="parking-result-content p-3">
+          <h3 class="parking-result-name h6 mb-0 fw-bold text-body">
+            ParkLive Centro
+          </h3>
+          <p class="parking-result-address mb-0 mt-1 small text-body-secondary">
+            C/ de Mallorca 401, Barcelona
+          </p>
+
+          <div class="parking-result-meta d-grid gap-2 mt-3 small text-body" aria-label="Dades de l'aparcament">
+            <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-currency-euro"></i> 2,80 €/h</span>
+            <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i> 650 m</span>
+            <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-lightning-charge"></i> Càrrega
+              EV</span>
+          </div>
+
+          <button type="button" id="openExampleParkingBtn" class="btn btn-danger w-100 mt-3">
+            Veure detall
           </button>
         </div>
-      </section>
+      </article>
+    </aside>
 
-      <aside class="parking-results-panel" aria-label="Resultats d'aparcaments">
-        <div
-          class="parking-results-header d-flex align-items-start justify-content-between gap-2 mb-3"
-        >
-          <div>
-            <h2 class="parking-results-title h5 mb-0 fw-bold text-body">
-              Resultats
+    <div id="filtersBackdrop" class="filters-backdrop" aria-hidden="true"></div>
+
+    <aside id="filtresSidepanel" class="sidepanel filters-panel d-flex flex-column" aria-label="Panell de filtres"
+      aria-hidden="true">
+      <div class="filters-header d-flex align-items-center px-3 py-3">
+        <h1 class="h5 mb-0 fw-semibold text-center w-100">Filtra</h1>
+        <button type="button" class="btn btn-sm btn-outline-secondary filters-close" aria-label="Tancar filtres">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <form id="filtresContainer" class="px-3 pb-3 overflow-auto flex-fill" aria-label="Filtres de cerca">
+        <section class="mb-4" aria-labelledby="price-filter-title">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 id="price-filter-title" class="h6 mb-0 fw-semibold text-body">
+              Preu total
             </h2>
-            <p
-              class="parking-results-subtitle mb-0 mt-1 small text-body-secondary"
-            >
-              1 aparcament trobat
-            </p>
+            <span id="priceRangeValue" class="fw-semibold text-body-secondary">Fins a 0 €</span>
           </div>
-          <button
-            type="button"
-            id="toggleResultsPanelBtn"
-            class="btn btn-sm btn-outline-secondary parking-results-toggle flex-shrink-0"
-            aria-label="Encongir panell de resultats"
-            aria-expanded="true"
-          >
-            <i class="bi bi-layout-sidebar-inset"></i>
-          </button>
-        </div>
-
-        <article
-          class="parking-result-card border rounded-4 overflow-hidden bg-body shadow-sm"
-          aria-label="Aparcament d'exemple"
-        >
-          <img
-            class="parking-result-image d-block w-100 object-fit-cover"
-            src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80"
-            alt="Foto de l'aparcament ParkLive Centre"
-            loading="lazy"
-          />
-
-          <div class="parking-result-content p-3">
-            <h3 class="parking-result-name h6 mb-0 fw-bold text-body">
-              ParkLive Centro
-            </h3>
-            <p
-              class="parking-result-address mb-0 mt-1 small text-body-secondary"
-            >
-              C/ de Mallorca 401, Barcelona
-            </p>
-
-            <div
-              class="parking-result-meta d-grid gap-2 mt-3 small text-body"
-              aria-label="Dades de l'aparcament"
-            >
-              <span class="d-inline-flex align-items-center gap-2"
-                ><i class="bi bi-currency-euro"></i> 2,80 €/h</span
-              >
-              <span class="d-inline-flex align-items-center gap-2"
-                ><i class="bi bi-geo-alt"></i> 650 m</span
-              >
-              <span class="d-inline-flex align-items-center gap-2"
-                ><i class="bi bi-lightning-charge"></i> Càrrega EV</span
-              >
-            </div>
-
-            <button
-              type="button"
-              id="openExampleParkingBtn"
-              class="btn btn-danger w-100 mt-3"
-            >
-              Veure detall
+          <input type="range" class="form-range" id="priceRange" name="price" min="0" max="50" step="1" value="0" />
+          <div class="grid-choices mt-3">
+            <button type="button" class="btn btn-outline-secondary quick-choice" data-target="priceRange"
+              data-value="20">
+              Fins a 20 €
+            </button>
+            <button type="button" class="btn btn-outline-secondary quick-choice" data-target="priceRange"
+              data-value="40">
+              Fins a 40 €
+            </button>
+            <button type="button" class="btn btn-outline-secondary quick-choice" data-target="priceRange"
+              data-value="50">
+              Fins a 50 €
             </button>
           </div>
-        </article>
-      </aside>
+        </section>
 
-      <div
-        id="filtersBackdrop"
-        class="filters-backdrop"
-        aria-hidden="true"
-      ></div>
-
-      <aside
-        id="filtresSidepanel"
-        class="sidepanel filters-panel d-flex flex-column"
-        aria-label="Panell de filtres"
-        aria-hidden="true"
-      >
-        <div class="filters-header d-flex align-items-center px-3 py-3">
-          <h1 class="h5 mb-0 fw-semibold text-center w-100">Filtra</h1>
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary filters-close"
-            aria-label="Tancar filtres"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-
-        <form
-          id="filtresContainer"
-          class="px-3 pb-3 overflow-auto flex-fill"
-          aria-label="Filtres de cerca"
-        >
-          <section class="mb-4" aria-labelledby="price-filter-title">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h2 id="price-filter-title" class="h6 mb-0 fw-semibold text-body">
-                Preu total
-              </h2>
-              <span id="priceRangeValue" class="fw-semibold text-body-secondary"
-                >Fins a 0 €</span
-              >
-            </div>
-            <input
-              type="range"
-              class="form-range"
-              id="priceRange"
-              name="price"
-              min="0"
-              max="50"
-              step="1"
-              value="0"
-            />
-            <div class="grid-choices mt-3">
-              <button
-                type="button"
-                class="btn btn-outline-secondary quick-choice"
-                data-target="priceRange"
-                data-value="20"
-              >
-                Fins a 20 €
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary quick-choice"
-                data-target="priceRange"
-                data-value="40"
-              >
-                Fins a 40 €
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary quick-choice"
-                data-target="priceRange"
-                data-value="50"
-              >
-                Fins a 50 €
-              </button>
-            </div>
-          </section>
-
-          <section class="mb-4" aria-labelledby="distance-filter-title">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h2
-                id="distance-filter-title"
-                class="h6 mb-0 fw-semibold text-body"
-              >
-                Distància
-              </h2>
-              <span
-                id="distanceRangeValue"
-                class="fw-semibold text-body-secondary"
-                >Fins a 0 km</span
-              >
-            </div>
-            <input
-              type="range"
-              class="form-range"
-              id="distanceRange"
-              name="distance"
-              min="0"
-              max="5"
-              step="1"
-              value="0"
-            />
-            <div class="grid-choices mt-3">
-              <button
-                type="button"
-                class="btn btn-outline-secondary quick-choice"
-                data-target="distanceRange"
-                data-value="1"
-              >
-                Fins a 1 km
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary quick-choice"
-                data-target="distanceRange"
-                data-value="3"
-              >
-                Fins a 3 km
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary quick-choice"
-                data-target="distanceRange"
-                data-value="5"
-              >
-                Fins a 5 km
-              </button>
-            </div>
-          </section>
-
-          <section class="mb-4" aria-labelledby="vehicle-filter-title">
-            <h2 id="vehicle-filter-title" class="h6 mb-3 fw-semibold text-body">
-              Tipus de vehicle
+        <section class="mb-4" aria-labelledby="distance-filter-title">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 id="distance-filter-title" class="h6 mb-0 fw-semibold text-body">
+              Distància
             </h2>
-            <div class="vehicle-grid">
-              <button
-                type="button"
-                class="btn vehicle-option"
-                data-vehicle="turismo"
-                aria-pressed="false"
-              >
-                <span class="vehicle-icon"
-                  ><i class="bi bi-car-front"></i
-                ></span>
-                <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Turisme</span>
-                  <small class="text-body-secondary"
-                    >A &lt; 1.9m, L &lt; 5.0m</small
-                  >
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn vehicle-option"
-                data-vehicle="furgoneta"
-                aria-pressed="false"
-              >
-                <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
-                <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Furgoneta</span>
-                  <small class="text-body-secondary"
-                    >A &lt; 2.2m, L &lt; 6.5m</small
-                  >
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn vehicle-option"
-                data-vehicle="autocaravana"
-                aria-pressed="false"
-              >
-                <span class="vehicle-icon"
-                  ><i class="bi bi-car-front"></i
-                ></span>
-                <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Autocaravana</span>
-                  <small class="text-body-secondary"
-                    >A &lt; 3.6m, L &lt; 10.0m</small
-                  >
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn vehicle-option"
-                data-vehicle="autobus"
-                aria-pressed="false"
-              >
-                <span class="vehicle-icon"
-                  ><i class="bi bi-bus-front"></i
-                ></span>
-                <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Autobús</span>
-                  <small class="text-body-secondary"
-                    >A &lt; 5.0m, L &lt; 12.0m</small
-                  >
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn vehicle-option"
-                data-vehicle="camion7"
-                aria-pressed="false"
-              >
-                <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
-                <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Camió 7m</span>
-                  <small class="text-body-secondary"
-                    >A &lt; 3.6m, L &lt; 7.0m</small
-                  >
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn vehicle-option"
-                data-vehicle="moto"
-                aria-pressed="false"
-              >
-                <span class="vehicle-icon"><i class="bi bi-scooter"></i></span>
-                <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Moto</span>
-                  <small class="text-body-secondary">A &lt; 2.2m</small>
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn vehicle-option full-width"
-                data-vehicle="camion6"
-                aria-pressed="false"
-              >
-                <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
-                <span class="vehicle-meta">
-                  <span class="fw-semibold text-body">Camió 6m</span>
-                  <small class="text-body-secondary"
-                    >A &lt; 2.7m, L &lt; 6.0m</small
-                  >
-                </span>
-              </button>
+            <span id="distanceRangeValue" class="fw-semibold text-body-secondary">Fins a 0 km</span>
+          </div>
+          <input type="range" class="form-range" id="distanceRange" name="distance" min="0" max="5" step="1"
+            value="0" />
+          <div class="grid-choices mt-3">
+            <button type="button" class="btn btn-outline-secondary quick-choice" data-target="distanceRange"
+              data-value="1">
+              Fins a 1 km
+            </button>
+            <button type="button" class="btn btn-outline-secondary quick-choice" data-target="distanceRange"
+              data-value="3">
+              Fins a 3 km
+            </button>
+            <button type="button" class="btn btn-outline-secondary quick-choice" data-target="distanceRange"
+              data-value="5">
+              Fins a 5 km
+            </button>
+          </div>
+        </section>
+
+        <section class="mb-4" aria-labelledby="vehicle-filter-title">
+          <h2 id="vehicle-filter-title" class="h6 mb-3 fw-semibold text-body">
+            Tipus de vehicle
+          </h2>
+          <div class="vehicle-grid">
+            <button type="button" class="btn vehicle-option" data-vehicle="turismo" aria-pressed="false">
+              <span class="vehicle-icon"><i class="bi bi-car-front"></i></span>
+              <span class="vehicle-meta">
+                <span class="fw-semibold text-body">Turisme</span>
+                <small class="text-body-secondary">A &lt; 1.9m, L &lt; 5.0m</small>
+              </span>
+            </button>
+            <button type="button" class="btn vehicle-option" data-vehicle="furgoneta" aria-pressed="false">
+              <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
+              <span class="vehicle-meta">
+                <span class="fw-semibold text-body">Furgoneta</span>
+                <small class="text-body-secondary">A &lt; 2.2m, L &lt; 6.5m</small>
+              </span>
+            </button>
+            <button type="button" class="btn vehicle-option" data-vehicle="autocaravana" aria-pressed="false">
+              <span class="vehicle-icon"><i class="bi bi-car-front"></i></span>
+              <span class="vehicle-meta">
+                <span class="fw-semibold text-body">Autocaravana</span>
+                <small class="text-body-secondary">A &lt; 3.6m, L &lt; 10.0m</small>
+              </span>
+            </button>
+            <button type="button" class="btn vehicle-option" data-vehicle="autobus" aria-pressed="false">
+              <span class="vehicle-icon"><i class="bi bi-bus-front"></i></span>
+              <span class="vehicle-meta">
+                <span class="fw-semibold text-body">Autobús</span>
+                <small class="text-body-secondary">A &lt; 5.0m, L &lt; 12.0m</small>
+              </span>
+            </button>
+            <button type="button" class="btn vehicle-option" data-vehicle="camion7" aria-pressed="false">
+              <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
+              <span class="vehicle-meta">
+                <span class="fw-semibold text-body">Camió 7m</span>
+                <small class="text-body-secondary">A &lt; 3.6m, L &lt; 7.0m</small>
+              </span>
+            </button>
+            <button type="button" class="btn vehicle-option" data-vehicle="moto" aria-pressed="false">
+              <span class="vehicle-icon"><i class="bi bi-scooter"></i></span>
+              <span class="vehicle-meta">
+                <span class="fw-semibold text-body">Moto</span>
+                <small class="text-body-secondary">A &lt; 2.2m</small>
+              </span>
+            </button>
+            <button type="button" class="btn vehicle-option full-width" data-vehicle="camion6" aria-pressed="false">
+              <span class="vehicle-icon"><i class="bi bi-truck"></i></span>
+              <span class="vehicle-meta">
+                <span class="fw-semibold text-body">Camió 6m</span>
+                <small class="text-body-secondary">A &lt; 2.7m, L &lt; 6.0m</small>
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <section class="mb-4" aria-labelledby="availability-filter-title">
+          <h2 id="availability-filter-title" class="h6 mb-3 fw-semibold text-body">
+            Disponibilitat
+          </h2>
+          <div class="availability-list d-flex flex-column gap-2">
+            <div class="form-check d-flex align-items-center gap-2 mb-0">
+              <input type="checkbox" class="form-check-input m-0" id="available" name="availability"
+                value="available" />
+              <label class="form-check-label d-flex align-items-center gap-2" for="available">
+                <span class="status-dot status-available"></span>
+                Disponible
+              </label>
             </div>
-          </section>
-
-          <section class="mb-4" aria-labelledby="availability-filter-title">
-            <h2
-              id="availability-filter-title"
-              class="h6 mb-3 fw-semibold text-body"
-            >
-              Disponibilitat
-            </h2>
-            <div class="availability-list d-flex flex-column gap-2">
-              <div class="form-check d-flex align-items-center gap-2 mb-0">
-                <input
-                  type="checkbox"
-                  class="form-check-input m-0"
-                  id="available"
-                  name="availability"
-                  value="available"
-                />
-                <label
-                  class="form-check-label d-flex align-items-center gap-2"
-                  for="available"
-                >
-                  <span class="status-dot status-available"></span>
-                  Disponible
-                </label>
-              </div>
-              <div class="form-check d-flex align-items-center gap-2 mb-0">
-                <input
-                  type="checkbox"
-                  class="form-check-input m-0"
-                  id="halfOccupied"
-                  name="availability"
-                  value="half"
-                />
-                <label
-                  class="form-check-label d-flex align-items-center gap-2"
-                  for="halfOccupied"
-                >
-                  <span class="status-dot status-half"></span>
-                  Mig ocupat
-                </label>
-              </div>
-              <div class="form-check d-flex align-items-center gap-2 mb-0">
-                <input
-                  type="checkbox"
-                  class="form-check-input m-0"
-                  id="occupied"
-                  name="availability"
-                  value="occupied"
-                />
-                <label
-                  class="form-check-label d-flex align-items-center gap-2"
-                  for="occupied"
-                >
-                  <span class="status-dot status-occupied"></span>
-                  Ocupat
-                </label>
-              </div>
+            <div class="form-check d-flex align-items-center gap-2 mb-0">
+              <input type="checkbox" class="form-check-input m-0" id="occupied" name="availability" value="occupied" />
+              <label class="form-check-label d-flex align-items-center gap-2" for="occupied">
+                <span class="status-dot status-occupied"></span>
+                Ocupat
+              </label>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section class="mb-4" aria-labelledby="electric-filter-title">
-            <h2
-              id="electric-filter-title"
-              class="h6 mb-3 fw-semibold text-body"
-            >
-              Càrrega elèctrica
-            </h2>
-            <div class="form-check form-switch">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                id="electricCharging"
-                name="electricCharging"
-              />
-              <label class="form-check-label" for="electricCharging"
-                >Només places amb càrrega elèctrica</label
-              >
-            </div>
-          </section>
+        <section class="mb-4" aria-labelledby="electric-filter-title">
+          <h2 id="electric-filter-title" class="h6 mb-3 fw-semibold text-body">
+            Càrrega elèctrica
+          </h2>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="electricCharging" name="electricCharging" />
+            <label class="form-check-label" for="electricCharging">Només places amb càrrega elèctrica</label>
+          </div>
+        </section>
 
-          <section class="mb-4" aria-labelledby="favorites-filter-title">
-            <h2
-              id="favorites-filter-title"
-              class="h6 mb-3 fw-semibold text-body"
-            >
-              Favorits
-            </h2>
-            <div class="form-check form-switch">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                id="favoritesOnly"
-                name="favoritesOnly"
-              />
-              <label class="form-check-label" for="favoritesOnly"
-                >Només aparcaments favorits</label
-              >
-            </div>
-          </section>
+        <section class="mb-4" aria-labelledby="accessibility-filter-title">
+          <h2 id="accessibility-filter-title" class="h6 mb-3 fw-semibold text-body">
+            Accessibilitat
+          </h2>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="accessibility" name="accessibility" />
+            <label class="form-check-label" for="accessibility">Només places accessibles (PMR)</label>
+          </div>
+        </section>
 
-          <p class="mb-2 text-body-secondary">
-            * Comprova les mesures específiques que accepta cada aparcament.
-          </p>
-        </form>
+        <section class="mb-4" aria-labelledby="favorites-filter-title">
+          <h2 id="favorites-filter-title" class="h6 mb-3 fw-semibold text-body">
+            Favorits
+          </h2>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="favoritesOnly" name="favoritesOnly" />
+            <label class="form-check-label" for="favoritesOnly">Només aparcaments favorits</label>
+          </div>
+        </section>
 
-        <div class="d-flex gap-2 border-top p-3 bg-body">
-          <button
-            type="reset"
-            form="filtresContainer"
-            class="btn btn-outline-secondary w-50"
-          >
-            Esborra filtres
-          </button>
-          <button type="button" class="btn btn-danger w-50">
-            Veure resultats
-          </button>
-        </div>
-      </aside>
-      <div id="map" class="flex-grow-1"></div>
+        <p class="mb-2 text-body-secondary">
+          * Comprova les mesures específiques que accepta cada aparcament.
+        </p>
+      </form>
 
-      <button
-        type="button"
-        id="mobileMapViewBtn"
-        class="btn btn-danger mobile-map-view-btn"
-        aria-pressed="false"
-      >
-        Veure mapa
-      </button>
-    </main>
+      <div class="d-flex gap-2 border-top p-3 bg-body">
+        <button type="reset" form="filtresContainer" class="btn btn-outline-secondary w-50">
+          Esborra filtres
+        </button>
+        <button type="button" class="btn btn-danger w-50">
+          Veure resultats
+        </button>
+      </div>
+    </aside>
+    <div id="map" class="flex-grow-1"></div>
 
-    <!-- Slot de plantilla: Peu de pàgina reutilitzable -->
-    <div
-      class="template-slot"
-      data-template="components/footer.html"
-      aria-label="Peu de pàgina"
-    ></div>
+    <button type="button" id="mobileMapViewBtn" class="btn btn-danger mobile-map-view-btn" aria-pressed="false">
+      Veure mapa
+    </button>
+  </main>
 
-    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="src/js/main.js"></script>
-  </body>
+  <!-- Slot de plantilla: Peu de pàgina reutilitzable -->
+  <div class="template-slot" data-template="components/footer.html" aria-label="Peu de pàgina"></div>
+
+  <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="src/js/main.js"></script>
+</body>
+
 </html>
