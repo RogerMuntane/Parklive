@@ -71,8 +71,16 @@ def search_aparcaments():
         if request.args.get('tipus'):
             filters['tipus'] = request.args.get('tipus')
 
-        if request.args.get('estat'):
-            filters['estat'] = request.args.get('estat')
+        if request.args.get('disponibilitat'):
+            disp_param = request.args.get('disponibilitat')
+            if ',' in disp_param:
+                filters['disponibilitat'] = [e.strip() for e in disp_param.split(',')]
+            else:
+                filters['disponibilitat'] = disp_param
+
+        # Filtre d'altura mínima (pel tipus de vehicle)
+        if request.args.get('altura_min'):
+            filters['altura_min'] = float(request.args.get('altura_min'))
 
         # Filtres numèrics de tarifes
         if request.args.get('tarifa_hora_min'):

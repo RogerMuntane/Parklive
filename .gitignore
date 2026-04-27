@@ -1,7 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 
-*.pyc
-*.pyc
-*.pyc
-googleAuth.json
+# Environments
 .env
-*.env
+.env.*
+!.env.example
+
+# Auth & Secrets
+googleAuth.json
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
