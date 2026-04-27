@@ -109,11 +109,20 @@ export function initLandingMap() {
 
   const setStreetReports = (reports = []) => {
     streetReportsLayer.clearLayers();
+    const usedCoords = new Set();
 
     reports.forEach((report) => {
-      const lat = Number(report?.latitud);
-      const lon = Number(report?.longitud);
+      let lat = Number(report?.latitud);
+      let lon = Number(report?.longitud);
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+      // Jitter para evitar solapamiento perfecto
+      const coordKey = `${lat.toFixed(5)},${lon.toFixed(5)}`;
+      if (usedCoords.has(coordKey)) {
+        lat += (Math.random() - 0.5) * 0.00015;
+        lon += (Math.random() - 0.5) * 0.00015;
+      }
+      usedCoords.add(coordKey);
 
       const isOccupied = String(report?.status || '').toLowerCase() === 'occupied';
       const marker = leaflet.circleMarker([lat, lon], {
