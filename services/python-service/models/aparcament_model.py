@@ -119,13 +119,8 @@ def get_aparcaments_by_filters(filters):
             }
         }
 
-    rating_expr = (
-        "COALESCE((SELECT AVG(v.puntuacio) "
-        "FROM valoracions v WHERE v.aparcament_id = aparcaments.id), 0)"
-    )
-
-    # Construcció de la query base
-    query = "SELECT * FROM aparcaments WHERE 1=1"
+    # Construcció de la query base usant la vista per incloure valoracions
+    query = "SELECT * FROM vista_aparcaments_complet WHERE estat = 'actiu'"
     params = []
 
     # Filtre per ciutat
@@ -181,20 +176,34 @@ def get_aparcaments_by_filters(filters):
         query += " AND obert_24h = %s"
         params.append(filters['obert_24h'])
 
-    # Filtre d'estat
-    if filters.get('estat'):
-        valid_estats = ['actiu', 'inactiu', 'manteniment', 'complet']
-        if filters['estat'] not in valid_estats:
-            raise ValueError(
-                f"Estat invàlid. Estats vàlids: {', '.join(valid_estats)}")
-        query += " AND estat = %s"
-        params.append(filters['estat'])
+    # Filtre de disponibilitat
+    if filters.get('disponibilitat'):
+        valid_disp = ['disponible', 'ocupat']
+        disp = filters['disponibilitat'] if isinstance(filters['disponibilitat'], list) else [filters['disponibilitat']]
+        
+        for d in disp:
+            if d not in valid_disp:
+                raise ValueError(f"Disponibilitat invàlida: {d}")
+        
+        conditions = []
+        if 'disponible' in disp:
+            conditions.append("places_disponibles > 0")
+        if 'ocupat' in disp:
+            conditions.append("places_disponibles = 0")
+            
+        if conditions:
+            query += f" AND ({' OR '.join(conditions)})"
+
+    # Filtre d'altura mínima
+    if filters.get('altura_min') is not None:
+        query += " AND (altura_maxima IS NULL OR altura_maxima >= %s)"
+        params.append(filters['altura_min'])
 
     # Filtre de valoració mínima
     if filters.get('valoracio_min') is not None:
         if filters['valoracio_min'] < 0 or filters['valoracio_min'] > 5:
             raise ValueError("Valoració mínima ha de ser entre 0 i 5")
-        query += f" AND {rating_expr} >= %s"
+        query += " AND valoracio_mitjana >= %s"
         params.append(filters['valoracio_min'])
 
     # Filtre de proximitat geogràfica (radi en km)
@@ -237,7 +246,7 @@ def get_aparcaments_by_filters(filters):
     if offset < 0:
         offset = 0
 
-    query += f" ORDER BY {rating_expr} DESC, aparcaments.id ASC"
+    query += " ORDER BY valoracio_mitjana DESC, id ASC"
     query += " LIMIT %s OFFSET %s"
     params.extend([limite, offset])
 

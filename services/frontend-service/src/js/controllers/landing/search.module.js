@@ -456,11 +456,11 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
   const priceRange = document.getElementById('priceRange')?.value;
   const distanceRange = document.getElementById('distanceRange')?.value;
   const electricCharging = document.getElementById('electricCharging')?.checked;
+  const accessibility = document.getElementById('accessibility')?.checked;
 
   const availability = [];
-  if (document.getElementById('available')?.checked) availability.push('actiu');
-  if (document.getElementById('halfOccupied')?.checked) availability.push('manteniment');
-  if (document.getElementById('occupied')?.checked) availability.push('complet');
+  if (document.getElementById('available')?.checked) availability.push('disponible');
+  if (document.getElementById('occupied')?.checked) availability.push('ocupat');
 
   const params = {
     limite: MAX_RESULTS_FOR_MAP,
@@ -483,8 +483,30 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
     params.carrega_electrica = true;
   }
 
+  if (accessibility) {
+    params.accessibilitat = true;
+  }
+
   if (availability.length > 0) {
-    params.estat = availability[0];
+    params.disponibilitat = availability.join(',');
+  }
+
+  // Filtre per tipus de vehicle (altura)
+  const activeVehicle = document.querySelector('.vehicle-option.active');
+  if (activeVehicle) {
+    const vehicleType = activeVehicle.dataset.vehicle;
+    const heightMap = {
+      turismo: 1.9,
+      furgoneta: 2.2,
+      autocaravana: 3.6,
+      autobus: 5.0,
+      camion7: 3.6,
+      moto: 2.2,
+      camion6: 2.7,
+    };
+    if (heightMap[vehicleType]) {
+      params.altura_min = heightMap[vehicleType];
+    }
   }
 
   return { params, searchTerm };

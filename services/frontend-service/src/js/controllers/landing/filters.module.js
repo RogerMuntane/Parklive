@@ -32,8 +32,19 @@ export function initFilterPanelControls() {
     const vehicleOptions = document.querySelectorAll('.vehicle-option[data-vehicle]');
     vehicleOptions.forEach((option) => {
       option.addEventListener('click', () => {
-        const isActive = option.classList.toggle('active');
-        option.setAttribute('aria-pressed', String(isActive));
+        const wasActive = option.classList.contains('active');
+        
+        // Remove active from all
+        vehicleOptions.forEach(opt => {
+          opt.classList.remove('active');
+          opt.setAttribute('aria-pressed', 'false');
+        });
+
+        // Toggle current
+        if (!wasActive) {
+          option.classList.add('active');
+          option.setAttribute('aria-pressed', 'true');
+        }
       });
     });
   };
