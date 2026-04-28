@@ -32,11 +32,10 @@ def crear_contribucio(data):
 
     Paràmetres esperats en data:
     - usuari_id: ID de l'usuari (requerit)
-    - aparcament_id: ID de l'aparcament (opcional)
-    - estat_reportat: 'lliure', 'ocupat', 'parcial' (requerit)
+    - estat_reportat: 'lliure' o 'ocupat' (requerit)
     - dades: diccionari amb dades addicionals (opcional)
-    - latitud: latitud de la ubicació (opcional)
-    - longitud: longitud de la ubicació (opcional)
+    - latitud: latitud de la ubicació (requerit)
+    - longitud: longitud de la ubicació (requerit)
 
     Retorna:
     - Dades de la contribució creada
@@ -51,7 +50,7 @@ def crear_contribucio(data):
             if field not in data or data[field] is None:
                 raise ValueError(f"El camp '{field}' és obligatori")
 
-        estats_valids = ['lliure', 'ocupat', 'parcial']
+        estats_valids = ['lliure', 'ocupat']
         if data['estat_reportat'] not in estats_valids:
             raise ValueError(
                 f"Estat reportat invàlid. Estats vàlids: {', '.join(estats_valids)}")
@@ -63,17 +62,6 @@ def crear_contribucio(data):
         if not usuari:
             raise ValueError(
                 f"L'usuari amb ID {data['usuari_id']} no existeix")
-
-        aparcament = None
-        aparcament_id = data.get('aparcament_id')
-        if aparcament_id is not None:
-            # Validar que l'aparcament existeix quan s'ha informat
-            cursor.execute(
-                "SELECT id, nom, latitud, longitud FROM aparcaments WHERE id = %s", (aparcament_id,))
-            aparcament = cursor.fetchone()
-            if not aparcament:
-                raise ValueError(
-                    f"L'aparcament amb ID {aparcament_id} no existeix")
 
         # Preparar dades JSON
         dades_json = None
@@ -91,20 +79,15 @@ def crear_contribucio(data):
         # Les contribucions ara són sempre de disponibilitat
         punts_guanyats = 5
 
-        # Si hi ha aparcament, fem fallback a les coordenades de l'aparcament
+        # Les coordenades són obligatòries perquè la contribució és independent d'aparcaments.
         latitud = data.get('latitud')
         longitud = data.get('longitud')
-        if aparcament:
-            latitud = latitud or aparcament['latitud']
-            longitud = longitud or aparcament['longitud']
-        elif latitud is None or longitud is None:
-            raise ValueError(
-                "Si no s'informa 'aparcament_id', cal informar 'latitud' i 'longitud'")
+        if latitud is None or longitud is None:
+            raise ValueError("Cal informar 'latitud' i 'longitud'")
 
         # Procedure equivalent: sp_crear_contribucio(..., OUT contribucio_id, OUT error_msg)
         proc_args = [
             data['usuari_id'],
-            aparcament_id,
             data['estat_reportat'],
             dades_json,
             punts_guanyats,
@@ -136,8 +119,6 @@ def crear_contribucio(data):
                 c.id,
                 c.usuari_id,
                 u.nom as usuari_nom,
-                c.aparcament_id,
-                a.nom as aparcament_nom,
                 c.estat_reportat,
                 c.dades,
                 c.validada,
@@ -147,7 +128,6 @@ def crear_contribucio(data):
                 c.created_at
             FROM contribucions c
             JOIN usuaris u ON c.usuari_id = u.id
-            LEFT JOIN aparcaments a ON c.aparcament_id = a.id
             WHERE c.id = %s
         """, (contribucio_id,))
 
@@ -163,10 +143,6 @@ def crear_contribucio(data):
             'usuari': {
                 'id': contribucio['usuari_id'],
                 'nom': contribucio['usuari_nom']
-            },
-            'aparcament': {
-                'id': contribucio['aparcament_id'],
-                'nom': contribucio['aparcament_nom']
             },
             'estat_reportat': contribucio['estat_reportat'],
             'dades': json.loads(contribucio['dades']) if contribucio['dades'] else None,
@@ -206,11 +182,8 @@ def get_contribucions_usuari(usuari_id, filters=None):
             c.estat_reportat,
             c.validada,
             c.punts_guanyats,
-            c.created_at,
-            a.nom as aparcament_nom,
-            a.ciutat
+            c.created_at
         FROM contribucions c
-        LEFT JOIN aparcaments a ON c.aparcament_id = a.id
         WHERE c.usuari_id = %s
     """
 
@@ -242,8 +215,6 @@ def get_contribucions_usuari(usuari_id, filters=None):
             'estat_reportat': c['estat_reportat'],
             'validada': bool(c['validada']),
             'punts_guanyats': c['punts_guanyats'],
-            'aparcament_nom': c['aparcament_nom'],
-            'ciutat': c['ciutat'],
             'created_at': serialize_value(c['created_at'])
         })
 

@@ -1,5 +1,5 @@
-const STREET_REPORTS_CACHE_KEY = 'parklive_street_reports_cache_v1';
-const STREET_REPORTS_CACHE_LIMIT = 50;
+const REPORT_DISPONIBILITAT_CACHE_KEY = 'parklive_report_disponibilitat_cache_v1';
+const REPORT_DISPONIBILITAT_CACHE_LIMIT = 50;
 
 function normalizeReport(raw) {
   if (!raw || typeof raw !== 'object') return null;
@@ -27,7 +27,7 @@ function normalizeReport(raw) {
 
 function readCacheRows() {
   try {
-    const raw = globalThis.localStorage.getItem(STREET_REPORTS_CACHE_KEY);
+    const raw = globalThis.localStorage.getItem(REPORT_DISPONIBILITAT_CACHE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -38,39 +38,39 @@ function readCacheRows() {
 
 function writeCacheRows(rows) {
   try {
-    globalThis.localStorage.setItem(STREET_REPORTS_CACHE_KEY, JSON.stringify(rows));
-    globalThis.dispatchEvent(new CustomEvent('street-reports-updated', { detail: { rows } }));
+    globalThis.localStorage.setItem(REPORT_DISPONIBILITAT_CACHE_KEY, JSON.stringify(rows));
+    globalThis.dispatchEvent(new CustomEvent('report-disponibilitat-updated', { detail: { rows } }));
   } catch {
     // Ignorem errors d'escriptura en localStorage.
   }
 }
 
-export function getStreetReportsCacheKey() {
-  return STREET_REPORTS_CACHE_KEY;
+export function getReportDisponibilitatCacheKey() {
+  return REPORT_DISPONIBILITAT_CACHE_KEY;
 }
 
-export function getCachedStreetReports() {
+export function getCachedReportDisponibilitat() {
   return readCacheRows()
     .map((row) => normalizeReport(row))
     .filter(Boolean)
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 }
 
-export function appendStreetReportToCache(report) {
+export function appendReportDisponibilitatToCache(report) {
   const normalized = normalizeReport(report);
   if (!normalized) return;
 
-  const existing = getCachedStreetReports();
+  const existing = getCachedReportDisponibilitat();
   const withoutCurrent = existing.filter((row) => row.id !== normalized.id);
   const nextRows = [normalized, ...withoutCurrent]
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
-    .slice(0, STREET_REPORTS_CACHE_LIMIT);
+    .slice(0, REPORT_DISPONIBILITAT_CACHE_LIMIT);
 
   writeCacheRows(nextRows);
 }
 
-export function mergeStreetReportsIntoCache(reports = []) {
-  const existing = getCachedStreetReports();
+export function mergeReportDisponibilitatIntoCache(reports = []) {
+  const existing = getCachedReportDisponibilitat();
   const normalizedIncoming = (Array.isArray(reports) ? reports : [])
     .map((report) => normalizeReport(report))
     .filter(Boolean);
@@ -82,7 +82,7 @@ export function mergeStreetReportsIntoCache(reports = []) {
 
   const merged = Array.from(mergedById.values())
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
-    .slice(0, STREET_REPORTS_CACHE_LIMIT);
+    .slice(0, REPORT_DISPONIBILITAT_CACHE_LIMIT);
 
   writeCacheRows(merged);
   return merged;

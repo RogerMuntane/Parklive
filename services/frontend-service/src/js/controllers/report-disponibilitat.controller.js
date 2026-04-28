@@ -4,7 +4,7 @@ import { getUserId } from '../utils.js';
 const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
 const REPORT_COOLDOWN_SECONDS = 60;
-const COOLDOWN_STORAGE_KEY = 'parklive_street_report_cooldown_until';
+const COOLDOWN_STORAGE_KEY = 'parklive_report_disponibilitat_cooldown_until';
 
 function setStatusButtons(statusButtons, nextStatus) {
   statusButtons.forEach((button) => {
@@ -17,7 +17,7 @@ function setStatusButtons(statusButtons, nextStatus) {
 function showToast(toastEl, message, type = 'success') {
   if (!toastEl) return;
   toastEl.textContent = message;
-  toastEl.className = `street-toast is-visible is-${type}`;
+  toastEl.className = `report-toast is-visible is-${type}`;
 
   globalThis.clearTimeout(showToast.timeoutId);
   showToast.timeoutId = globalThis.setTimeout(() => {
@@ -78,14 +78,14 @@ async function resolveCurrentPosition() {
   });
 }
 
-export function initStreetReport() {
-  const form = document.getElementById('streetReportForm');
-  const mapEl = document.getElementById('streetReportMap');
-  const coordsEl = document.getElementById('streetReportCoords');
-  const toastEl = document.getElementById('streetReportToast');
-  const submitBtn = document.getElementById('streetReportSubmit');
-  const commentEl = document.getElementById('streetReportComment');
-  const statusButtons = Array.from(document.querySelectorAll('.street-status-option[data-status]'));
+export function initReportDisponibilitat() {
+  const form = document.getElementById('reportDisponibilitatForm');
+  const mapEl = document.getElementById('reportDisponibilitatMap');
+  const coordsEl = document.getElementById('reportDisponibilitatCoords');
+  const toastEl = document.getElementById('reportDisponibilitatToast');
+  const submitBtn = document.getElementById('reportDisponibilitatSubmit');
+  const commentEl = document.getElementById('reportDisponibilitatComment');
+  const statusButtons = Array.from(document.querySelectorAll('.report-status-option[data-status]'));
 
   if (!form || !mapEl || !coordsEl || !submitBtn || statusButtons.length === 0 || !globalThis.L) {
     return;
@@ -145,10 +145,7 @@ export function initStreetReport() {
       marker = globalThis.L.marker(latLng).addTo(map);
     }
 
-    marker
-      .bindPopup('Ubicació del report')
-      .openPopup();
-
+    marker.bindPopup('Ubicació del report').openPopup();
     map.flyTo(latLng, 17, { duration: 0.8 });
 
     coordsEl.innerHTML = `<i class="bi bi-geo-alt"></i><span>Lat ${lat.toFixed(5)} · Lon ${lon.toFixed(5)}</span>`;
@@ -199,7 +196,7 @@ export function initStreetReport() {
     };
 
     try {
-      const response = await pythonApi.post('/api/reports/street-availability', payload);
+      const response = await pythonApi.post('/api/reports/disponibilitat', payload);
       const successCooldownSeconds = Number(response?.cooldown_seconds);
       const cooldownSeconds = Number.isFinite(successCooldownSeconds) && successCooldownSeconds > 0
         ? successCooldownSeconds
