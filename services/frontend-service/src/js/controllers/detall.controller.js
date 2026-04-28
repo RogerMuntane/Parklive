@@ -300,6 +300,73 @@ function renderDetall(a) {
   renderValoracions(a.valoracions || []);
 }
 
+/* ------------------------------------------------------------------ */
+/*  Disponibilitat en temps real (franja actual)                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Converteix un Date a cadena "YYYY-MM-DD HH:MM" en hora local.
+ * @param {Date} d
+ * @returns {string}
+ */
+function toLocalDateTimeString(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    ` ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+/**
+ * Crida l'endpoint de disponibilitat per franja i actualitza els elements
+ * [data-detall="places-lliures"], "places-totals", "ocupacio-pct" i la barra.
+ *
+ * Utilitza la franja horària actual (ara → ara+2h) per defecte.
+ *
+ * @param {string|number} aparcamentId
+ */
+async function fetchAndUpdateDisponibilitat(aparcamentId) {
+  try {
+    const now = new Date();
+    // Arrodonir als 30 min superiors per coherència amb la pàgina de reserva
+    const ms30 = 30 * 60 * 1000;
+    const roundedIn = new Date(Math.ceil(now.getTime() / ms30) * ms30);
+    const roundedOut = new Date(roundedIn.getTime() + 2 * 60 * 60 * 1000);
+
+    const params = new URLSearchParams({
+      data_entrada: toLocalDateTimeString(roundedIn),
+      data_sortida: toLocalDateTimeString(roundedOut),
+    });
+
+    const res = await pythonApi.get(
+      `/api/aparcaments/${encodeURIComponent(aparcamentId)}/disponibilitat?${params}`,
+    );
+
+    const lliures = res.places_lliures ?? 0;
+    const totals  = res.capacitat_total ?? 0;
+    const ocupats = totals > 0
+      ? Math.round(((totals - lliures) / totals) * 100)
+      : 0;
+
+    fill('places-lliures', lliures);
+    fill('places-totals', `Capacitat: ${totals}`);
+    fill('ocupacio-pct', `${ocupats}% ple`);
+
+    const progressBar = document.querySelector('[data-detall="progress-bar"]');
+    if (progressBar) {
+      progressBar.style.width = `${ocupats}%`;
+      progressBar.setAttribute('aria-valuenow', ocupats);
+      progressBar.style.backgroundColor =
+        ocupats < 50 ? 'var(--bs-success)'
+          : ocupats < 80 ? 'var(--bs-warning)'
+            : 'var(--bs-danger)';
+    }
+  } catch (err) {
+    // En cas d'error mantenim el valor estàtic carregat inicialment
+    console.warn('[ParkLive] No s\'ha pogut actualitzar la disponibilitat real (detall):', err);
+  }
+}
+
 async function initDetallFavoriteButton(aparcamentId) {
   const favoriteBtn = document.querySelector('[data-detall="favorit-btn"]');
   const favoriteIcon = document.querySelector('[data-detall="favorit-icon"]');
@@ -426,6 +493,9 @@ export async function initDetallAparcament() {
   try {
     const aparcament = await pythonApi.get(`/api/aparcaments/${encodeURIComponent(id)}`);
     renderDetall(aparcament);
+    // Sobreescriu les places lliures estàtiques de la BD amb el càlcul
+    // real per franja horària (ara → ara+2h), igual que la pàgina de reserva.
+    fetchAndUpdateDisponibilitat(aparcament.id || id);
     await initDetallFavoriteButton(aparcament.id || id);
     showContent();
 

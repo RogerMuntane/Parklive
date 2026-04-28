@@ -1,4 +1,5 @@
 from flask import jsonify, request
+from datetime import datetime
 from models.aparcament_model import (
     get_all_aparcaments,
     get_aparcament_by_id,
@@ -6,6 +7,7 @@ from models.aparcament_model import (
     add_user_favorite_parking,
     remove_user_favorite_parking,
     get_user_favorite_parkings,
+    get_places_disponibles_per_franja,
 )
 
 
@@ -130,6 +132,13 @@ def search_aparcaments():
         if request.args.get('radi_km'):
             filters['radi_km'] = float(request.args.get('radi_km'))
 
+        # Filtres de dates
+        if request.args.get('data_entrada'):
+            filters['data_entrada'] = request.args.get('data_entrada')
+        
+        if request.args.get('data_sortida'):
+            filters['data_sortida'] = request.args.get('data_sortida')
+
         # Paginació
         if request.args.get('limite'):
             filters['limite'] = int(request.args.get('limite'))
@@ -210,5 +219,53 @@ def list_aparcaments_favorits_usuari():
         }), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def get_disponibilitat_franja(aparcament_id):
+    """
+    Controlador per obtenir les places disponibles d'un aparcament per una franja horària.
+
+    Query params:
+    - data_entrada: inici de la franja (format: YYYY-MM-DD HH:MM o YYYY-MM-DD HH:MM:SS)
+    - data_sortida: fi de la franja (format: YYYY-MM-DD HH:MM o YYYY-MM-DD HH:MM:SS)
+    """
+    try:
+        aparcament_id = int(aparcament_id)
+    except (ValueError, TypeError):
+        return jsonify({"error": "ID d'aparcament no vàlid"}), 400
+
+    data_entrada_str = request.args.get('data_entrada')
+    data_sortida_str = request.args.get('data_sortida')
+
+    if not data_entrada_str or not data_sortida_str:
+        return jsonify({"error": "Cal especificar 'data_entrada' i 'data_sortida'"}), 400
+
+    # Acceptar formats amb o sense segons
+    FORMATS = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
+
+    def parse_dt(s):
+        for fmt in FORMATS:
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                continue
+        raise ValueError(f"Format de data no reconegut: {s}")
+
+    try:
+        data_entrada = parse_dt(data_entrada_str)
+        data_sortida = parse_dt(data_sortida_str)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    if data_sortida <= data_entrada:
+        return jsonify({"error": "La data de sortida ha de ser posterior a la d'entrada"}), 400
+
+    try:
+        resultat = get_places_disponibles_per_franja(aparcament_id, data_entrada, data_sortida)
+        if resultat is None:
+            return jsonify({"error": "Aparcament no trobat"}), 404
+        return jsonify(resultat), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

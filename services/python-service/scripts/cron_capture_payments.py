@@ -77,6 +77,33 @@ def capture_due_payments():
                     # 3. Actualitzar estat de la reserva a 'completada'
                     actualitzar_estat_reserva(res_id, 'completada')
                     
+                    # 4. Recalcular places_disponibles de l'aparcament
+                    #    Basant-nos en reserves actives que cobreixen l'instant actual
+                    try:
+                        ap_cursor = conn.cursor(dictionary=True)
+                        ap_cursor.execute(
+                            "SELECT aparcament_id FROM reserves WHERE id = %s", (res_id,)
+                        )
+                        ap_row = ap_cursor.fetchone()
+                        if ap_row:
+                            aparcament_id = ap_row['aparcament_id']
+                            ap_cursor.execute("""
+                                UPDATE aparcaments a
+                                SET places_disponibles = GREATEST(0, a.capacitat_total - (
+                                    SELECT COUNT(*) FROM reserves r
+                                    WHERE r.aparcament_id = a.id
+                                      AND r.estat IN ('confirmada', 'pendent')
+                                      AND r.data_entrada <= NOW()
+                                      AND r.data_sortida > NOW()
+                                ))
+                                WHERE a.id = %s
+                            """, (aparcament_id,))
+                            conn.commit()
+                            print(f"[{datetime.now()}] places_disponibles actualitzades per aparcament ID {aparcament_id}.")
+                        ap_cursor.close()
+                    except Exception as upd_e:
+                        print(f"[{datetime.now()}] ADVERTÈNCIA: No s'ha pogut actualitzar places_disponibles: {upd_e}")
+
                     print(f"[{datetime.now()}] Pagament capturat i reserva {codi} completada amb èxit.")
                 else:
                     print(f"[{datetime.now()}] ERROR: No s'ha pogut capturar el pagament a Stripe per la reserva {codi}.")

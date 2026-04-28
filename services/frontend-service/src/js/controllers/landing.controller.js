@@ -176,7 +176,10 @@ export function initLanding() {
   } = mapState;
 
   setStreetReports([]);
-  refreshStreetReportsFromApi(setStreetReports);
+  const initialCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
+  if (initialCategory !== 'structure') {
+    refreshStreetReportsFromApi(setStreetReports);
+  }
 
   const toggleFilters = createFiltersController({ map, updateOpenPopupsLayout });
 
@@ -186,7 +189,7 @@ export function initLanding() {
   initFilterPanelControls();
   setupSearchBar({ closeFilters: toggleFilters });
   setupDateMiniSheet();
-  const { runSearch, setUserLocation } = initLandingSearch({
+  const { runSearch: originalRunSearch, setUserLocation } = initLandingSearch({
     setParkingSpots,
     focusParkingById,
     closeFilters: toggleFilters,
@@ -254,7 +257,13 @@ export function initLanding() {
       });
 
       if (currentRequestId !== mapDynamicRequestId) return;
-      await refreshStreetReportsFromApi(setStreetReports);
+
+      const parkingCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
+      if (parkingCategory === 'structure') {
+        setStreetReports([]);
+      } else {
+        await refreshStreetReportsFromApi(setStreetReports);
+      }
     }, MAP_DYNAMIC_LOAD_DEBOUNCE_MS);
   };
 

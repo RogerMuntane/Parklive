@@ -1,6 +1,7 @@
 from models.db_connection import get_db_connection, get_new_connection
 from shared.serializers import serialize_row, serialize_rows
 import math
+from datetime import datetime, timedelta
 
 
 def get_all_aparcaments():
@@ -72,12 +73,17 @@ def get_aparcaments_by_filters(filters):
     # Si només s'usen filtres compatibles, delegar al procedure
     procedure_supported_filters = {
         'ciutat', 'tipus', 'accessibilitat', 'carrega_electrica',
+        'videovigilancia', 'obert_24h',
         'latitud', 'longitud', 'limite', 'offset'
     }
     unsupported_filters = {
         key for key, value in filters.items()
         if value is not None and key not in procedure_supported_filters
     }
+
+    # Forçar consulta manual si hi ha disponibilitat o dates per fer el càlcul dinàmic
+    if filters.get('disponibilitat') or filters.get('data_entrada'):
+        unsupported_filters.add('dynamic_availability')
 
     if not unsupported_filters:
         limite = filters.get('limite', 20)
@@ -95,6 +101,8 @@ def get_aparcaments_by_filters(filters):
             filters.get('tipus'),
             filters.get('accessibilitat'),
             filters.get('carrega_electrica'),
+            filters.get('videovigilancia'),
+            filters.get('obert_24h'),
             filters.get('latitud'),
             filters.get('longitud'),
             limite,
@@ -128,15 +136,19 @@ def get_aparcaments_by_filters(filters):
         query += " AND ciutat LIKE %s"
         params.append(f"%{filters['ciutat']}%")
 
-    # Filtre per tipus
+    # Filtre per tipus (suporta múltiples valors separats per coma)
     if filters.get('tipus'):
+        tipus_values = filters['tipus'].split(',')
         valid_tipus = ['carrer', 'cobert', 'aire_lliure',
                        'subterrani', 'parking_public', 'parking_privat']
-        if filters['tipus'] not in valid_tipus:
-            raise ValueError(
-                f"Tipus invàlid. Tipus vàlids: {', '.join(valid_tipus)}")
-        query += " AND tipus = %s"
-        params.append(filters['tipus'])
+        
+        for t in tipus_values:
+            if t not in valid_tipus:
+                raise ValueError(f"Tipus invàlid: {t}")
+        
+        placeholders = ', '.join(['%s'] * len(tipus_values))
+        query += f" AND tipus IN ({placeholders})"
+        params.extend(tipus_values)
 
     # Filtres per tarifa per hora
     if filters.get('tarifa_hora_min') is not None:
@@ -176,23 +188,51 @@ def get_aparcaments_by_filters(filters):
         query += " AND obert_24h = %s"
         params.append(filters['obert_24h'])
 
-    # Filtre de disponibilitat
-    if filters.get('disponibilitat'):
+    # Filtre de disponibilitat dinàmica (Basat en reserves)
+    if filters.get('disponibilitat') or filters.get('data_entrada'):
+        # Si no hi ha dates, usem ara -> ara + 2h
+        data_entrada = filters.get('data_entrada')
+        data_sortida = filters.get('data_sortida')
+        
+        if not data_entrada or not data_sortida:
+            now = datetime.now()
+            # Arrodonir a 30 min superiors
+            now = now.replace(minute=(now.minute // 30) * 30, second=0, microsecond=0)
+            data_entrada = now.strftime('%Y-%m-%d %H:%M')
+            data_sortida = (now + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
+
         valid_disp = ['disponible', 'ocupat']
-        disp = filters['disponibilitat'] if isinstance(filters['disponibilitat'], list) else [filters['disponibilitat']]
+        disp = filters.get('disponibilitat', [])
+        if isinstance(disp, str): disp = [disp]
         
-        for d in disp:
-            if d not in valid_disp:
-                raise ValueError(f"Disponibilitat invàlida: {d}")
+        # Només apliquem el filtre restrictiu si s'ha marcat explícitament "disponible" 
+        # o si l'usuari ha posat dates al cercador
+        if 'disponible' in disp or filters.get('data_entrada'):
+            query += """
+            AND id NOT IN (
+                SELECT r.aparcament_id
+                FROM reserves r
+                WHERE r.estat IN ('confirmada', 'pendent')
+                AND NOT (r.data_sortida <= %s OR r.data_entrada >= %s)
+                GROUP BY r.aparcament_id
+                HAVING COUNT(*) >= (SELECT a.capacitat_total FROM aparcaments a WHERE a.id = r.aparcament_id)
+            )
+            """
+            params.extend([data_entrada, data_sortida])
         
-        conditions = []
-        if 'disponible' in disp:
-            conditions.append("places_disponibles > 0")
-        if 'ocupat' in disp:
-            conditions.append("places_disponibles = 0")
-            
-        if conditions:
-            query += f" AND ({' OR '.join(conditions)})"
+        elif 'ocupat' in disp:
+            # Cas contrari: mostrar només els plens
+            query += """
+            AND id IN (
+                SELECT r.aparcament_id
+                FROM reserves r
+                WHERE r.estat IN ('confirmada', 'pendent')
+                AND NOT (r.data_sortida <= %s OR r.data_entrada >= %s)
+                GROUP BY r.aparcament_id
+                HAVING COUNT(*) >= (SELECT a.capacitat_total FROM aparcaments a WHERE a.id = r.aparcament_id)
+            )
+            """
+            params.extend([data_entrada, data_sortida])
 
     # Filtre d'altura mínima
     if filters.get('altura_min') is not None:
@@ -337,6 +377,54 @@ def get_user_favorite_parkings(usuari_id, limit=1000, offset=0):
                 favorits.extend(rows)
 
         return serialize_rows(favorits)
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_places_disponibles_per_franja(aparcament_id, data_entrada, data_sortida):
+    """
+    Calcula les places disponibles d'un aparcament per una franja horària concreta.
+
+    Compta quantes reserves actives (confirmada o pendent) se solapen amb l'interval
+    [data_entrada, data_sortida] i les resta de la capacitat total.
+
+    Paràmetres:
+    - aparcament_id: ID de l'aparcament
+    - data_entrada: datetime d'inici de la franja
+    - data_sortida: datetime de fi de la franja
+
+    Retorna:
+    - dict amb capacitat_total, reserves_actives i places_lliures
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        query = """
+            SELECT
+                a.capacitat_total,
+                COUNT(r.id) AS reserves_actives,
+                GREATEST(0, a.capacitat_total - COUNT(r.id)) AS places_lliures
+            FROM aparcaments a
+            LEFT JOIN reserves r ON r.aparcament_id = a.id
+                AND r.estat IN ('confirmada', 'pendent')
+                AND r.data_entrada < %s
+                AND r.data_sortida > %s
+            WHERE a.id = %s
+            GROUP BY a.id, a.capacitat_total
+        """
+        cursor.execute(query, (data_sortida, data_entrada, aparcament_id))
+        row = cursor.fetchone()
+
+        if not row:
+            return None
+
+        return {
+            'capacitat_total': int(row['capacitat_total'] or 0),
+            'reserves_actives': int(row['reserves_actives'] or 0),
+            'places_lliures': int(row['places_lliures'] or 0),
+        }
     finally:
         cursor.close()
         conn.close()

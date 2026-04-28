@@ -51,6 +51,63 @@ function showContent() {
   document.querySelector('[data-reserva-state="content"]')?.style.setProperty('display', '', 'important');
 }
 
+/** Debounce helper */
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/**
+ * Actualitza la UI de disponibilitat (places, barra, color)
+ * en base a les dades rebudes del backend.
+ */
+function updateDisponibilitatUI({ places_lliures, capacitat_total }) {
+  fill('places-lliures', places_lliures);
+  fill('capacitat', `Capacitat: ${capacitat_total}`);
+
+  const ocupats = capacitat_total > 0
+    ? Math.round(((capacitat_total - places_lliures) / capacitat_total) * 100)
+    : 0;
+  fill('ocupacio', `${ocupats}% ple`);
+
+  const progressBar = document.getElementById('ocupacio-bar');
+  if (progressBar) {
+    progressBar.style.width = `${ocupats}%`;
+    progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+    if (ocupats < 50) {
+      progressBar.classList.add('bg-success');
+    } else if (ocupats < 100) {
+      progressBar.classList.add('bg-warning');
+    } else {
+      progressBar.classList.add('bg-danger');
+    }
+  }
+}
+
+/**
+ * Lògica de fetch de disponibilitat (sense debounce).
+ * Reutilitzable per la càrrega inicial i per els canvis de l'usuari.
+ */
+async function _doFetchDisponibilitat(aparcamentId, dataEntrada, dataSortida) {
+  try {
+    const params = new URLSearchParams({
+      data_entrada: dataEntrada,
+      data_sortida: dataSortida,
+    });
+    const res = await pythonApi.get(`/api/aparcaments/${aparcamentId}/disponibilitat?${params}`);
+    updateDisponibilitatUI(res);
+  } catch (err) {
+    // Si falla la consulta no mostrem error crític — mantenim l'últim valor conegut
+    console.warn('[ParkLive] No s\'ha pogut actualitzar la disponibilitat per franja:', err);
+  }
+}
+
+/** Versió amb debounce per als canvis interactius de l'usuari (evita masses crides) */
+const fetchDisponibilitatFranja = debounce(_doFetchDisponibilitat, 600);
+
 function calculateCost() {
   if (!aparcamentData) return;
 
@@ -113,6 +170,15 @@ function calculateCost() {
   
   // Guardem el preu total al data per utilitzar-lo en la reserva
   document.getElementById('form-reserva').dataset.total = total.toFixed(2);
+
+  // Actualitzar disponibilitat per la franja seleccionada (amb debounce)
+  if (aparcamentData?.id) {
+    fetchDisponibilitatFranja(
+      aparcamentData.id,
+      `${inDateStr} ${inTimeStr}`,
+      `${outDateStr} ${outTimeStr}`
+    );
+  }
 }
 
 function updateEndDateTime(hoursToAdd) {
@@ -227,37 +293,35 @@ export async function initReservaAparcament() {
     fill('nom', esc(aparcamentData.nom || 'Aparcament'));
     fill('adreca', esc(`${aparcamentData.adreca || ''}, ${aparcamentData.ciutat || ''}`));
     fill('tarifa', `${formatCurrency(aparcamentData.tarifa_hora)} / hora`);
-    fill('places-lliures', aparcamentData.places_disponibles || 0);
-    fill('capacitat', `Capacitat: ${aparcamentData.capacitat_total || 0}`);
-    
-    const totals = aparcamentData.capacitat_total ?? 0;
-    const lliures = aparcamentData.places_disponibles ?? 0;
-    const ocupats = totals > 0 ? Math.round(((totals - lliures) / totals) * 100) : 0;
-    
-    fill('ocupacio', `${ocupats}% ple`);
-    
+    fill('places-lliures', aparcamentData.places_disponibles ?? 0);
+    fill('capacitat', `Capacitat: ${aparcamentData.capacitat_total ?? 0}`);
+    const _totals = aparcamentData.capacitat_total ?? 0;
+    const _lliures = aparcamentData.places_disponibles ?? 0;
+    const _ocupats = _totals > 0 ? Math.round(((_totals - _lliures) / _totals) * 100) : 0;
+    fill('ocupacio', `${_ocupats}% ple`);
     const progressBar = document.getElementById('ocupacio-bar');
     if (progressBar) {
-        progressBar.style.width = `${ocupats}%`;
-        progressBar.style.backgroundColor = ocupats < 50 ? 'var(--bs-success)' : ocupats < 80 ? 'var(--bs-warning)' : 'var(--bs-danger)';
+        progressBar.style.width = `${_ocupats}%`;
+        progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+        progressBar.classList.add(_ocupats < 50 ? 'bg-success' : _ocupats < 100 ? 'bg-warning' : 'bg-danger');
     }
 
     // Initialize Dates safely in local time
     const today = new Date();
-    const todayStr = getLocalDateString(today);
+    const ms30 = 30 * 60 * 1000;
+    const roundedIn = new Date(Math.ceil(today.getTime() / ms30) * ms30);
+    const roundedOut = new Date(roundedIn.getTime() + 2 * 60 * 60 * 1000);
+
+    const todayStr = getLocalDateString(roundedIn);
+    const outStr = getLocalDateString(roundedOut);
     
-    const outDate = new Date(today.getTime() + 2 * 60 * 60 * 1000);
-    const outStr = getLocalDateString(outDate);
-    
-    let nowHours = today.getHours();
-    nowHours = nowHours < 10 ? '0'+nowHours : nowHours;
-    let nowMinutes = today.getMinutes() >= 30 ? '30' : '00';
-    const timeIn = `${nowHours}:${nowMinutes}`;
-    
-    let outTimeObj = new Date();
-    outTimeObj.setHours(today.getHours() + 2);
-    let outHoursStr = outTimeObj.getHours() < 10 ? '0'+outTimeObj.getHours() : outTimeObj.getHours();
-    const timeOut = `${outHoursStr}:${nowMinutes}`;
+    const timeIn = roundedIn.getHours().toString().padStart(2, '0') + ':' + 
+                   roundedIn.getMinutes().toString().padStart(2, '0');
+    const timeOut = roundedOut.getHours().toString().padStart(2, '0') + ':' + 
+                    roundedOut.getMinutes().toString().padStart(2, '0');
+
+    // Càrrega inicial de disponibilitat per la franja per defecte (immediat, sense debounce)
+    _doFetchDisponibilitat(id, `${todayStr} ${timeIn}`, `${outStr} ${timeOut}`);
 
     // Initialize Flatpickr for Dates
     const fpEntrada = flatpickr("#entrada-data", {

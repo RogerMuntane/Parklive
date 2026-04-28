@@ -166,11 +166,13 @@
         </button>
       </div>
 
+      <hr class="mx-3 mt-0 mb-4 opacity-25">
+
       <form id="filtresContainer" class="px-3 pb-3 overflow-auto flex-fill" aria-label="Filtres de cerca">
         <section class="mb-4" aria-labelledby="price-filter-title">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 id="price-filter-title" class="h6 mb-0 fw-semibold text-body">
-              Preu total
+              Preu per dia
             </h2>
             <span id="priceRangeValue" class="fw-semibold text-body-secondary">Fins a 0 €</span>
           </div>
@@ -178,15 +180,15 @@
           <div class="grid-choices mt-3">
             <button type="button" class="btn btn-outline-secondary quick-choice" data-target="priceRange"
               data-value="20">
-              Fins a 20 €
+              Fins a 20 €/dia
             </button>
             <button type="button" class="btn btn-outline-secondary quick-choice" data-target="priceRange"
               data-value="40">
-              Fins a 40 €
+              Fins a 40 €/dia
             </button>
             <button type="button" class="btn btn-outline-secondary quick-choice" data-target="priceRange"
               data-value="50">
-              Fins a 50 €
+              Fins a 50 €/dia
             </button>
           </div>
         </section>
@@ -273,62 +275,83 @@
           </div>
         </section>
 
+        <section class="mb-4">
+          <h2 class="h6 mb-3 fw-semibold text-body">Ubicació del parking</h2>
+          <div class="btn-group w-100" role="group" aria-label="Tipus d'aparcament">
+            <input type="radio" class="btn-check" name="parkingCategory" id="typeAll" value="all" checked>
+            <label class="btn btn-outline-secondary" for="typeAll">Tots</label>
+
+            <input type="radio" class="btn-check" name="parkingCategory" id="typeStructure" value="structure">
+            <label class="btn btn-outline-secondary" for="typeStructure">Pàrquings</label>
+
+            <input type="radio" class="btn-check" name="parkingCategory" id="typeStreet" value="street">
+            <label class="btn btn-outline-secondary" for="typeStreet">Via Pública</label>
+          </div>
+        </section>
+
         <section class="mb-4" aria-labelledby="availability-filter-title">
           <h2 id="availability-filter-title" class="h6 mb-3 fw-semibold text-body">
             Disponibilitat
           </h2>
-          <div class="availability-list d-flex flex-column gap-2">
-            <div class="form-check d-flex align-items-center gap-2 mb-0">
-              <input type="checkbox" class="form-check-input m-0" id="available" name="availability"
-                value="available" />
-              <label class="form-check-label d-flex align-items-center gap-2" for="available">
-                <span class="status-dot status-available"></span>
-                Disponible
-              </label>
+          <div class="btn-group w-100" role="group" aria-label="Filtre de disponibilitat">
+            <input type="checkbox" class="btn-check" id="available" name="availability" value="available">
+            <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2" for="available">
+              <i class="bi bi-circle-fill text-success small"></i>
+              <span>Disponible</span>
+            </label>
+
+            <input type="checkbox" class="btn-check" id="occupied" name="availability" value="occupied">
+            <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2" for="occupied">
+              <i class="bi bi-circle-fill text-danger small"></i>
+              <span>Ocupat</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="mb-4">
+          <h2 class="h6 mb-3 fw-semibold text-body">Càrrega elèctrica</h2>
+          <div class="subscription-toggle-card d-flex align-items-center p-2 gap-3 cursor-pointer" id="electric-toggle" style="padding: 12px 16px !important; border-radius: 12px;">
+            <div class="flex-grow-1">
+              <p class="small mb-0 text-body">Només amb càrrega elèctrica</p>
             </div>
-            <div class="form-check d-flex align-items-center gap-2 mb-0">
-              <input type="checkbox" class="form-check-input m-0" id="occupied" name="availability" value="occupied" />
-              <label class="form-check-label d-flex align-items-center gap-2" for="occupied">
-                <span class="status-dot status-occupied"></span>
-                Ocupat
-              </label>
+            <div class="custom-switch" id="electric-switch"></div>
+            <input type="checkbox" id="electricCharging" name="electricCharging" class="d-none" />
+          </div>
+        </section>
+
+        <section class="mb-4">
+          <h2 class="h6 mb-3 fw-semibold text-body">Accessibilitat</h2>
+          <div class="subscription-toggle-card d-flex align-items-center p-2 gap-3 cursor-pointer" id="accessibility-toggle" style="padding: 12px 16px !important; border-radius: 12px;">
+            <div class="flex-grow-1">
+              <p class="small mb-0 text-body">Només places accessibles (PMR)</p>
             </div>
+            <div class="custom-switch" id="accessibility-switch"></div>
+            <input type="checkbox" id="accessibility" name="accessibility" class="d-none" />
           </div>
         </section>
 
-        <section class="mb-4" aria-labelledby="electric-filter-title">
-          <h2 id="electric-filter-title" class="h6 mb-3 fw-semibold text-body">
-            Càrrega elèctrica
-          </h2>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="electricCharging" name="electricCharging" />
-            <label class="form-check-label" for="electricCharging">Només places amb càrrega elèctrica</label>
+        <section class="mb-4">
+          <h2 class="h6 mb-3 fw-semibold text-body">Videovigilància</h2>
+          <div class="subscription-toggle-card d-flex align-items-center p-2 gap-3 cursor-pointer" id="videovigilancia-toggle" style="padding: 12px 16px !important; border-radius: 12px;">
+            <div class="flex-grow-1">
+              <p class="small mb-0 text-body">Només amb videovigilància</p>
+            </div>
+            <div class="custom-switch" id="videovigilancia-switch"></div>
+            <input type="checkbox" id="videovigilancia" name="videovigilancia" class="d-none" />
           </div>
         </section>
 
-        <section class="mb-4" aria-labelledby="accessibility-filter-title">
-          <h2 id="accessibility-filter-title" class="h6 mb-3 fw-semibold text-body">
-            Accessibilitat
-          </h2>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="accessibility" name="accessibility" />
-            <label class="form-check-label" for="accessibility">Només places accessibles (PMR)</label>
+        <section class="mb-4">
+          <h2 class="h6 mb-3 fw-semibold text-body">Favorits</h2>
+          <div class="subscription-toggle-card d-flex align-items-center p-2 gap-3 cursor-pointer" id="favorites-toggle" style="padding: 12px 16px !important; border-radius: 12px;">
+            <div class="flex-grow-1">
+              <p class="small mb-0 text-body">Només aparcaments favorits</p>
+            </div>
+            <div class="custom-switch" id="favoritesOnly-switch"></div>
+            <input type="checkbox" id="favoritesOnly" name="favoritesOnly" class="d-none" />
           </div>
         </section>
 
-        <section class="mb-4" aria-labelledby="favorites-filter-title">
-          <h2 id="favorites-filter-title" class="h6 mb-3 fw-semibold text-body">
-            Favorits
-          </h2>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="favoritesOnly" name="favoritesOnly" />
-            <label class="form-check-label" for="favoritesOnly">Només aparcaments favorits</label>
-          </div>
-        </section>
-
-        <p class="mb-2 text-body-secondary">
-          * Comprova les mesures específiques que accepta cada aparcament.
-        </p>
       </form>
 
       <div class="d-flex gap-2 border-top p-3 bg-body">

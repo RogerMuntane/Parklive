@@ -571,6 +571,22 @@ def crear_reserva(data):
             raise ValueError(
                 "La data de sortida ha de ser posterior a la data d'entrada")
 
+        # ── Sincronitzar places_disponibles per la franja sol·licitada ───────────
+
+        sync_cursor = conn.cursor()
+        sync_cursor.execute("""
+            UPDATE aparcaments a
+            SET a.places_disponibles = GREATEST(0, a.capacitat_total - (
+                SELECT COUNT(*) FROM reserves r
+                WHERE r.aparcament_id = a.id
+                  AND r.estat IN ('confirmada', 'pendent')
+                  AND r.data_entrada < %s
+                  AND r.data_sortida > %s
+            ))
+            WHERE a.id = %s
+        """, (data_sortida, data_entrada, data['aparcament_id']))
+        sync_cursor.close()
+
         # Procedure equivalent: sp_crear_reserva(..., OUT reserva_id, OUT codi_reserva, OUT error_msg)
         proc_args = [
             data['usuari_id'],
