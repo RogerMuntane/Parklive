@@ -71,6 +71,12 @@ export function setupDateMiniSheet() {
   applyBtn.addEventListener('click', () => {
     syncToSearch();
     closeSheet();
+
+    // Trigger search automatically
+    const mapSearchBar = document.getElementById('mapSearchBar');
+    if (mapSearchBar) {
+      mapSearchBar.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
   });
 
   document.addEventListener('keydown', (event) => {

@@ -9,6 +9,7 @@ from models.reserves_model import (
     actualitzar_estat_reserva,
     actualitzar_tiquet_reserva
 )
+from models.aparcament_model import get_places_disponibles_per_franja
 from models.stripe_model import get_user_stripe_id, createPaymentIntent, registrar_pagament_db, cancel_payment_intent
 from datetime import datetime, timedelta
 from utils.pdf_generator import generar_tiquet_pdf_python
@@ -107,6 +108,39 @@ def crear_nova_reserva():
         payment_method_id = data.get('payment_method_id')
         if not payment_method_id:
             return jsonify({"error": "Falta el paràmetre 'payment_method_id' per processar el pagament."}), 400
+
+        # ── Prevalidació de disponibilitat per franja ─────────────────────────
+        # Validem contra les reserves que solapen la franja sol·licitada,
+        # NO contra el camp estàtic places_disponibles (que reflecteix el moment actual).
+        FORMATS_DATA = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
+
+        def parse_dt_flexible(s):
+            for fmt in FORMATS_DATA:
+                try:
+                    return datetime.strptime(s, fmt)
+                except ValueError:
+                    continue
+            raise ValueError(f"Format de data no reconegut: {s}")
+
+        try:
+            dt_entrada = parse_dt_flexible(data['data_entrada'])
+            dt_sortida = parse_dt_flexible(data['data_sortida'])
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
+        disponibilitat = get_places_disponibles_per_franja(
+            data['aparcament_id'], dt_entrada, dt_sortida
+        )
+        if disponibilitat is None:
+            return jsonify({"error": "L'aparcament especificat no existeix."}), 404
+
+        if disponibilitat['places_lliures'] <= 0:
+            return jsonify({
+                "error": f"L'aparcament no té places disponibles per la franja "
+                         f"{data['data_entrada']} – {data['data_sortida']}. "
+                         f"Places lliures: {disponibilitat['places_lliures']} / "
+                         f"{disponibilitat['capacitat_total']}."
+            }), 409
 
         try:
             nova_reserva = crear_reserva(data)

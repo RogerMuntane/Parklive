@@ -6,6 +6,7 @@ from controllers.aparcament_controller import (
     add_aparcament_favorit,
     remove_aparcament_favorit,
     list_aparcaments_favorits_usuari,
+    get_disponibilitat_franja,
 )
 
 
@@ -48,6 +49,17 @@ def cerca_aparcaments():
 def get_aparcament(id):
     """Endpoint GET per obtenir detall d'un aparcament"""
     return get_aparcament_detail(id)
+
+
+@aparcament_routes.route("/api/aparcaments/<int:id>/disponibilitat", methods=["GET"])
+def get_aparcament_disponibilitat(id):
+    """Endpoint GET per obtenir places disponibles per una franja horària.
+
+    Query params:
+    - data_entrada: inici de la franja (YYYY-MM-DD HH:MM o YYYY-MM-DD HH:MM:SS)
+    - data_sortida: fi de la franja (YYYY-MM-DD HH:MM o YYYY-MM-DD HH:MM:SS)
+    """
+    return get_disponibilitat_franja(id)
 
 
 @aparcament_routes.route("/api/usuari/favorits", methods=["GET"])
