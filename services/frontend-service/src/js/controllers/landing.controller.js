@@ -1,5 +1,6 @@
 import { initLandingMap } from './landing/map.module.js';
 import { pythonApi } from '../api.js';
+import { showBootstrapAlert } from '../utils.js';
 import { initResultsPanelToggle } from './landing/results-panel.module.js';
 import {
   createFiltersController,
@@ -58,7 +59,7 @@ function getMapViewportContext(map) {
 
 async function refreshStreetReportsFromApi(setStreetReports) {
   try {
-    const response = await pythonApi.get('/api/reports/street-availability', {
+    const response = await pythonApi.get('/api/reports/disponibilitat', {
       limit: 500,
     });
     const reports = Array.isArray(response?.reports) ? response.reports : [];
@@ -68,35 +69,87 @@ async function refreshStreetReportsFromApi(setStreetReports) {
   }
 }
 
-function tryAutoLocateAndSearch({ map, setUserLocation, runSearch }) {
-  if (!globalThis.navigator?.geolocation) {
-    runSearch();
-    return;
-  }
+function getCurrentBrowserLocation() {
+  return new Promise((resolve, reject) => {
+    if (!globalThis.navigator?.geolocation) {
+      reject(new Error('El navegador no admet geolocalització.'));
+      return;
+    }
 
-  globalThis.navigator.geolocation.getCurrentPosition(
-    async ({ coords }) => {
-      const lat = Number(coords?.latitude);
-      const lon = Number(coords?.longitude);
+    globalThis.navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  });
+}
 
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-        await runSearch();
-        return;
-      }
+async function resolveCurrentLocation({
+  map,
+  setUserLocation,
+  runSearch,
+  focusUserLocation,
+  fallbackCenter,
+  fallbackZoom,
+  silent = false,
+} = {}) {
+  try {
+    const position = await getCurrentBrowserLocation();
+    const lat = Number(position?.coords?.latitude);
+    const lon = Number(position?.coords?.longitude);
 
-      setUserLocation({ lat, lon });
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      throw new TypeError('No s\'ha pogut determinar la teva ubicació actual.');
+    }
+
+    setUserLocation({ lat, lon });
+    if (map && typeof map.setView === 'function') {
       map.setView([lat, lon], GEOLOCATION_ZOOM);
-      await runSearch({ resetPage: true });
-    },
-    async () => {
+    }
+
+    if (typeof focusUserLocation === 'function') {
+      focusUserLocation({ zoom: GEOLOCATION_ZOOM });
+    }
+
+    await runSearch({ resetPage: true });
+    return true;
+  } catch (error) {
+    const fallbackCenterPoint = Array.isArray(fallbackCenter) && fallbackCenter.length >= 2
+      ? fallbackCenter
+      : null;
+    const fallbackZoomLevel = Number.isFinite(fallbackZoom) ? fallbackZoom : 14;
+
+    if (map && fallbackCenterPoint && typeof map.setView === 'function') {
+      map.setView(fallbackCenterPoint, fallbackZoomLevel);
+    }
+
+    if (!silent) {
+      showBootstrapAlert(
+        'warning',
+        `${error?.message || 'No s\'ha pogut obtenir la teva ubicació.'} T\'hem mostrat el mapa per defecte.`,
+      );
+    }
+
+    if (typeof runSearch === 'function') {
       await runSearch();
-    },
-    {
-      enableHighAccuracy: false,
-      timeout: GEOLOCATION_TIMEOUT_MS,
-      maximumAge: 5 * 60 * 1000,
-    },
-  );
+    }
+
+    return false;
+  }
+}
+
+function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation }) {
+  resolveCurrentLocation({
+    map,
+    setUserLocation,
+    runSearch,
+    focusUserLocation,
+    fallbackCenter: map?.options?.center,
+    fallbackZoom: map?.options?.zoom,
+    silent: true,
+  }).catch(async () => {
+    await runSearch();
+  });
 }
 
 export function initLanding() {
@@ -112,6 +165,9 @@ export function initLanding() {
     markerGroup,
     setParkingSpots,
     setStreetReports,
+    setUserLocationMarker,
+    focusUserLocation,
+    setLocateMeAction,
     focusParkingById,
     updateOpenPopupsLayout,
     ensureValidViewport,
@@ -134,9 +190,22 @@ export function initLanding() {
     setParkingSpots,
     focusParkingById,
     closeFilters: toggleFilters,
+    setUserLocationMarker,
     onSearchLocationResolved: ({ lat, lon }) => {
       map.setView([lat, lon], SEARCH_LOCATION_ZOOM);
     },
+  });
+
+  setLocateMeAction(() => {
+    resolveCurrentLocation({
+      map,
+      setUserLocation,
+      runSearch,
+      focusUserLocation,
+      fallbackCenter: defaultCenter,
+      fallbackZoom: defaultZoom,
+      silent: false,
+    });
   });
   setupMobileMapViewToggle({
     map,
@@ -148,7 +217,7 @@ export function initLanding() {
   });
 
   toggleFilters(false);
-  tryAutoLocateAndSearch({ map, setUserLocation, runSearch });
+  tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation });
 
   let mapDynamicLoadTimerId = null;
   let mapDynamicRequestId = 0;
@@ -176,7 +245,6 @@ export function initLanding() {
       if (!viewport) return;
 
       const currentRequestId = ++mapDynamicRequestId;
-      setUserLocation(viewport.center);
 
       await runSearch({
         resetPage: true,

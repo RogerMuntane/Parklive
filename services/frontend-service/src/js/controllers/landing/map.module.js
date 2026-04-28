@@ -2,7 +2,7 @@ const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
 const MIN_ZOOM = 4;
 const OPEN_AIR_BASE_RADIUS_METERS = 45;
-const STREET_REPORT_MARKER_RADIUS = 7;
+const REPORT_DISPONIBILITAT_MARKER_RADIUS = 7;
 
 function escapeHtml(value) {
   if (!value) return '';
@@ -22,6 +22,17 @@ function computeOpenAirRadius(spot) {
   }
 
   return Math.max(35, Math.min(95, Math.round(Math.sqrt(totalCapacity) * 3.2)));
+}
+
+function normalizeLatLng(leaflet, location) {
+  const lat = Number(location?.lat);
+  const lon = Number(location?.lon);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null;
+  }
+
+  return leaflet.latLng(lat, lon);
 }
 
 export function initLandingMap() {
@@ -51,6 +62,32 @@ export function initLandingMap() {
   leaflet.control.zoom({ position: 'bottomright' }).addTo(map);
   leaflet.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
 
+  let locateMeHandler = null;
+  let userLocationMarker = null;
+
+  const locateControl = leaflet.control({ position: 'bottomright' });
+  locateControl.onAdd = () => {
+    const container = leaflet.DomUtil.create('div', 'leaflet-bar map-locate-control');
+    const button = leaflet.DomUtil.create('button', 'map-locate-control__button', container);
+
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Anar a la meva ubicació');
+    button.setAttribute('title', 'Anar a la meva ubicació');
+    button.innerHTML = '<i class="bi bi-crosshair"></i>';
+
+    leaflet.DomEvent.disableClickPropagation(container);
+    leaflet.DomEvent.disableScrollPropagation(container);
+
+    button.addEventListener('click', () => {
+      if (typeof locateMeHandler === 'function') {
+        locateMeHandler();
+      }
+    });
+
+    return container;
+  };
+  locateControl.addTo(map);
+
   leaflet.control
     .attribution({ position: 'bottomleft', prefix: false })
     .addTo(map)
@@ -78,9 +115,24 @@ export function initLandingMap() {
     popupAnchor: [0, -14],
   });
 
+  const userLocationIcon = leaflet.divIcon({
+    className: 'user-location-marker-wrapper',
+    html: `
+      <span class="user-location-marker" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="user-location-marker__icon" role="img" focusable="false">
+          <path d="M12 2.5c-3.58 0-6.5 2.92-6.5 6.5 0 4.64 6.5 12.5 6.5 12.5s6.5-7.86 6.5-12.5c0-3.58-2.92-6.5-6.5-6.5Zm0 9.2a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Z" />
+        </svg>
+      </span>
+    `,
+    iconSize: [28, 36],
+    iconAnchor: [14, 34],
+    popupAnchor: [0, -30],
+  });
+
   const parkingMarkers = new Map();
   const markerGroup = leaflet.featureGroup().addTo(map);
-  const streetReportsLayer = leaflet.layerGroup().addTo(map);
+  const reportDisponibilitatLayer = leaflet.layerGroup().addTo(map);
+  const userLocationLayer = leaflet.layerGroup().addTo(map);
 
   const updateMarkerGroup = () => {
     markerGroup.clearLayers();
@@ -108,7 +160,7 @@ export function initLandingMap() {
   };
 
   const setStreetReports = (reports = []) => {
-    streetReportsLayer.clearLayers();
+    reportDisponibilitatLayer.clearLayers();
     const usedCoords = new Set();
 
     reports.forEach((report) => {
@@ -126,7 +178,7 @@ export function initLandingMap() {
 
       const isOccupied = String(report?.status || '').toLowerCase() === 'occupied';
       const marker = leaflet.circleMarker([lat, lon], {
-        radius: STREET_REPORT_MARKER_RADIUS,
+        radius: REPORT_DISPONIBILITAT_MARKER_RADIUS,
         color: isOccupied ? '#b42318' : '#15803d',
         weight: 2,
         fillColor: isOccupied ? '#ef4444' : '#22c55e',
@@ -138,8 +190,55 @@ export function initLandingMap() {
         autoPanPadding: [30, 30],
       });
 
-      streetReportsLayer.addLayer(marker);
+      reportDisponibilitatLayer.addLayer(marker);
     });
+  };
+
+  const clearUserLocationMarker = () => {
+    userLocationLayer.clearLayers();
+    userLocationMarker = null;
+  };
+
+  const setUserLocationMarker = (location) => {
+    const latLng = normalizeLatLng(leaflet, location);
+    if (!latLng) {
+      clearUserLocationMarker();
+      return null;
+    }
+
+    clearUserLocationMarker();
+
+    userLocationMarker = leaflet.marker(latLng, {
+      icon: userLocationIcon,
+      zIndexOffset: 1500,
+    });
+
+    userLocationMarker.bindPopup('La teva ubicació', {
+      closeButton: false,
+      autoPanPadding: [30, 30],
+    });
+
+    userLocationMarker.addTo(userLocationLayer);
+    return userLocationMarker;
+  };
+
+  const focusUserLocation = ({ zoom = 16, openPopup = false } = {}) => {
+    if (!userLocationMarker) return false;
+
+    map.flyTo(userLocationMarker.getLatLng(), zoom, { duration: 0.8 });
+    if (openPopup && typeof userLocationMarker.openPopup === 'function') {
+      userLocationMarker.openPopup();
+    }
+
+    return true;
+  };
+
+  const setLocateMeAction = (handler) => {
+    locateMeHandler = typeof handler === 'function' ? handler : null;
+    const button = mapElement.querySelector('.map-locate-control__button');
+    if (button) {
+      button.disabled = !locateMeHandler;
+    }
   };
 
   const setParkingSpots = (spots = [], { fitBounds = true, openFirstPopup = true } = {}) => {
@@ -266,6 +365,9 @@ export function initLandingMap() {
     markerGroup,
     setParkingSpots,
     setStreetReports,
+    setUserLocationMarker,
+    focusUserLocation,
+    setLocateMeAction,
     focusParkingById,
     updateOpenPopupsLayout,
     fitToParkingSpots,

@@ -1,22 +1,21 @@
 
--- STORED PROCEDURES PARKLIVE - GESTIÓ DE APARCAMENTS
+-- STORED PROCEDURES PARKLIVE - GESTIÓ DE CONTRIBUCIONS
 USE parklive_db;
 -- Eliminar procedures si existeixen (per poder recrear-los)
 DROP PROCEDURE IF EXISTS sp_crear_contribucio;
 DROP PROCEDURE IF EXISTS sp_votar_contribucio;
-DROP PROCEDURE IF EXISTS sp_llistar_contribucions_street_reports;
+DROP PROCEDURE IF EXISTS sp_llistar_contribucions_disponibilitat;
 
 -- ===========================================
 -- 1. POST /api/contribucions (reportar)
 -- ===========================================
 -- Crea una nova contribució d'un usuari
--- Exemple: CALL sp_crear_contribucio(1, 1, 'lliure', NULL, 5, 41.3851, 2.1734, @contribucio_id, @error_msg);
+-- Exemple: CALL sp_crear_contribucio(1, 'ocupat', NULL, 5, 41.3851, 2.1734, @contribucio_id, @error_msg);
 
 DELIMITER //
 
 CREATE PROCEDURE sp_crear_contribucio(
     IN p_usuari_id INT,
-    IN p_aparcament_id INT,
     IN p_estat_reportat VARCHAR(50),
     IN p_dades JSON,
     IN p_punts_guanyats INT,
@@ -26,8 +25,6 @@ CREATE PROCEDURE sp_crear_contribucio(
     OUT p_error_msg VARCHAR(500)
 )
 BEGIN
-    DECLARE v_aparcament_existeix INT;
-
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -39,17 +36,10 @@ BEGIN
     START TRANSACTION;
     SET p_error_msg = NULL;
 
-    IF p_aparcament_id IS NOT NULL THEN
-        -- Validar que l'aparcament existeix quan s'ha informat
-        SELECT COUNT(*) INTO v_aparcament_existeix
-        FROM aparcaments
-        WHERE id = p_aparcament_id;
-
-        IF v_aparcament_existeix = 0 THEN
-            SET p_contribucio_id = NULL;
-            SET p_error_msg = 'Aparcament no trobat';
-            ROLLBACK;
-        END IF;
+    IF p_estat_reportat NOT IN ('lliure', 'ocupat') THEN
+        SET p_contribucio_id = NULL;
+        SET p_error_msg = 'estat_reportat ha de ser lliure o ocupat';
+        ROLLBACK;
     END IF;
 
     IF p_error_msg IS NULL THEN
@@ -76,26 +66,6 @@ BEGIN
 
         SET p_contribucio_id = LAST_INSERT_ID();
         SET p_error_msg = NULL;
-
-        -- Si la contribució està vinculada a un aparcament, afegir a l'històric
-        IF p_aparcament_id IS NOT NULL THEN
-            INSERT INTO historic_disponibilitat (
-                aparcament_id,
-                places_disponibles,
-                font
-            )
-            SELECT
-                p_aparcament_id,
-                CASE
-                    WHEN p_estat_reportat = 'lliure' THEN capacitat_total
-                    WHEN p_estat_reportat = 'ocupat' THEN 0
-                    WHEN p_estat_reportat = 'parcial' THEN FLOOR(capacitat_total / 2)
-                    ELSE places_disponibles
-                END,
-                'usuari'
-            FROM aparcaments
-            WHERE id = p_aparcament_id;
-        END IF;
 
         COMMIT;
     END IF;
@@ -204,12 +174,12 @@ BEGIN
 END//
 
 -- ===========================================
--- 3. GET /api/reports/street-availability
+-- 3. GET /api/reports/disponibilitat
 -- ===========================================
--- Llista contribucions de tipus street_report per mostrar-les al mapa.
--- Exemple: CALL sp_llistar_contribucions_street_reports(100, 0);
+-- Llista contribucions de disponibilitat per mostrar-les al mapa.
+-- Exemple: CALL sp_llistar_contribucions_disponibilitat(100, 0);
 
-CREATE PROCEDURE sp_llistar_contribucions_street_reports(
+CREATE PROCEDURE sp_llistar_contribucions_disponibilitat(
     IN p_limit INT,
     IN p_offset INT
 )

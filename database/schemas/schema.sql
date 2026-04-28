@@ -265,10 +265,11 @@ CREATE TABLE respostes_valoracions (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE COL·LABORACIÓ I GAMIFICACIÓ
 -- Taula de contribucions d'usuaris
+-- Les contribucions són independents de la taula aparcaments.
 CREATE TABLE contribucions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
-    estat_reportat ENUM('lliure', 'ocupat', 'parcial') NULL,
+    estat_reportat ENUM('lliure', 'ocupat') NOT NULL,
     dades JSON,
     estat_validacio ENUM('pendent', 'validada', 'rebutjada') DEFAULT 'pendent',
     validada BOOLEAN DEFAULT FALSE,

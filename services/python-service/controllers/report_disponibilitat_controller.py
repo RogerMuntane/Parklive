@@ -1,7 +1,7 @@
 from flask import jsonify, request
-from models.street_reports_model import (
-    create_street_report,
-    list_street_reports,
+from models.report_disponibilitat_model import (
+    create_report_disponibilitat,
+    list_report_disponibilitat,
     CooldownError,
     COOLDOWN_SECONDS,
 )
@@ -36,7 +36,7 @@ def _resolve_request_user_id(payload):
         return None
 
 
-def create_street_availability_report():
+def create_report_disponibilitat_controller():
     if not request.is_json:
         return jsonify({'error': 'El contingut ha de ser JSON'}), 400
 
@@ -46,7 +46,7 @@ def create_street_availability_report():
     reporter_key = _resolve_reporter_key(payload)
 
     try:
-        report = create_street_report(payload, reporter_key=reporter_key)
+        report = create_report_disponibilitat(payload, reporter_key=reporter_key)
         return jsonify({
             'message': 'Reporte enviado correctamente',
             'cooldown_seconds': COOLDOWN_SECONDS,
@@ -63,10 +63,10 @@ def create_street_availability_report():
         return jsonify({'error': f'Error creando reporte: {str(err)}'}), 500
 
 
-def list_street_availability_reports():
+def list_report_disponibilitat_controller():
     try:
         limit = request.args.get('limit', 100)
-        reports = list_street_reports(limit=limit)
+        reports = list_report_disponibilitat(limit=limit)
         return jsonify({
             'total': len(reports),
             'reports': reports,

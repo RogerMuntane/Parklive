@@ -353,9 +353,9 @@ async function initControllers() {
     }
 
     // ── Report de plaça en carrer ───────────────────────────────
-    if (bodyClass.includes('page-street-report')) {
-      const { initStreetReport } = await import('./controllers/street-report.controller.js');
-      initStreetReport();
+    if (bodyClass.includes('page-report-disponibilitat')) {
+      const { initReportDisponibilitat } = await import('./controllers/report-disponibilitat.controller.js');
+      initReportDisponibilitat();
     }
 
     // ── Contacte ────────────────────────────────────────────────
