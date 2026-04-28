@@ -189,7 +189,7 @@ export function initLanding() {
   initFilterPanelControls();
   setupSearchBar({ closeFilters: toggleFilters });
   setupDateMiniSheet();
-  const { runSearch: originalRunSearch, setUserLocation } = initLandingSearch({
+  const { runSearch, setUserLocation } = initLandingSearch({
     setParkingSpots,
     focusParkingById,
     closeFilters: toggleFilters,
