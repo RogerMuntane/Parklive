@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       payment: 'Mètode de pagament',
       plan: 'Millorar el pla',
       manage: 'Gestionar subscripció',
-      notifications: 'Notificacions',
+      // notifications: 'Notificacions',
       'admin-users': 'Admin: Gestió d\'Usuaris',
       stadistics: 'Les teves estadístiques'
     };

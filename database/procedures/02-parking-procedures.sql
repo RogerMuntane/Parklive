@@ -323,6 +323,8 @@ CREATE PROCEDURE sp_cercar_aparcaments(
     IN p_tipus VARCHAR(50),
     IN p_accessibilitat BOOLEAN,
     IN p_carrega_electrica BOOLEAN,
+    IN p_videovigilancia BOOLEAN,
+    IN p_obert_24h BOOLEAN,
     IN p_latitud DECIMAL(10,8),
     IN p_longitud DECIMAL(11,8),
     IN p_limit INT,
@@ -383,6 +385,8 @@ BEGIN
         AND (p_tipus IS NULL OR a.tipus = p_tipus)
         AND (p_accessibilitat IS NULL OR a.accessibilitat = p_accessibilitat)
         AND (p_carrega_electrica IS NULL OR a.carrega_electrica = p_carrega_electrica)
+        AND (p_videovigilancia IS NULL OR a.videovigilancia = p_videovigilancia)
+        AND (p_obert_24h IS NULL OR a.obert_24h = p_obert_24h)
     ORDER BY
         CASE
             WHEN p_latitud IS NOT NULL AND p_longitud IS NOT NULL THEN distancia_km

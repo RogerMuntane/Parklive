@@ -18,6 +18,8 @@ const SUGGESTIONS_DEBOUNCE_MS = 320;
 const SUGGESTIONS_CACHE_TTL_MS = 45 * 1000;
 const PARKING_CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
 const LOCATION_EXPANSION_RADII_KM = [5, 15, 40, 120, 300];
+/** Peticions seqüencials (1) per evitar errors de concurrència a la BD (Commands out of sync) */
+const AVAIL_CONCURRENCY = 1;
 
 let userLocation = null;
 
@@ -311,20 +313,10 @@ function formatMaxHeight(value) {
   return `${height.toFixed(2).replace('.', ',')} m`;
 }
 
-function formatAvailabilitySummary(available, total, percent) {
-  const availableNum = Number(available);
-  const totalNum = Number(total);
-  const percentNum = Number(percent);
-
-  if (!Number.isFinite(availableNum) || !Number.isFinite(totalNum) || totalNum <= 0) {
-    return 'No disponible';
-  }
-
-  if (Number.isFinite(percentNum)) {
-    return `${availableNum}/${totalNum} (${Math.round(percentNum)}%)`;
-  }
-
-  return `${availableNum}/${totalNum}`;
+function formatAvailabilitySummary() {
+  // No usem les dades de la BD (poden ser obsoletes).
+  // Retornem un placeholder que serà omplert per enrichDisponibilitatAsync.
+  return '<span class="spinner-border spinner-border-sm text-secondary opacity-50" role="status"></span> <small class="text-muted">Calculant...</small>';
 }
 
 function formatSchedule(open24h, openingTime, closingTime) {
@@ -404,15 +396,12 @@ function normalizeParking(raw, origin = null) {
     hasEv: Boolean(raw.carrega_electrica),
     typeLabel: formatParkingType(raw.tipus),
     maxHeightLabel: formatMaxHeight(raw.altura_maxima),
-    availabilitySummary: formatAvailabilitySummary(
-      raw.places_disponibles,
-      raw.capacitat_total,
-      raw.percentatge_disponibilitat,
-    ),
+    availabilitySummary: formatAvailabilitySummary(),
     scheduleLabel: formatSchedule(raw.obert_24h, raw.horari_obertura, raw.horari_tancament),
     ratingSummary: formatRatingSummary(raw.valoracio_mitjana, raw.total_valoracions),
     isAccessible: Boolean(raw.accessibilitat),
     hasCctv: Boolean(raw.videovigilancia),
+    imageUrl: raw.foto_principal || raw.imatge_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80',
     raw,
   };
 }
@@ -457,6 +446,7 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
   const distanceRange = document.getElementById('distanceRange')?.value;
   const electricCharging = document.getElementById('electricCharging')?.checked;
   const accessibility = document.getElementById('accessibility')?.checked;
+  const videovigilancia = document.getElementById('videovigilancia')?.checked;
 
   const availability = [];
   if (document.getElementById('available')?.checked) availability.push('disponible');
@@ -473,7 +463,7 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
 
   const maxPrice = parsePositiveNumber(priceRange);
   if (maxPrice) {
-    params.tarifa_hora_max = maxPrice;
+    params.tarifa_dia_max = maxPrice;
   }
 
   const selectedRadiusKm = addRadiusParam(params, distanceRange, radiusOverrideKm);
@@ -487,8 +477,20 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
     params.accessibilitat = true;
   }
 
+  if (videovigilancia) {
+    params.videovigilancia = true;
+  }
+
   if (availability.length > 0) {
     params.disponibilitat = availability.join(',');
+  }
+
+  // Categoria d'aparcament
+  const parkingCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
+  if (parkingCategory === 'structure') {
+    params.tipus = 'cobert,aire_lliure,subterrani,parking_public,parking_privat';
+  } else if (parkingCategory === 'street') {
+    params.tipus = 'carrer';
   }
 
   // Filtre per tipus de vehicle (altura)
@@ -507,6 +509,19 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
     if (heightMap[vehicleType]) {
       params.altura_min = heightMap[vehicleType];
     }
+  }
+
+  // Filtre per dates
+  const entryDate = document.getElementById('entryDate')?.value;
+  const entryTime = document.getElementById('entryTime')?.value;
+  const exitDate = document.getElementById('exitDate')?.value;
+  const exitTime = document.getElementById('exitTime')?.value;
+
+  if (entryDate && entryTime) {
+    params.data_entrada = `${entryDate} ${entryTime}:00`;
+  }
+  if (exitDate && exitTime) {
+    params.data_sortida = `${exitDate} ${exitTime}:00`;
   }
 
   return { params, searchTerm };
@@ -580,6 +595,10 @@ async function resolveFavoritesState(favoritesOnly) {
 }
 
 async function fetchRecordsByParams(params) {
+  const parkingCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
+  if (parkingCategory === 'street') {
+    return [];
+  }
   const response = await pythonApi.get('/api/aparcaments/cerca', params);
   return Array.isArray(response) ? response : response?.resultats || [];
 }
@@ -649,6 +668,101 @@ function escapeHtml(value) {
   const div = document.createElement('div');
   div.textContent = value;
   return div.innerHTML;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Enriquiment de disponibilitat real per les targetes del mapa        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Converteix un Date a cadena "YYYY-MM-DD HH:MM" en hora local.
+ * @param {Date} d
+ * @returns {string}
+ */
+function toLocalDateTimeStr(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    ` ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+/**
+ * Retorna [dataEntrada, dataSortida] per la consulta de disponibilitat.
+ * Usa les dates del cercador si estan seleccionades; sinó ara → ara+2h.
+ * @returns {[string, string]}
+ */
+function getDisponibilitatFranja() {
+  const entryDate = document.getElementById('entryDate')?.value;
+  const entryTime = document.getElementById('entryTime')?.value;
+  const exitDate  = document.getElementById('exitDate')?.value;
+  const exitTime  = document.getElementById('exitTime')?.value;
+
+  if (entryDate && entryTime && exitDate && exitTime) {
+    return [`${entryDate} ${entryTime}`, `${exitDate} ${exitTime}`];
+  }
+
+  const now = new Date();
+  const ms30 = 30 * 60 * 1000;
+  const roundedIn  = new Date(Math.ceil(now.getTime() / ms30) * ms30);
+  const roundedOut = new Date(roundedIn.getTime() + 2 * 60 * 60 * 1000);
+  return [toLocalDateTimeStr(roundedIn), toLocalDateTimeStr(roundedOut)];
+}
+
+/**
+ * Enriqueix en segon pla els textos de disponibilitat de les targetes
+ * de resultats amb dades en temps real del backend.
+ *
+ * Fa crides paral·leles a /disponibilitat, en lots de AVAIL_CONCURRENCY,
+ * i actualitza els elements [data-avail-spot-id] al DOM.
+ *
+ * @param {Array} spots - Spots normalitzats ja renderitzats
+ */
+async function enrichDisponibilitatAsync(spots) {
+  if (!spots || spots.length === 0) return;
+
+  const [dataEntrada, dataSortida] = getDisponibilitatFranja();
+
+  for (let i = 0; i < spots.length; i += AVAIL_CONCURRENCY) {
+    const batch = spots.slice(i, i + AVAIL_CONCURRENCY);
+    
+    // Execució seqüencial dins del batch per seguretat amb MySQL
+    for (const spot of batch) {
+      try {
+        // Petit retard per no saturar el servidor
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        const params = new URLSearchParams({
+          data_entrada: dataEntrada,
+          data_sortida: dataSortida,
+        });
+        const res = await pythonApi.get(
+          `/api/aparcaments/${encodeURIComponent(spot.id)}/disponibilitat?${params}`,
+        );
+
+        const lliures = res.places_lliures ?? 0;
+        const totals  = res.capacitat_total ?? 0;
+        const ocupacioPct = totals > 0 ? Math.round(((totals - lliures) / totals) * 100) : 0;
+        
+        const resum = totals > 0
+          ? `<span class="fw-bold">${lliures}</span>/${totals} <small>(${ocupacioPct}% ple)</small>`
+          : 'No disponible';
+
+        const el = document.querySelector(`[data-avail-spot-id="${spot.id}"]`);
+        if (el) {
+          el.innerHTML = resum;
+          if (ocupacioPct >= 90) {
+              el.parentElement.classList.add('text-danger');
+              el.parentElement.classList.remove('text-body');
+          }
+        }
+      } catch (err) {
+        console.warn(`[ParkLive] Error enriquint spot ${spot.id}:`, err);
+        const el = document.querySelector(`[data-avail-spot-id="${spot.id}"]`);
+        if (el) el.textContent = 'Error';
+      }
+    }
+  }
 }
 
 function renderPagination(panel, {
@@ -742,7 +856,7 @@ function renderResults({
     card.innerHTML = `
       <img
         class="parking-result-image d-block w-100 object-fit-cover"
-        src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80"
+        src="${escapeHtml(spot.imageUrl)}"
         alt="Foto de l'aparcament ${escapeHtml(spot.name)}"
         loading="lazy"
       />
@@ -753,7 +867,7 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-currency-euro"></i>${escapeHtml(spot.priceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-geo-alt"></i>${escapeHtml(spot.distanceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-house-door"></i>${escapeHtml(spot.typeLabel)}</span>
-          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-grid-3x3-gap"></i>Disp: ${escapeHtml(spot.availabilitySummary)}</span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-grid-3x3-gap"></i><span class="fw-medium">Disp:</span> <span data-avail-spot-id="${escapeHtml(String(spot.id))}">${spot.availabilitySummary}</span></span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-clock"></i>${escapeHtml(spot.scheduleLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
@@ -1158,9 +1272,15 @@ export function initLandingSearch({
         effectiveFavoritesOnly,
       } = await resolveFavoritesState(favoritesOnly);
 
-      const visibleSpots = effectiveFavoritesOnly
+      let visibleSpots = effectiveFavoritesOnly
         ? allSpots.filter((spot) => favoriteIds.has(String(spot.id)))
         : allSpots;
+
+      const distanceRangeVal = document.getElementById('distanceRange')?.value;
+      const maxDistance = parsePositiveNumber(distanceRangeVal);
+      if (maxDistance) {
+        visibleSpots = visibleSpots.filter(spot => spot.distanceKm !== null && spot.distanceKm <= maxDistance);
+      }
 
       const total = visibleSpots.length;
       const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -1194,6 +1314,9 @@ export function initLandingSearch({
           return nextIsFavorite;
         },
       });
+      // Enriquiment asíncron: sobreescriu la disponibilitat estàtica de la BD
+      // amb el càlcul real per franja horària, sense bloquejar el render inicial.
+      enrichDisponibilitatAsync(paginatedSpots);
       setParkingSpots(visibleSpots, {
         fitBounds: !preserveViewport,
         openFirstPopup: !preserveViewport,
