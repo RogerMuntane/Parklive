@@ -316,6 +316,9 @@ DELIMITER ;
 -- Cerca aparcaments amb diversos filtres
 -- Exemple: CALL sp_cercar_aparcaments('Barcelona', 'cobert', 1, 1, NULL, NULL, 50, 0);
 
+USE parklive_db;
+DROP PROCEDURE IF EXISTS sp_cercar_aparcaments;
+
 DELIMITER //
 
 CREATE PROCEDURE sp_cercar_aparcaments(
@@ -364,7 +367,6 @@ BEGIN
             WHERE v.aparcament_id = a.id
         ), 0) AS total_valoracions,
         a.verificat,
-        -- Calcular distància si es proporcionen coordenades
         CASE
             WHEN p_latitud IS NOT NULL AND p_longitud IS NOT NULL THEN
                 ROUND(
