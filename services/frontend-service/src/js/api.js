@@ -73,10 +73,14 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
 
     const headers = {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
       ...options.headers,
     };
+
+    // Només afegir Content-Type si no és un GET o DELETE (per evitar problemes amb alguns proxies)
+    if (options.method && !['GET', 'DELETE'].includes(options.method.toUpperCase())) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Injectar ID d'usuari si existeix a la sessió
     const userId = sessionStorage.getItem(STORAGE_KEYS.USER_ID);
