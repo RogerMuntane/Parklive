@@ -16,6 +16,7 @@ import {
   saveUserSession,
   clearUserSession,
   redirectAfterDelay,
+  showBootstrapAlert,
 } from '../utils.js';
 
 /*  GOOGLE CLIENT ID (carregat dinàmicament del backend)                */
@@ -83,7 +84,9 @@ function initLogin() {
         // Neteja explícita de la sessió OAuth si NO és Google
         sessionStorage.removeItem('parklive_oauth');
         
+        
         showAlert('success', result.message || 'Sessió iniciada correctament.');
+        showBootstrapAlert('success', result.message || 'Sessió iniciada correctament!');
         redirectAfterDelay('index.html', REDIRECT_DELAY);
       }
     } catch (err) {
@@ -136,6 +139,7 @@ function initRegister() {
 
       if (result && result.success) {
         showAlert('success', result.message || 'Registre completat correctament.');
+        showBootstrapAlert('success', result.message || 'Benvingut/da a ParkLive! Registre completat.');
         redirectAfterDelay('login.html', REDIRECT_DELAY);
       }
     } catch (err) {
@@ -200,6 +204,7 @@ function initRequestResetCode() {
       );
 
       showAlert('success', result.message || 'Codi enviat al teu correu.');
+      showBootstrapAlert('info', result.message || 'Codi de verificació enviat al correu.');
 
       // Transició al pas 2: verificar codi
       showResetStep('step-verify');

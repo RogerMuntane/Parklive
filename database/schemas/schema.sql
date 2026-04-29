@@ -59,7 +59,7 @@ CREATE TABLE subscripcions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
     tipus ENUM('mensual', 'trimestral', 'anual') NOT NULL,
-    estat ENUM('activa', 'cancel·lada', 'caducada') DEFAULT 'activa',
+    estat ENUM('activa', 'cancelada', 'caducada') DEFAULT 'activa',
     data_inici DATE NOT NULL,
     data_final DATE NOT NULL,
     preu DECIMAL(10, 2) NOT NULL,
@@ -168,7 +168,7 @@ CREATE TABLE reserves (
         'confirmada',
         'en_curs',
         'completada',
-        'cancel·lada'
+        'cancelada'
     ) DEFAULT 'pendent',
     preu_total DECIMAL(10, 2) NOT NULL,
     descompte_aplicat DECIMAL(10, 2) DEFAULT 0.00,

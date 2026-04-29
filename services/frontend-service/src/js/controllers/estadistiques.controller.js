@@ -42,7 +42,7 @@ const TIPUS_LABELS = {
 const ESTAT_MAP = {
   completada: { label: 'Completada', color: COLORS.success },
   confirmada: { label: 'Confirmada', color: COLORS.primary },
-  'cancel·lada': { label: 'Cancel·lada', color: COLORS.danger },
+  'cancelada': { label: 'Cancel·lada', color: COLORS.danger },
   pendent: { label: 'Pendent', color: COLORS.warning },
   en_curs: { label: 'En curs', color: COLORS.info },
 };

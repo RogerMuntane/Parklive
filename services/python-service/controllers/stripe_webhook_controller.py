@@ -48,7 +48,7 @@ def handle_stripe_webhook():
         # Opcionalment: marcar subscripció com a pendent o fallida
 
     elif event_type == 'customer.subscription.deleted':
-        # Subscripció cancel·lada o finalitzada (per impagament o manualment)
+        # Subscripció cancelada o finalitzada (per impagament o manualment)
         stripe_sub_id = data_object.get('id')
         update_subscription_status(stripe_sub_id, 'caducada')
         update_user_premium_status(data_object.get('customer'), False)

@@ -156,7 +156,7 @@ def crear_nova_reserva():
         try:
             stripe_customer_id = get_user_stripe_id(data['usuari_id'])
             if not stripe_customer_id:
-                actualitzar_estat_reserva(reserva_id, 'cancel·lada')
+                actualitzar_estat_reserva(reserva_id, 'cancelada')
                 return jsonify({"error": "L'usuari no té un compte de pagament vinculat."}), 400
 
             import_en_centims = int(data['preu_total'] * 100)
@@ -168,7 +168,7 @@ def crear_nova_reserva():
             )
 
             if not payment_intent or payment_intent.status not in ['succeeded', 'requires_capture']:
-                actualitzar_estat_reserva(reserva_id, 'cancel·lada')
+                actualitzar_estat_reserva(reserva_id, 'cancelada')
                 return jsonify({"error": "La targeta ha estat denegada pel banc o l'autorització ha fallat."}), 400
 
             registrar_pagament_db(
@@ -199,7 +199,7 @@ def crear_nova_reserva():
             }), 201
 
         except Exception as e:
-            actualitzar_estat_reserva(reserva_id, 'cancel·lada')
+            actualitzar_estat_reserva(reserva_id, 'cancelada')
             return jsonify({"error": f"Error processant el pagament: {str(e)}"}), 400
 
     except Exception as e:
@@ -238,8 +238,8 @@ def cancelar_reserva_usuari(reserva_id):
         if not reserva:
             return jsonify({"error": "Reserva no trobada"}), 404
 
-        if reserva['estat'] == 'cancel·lada':
-            return jsonify({"error": "Aquesta reserva ja està cancel·lada"}), 400
+        if reserva['estat'] == 'cancelada':
+            return jsonify({"error": "Aquesta reserva ja està cancelada"}), 400
         
         if reserva['estat'] not in ['confirmada', 'pendent']:
             return jsonify({"error": f"No es pot cancel·lar una reserva en estat {reserva['estat']}"}), 400
@@ -270,15 +270,15 @@ def cancelar_reserva_usuari(reserva_id):
             if not stripe_res:
                 return jsonify({"error": "No s'ha pogut cancel·lar la retenció de fons a Stripe."}), 500
         
-        # 2. Actualitzar estat reserva a 'cancel·lada'
-        success = actualitzar_estat_reserva(reserva_id, 'cancel·lada')
+        # 2. Actualitzar estat reserva a 'cancelada'
+        success = actualitzar_estat_reserva(reserva_id, 'cancelada')
         if not success:
             return jsonify({"error": "No s'ha pogut actualitzar l'estat de la reserva a la base de dades."}), 500
 
         # 3. Opcional: Podríem actualitzar l'estat del pagament a la BD si fos necessari
         # Per ara, actualitzar_estat_reserva ja hauria d'encarregar-se de la lògica de negoci
 
-        return jsonify({"message": "Reserva cancel·lada correctament i fons alliberats."}), 200
+        return jsonify({"message": "Reserva cancelada correctament i fons alliberats."}), 200
 
     except Exception as e:
         print(f"[ERROR] Cancel·lant reserva {reserva_id}: {str(e)}")

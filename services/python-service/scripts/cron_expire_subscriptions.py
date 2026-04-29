@@ -19,7 +19,7 @@ def expire_subscriptions():
     
     try:
         # Cercar subscripcions que han arribat a la data final i no tenen autorenovació
-        # O que estan marcades com a 'cancel·lada' però encara eren 'premium'
+        # O que estan marcades com a 'cancelada' però encara eren 'premium'
         query = """
             SELECT s.id, s.usuari_id
             FROM subscripcions s
@@ -27,7 +27,7 @@ def expire_subscriptions():
             WHERE u.tipus_usuari = 'premium'
               AND s.auto_renovacio = 0
               AND s.data_final <= CURDATE()
-              AND s.estat IN ('activa', 'cancel·lada')
+              AND s.estat IN ('activa', 'cancelada')
         """
         cursor.execute(query)
         expired_subs = cursor.fetchall()

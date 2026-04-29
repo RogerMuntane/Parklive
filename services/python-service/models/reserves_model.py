@@ -20,7 +20,7 @@ def get_reserves_usuari(usuari_id, filters=None):
     Obté totes les reserves d'un usuari amb filtres opcionals
 
     Filtres disponibles:
-    - estat: pendent, confirmada, en_curs, completada, cancel·lada
+    - estat: pendent, confirmada, en_curs, completada, cancelada
     - data_desde: data mínima (format YYYY-MM-DD)
     - data_fins: data màxima (format YYYY-MM-DD)
     - aparcament_id: filtre per aparcament específic
@@ -43,7 +43,7 @@ def get_reserves_usuari(usuari_id, filters=None):
     if not unsupported_filters and not filters.get('search') and (not filters.get('estat') or ',' not in filters.get('estat', '')):
         estat = filters.get('estat')
         valid_estats = ['pendent', 'confirmada',
-                        'en_curs', 'completada', 'cancel·lada']
+                        'en_curs', 'completada', 'cancelada']
         if estat and estat not in valid_estats:
             raise ValueError(
                 f"Estat invàlid. Estats vàlids: {', '.join(valid_estats)}")
@@ -161,7 +161,7 @@ def get_reserves_usuari(usuari_id, filters=None):
     # Filtre per estat
     if filters.get('estat'):
         valid_estats = ['pendent', 'confirmada',
-                        'en_curs', 'completada', 'cancel·lada']
+                        'en_curs', 'completada', 'cancelada']
         
         # Suport per múltiples estats separats per coma
         estats_req = filters['estat'].split(',')
@@ -292,7 +292,7 @@ def get_totes_reserves(filters=None):
     Filtres disponibles:
     - usuari_id: filtre per usuari
     - aparcament_id: filtre per aparcament
-    - estat: pendent, confirmada, en_curs, completada, cancel·lada
+    - estat: pendent, confirmada, en_curs, completada, cancelada
     - data_desde: data mínima
     - data_fins: data màxima
     """
@@ -339,7 +339,7 @@ def get_totes_reserves(filters=None):
 
     if filters.get('estat'):
         valid_estats = ['pendent', 'confirmada',
-                        'en_curs', 'completada', 'cancel·lada']
+                        'en_curs', 'completada', 'cancelada']
         if filters['estat'] not in valid_estats:
             raise ValueError("Estat invàlid")
         query += " AND r.estat = %s"
@@ -419,13 +419,13 @@ def get_reserves_per_estat(estat, filters=None):
     """
     Obté reserves filtrades per estat
 
-    Estats vàlids: pendent, confirmada, en_curs, completada, cancel·lada
+    Estats vàlids: pendent, confirmada, en_curs, completada, cancelada
     """
     if filters is None:
         filters = {}
 
     valid_estats = ['pendent', 'confirmada',
-                    'en_curs', 'completada', 'cancel·lada']
+                    'en_curs', 'completada', 'cancelada']
     if estat not in valid_estats:
         raise ValueError(
             f"Estat invàlid. Estats vàlids: {', '.join(valid_estats)}")
@@ -579,7 +579,7 @@ def crear_reserva(data):
             SET a.places_disponibles = GREATEST(0, a.capacitat_total - (
                 SELECT COUNT(*) FROM reserves r
                 WHERE r.aparcament_id = a.id
-                  AND r.estat IN ('confirmada', 'pendent')
+                  AND r.estat IN ('confirmada', 'pendent', 'en_curs')
                   AND r.data_entrada < %s
                   AND r.data_sortida > %s
             ))

@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timezone
-from models.db_connection import get_db_connection
+from models.db_connection import get_new_connection
 from models.contribucions_model import crear_contribucio
 
 VALID_STATUS = {'available', 'occupied'}
@@ -55,7 +55,9 @@ def _get_last_report_for_reporter(reporter_key):
     if not reporter_key:
         return None
 
-    conn = get_db_connection()
+    conn = get_new_connection()
+    if not conn:
+        return None
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
@@ -73,6 +75,7 @@ def _get_last_report_for_reporter(reporter_key):
         return cursor.fetchone()
     finally:
         cursor.close()
+        conn.close()
 
 
 def _validate_cooldown(reporter_key, now_dt):
@@ -208,7 +211,9 @@ def list_report_disponibilitat(limit=100):
 
     safe_limit = max(1, min(parsed_limit, 500))
 
-    conn = get_db_connection()
+    conn = get_new_connection()
+    if not conn:
+        return []
     cursor = conn.cursor(dictionary=True)
     rows = []
     try:
@@ -231,6 +236,7 @@ def list_report_disponibilitat(limit=100):
         rows = cursor.fetchall()
     finally:
         cursor.close()
+        conn.close()
 
     reports = []
     for row in rows:

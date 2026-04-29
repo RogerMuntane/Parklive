@@ -590,7 +590,7 @@ export function initProfileHistorySection() {
       const offset = (currentPage - 1) * limit;
 
       // Agafem l'estat del select o per defecte els d'historial
-      const estatFiltre = statusSelect ? statusSelect.value : 'completada,cancel·lada';
+      const estatFiltre = statusSelect ? statusSelect.value : 'completada,cancelada';
 
       const params = {
         estat: estatFiltre,
@@ -635,7 +635,7 @@ export function initProfileHistorySection() {
           labelText = 'Completat';
           icon = 'bi-check-circle-fill';
           potVeureTiquet = true;
-        } else if (estat === 'cancel·lada') {
+        } else if (estat === 'cancelada') {
           badgeClass = 'status-err';
           labelText = 'Cancel·lat';
           icon = 'bi-x-circle-fill';
