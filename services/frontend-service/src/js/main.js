@@ -306,7 +306,7 @@ async function initControllers() {
   try {
     // ── Pàgines d'autenticació (login, registre, reset) ────────
     if (bodyClass.includes('page-auth')) {
-      const { initAuth } = await import('./controllers/auth.controller.js');
+      const { initAuth } = await import(new URL('./controllers/auth.controller.js', import.meta.url).href);
       initAuth();
     }
 
@@ -318,9 +318,9 @@ async function initControllers() {
         { initReserves },
         { initContribucions },
       ] = await Promise.all([
-        import('./controllers/aparcament.controller.js'),
-        import('./controllers/reserves.controller.js'),
-        import('./controllers/contribucions.controller.js'),
+        import(new URL('./controllers/aparcament.controller.js', import.meta.url).href),
+        import(new URL('./controllers/reserves.controller.js', import.meta.url).href),
+        import(new URL('./controllers/contribucions.controller.js', import.meta.url).href),
       ]);
 
       initAparcaments();
@@ -330,37 +330,37 @@ async function initControllers() {
 
     // ── Pàgina Landing (mapa, filtres, responsive map view) ─────
     if (bodyClass.includes('page-landing')) {
-      const { initLanding } = await import('./controllers/landing.controller.js');
+      const { initLanding } = await import(new URL('./controllers/landing.controller.js', import.meta.url).href);
       initLanding();
     }
 
     // ── Detall d'aparcament ───────────────────────────────────
     if (bodyClass.includes('page-detall-aparcament')) {
-      const { initDetallAparcament } = await import(`./controllers/detall.controller.js?v=${Date.now()}`);
+      const { initDetallAparcament } = await import(new URL(`./controllers/detall.controller.js?v=${Date.now()}`, import.meta.url).href);
       initDetallAparcament();
     }
 
     // ── Reseva d'aparcament ───────────────────────────────────
     if (bodyClass.includes('page-reserva-aparcament')) {
-      const { initReservaAparcament } = await import(`./controllers/reserva_aparcament.controller.js?v=${Date.now()}`);
+      const { initReservaAparcament } = await import(new URL(`./controllers/reserva_aparcament.controller.js?v=${Date.now()}`, import.meta.url).href);
       initReservaAparcament();
     }
 
     // ── Tiquet d'Aparcament ───────────────────────────────────
     if (bodyClass.includes('page-tiquet')) {
-      const { initTiquetAparcament } = await import(`./controllers/tiquet.controller.js?v=${Date.now()}`);
+      const { initTiquetAparcament } = await import(new URL(`./controllers/tiquet.controller.js?v=${Date.now()}`, import.meta.url).href);
       initTiquetAparcament();
     }
 
     // ── Report de plaça en carrer ───────────────────────────────
     if (bodyClass.includes('page-report-disponibilitat')) {
-      const { initReportDisponibilitat } = await import('./controllers/report-disponibilitat.controller.js');
+      const { initReportDisponibilitat } = await import(new URL('./controllers/report-disponibilitat.controller.js', import.meta.url).href);
       initReportDisponibilitat();
     }
 
     // ── Contacte ────────────────────────────────────────────────
     if (bodyClass.includes('page-contacte')) {
-      const { initContacte } = await import(`./controllers/contacte.controller.js?v=${Date.now()}`);
+      const { initContacte } = await import(new URL(`./controllers/contacte.controller.js?v=${Date.now()}`, import.meta.url).href);
       initContacte();
     }
 
@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initControllers();
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
-  if (document.body.classList.contains('page-profile')) {
+    if (document.body.classList.contains('page-profile')) {
     const {
       initProfilePasswordForm,
       initProfileInfoForm,
@@ -393,10 +393,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       initProfileHistorySection,
       initProfileFavoritesSection,
       initProfileImageUpload
-    } = await import('./controllers/profile.controller.js');
-    const { initReserves } = await import('./controllers/reserves.controller.js');
-    const { initAdminUserCRUD } = await import('./controllers/profile-admin.controller.js');
-    const { initEstadistiques } = await import('./controllers/estadistiques.controller.js');
+    } = await import(new URL('./controllers/profile.controller.js', import.meta.url).href);
+    const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
+    const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
+    const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
 
     initProfilePasswordForm();
     initProfileInfoForm();
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
     if (userId) {
-      import('./controllers/stripe.controller.js').then(async (module) => {
+      import(new URL('./controllers/stripe.controller.js', import.meta.url).href).then(async (module) => {
         // Inicialitzar instància de Stripe
         await module.initStripe(userId);
         // Carregar targetes existents

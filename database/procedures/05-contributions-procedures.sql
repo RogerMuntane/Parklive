@@ -57,8 +57,8 @@ BEGIN
             p_usuari_id,
             p_estat_reportat,
             p_dades,
-            'pendent',
-            FALSE,  -- Les contribucions necessiten validació
+            'validada',
+            TRUE,  -- Les contribucions s'consideren vàlides al crear-les
             IFNULL(p_punts_guanyats, 5),
             p_latitud,
             p_longitud

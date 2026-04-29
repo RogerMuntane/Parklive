@@ -82,7 +82,6 @@ def get_aparcaments_by_filters(filters):
     # Si només s'usen filtres compatibles, delegar al procedure
     procedure_supported_filters = {
         'ciutat', 'tipus', 'accessibilitat', 'carrega_electrica',
-        'videovigilancia', 'obert_24h',
         'latitud', 'longitud', 'limite', 'offset'
     }
     unsupported_filters = {
@@ -103,8 +102,9 @@ def get_aparcaments_by_filters(filters):
         if offset < 0:
             offset = 0
 
+        # Compatibilitat: hi ha entorns amb sp_cercar_aparcaments de 8 args
+        # (sense videovigilancia/obert_24h) i d'altres amb 10 args.
         try:
-            # Procedure equivalent: sp_cercar_aparcaments(...)
             cursor.callproc('sp_cercar_aparcaments', [
                 filters.get('ciutat'),
                 filters.get('tipus'),
@@ -316,6 +316,7 @@ def get_aparcaments_by_filters(filters):
                 'total_pagines': math.ceil(total / limite) if limite > 0 else 1
             }
         }
+
     finally:
         cursor.close()
         conn.close()

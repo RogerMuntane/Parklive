@@ -489,6 +489,9 @@ SELECT a.id,
     a.accessibilitat,
     a.carrega_electrica,
     a.videovigilancia,
+    a.altura_maxima,
+    a.horari_obertura,
+    a.horari_tancament,
     COALESCE((
         SELECT ROUND(AVG(v.puntuacio), 2)
         FROM valoracions v
@@ -579,6 +582,38 @@ BEGIN
             NEW.id,
             'Punts per contribució validada',
             CONCAT('contribucio-validada-', NEW.id)
+        );
+    END IF;
+END//
+
+-- Trigger per afegir punts immediatament quan es crea una contribució
+DROP TRIGGER IF EXISTS after_contribucio_insert//
+CREATE TRIGGER after_contribucio_insert
+AFTER INSERT ON contribucions
+FOR EACH ROW
+BEGIN
+    -- Si la contribució té punts assignats, els atorguem a l'usuari immediatament
+    IF NEW.punts_guanyats IS NOT NULL AND NEW.punts_guanyats > 0 THEN
+        UPDATE usuaris
+        SET punts_gamificacio = punts_gamificacio + NEW.punts_guanyats
+        WHERE id = NEW.usuari_id;
+
+        INSERT INTO punts_moviments (
+            usuari_id,
+            tipus_moviment,
+            punts,
+            origen_tipus,
+            origen_id,
+            descripcio,
+            idempotency_key
+        ) VALUES (
+            NEW.usuari_id,
+            'guany',
+            NEW.punts_guanyats,
+            'contribucio',
+            NEW.id,
+            'Punts per contribució (creada)',
+            CONCAT('contribucio-creada-', NEW.id)
         );
     END IF;
 END//
