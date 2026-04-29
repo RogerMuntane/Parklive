@@ -47,6 +47,18 @@ export function setupDateMiniSheet() {
     exitTime.value = sheetExitTime.value;
   };
 
+  // Inicialització de Flatpickr per a tots els inputs de data
+  const fpConfig = {
+    minDate: "today",
+    dateFormat: "Y-m-d",
+    disableMobile: "true", // Força l'ús de la interfície de Flatpickr en mòbils
+  };
+
+  const fpEntry = flatpickr("#entryDate", fpConfig);
+  const fpSheetEntry = flatpickr("#dateSheetEntryDate", fpConfig);
+  const fpExit = flatpickr("#exitDate", fpConfig);
+  const fpSheetExit = flatpickr("#dateSheetExitDate", fpConfig);
+
   const openSheet = () => {
     syncToSheet();
     sheet.classList.add('is-visible');

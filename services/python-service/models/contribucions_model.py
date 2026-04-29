@@ -1,4 +1,4 @@
-from models.db_connection import get_db_connection
+from models.db_connection import get_new_connection
 from datetime import datetime
 from decimal import Decimal
 import json
@@ -29,18 +29,13 @@ def _extract_callproc_out_params(result_args):
 def crear_contribucio(data):
     """
     Crea una nova contribució d'usuari
-
-    Paràmetres esperats en data:
-    - usuari_id: ID de l'usuari (requerit)
-    - estat_reportat: 'lliure' o 'ocupat' (requerit)
-    - dades: diccionari amb dades addicionals (opcional)
-    - latitud: latitud de la ubicació (requerit)
-    - longitud: longitud de la ubicació (requerit)
-
+    ...
     Retorna:
     - Dades de la contribució creada
     """
-    conn = get_db_connection()
+    conn = get_new_connection()
+    if not conn:
+        raise RuntimeError("Base de dades no disponible")
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -156,24 +151,27 @@ def crear_contribucio(data):
         }
 
     except Exception as e:
-        conn.rollback()
-        cursor.close()
+        if conn:
+            conn.rollback()
         raise e
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 def get_contribucions_usuari(usuari_id, filters=None):
     """
     Obté totes les contribucions d'un usuari
-
-    Filtres opcionals:
-    - validada: només contribucions validades
-    - limit: límit de resultats
-    - offset: offset per paginació
+    ...
     """
     if filters is None:
         filters = {}
 
-    conn = get_db_connection()
+    conn = get_new_connection()
+    if not conn:
+        return []
     cursor = conn.cursor(dictionary=True)
 
     query = """
@@ -206,6 +204,7 @@ def get_contribucions_usuari(usuari_id, filters=None):
     cursor.execute(query, params)
     contribucions = cursor.fetchall()
     cursor.close()
+    conn.close()
 
     # Serialitzar
     result = []

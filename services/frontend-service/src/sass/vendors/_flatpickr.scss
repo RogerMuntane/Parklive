@@ -1,0 +1,142 @@
+@use '../abstracts/variables' as *;
+
+// Custom Flatpickr Theme - ParkLive Premium (Global)
+.flatpickr-calendar {
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    font-family: inherit;
+
+    &.open {
+        z-index: 9999;
+    }
+
+    .flatpickr-months {
+        .flatpickr-month {
+            height: 40px;
+            color: $dark-theme;
+        }
+        .flatpickr-prev-month, .flatpickr-next-month {
+            padding: 10px;
+            &:hover svg {
+                fill: $danger;
+            }
+        }
+    }
+
+    .flatpickr-day {
+        border-radius: 8px;
+        &.today {
+            border-color: rgba($danger, 0.3);
+            &:hover {
+                background: rgba($danger, 0.1);
+                border-color: $danger;
+            }
+        }
+        &.selected, &.startRange, &.endRange {
+            background: $danger !important;
+            border-color: $danger !important;
+            color: white !important;
+            box-shadow: 0 4px 8px rgba($danger, 0.3);
+        }
+        &:hover {
+            background: rgba($danger, 0.05);
+        }
+        &.flatpickr-disabled {
+            color: rgba(0,0,0,0.15);
+        }
+    }
+
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 700;
+        &:hover {
+            background: transparent;
+        }
+    }
+
+    // ─── Flatpickr Dark Mode ──────────────────────────────────
+    [data-bs-theme="dark"] & {
+        background: lighten($dark-theme, 2%) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+
+        .flatpickr-months {
+            .flatpickr-month {
+                color: $off-white !important;
+                fill: $off-white !important;
+            }
+            .flatpickr-prev-month,
+            .flatpickr-next-month {
+                fill: $off-white !important;
+                &:hover svg {
+                    fill: $danger !important;
+                }
+            }
+        }
+
+        .flatpickr-current-month {
+            color: $off-white !important;
+            .flatpickr-monthDropdown-months {
+                color: $off-white !important;
+            }
+            .numInputWrapper {
+                color: $off-white !important;
+            }
+        }
+
+        .flatpickr-weekday {
+            color: rgba($off-white, 0.6) !important;
+        }
+
+        .flatpickr-day {
+            color: $off-white !important;
+            &:hover {
+                background: rgba($off-white, 0.1) !important;
+            }
+            &.today {
+                border-color: rgba($danger, 0.5) !important;
+                &:hover {
+                    background: rgba($danger, 0.2) !important;
+                    border-color: $danger !important;
+                }
+            }
+            &.selected,
+            &.startRange,
+            &.endRange {
+                background: $danger !important;
+                border-color: $danger !important;
+                color: white !important;
+            }
+            &.flatpickr-disabled,
+            &.prevMonthDay,
+            &.nextMonthDay {
+                color: rgba($off-white, 0.25) !important;
+            }
+        }
+
+        .flatpickr-time {
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            .flatpickr-hour,
+            .flatpickr-minute,
+            .flatpickr-second,
+            .flatpickr-am-pm {
+                color: $off-white !important;
+                &:focus {
+                    background: rgba($off-white, 0.1) !important;
+                }
+            }
+            .numInputWrapper span {
+                border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+                &:hover {
+                    background: rgba($off-white, 0.1) !important;
+                }
+                &.arrowUp:after {
+                    border-bottom: 4px solid $off-white !important;
+                }
+                &.arrowDown:after {
+                    border-top: 4px solid $off-white !important;
+                }
+            }
+        }
+    }
+}

@@ -407,8 +407,8 @@ def registrar_pagament_db(reserva_id, usuari_id, import_pagament, metode, refere
     """
     Registra el pagament a la base de dades mitjançant el procedure sp_registrar_pagament
     """
-    from models.db_connection import get_db_connection
-    conn = get_db_connection()
+    from models.db_connection import get_new_connection
+    conn = get_new_connection()
     cursor = conn.cursor()
 
     try:

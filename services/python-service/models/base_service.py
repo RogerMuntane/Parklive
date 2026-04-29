@@ -6,7 +6,7 @@ Centralitza la lògica comuna de connexió i error handling.
 from typing import Any, Dict, Optional
 from mysql.connector import Error
 
-from models.db_connection import get_db_connection
+from models.db_connection import get_db_connection, get_new_connection
 
 
 class BaseService:
@@ -18,7 +18,7 @@ class BaseService:
     def _get_connection(self):
         """Obté una connexió a la BD, creant-la si és necessari."""
         if not self.conn or not self.conn.is_connected():
-            self.conn = get_db_connection()
+            self.conn = get_new_connection()
         return self.conn
 
     def _fetch_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
