@@ -225,6 +225,15 @@ export function initLandingMap() {
   const focusUserLocation = ({ zoom = 16, openPopup = false } = {}) => {
     if (!userLocationMarker) return false;
 
+    const latlng = userLocationMarker.getLatLng();
+    const lat = Number(latlng?.lat);
+    const lng = Number(latlng?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      // Coordenades invàlides: netegem el marcador i evitem fer flyTo amb NaN
+      clearUserLocationMarker();
+      return false;
+    }
+
     map.flyTo(userLocationMarker.getLatLng(), zoom, { duration: 0.8 });
     if (openPopup && typeof userLocationMarker.openPopup === 'function') {
       userLocationMarker.openPopup();
@@ -242,7 +251,11 @@ export function initLandingMap() {
   };
 
   const setParkingSpots = (spots = [], { fitBounds = true, openFirstPopup = true } = {}) => {
+    // Cerrar cualquier popup abierto antes de limpiar marcadores
     parkingMarkers.forEach((marker) => {
+      if (typeof marker.closePopup === 'function') {
+        marker.closePopup();
+      }
       map.removeLayer(marker);
     });
     parkingMarkers.clear();
@@ -304,7 +317,6 @@ export function initLandingMap() {
   };
   const fitToParkingSpots = () => {
     if (markerGroup.getLayers().length === 0) {
-      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
       return;
     }
 
@@ -356,7 +368,6 @@ export function initLandingMap() {
       if (typeof map.invalidateSize === 'function') {
         map.invalidateSize({ pan: false, debounceMoveend: true });
       }
-      ensureValidViewport();
     });
   });
 

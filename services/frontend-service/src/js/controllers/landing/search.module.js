@@ -7,7 +7,6 @@ import {
 
 const PAGE_SIZE = 5;
 const MAX_RESULTS_FOR_MAP = 1000;
-const DEFAULT_NEARBY_RADIUS_KM = 5;
 const NOMINATIM_ENDPOINT = 'https://nominatim.openstreetmap.org/search';
 const PHOTON_ENDPOINT = 'https://photon.komoot.io/api/';
 const LOCATION_SUGGESTIONS_LIMIT = 4;
@@ -37,13 +36,14 @@ function setUserLocation(nextLocation) {
       lon: Number(nextLocation.lon),
     };
     setUserLocationMarker(userLocation);
-    setSearchAnchor(userLocation);
+    // NOTE: No toques searchAnchorLocation aquí. Solo actualiza el marcador del usuari.
+    // searchAnchorLocation debería actualizar-se SOLO per moviments de mapa.
     return;
   }
 
   userLocation = null;
   setUserLocationMarker(null);
-  setSearchAnchor(null);
+  // NOTE: No toques searchAnchorLocation aquí tampoc.
 }
 
 function updateSearchAnchor(nextLocation) {
@@ -451,20 +451,18 @@ function addRadiusParam(params, distanceRange, radiusOverrideKm) {
   return null;
 }
 
-function addUserLocationParams(params, selectedRadiusKm) {
-  const anchor = searchAnchorLocation || userLocation;
-  if (!anchor) return;
+function addUserLocationParams(params, forceSearchAnchor = false) {
+  const anchor = forceSearchAnchor ? searchAnchorLocation : (searchAnchorLocation || userLocation);
+  if (!anchor) {
+    console.warn('[ParkLive] No hay ubicación (searchAnchor o userLocation)');
+    return;
+  }
 
   params.latitud = anchor.lat;
   params.longitud = anchor.lon;
-
-  // Si tenim ubicació, fem servir un radi per defecte per prioritzar aparcaments propers.
-  if (!selectedRadiusKm) {
-    params.radi_km = DEFAULT_NEARBY_RADIUS_KM;
-  }
 }
 
-function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null } = {}) {
+function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null, forceSearchAnchor = false } = {}) {
   const searchTerm = document.getElementById('mapSearchInput')?.value.trim() || '';
   const priceRange = document.getElementById('priceRange')?.value;
   const distanceRange = document.getElementById('distanceRange')?.value;
@@ -490,8 +488,8 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null }
     params.tarifa_dia_max = maxPrice;
   }
 
-  const selectedRadiusKm = addRadiusParam(params, distanceRange, radiusOverrideKm);
-  addUserLocationParams(params, selectedRadiusKm);
+  addRadiusParam(params, distanceRange, radiusOverrideKm);
+  addUserLocationParams(params, forceSearchAnchor);
 
   if (electricCharging) {
     params.carrega_electrica = true;
@@ -750,13 +748,13 @@ async function enrichDisponibilitatAsync(spots) {
 
   for (let i = 0; i < spots.length; i += AVAIL_CONCURRENCY) {
     const batch = spots.slice(i, i + AVAIL_CONCURRENCY);
-    
+
     // Execució seqüencial dins del batch per seguretat amb MySQL
     for (const spot of batch) {
       try {
         // Petit retard per no saturar el servidor
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         const params = new URLSearchParams({
           data_entrada: dataEntrada,
           data_sortida: dataSortida,
@@ -768,7 +766,7 @@ async function enrichDisponibilitatAsync(spots) {
         const lliures = res.places_lliures ?? 0;
         const totals  = res.capacitat_total ?? 0;
         const ocupacioPct = totals > 0 ? Math.round(((totals - lliures) / totals) * 100) : 0;
-        
+
         const resum = totals > 0
           ? `<span class="fw-bold">${lliures}</span>/${totals} <small>(${ocupacioPct}% ple)</small>`
           : 'No disponible';
@@ -975,13 +973,15 @@ function renderResults({
   renderPagination(panel, { currentPage, totalPages, onChangePage });
 }
 
-async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadius = false } = {}) {
-  const { searchTerm } = buildSearchParams({ ignoreCityFilter });
+async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadius = false, viewportRadiusKm = null } = {}) {
+  const forceSearchAnchor = Boolean(viewportRadiusKm);
+  console.log('[ParkLive] fetchSearchResults: viewportRadiusKm=%o, forceSearchAnchor=%o', viewportRadiusKm, forceSearchAnchor);
+  const { searchTerm } = buildSearchParams({ ignoreCityFilter, radiusOverrideKm: viewportRadiusKm, forceSearchAnchor });
   const shouldExpandRadius = expandLocationRadius && Boolean(searchAnchorLocation || userLocation);
 
   let records = shouldExpandRadius
     ? await fetchRecordsExpandingRadius(ignoreCityFilter)
-    : await fetchRecordsByParams(buildSearchParams({ ignoreCityFilter }).params);
+    : await fetchRecordsByParams(buildSearchParams({ ignoreCityFilter, radiusOverrideKm: viewportRadiusKm, forceSearchAnchor }).params);
 
   if (records.length === 0 && searchTerm) {
     records = await fallbackToTextSearch(searchTerm);
@@ -1000,10 +1000,8 @@ export function initLandingSearch({
   closeFilters,
   onSearchLocationResolved = () => {},
   setUserLocationMarker: updateUserLocationMarker = () => {},
-  setSearchAnchor: updateSearchAnchor = () => {},
 }) {
   setUserLocationMarker = updateUserLocationMarker;
-  setSearchAnchor = updateSearchAnchor;
   const mapSearchBar = document.getElementById('mapSearchBar');
   const mapSearchInput = document.getElementById('mapSearchInput');
   const applyFiltersBtn = document.querySelector('#filtresSidepanel .btn-danger.w-50');
@@ -1103,6 +1101,8 @@ export function initLandingSearch({
     if (!mapSearchInput) return;
     mapSearchInput.value = label;
     setUserLocation({ lat, lon });
+    // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
+    updateSearchAnchor({ lat, lon });
     onSearchLocationResolved({ lat, lon });
     hideSuggestions();
     await runSearch({
@@ -1124,6 +1124,8 @@ export function initLandingSearch({
     const lon = Number(parkingRaw?.longitud);
     if (Number.isFinite(lat) && Number.isFinite(lon)) {
       setUserLocation({ lat, lon });
+      // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
+      updateSearchAnchor({ lat, lon });
       onSearchLocationResolved({ lat, lon });
     }
 
@@ -1263,7 +1265,28 @@ export function initLandingSearch({
     forceIgnoreCityFilter = false,
     expandRadiusFromUserLocation = false,
     preserveViewport = false,
+    viewportRadiusKm = null,
+    forceEmptyResults = false,
+    skipMapRender = false,
   } = {}) => {
+    if (forceEmptyResults) {
+      const favoritesOnly = isFavoritesOnlyFilterEnabled();
+      const { favoritesEnabled } = await resolveFavoritesState(favoritesOnly);
+      renderResults({
+        spots: [],
+        total: 0,
+        currentPage: 1,
+        totalPages: 1,
+        onFocusParking: focusParkingById,
+        onChangePage: () => {},
+        favoritesEnabled,
+        favoriteIds: new Set(),
+        onToggleFavorite: async () => false,
+      });
+      setParkingSpots([], { fitBounds: false, openFirstPopup: false });
+      return;
+    }
+
     const targetPage = resetPage ? 1 : page;
     const searchTerm = document.getElementById('mapSearchInput')?.value.trim() || '';
 
@@ -1275,6 +1298,8 @@ export function initLandingSearch({
         const resolvedLocation = await geocodeSearchLocation(searchTerm);
         if (resolvedLocation) {
           setUserLocation(resolvedLocation);
+          // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
+          updateSearchAnchor(resolvedLocation);
           onSearchLocationResolved(resolvedLocation);
           ignoreCityFilter = true;
           locationResolvedFromTerm = true;
@@ -1289,6 +1314,7 @@ export function initLandingSearch({
       const records = await fetchSearchResults({
         ignoreCityFilter,
         expandLocationRadius: shouldExpandByLocation,
+        viewportRadiusKm,
       });
 
       const favoritesOnly = isFavoritesOnlyFilterEnabled();
@@ -1346,6 +1372,7 @@ export function initLandingSearch({
       // Enriquiment asíncron: sobreescriu la disponibilitat estàtica de la BD
       // amb el càlcul real per franja horària, sense bloquejar el render inicial.
       enrichDisponibilitatAsync(paginatedSpots);
+
       setParkingSpots(visibleSpots, {
         fitBounds: !preserveViewport,
         openFirstPopup: !preserveViewport,
@@ -1431,5 +1458,6 @@ export function initLandingSearch({
   return {
     setUserLocation,
     runSearch,
+    setSearchAnchor: updateSearchAnchor,
   };
 }
