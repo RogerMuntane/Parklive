@@ -489,6 +489,9 @@ SELECT a.id,
     a.accessibilitat,
     a.carrega_electrica,
     a.videovigilancia,
+    a.altura_maxima,
+    a.horari_obertura,
+    a.horari_tancament,
     COALESCE((
         SELECT ROUND(AVG(v.puntuacio), 2)
         FROM valoracions v
