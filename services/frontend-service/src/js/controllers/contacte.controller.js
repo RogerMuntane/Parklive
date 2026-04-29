@@ -1,3 +1,5 @@
+import { showBootstrapAlert } from '../utils.js';
+
 export function initContacte() {
   const mapEl = document.getElementById('contact-map');
   if (!mapEl) return;
@@ -43,7 +45,7 @@ export function initContacte() {
     contactForm.addEventListener('submit', (e) => {
       e.preventDefault();
       // Placeholder logic for form submission
-      alert('Missatge enviat correctament! Et contactarem aviat.');
+      showBootstrapAlert('success', 'Missatge enviat correctament! Et contactarem aviat.');
       contactForm.reset();
     });
   }

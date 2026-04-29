@@ -1,5 +1,5 @@
 import { pythonApi } from '../api.js';
-import { getUserId } from '../utils.js';
+import { getUserId, showBootstrapAlert } from '../utils.js';
 
 const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
@@ -15,6 +15,9 @@ function setStatusButtons(statusButtons, nextStatus) {
 }
 
 function showToast(toastEl, message, type = 'success') {
+  const alertType = type === 'error' ? 'danger' : type;
+  showBootstrapAlert(alertType, message);
+  
   if (!toastEl) return;
   toastEl.textContent = message;
   toastEl.className = `report-toast is-visible is-${type}`;

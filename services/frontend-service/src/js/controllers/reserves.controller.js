@@ -77,7 +77,7 @@ export async function obtenirTotesReserves(filtres = {}) {
 /**
  * Obté reserves filtrades per estat.
  *
- * @param {string} estat – pendent, confirmada, en_curs, completada, cancel·lada
+ * @param {string} estat – pendent, confirmada, en_curs, completada, cancelada
  * @param {Object} [filtres] – limit, offset
  * @returns {Promise<Array>}
  */
@@ -163,7 +163,7 @@ const ESTAT_CLASSES = {
   confirmada: 'info',
   en_curs: 'primary',
   completada: 'success',
-  'cancel·lada': 'danger',
+  'cancelada': 'danger',
 };
 
 /**
@@ -354,7 +354,7 @@ export async function initReserves() {
 
         try {
           await cancelarReserva(id);
-          showAlert('success', 'Reserva cancel·lada correctament.');
+          showAlert('success', 'Reserva cancelada correctament.');
 
           // Tancar modal
           const modalEl = document.getElementById('cancelModal');
@@ -477,7 +477,7 @@ export function renderProfileReserves(reserves, container) {
       borderClass = 'border-confirmed';
       badgeClass = 'badge-confirmed';
       statusLabel = normalizedEstat === 'pendent' ? 'Pendent' : 'Confirmada';
-    } else if (normalizedEstat === 'cancel·lada') {
+    } else if (normalizedEstat === 'cancelada') {
       borderClass = 'border-danger';
       badgeClass = 'bg-danger';
       statusLabel = 'Cancel·lada';

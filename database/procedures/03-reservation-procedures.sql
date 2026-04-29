@@ -3,6 +3,7 @@ USE parklive_db;
 -- Eliminar procedures si existeixen (per poder recrear-los)
 DROP PROCEDURE IF EXISTS sp_crear_reserva;
 DROP PROCEDURE IF EXISTS sp_obtenir_historial_reserves;
+DROP PROCEDURE IF EXISTS sp_actualitzar_estat_reserva;
 
 -- ===========================================
 -- 1. POST /api/reserves (crear reserva)
@@ -156,7 +157,7 @@ BEGIN
         ROLLBACK;
     ELSE
         -- Si estem cancel·lant una reserva que no estava ja cancel·lada, alliberem plaça
-        IF p_nou_estat = 'cancel·lada' AND v_estat_actual != 'cancel·lada' THEN
+        IF p_nou_estat = 'cancelada' AND v_estat_actual != 'cancelada' THEN
             UPDATE aparcaments
             SET places_disponibles = places_disponibles + 1
             WHERE id = v_aparcament_id;
