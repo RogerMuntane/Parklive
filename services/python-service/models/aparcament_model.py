@@ -73,7 +73,6 @@ def get_aparcaments_by_filters(filters):
     # Si només s'usen filtres compatibles, delegar al procedure
     procedure_supported_filters = {
         'ciutat', 'tipus', 'accessibilitat', 'carrega_electrica',
-        'videovigilancia', 'obert_24h',
         'latitud', 'longitud', 'limite', 'offset'
     }
     unsupported_filters = {
@@ -94,20 +93,36 @@ def get_aparcaments_by_filters(filters):
         if offset < 0:
             offset = 0
 
-        # Procedure equivalent: sp_cercar_aparcaments(ciutat, tipus, accessibilitat,
-        # carrega_electrica, latitud, longitud, limit, offset)
-        cursor.callproc('sp_cercar_aparcaments', [
-            filters.get('ciutat'),
-            filters.get('tipus'),
-            filters.get('accessibilitat'),
-            filters.get('carrega_electrica'),
-            filters.get('videovigilancia'),
-            filters.get('obert_24h'),
-            filters.get('latitud'),
-            filters.get('longitud'),
-            limite,
-            offset
-        ])
+        # Compatibilitat: hi ha entorns amb sp_cercar_aparcaments de 8 args
+        # (sense videovigilancia/obert_24h) i d'altres amb 10 args.
+        try:
+            cursor.callproc('sp_cercar_aparcaments', [
+                filters.get('ciutat'),
+                filters.get('tipus'),
+                filters.get('accessibilitat'),
+                filters.get('carrega_electrica'),
+                filters.get('videovigilancia'),
+                filters.get('obert_24h'),
+                filters.get('latitud'),
+                filters.get('longitud'),
+                limite,
+                offset
+            ])
+        except Exception as exc:
+            # Fallback a signatura antiga de 8 arguments.
+            if 'expected 8, got 10' not in str(exc):
+                raise
+
+            cursor.callproc('sp_cercar_aparcaments', [
+                filters.get('ciutat'),
+                filters.get('tipus'),
+                filters.get('accessibilitat'),
+                filters.get('carrega_electrica'),
+                filters.get('latitud'),
+                filters.get('longitud'),
+                limite,
+                offset
+            ])
 
         aparcaments = []
         for result in cursor.stored_results():
@@ -141,11 +156,11 @@ def get_aparcaments_by_filters(filters):
         tipus_values = filters['tipus'].split(',')
         valid_tipus = ['carrer', 'cobert', 'aire_lliure',
                        'subterrani', 'parking_public', 'parking_privat']
-        
+
         for t in tipus_values:
             if t not in valid_tipus:
                 raise ValueError(f"Tipus invàlid: {t}")
-        
+
         placeholders = ', '.join(['%s'] * len(tipus_values))
         query += f" AND tipus IN ({placeholders})"
         params.extend(tipus_values)
@@ -193,7 +208,7 @@ def get_aparcaments_by_filters(filters):
         # Si no hi ha dates, usem ara -> ara + 2h
         data_entrada = filters.get('data_entrada')
         data_sortida = filters.get('data_sortida')
-        
+
         if not data_entrada or not data_sortida:
             now = datetime.now()
             # Arrodonir a 30 min superiors
@@ -204,8 +219,8 @@ def get_aparcaments_by_filters(filters):
         valid_disp = ['disponible', 'ocupat']
         disp = filters.get('disponibilitat', [])
         if isinstance(disp, str): disp = [disp]
-        
-        # Només apliquem el filtre restrictiu si s'ha marcat explícitament "disponible" 
+
+        # Només apliquem el filtre restrictiu si s'ha marcat explícitament "disponible"
         # o si l'usuari ha posat dates al cercador
         if 'disponible' in disp or filters.get('data_entrada'):
             query += """
@@ -219,7 +234,7 @@ def get_aparcaments_by_filters(filters):
             )
             """
             params.extend([data_entrada, data_sortida])
-        
+
         elif 'ocupat' in disp:
             # Cas contrari: mostrar només els plens
             query += """

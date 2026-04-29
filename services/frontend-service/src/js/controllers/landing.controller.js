@@ -87,13 +87,16 @@ function getCurrentBrowserLocation() {
 async function resolveCurrentLocation({
   map,
   setUserLocation,
+  setSearchAnchor,
   runSearch,
   focusUserLocation,
   fallbackCenter,
   fallbackZoom,
+  viewportRadiusKm = null,
   silent = false,
 } = {}) {
   try {
+    console.log('[ParkLive] Intentando obtener geolocalización...');
     const position = await getCurrentBrowserLocation();
     const lat = Number(position?.coords?.latitude);
     const lon = Number(position?.coords?.longitude);
@@ -102,24 +105,52 @@ async function resolveCurrentLocation({
       throw new TypeError('No s\'ha pogut determinar la teva ubicació actual.');
     }
 
+    console.log('[ParkLive] Geolocalización obtenida: lat=%o, lon=%o', lat, lon);
     setUserLocation({ lat, lon });
+
+    if (typeof setSearchAnchor === 'function') {
+      setSearchAnchor({ lat, lon });
+    }
+
     if (map && typeof map.setView === 'function') {
-      map.setView([lat, lon], GEOLOCATION_ZOOM);
+      console.log('[ParkLive] Map existe, intentando setView([%o, %o], %o)', lat, lon, GEOLOCATION_ZOOM);
+      try {
+        map.setView([lat, lon], GEOLOCATION_ZOOM);
+        console.log('[ParkLive] setView ejecutado correctamente');
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        console.log('[ParkLive] Mapa actual después de setView: center=[%o, %o], zoom=%o', center.lat, center.lng, zoom);
+      } catch (err) {
+        console.error('[ParkLive] Error en map.setView:', err);
+      }
+    } else {
+      console.warn('[ParkLive] Map no existe o no tiene función setView');
     }
 
     if (typeof focusUserLocation === 'function') {
       focusUserLocation({ zoom: GEOLOCATION_ZOOM });
     }
 
-    await runSearch({ resetPage: true });
+    // Mostrar aparcamientos en el mapa (con preserveViewport para no hacer fitBounds),
+    // pero luego volver a centrar en la ubicación del usuario
+    await runSearch({ resetPage: true, viewportRadiusKm, preserveViewport: true, centerOnUserLocation: true });
+
+    // Volver a centrar el mapa en la ubicación del usuario INMEDIATAMENTE después de mostrar los aparcamientos
+    if (map && typeof map.setView === 'function') {
+      map.setView([lat, lon], GEOLOCATION_ZOOM);
+      console.log('[ParkLive] Recentrado en geolocalización después de runSearch: [%o, %o]', lat, lon);
+    }
+
     return true;
   } catch (error) {
+    console.log('[ParkLive] Geolocalización falló: %o', error?.message);
     const fallbackCenterPoint = Array.isArray(fallbackCenter) && fallbackCenter.length >= 2
       ? fallbackCenter
       : null;
     const fallbackZoomLevel = Number.isFinite(fallbackZoom) ? fallbackZoom : 14;
 
     if (map && fallbackCenterPoint && typeof map.setView === 'function') {
+      console.log('[ParkLive] Usando ubicación por defecto: center=%o, zoom=%o', fallbackCenterPoint, fallbackZoomLevel);
       map.setView(fallbackCenterPoint, fallbackZoomLevel);
     }
 
@@ -131,24 +162,50 @@ async function resolveCurrentLocation({
     }
 
     if (typeof runSearch === 'function') {
-      await runSearch();
-    }
+      // Mostrar aparcamientos manteniendo el viewport
+      await runSearch({ viewportRadiusKm, preserveViewport: true });
 
-    return false;
+      // Volver a centrar el mapa en la ubicación por defecto INMEDIATAMENTE después de mostrar aparcamientos
+      if (map && fallbackCenterPoint && typeof map.setView === 'function') {
+        map.setView(fallbackCenterPoint, fallbackZoomLevel);
+        console.log('[ParkLive] Recentrado en ubicación por defecto después de runSearch');
+      }
+    }
   }
 }
 
-function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation }) {
+function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation, setSearchAnchor }) {
+
+  // Calcular el viewport inicial para la primera búsqueda
+  const initialViewport = getMapViewportContext(map);
+  const initialViewportRadiusKm = initialViewport?.radiusKm || null;
+
+  console.log('[ParkLive] tryAutoLocateAndSearch iniciado');
   resolveCurrentLocation({
     map,
     setUserLocation,
+    setSearchAnchor,
     runSearch,
     focusUserLocation,
     fallbackCenter: map?.options?.center,
     fallbackZoom: map?.options?.zoom,
+    viewportRadiusKm: initialViewportRadiusKm,
     silent: true,
   }).catch(async () => {
-    await runSearch();
+    console.log('[ParkLive] tryAutoLocateAndSearch fallback: sin geolocalización');
+
+    // Si falla la geolocalización, fijar el punto de búsqueda al centro del mapa por defecto (Barcelona)
+    const mapCenter = map?.getCenter();
+    if (mapCenter && typeof setSearchAnchor === 'function') {
+      setSearchAnchor({ lat: Number(mapCenter.lat), lon: Number(mapCenter.lng) });
+    }
+
+    // Si la geolocalización falla, buscar con viewport radius si está disponible
+    // Mantener el viewport sin reajustar bounds
+    await runSearch({
+      viewportRadiusKm: initialViewportRadiusKm,
+      preserveViewport: true,
+    });
   });
 }
 
@@ -189,7 +246,8 @@ export function initLanding() {
   initFilterPanelControls();
   setupSearchBar({ closeFilters: toggleFilters });
   setupDateMiniSheet();
-  const { runSearch, setUserLocation } = initLandingSearch({
+
+  const { runSearch, setUserLocation, setSearchAnchor } = initLandingSearch({
     setParkingSpots,
     focusParkingById,
     closeFilters: toggleFilters,
@@ -203,6 +261,7 @@ export function initLanding() {
     resolveCurrentLocation({
       map,
       setUserLocation,
+      setSearchAnchor,
       runSearch,
       focusUserLocation,
       fallbackCenter: defaultCenter,
@@ -220,12 +279,26 @@ export function initLanding() {
   });
 
   toggleFilters(false);
-  tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation });
+
+  let isInitializing = true; // Bandera para evitar scheduleMapDynamicLoad durante inicialización
+  tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation, setSearchAnchor });
+
+  // Permitir scheduleMapDynamicLoad después de 3 segundos (tiempo suficiente para la carga inicial)
+  globalThis.setTimeout(() => {
+    isInitializing = false;
+    console.log('[ParkLive] Inicialización completada, habilitando dynamic load');
+  }, 3000);
 
   let mapDynamicLoadTimerId = null;
   let mapDynamicRequestId = 0;
 
   const scheduleMapDynamicLoad = () => {
+    // No ejecutar durante la inicialización inicial
+    if (isInitializing) {
+      console.log('[ParkLive] scheduleMapDynamicLoad ignorado (aún inicializando)');
+      return;
+    }
+
     if (map.getZoom() < MAP_DYNAMIC_MIN_ZOOM) {
       if (mapDynamicLoadTimerId) {
         globalThis.clearTimeout(mapDynamicLoadTimerId);
@@ -235,6 +308,8 @@ export function initLanding() {
       mapDynamicRequestId += 1;
       setParkingSpots([], { fitBounds: false, openFirstPopup: false });
       setStreetReports([]);
+      // Limpiar también el panel de resultados cuando zoom es muy bajo
+      runSearch({ forceEmptyResults: true });
       return;
     }
 
@@ -245,15 +320,27 @@ export function initLanding() {
     mapDynamicLoadTimerId = globalThis.setTimeout(async () => {
       mapDynamicLoadTimerId = null;
       const viewport = getMapViewportContext(map);
-      if (!viewport) return;
+      if (!viewport) {
+        return;
+      }
 
       const currentRequestId = ++mapDynamicRequestId;
+
+      // Actualitzar el punt de cerca al centre del viewport actual
+      const mapCenter = map.getCenter();
+      if (mapCenter && typeof mapCenter.lat === 'number' && typeof mapCenter.lng === 'number') {
+        setSearchAnchor({
+          lat: Number(mapCenter.lat),
+          lon: Number(mapCenter.lng),
+        });
+      }
 
       await runSearch({
         resetPage: true,
         forceIgnoreCityFilter: true,
-        expandRadiusFromUserLocation: true,
+        expandRadiusFromUserLocation: false,
         preserveViewport: true,
+        viewportRadiusKm: viewport.radiusKm,
       });
 
       if (currentRequestId !== mapDynamicRequestId) return;
