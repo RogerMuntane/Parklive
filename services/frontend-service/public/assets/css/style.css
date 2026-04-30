@@ -20662,11 +20662,65 @@ textarea.form-control-lg {
 
 .profile-section {
   display: none;
+  opacity: 0;
 }
 
 .profile-section.active {
   display: block;
-  animation: fadeUp 0.3s ease both;
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.profile-section.active.animate-stagger .row > div, .profile-section.active.animate-stagger > .card, .profile-section.active.animate-stagger > div:not(.row) {
+  opacity: 0;
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(1), .profile-section.active.animate-stagger > .card:nth-child(1), .profile-section.active.animate-stagger > div:not(.row):nth-child(1) {
+  animation-delay: 0.08s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(2), .profile-section.active.animate-stagger > .card:nth-child(2), .profile-section.active.animate-stagger > div:not(.row):nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(3), .profile-section.active.animate-stagger > .card:nth-child(3), .profile-section.active.animate-stagger > div:not(.row):nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(4), .profile-section.active.animate-stagger > .card:nth-child(4), .profile-section.active.animate-stagger > div:not(.row):nth-child(4) {
+  animation-delay: 0.32s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(5), .profile-section.active.animate-stagger > .card:nth-child(5), .profile-section.active.animate-stagger > div:not(.row):nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(6), .profile-section.active.animate-stagger > .card:nth-child(6), .profile-section.active.animate-stagger > div:not(.row):nth-child(6) {
+  animation-delay: 0.48s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(7), .profile-section.active.animate-stagger > .card:nth-child(7), .profile-section.active.animate-stagger > div:not(.row):nth-child(7) {
+  animation-delay: 0.56s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(8), .profile-section.active.animate-stagger > .card:nth-child(8), .profile-section.active.animate-stagger > div:not(.row):nth-child(8) {
+  animation-delay: 0.64s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(9), .profile-section.active.animate-stagger > .card:nth-child(9), .profile-section.active.animate-stagger > div:not(.row):nth-child(9) {
+  animation-delay: 0.72s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(10), .profile-section.active.animate-stagger > .card:nth-child(10), .profile-section.active.animate-stagger > div:not(.row):nth-child(10) {
+  animation-delay: 0.8s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(11), .profile-section.active.animate-stagger > .card:nth-child(11), .profile-section.active.animate-stagger > div:not(.row):nth-child(11) {
+  animation-delay: 0.88s;
+}
+
+.profile-section.active.animate-stagger .row > div:nth-child(12), .profile-section.active.animate-stagger > .card:nth-child(12), .profile-section.active.animate-stagger > div:not(.row):nth-child(12) {
+  animation-delay: 0.96s;
 }
 
 [data-bs-theme=dark] .btn-outline-danger {
@@ -20862,10 +20916,12 @@ textarea.form-control-lg {
 
 .subscription-toggle-card.active .custom-switch {
   background-color: #c1121f;
+  border-color: #c1121f;
 }
 
 .subscription-toggle-card.active .custom-switch::after {
   transform: translateX(22px);
+  background-color: white;
 }
 
 .subscription-toggle-card:not(.active) .toggle-icon-box {
@@ -20877,14 +20933,6 @@ textarea.form-control-lg {
 .subscription-toggle-card:not(.active) .toggle-badge {
   background-color: rgba(var(--bs-secondary-rgb), 0.1);
   color: var(--bs-secondary-color);
-}
-
-.subscription-toggle-card:not(.active) .custom-switch {
-  background-color: rgba(var(--bs-secondary-rgb), 0.3);
-}
-
-.subscription-toggle-card:not(.active) .custom-switch::after {
-  transform: translateX(0);
 }
 
 .subscription-toggle-card:not(.active) .toggle-desc {
@@ -20926,6 +20974,8 @@ textarea.form-control-lg {
   transition: all 0.3s ease;
   margin-left: auto;
   flex-shrink: 0;
+  background-color: rgba(var(--bs-secondary-rgb), 0.2);
+  border: 1px solid var(--bs-border-color);
 }
 
 .custom-switch::after {
@@ -20935,18 +20985,30 @@ textarea.form-control-lg {
   height: 20px;
   background-color: white;
   border-radius: 50%;
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 2px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.custom-switch.on {
+  background-color: #c1121f;
+  border-color: #c1121f;
+}
+
+.custom-switch.on::after {
+  transform: translateX(22px);
+  background-color: white;
 }
 
 @keyframes fadeUp {
   from {
     opacity: 0;
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 .plan-switcher-container {

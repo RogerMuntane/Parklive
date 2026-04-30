@@ -83,11 +83,14 @@ function initLogin() {
         }
         // Neteja explícita de la sessió OAuth si NO és Google
         sessionStorage.removeItem('parklive_oauth');
-        
-        
+
         showAlert('success', result.message || 'Sessió iniciada correctament.');
         showBootstrapAlert('success', result.message || 'Sessió iniciada correctament!');
-        redirectAfterDelay('index.html', REDIRECT_DELAY);
+
+        // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        const target = redirectParam ? decodeURIComponent(redirectParam) : 'index.html';
+        redirectAfterDelay(target, REDIRECT_DELAY);
       }
     } catch (err) {
       const msg = err.message || 'Error en iniciar sessió. Revisa les credencials.';
@@ -370,7 +373,11 @@ async function handleGoogleTokenResponse(tokenResponse) {
         console.log('[ParkLive] OAuth guardat a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
       }
       showAlert('success', result.message || 'Sessió iniciada amb Google!');
-      redirectAfterDelay('index.html', REDIRECT_DELAY);
+
+      // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      const target = redirectParam ? decodeURIComponent(redirectParam) : 'index.html';
+      redirectAfterDelay(target, REDIRECT_DELAY);
     }
   } catch (err) {
     const msg = err.message || 'Error en l\'autenticació amb Google.';

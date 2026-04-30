@@ -268,7 +268,74 @@ function initSidebarData() {
   }
 }
 
-/*  4. CÀRREGA DINÀMICA DE CONTROLADORS                                */
+/*  4. AUTH GUARD – Protecció de pàgines privades                     */
+
+/**
+ * Llista de classes `body` que requereixen que l'usuari estigui autenticat.
+ * Si la pàgina actual conté alguna d'aquestes classes i l'usuari no té sessió,
+ * se'l redirigeix immediatament a login.html sense carregar cap controlador.
+ */
+const PROTECTED_PAGES = [
+  'page-dashboard',
+  'page-profile',
+  'page-reserva-aparcament',
+  'page-tiquet',
+  'page-nova-valoracio',
+  'page-report-disponibilitat',
+];
+
+/**
+ * Comprova si la pàgina actual és protegida i, si l'usuari no té sessió,
+ * oculta el contingut i redirigeix a login.html.
+ * Retorna `true` si cal bloquejar l'execució (no autenticat a pàgina protegida).
+ */
+function applyAuthGuard() {
+  const bodyClass = document.body.className;
+  const isProtected = PROTECTED_PAGES.some((cls) => bodyClass.includes(cls));
+
+  if (!isProtected) return false; // Pàgina pública, no cal fer res
+
+  if (isAuthenticated()) return false; // Usuari autenticat, accés permès
+
+  // Usuari NO autenticat a pàgina protegida → bloquejar i redirigir
+  // Ocultar tot el body per evitar el "flash" de contingut
+  document.body.style.visibility = 'hidden';
+  const redirectTarget = `login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  console.warn(`[ParkLive] Auth Guard: accés denegat a "${window.location.pathname}". Redirigint a login...`);
+  window.location.replace(redirectTarget);
+  return true; // Bloquejar la resta de la inicialització
+}
+
+/*  4b. ROLE GUARD – Protecció de seccions privades per rol            */
+
+/**
+ * Obté el rol de l'usuari de la sessió actual.
+ * @returns {'admin'|'operador'|'premium'|'basic'|null}
+ */
+function getUserRole() {
+  try {
+    const raw = sessionStorage.getItem('parklive_user_data');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return (user.tipus_usuari || 'basic').toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Comprova si l'usuari té el rol requerit.
+ * @param {string} requiredRole - Rol mínim requerit ('admin', 'operador', etc.)
+ * @returns {boolean}
+ */
+function hasRole(requiredRole) {
+  const role = getUserRole();
+  if (requiredRole === 'admin') return role === 'admin';
+  if (requiredRole === 'operador') return role === 'admin' || role === 'operador';
+  return role !== null; // Qualsevol usuari autenticat
+}
+
+/*  5. CÀRREGA DINÀMICA DE CONTROLADORS                                */
 
 /**
  * Toggle de visibilitat de contrasenyes.
@@ -372,6 +439,12 @@ async function initControllers() {
 /*  Carreguem els elements                                                          */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // ── Auth Guard: primer de tot, abans de carregar res ──────────────
+  // Aplica el tema immediatament per evitar flash blanc/negre
+  applyTheme(getPreferredTheme());
+
+  if (applyAuthGuard()) return; // Redirigeix i para l'execució
+
   await loadTemplates();
   initSidebarData();
 
@@ -395,8 +468,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       initProfileImageUpload
     } = await import(new URL('./controllers/profile.controller.js', import.meta.url).href);
     const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
-    const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
-    const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
 
     initProfilePasswordForm();
     initProfileInfoForm();
@@ -406,8 +477,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfileHistorySection();
     initProfileFavoritesSection();
     initReserves();
-    initAdminUserCRUD();
-    initEstadistiques();
+
+    // ── Role Guard: controladors exclusius d'administrador ─────────────
+    // Només es carreguen si el rol és 'admin'. Si no ho és, els fitxers
+    // JS mai es descarreguen i la secció admin-users s'elimina del DOM.
+    if (hasRole('admin')) {
+      const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
+      initAdminUserCRUD();
+    }
+
+    // Inicialització d'estadístiques per a usuaris Premium i Admin
+    const userRole = getUserRole();
+    if (userRole === 'premium' || userRole === 'admin') {
+      const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
+      initEstadistiques();
+    } else {
+      // Eliminar físicament del DOM la secció i el botó del sidebar per evitar
+      // que un usuari pugui accedir-hi manipulant el DOM o la URL
+      document.getElementById('section-admin-users')?.remove();
+      document.querySelector('.sidebar-nav-item[data-section="admin-users"]')?.remove();
+
+      // Si algú ha manipulat la URL amb ?section=admin-users, redirigir a info
+      const sectionParam = new URLSearchParams(window.location.search).get('section');
+      if (sectionParam === 'admin-users') {
+        console.warn('[ParkLive] Role Guard: accés denegat a la secció admin-users.');
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
@@ -444,7 +540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       stadistics: 'Les teves estadístiques'
     };
     sidebarBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const sec = btn.dataset.section;
         if (sec === 'logout') {
           logoutUser('/index.html');
@@ -453,8 +549,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         sidebarBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         sections.forEach(s => s.classList.remove('active'));
+        
         const target = document.getElementById('section-' + sec);
-        if (target) target.classList.add('active');
+        if (target) {
+          // Reset animació per permetre que es torni a reproduir
+          target.style.animation = 'none';
+          void target.offsetWidth; // Force reflow
+          target.style.animation = null;
+          
+          target.classList.add('active');
+
+          // Si entrem a estadístiques, disparem les animacions de les gràfiques
+          if (sec === 'stadistics') {
+            const { refreshEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
+            refreshEstadistiques();
+          }
+        }
         if (sectionTitle) sectionTitle.textContent = sectionTitles[sec] || '';
       });
     });
