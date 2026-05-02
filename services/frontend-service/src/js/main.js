@@ -394,6 +394,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } = await import(new URL('./controllers/profile.controller.js', import.meta.url).href);
     const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
     const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
+    const { initAdminParkingCRUD } = await import(new URL('./controllers/profile-admin-aparcaments.controller.js', import.meta.url).href);
     const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
 
     initProfilePasswordForm();
@@ -405,6 +406,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfileFavoritesSection();
     initReserves();
     initAdminUserCRUD();
+    initAdminParkingCRUD();
     initEstadistiques();
     initProfilePointsSection();
 
@@ -440,6 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       manage: 'Gestionar subscripció',
       // notifications: 'Notificacions',
       'admin-users': 'Admin: Gestió d\'Usuaris',
+      'admin-parkings': 'Admin: Gestió d\'Aparcaments',
       stadistics: 'Les teves estadístiques',
       points: 'Canviar punts per recompenses'
     };

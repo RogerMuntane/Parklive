@@ -1,0 +1,146 @@
+<?php
+
+session_start();
+require_once __DIR__ . "/../models/AdminAparcamentModel.php";
+require_once __DIR__ . "/../models/sessionModel.php";
+
+class AdminAparcamentController
+{
+    private $model;
+
+    public function __construct()
+    {
+        header('Content-Type: application/json');
+        
+        // Verificar autenticació i rol
+        SessionModel::iniciarSessio();
+        if (!SessionModel::estaAutenticat() || !self::isAdmin()) {
+            $this->respond(['success' => false, 'error' => 'No tens permisos per realitzar aquesta acció'], 403);
+        }
+
+        $this->model = new AdminAparcamentModel();
+        $this->processRequest();
+    }
+
+    private static function isAdmin()
+    {
+        $usuari = SessionModel::obtenirUsuari();
+        // El camp 'rol' de la sessió es mapeja des de 'tipus_usuari' de la BD
+        return ($usuari && isset($usuari['rol']) && $usuari['rol'] === 'admin');
+    }
+
+    private function processRequest()
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        $action = $_GET['action'] ?? '';
+
+        switch ($method) {
+            case 'GET':
+                $search = trim($_GET['search'] ?? '');
+                $type = trim($_GET['type'] ?? '');
+                $status = trim($_GET['status'] ?? '');
+                
+                $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+                $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
+                $offset = ($page - 1) * $limit;
+
+                $total = $this->model->getTotalAparcamentsCount($search, $type, $status);
+                $parkings = $this->model->getAllAparcaments($search, $type, $status, $limit, $offset);
+                
+                if (!empty($this->model->getErrors())) {
+                    $this->respond([
+                        'success' => false,
+                        'error' => 'Error de dades',
+                        'details' => $this->model->getErrors()
+                    ], 500);
+                }
+
+                $totalPages = ceil($total / $limit);
+
+                $this->respond([
+                    'success' => true, 
+                    'data' => $parkings,
+                    'pagination' => [
+                        'total' => $total,
+                        'page' => $page,
+                        'limit' => $limit,
+                        'total_pages' => $totalPages
+                    ]
+                ]);
+                break;
+
+            case 'POST':
+                $data = json_decode(file_get_contents('php://input'), true);
+                
+                if ($action === 'create') {
+                    $this->handleCreate($data);
+                } elseif ($action === 'update') {
+                    $id = $_GET['id'] ?? null;
+                    $this->handleUpdate($id, $data);
+                } elseif ($action === 'delete') {
+                    $id = $_GET['id'] ?? null;
+                    $this->handleDelete($id);
+                } else {
+                    $this->respond(['success' => false, 'error' => 'Acció no vàlida'], 400);
+                }
+                break;
+
+            default:
+                $this->respond(['success' => false, 'error' => 'Mètode no permès'], 405);
+                break;
+        }
+    }
+
+    private function handleCreate($data)
+    {
+        if (empty($data['nom']) || empty($data['tipus']) || empty($data['adreca']) || empty($data['latitud']) || empty($data['longitud'])) {
+            $this->respond(['success' => false, 'error' => 'Falten dades obligatòries'], 400);
+        }
+
+        $result = $this->model->createAparcament($data);
+        if ($result) {
+            $this->respond(['success' => true, 'message' => 'Aparcament creat correctament', 'id' => $result]);
+        } else {
+            $this->respond(['success' => false, 'errors' => $this->model->getErrors()], 500);
+        }
+    }
+
+    private function handleUpdate($id, $data)
+    {
+        if (!$id) {
+            $this->respond(['success' => false, 'error' => 'ID d\'aparcament no proporcionat'], 400);
+        }
+
+        $result = $this->model->updateAparcament($id, $data);
+        if ($result) {
+            $this->respond(['success' => true, 'message' => 'Aparcament actualitzat correctament']);
+        } else {
+            $this->respond(['success' => false, 'errors' => $this->model->getErrors()], 500);
+        }
+    }
+
+    private function handleDelete($id)
+    {
+        if (!$id) {
+            $this->respond(['success' => false, 'error' => 'ID d\'aparcament no proporcionat'], 400);
+        }
+
+        $result = $this->model->deleteAparcament($id);
+        if ($result) {
+            $this->respond(['success' => true, 'message' => 'Aparcament eliminat correctament']);
+        } else {
+            $this->respond(['success' => false, 'errors' => $this->model->getErrors()], 500);
+        }
+    }
+
+    private function respond($data, $status = 200)
+    {
+        http_response_code($status);
+        echo json_encode($data);
+        exit();
+    }
+}
+
+if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
+    new AdminAparcamentController();
+}

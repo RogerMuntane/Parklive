@@ -21998,6 +21998,27 @@ body.page-tiquet {
     min-height: 340px;
   }
 }
+/* Admin Aparcaments CRUD Styles */
+[data-bs-theme=dark] #section-admin-parkings .form-control, [data-bs-theme=dark] #section-admin-parkings .form-select, [data-bs-theme=dark] #modal-parking .form-control, [data-bs-theme=dark] #modal-parking .form-select {
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #edf2f4;
+}
+
+[data-bs-theme=dark] #section-admin-parkings .form-control option, [data-bs-theme=dark] #section-admin-parkings .form-select option, [data-bs-theme=dark] #modal-parking .form-control option, [data-bs-theme=dark] #modal-parking .form-select option {
+  background-color: #2b2d42;
+  color: #edf2f4;
+}
+
+[data-bs-theme=dark] #section-admin-parkings .form-control:focus, [data-bs-theme=dark] #section-admin-parkings .form-select:focus, [data-bs-theme=dark] #modal-parking .form-control:focus, [data-bs-theme=dark] #modal-parking .form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.x-small {
+  font-size: 0.75rem;
+}
+
 [data-bs-theme=dark] .page-auth .main-content {
   background: linear-gradient(135deg, rgb(51.047706422, 53.4220183486, 78.352293578) 0%, #434667 100%);
 }

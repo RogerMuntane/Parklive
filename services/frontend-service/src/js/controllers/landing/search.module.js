@@ -1098,20 +1098,29 @@ export function initLandingSearch({
   };
 
   const applyLocationSuggestion = async ({ label, lat, lon }) => {
-    if (!mapSearchInput) return;
-    mapSearchInput.value = label;
-    setUserLocation({ lat, lon });
-    // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
-    updateSearchAnchor({ lat, lon });
-    onSearchLocationResolved({ lat, lon });
-    hideSuggestions();
-    await runSearch({
-      resetPage: true,
-      resolveSearchLocation: false,
-      centerOnUserLocation: true,
-      forceIgnoreCityFilter: true,
-      expandRadiusFromUserLocation: true,
-    });
+    try {
+      if (!mapSearchInput) return;
+      mapSearchInput.value = label;
+      
+      const coords = { lat: Number(lat), lon: Number(lon) };
+      
+      // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
+      updateSearchAnchor(coords);
+      onSearchLocationResolved(coords);
+      hideSuggestions();
+      
+      await runSearch({
+        resetPage: true,
+        resolveSearchLocation: false,
+        centerOnUserLocation: false, // Ja hem centrat a dalt
+        forceIgnoreCityFilter: true,
+        expandRadiusFromUserLocation: true,
+        preserveViewport: true, // No volem que runSearch torni a moure el mapa
+      });
+    } catch (err) {
+      console.error('[ParkLive] Error aplicant suggeriment:', err);
+      hideSuggestions();
+    }
   };
 
   const applyParkingSuggestion = async ({ label, parkingId, parkingRaw }) => {
@@ -1123,7 +1132,6 @@ export function initLandingSearch({
     const lat = Number(parkingRaw?.latitud);
     const lon = Number(parkingRaw?.longitud);
     if (Number.isFinite(lat) && Number.isFinite(lon)) {
-      setUserLocation({ lat, lon });
       // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
       updateSearchAnchor({ lat, lon });
       onSearchLocationResolved({ lat, lon });
@@ -1187,7 +1195,8 @@ export function initLandingSearch({
         optionBtn.type = 'button';
         optionBtn.className = 'list-group-item list-group-item-action small d-flex align-items-center gap-2';
         optionBtn.innerHTML = `<i class="bi bi-p-square"></i><span>${escapeHtml(item.label)}</span>`;
-        optionBtn.addEventListener('click', async () => {
+        optionBtn.addEventListener('mousedown', async (e) => {
+          e.preventDefault(); // Evitar que el blur de l'input s'executi abans
           await applyParkingSuggestion(item);
         });
         suggestionsMenu.appendChild(optionBtn);
@@ -1201,7 +1210,8 @@ export function initLandingSearch({
         optionBtn.type = 'button';
         optionBtn.className = 'list-group-item list-group-item-action small d-flex align-items-center gap-2';
         optionBtn.innerHTML = `<i class="bi bi-geo-alt"></i><span>${escapeHtml(item.label)}</span>`;
-        optionBtn.addEventListener('click', async () => {
+        optionBtn.addEventListener('mousedown', async (e) => {
+          e.preventDefault(); // Evitar que el blur de l'input s'executi abans
           await applyLocationSuggestion(item);
         });
         suggestionsMenu.appendChild(optionBtn);
@@ -1297,7 +1307,6 @@ export function initLandingSearch({
       try {
         const resolvedLocation = await geocodeSearchLocation(searchTerm);
         if (resolvedLocation) {
-          setUserLocation(resolvedLocation);
           // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
           updateSearchAnchor(resolvedLocation);
           onSearchLocationResolved(resolvedLocation);
@@ -1378,11 +1387,15 @@ export function initLandingSearch({
         openFirstPopup: !preserveViewport,
       });
 
-      const shouldCenterAfterRender = (centerOnUserLocation || locationResolvedFromTerm) && userLocation;
+      const shouldCenterAfterRender = (centerOnUserLocation || locationResolvedFromTerm) && !preserveViewport;
       if (shouldCenterAfterRender) {
-        globalThis.requestAnimationFrame(() => {
-          onSearchLocationResolved(userLocation);
-        });
+        // Prioritzem el punt on s'ha buscat (searchAnchorLocation) sobre el GPS (userLocation)
+        const centerPos = searchAnchorLocation || userLocation;
+        if (centerPos) {
+          globalThis.requestAnimationFrame(() => {
+            onSearchLocationResolved(centerPos);
+          });
+        }
       }
     } catch (error) {
       console.error('[ParkLive] Error cercant aparcaments:', error);
@@ -1431,7 +1444,7 @@ export function initLandingSearch({
     mapSearchInput.addEventListener('blur', () => {
       globalThis.setTimeout(() => {
         hideSuggestions();
-      }, 120);
+      }, 250); // Un poc més de marge
     });
 
     mapSearchInput.addEventListener('focus', () => {

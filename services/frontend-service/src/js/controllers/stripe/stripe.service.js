@@ -15,6 +15,7 @@ const API_STRIPE_URL = `${PYTHON_API_URL}/api/stripe`;
  */
 export async function fetchSetupIntent(userId) {
     const res = await fetch(`${API_STRIPE_URL}/setup-intent?user_id=${userId}`);
+    if (res.status === 404) return { client_secret: null, stripe_publishable_key: null };
     if (!res.ok) throw new Error(`Error ${res.status} en crear SetupIntent`);
     return await res.json();
 }
@@ -27,6 +28,7 @@ export async function fetchSetupIntent(userId) {
  */
 export async function fetchPaymentMethods(userId) {
     const response = await fetch(`${API_STRIPE_URL}/payment-methods?user_id=${userId}&t=${Date.now()}`);
+    if (response.status === 404) return [];
     if (!response.ok) throw new Error('Error obtenint mètodes de pagament');
     return await response.json();
 }
