@@ -1,5 +1,13 @@
--- 1. RECOMPENSES (catàleg d'insignies i premis)
+-- 1. NETEJA DE DADES PRÈVIES (per evitar conflictes de claus foranes i IDs)
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE usuaris_recompenses;
+TRUNCATE TABLE bescanvis_recompenses;
+TRUNCATE TABLE recompenses;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 2. RECOMPENSES (catàleg d'insignies i premis amb lògica millorada)
 INSERT INTO recompenses (
+        id,
         nom,
         descripcio,
         tipus,
@@ -9,94 +17,85 @@ INSERT INTO recompenses (
         activa
     )
 VALUES (
-        'Explorador Urbà',
-        'Primer aparcament reservat amb èxit',
+        1,
+        'Benvinguda a ParkLive',
+        'La teva primera fita dins de la comunitat de conductors de ParkLive.',
         'insignia',
         0,
         '{"badge_level": "bronze"}',
-        '/icons/badges/explorador_urba.svg',
+        'bi-hand-thumbs-up',
         TRUE
     ),
     (
-        'Conductor Freqüent',
-        'Més de 10 reserves completades',
+        2,
+        'Explorador de Ciutat',
+        'Insignia per als conductors que ja coneixen els millors racons per aparcar.',
         'insignia',
         100,
         '{"badge_level": "plata"}',
-        '/icons/badges/conductor_frequent.svg',
+        'bi-map',
         TRUE
     ),
     (
-        'Expert en Mobilitat',
-        'Més de 50 reserves i 5 contribucions validades',
+        3,
+        'Guardià de la Comunitat',
+        'Distinció per a aquells que col·laboren activament mantenint la xarxa actualitzada.',
+        'insignia',
+        250,
+        '{"badge_level": "or"}',
+        'bi-shield-check',
+        TRUE
+    ),
+    (
+        4,
+        'Ambaixador ParkLive',
+        'El reconeixement més alt per als membres més actius i compromesos de la plataforma.',
         'insignia',
         500,
-        '{"badge_level": "or"}',
-        '/icons/badges/expert_mobilitat.svg',
+        '{"badge_level": "platinum"}',
+        'bi-trophy-fill',
         TRUE
     ),
     (
-        'Col·laborador Actiu',
-        'Més de 10 contribucions validades',
-        'insignia',
+        5,
+        'Descompte del 10%',
+        'Bescanvia els teus punts per un estalvi del 10% en la teva propera reserva.',
+        'descompte',
+        75,
+        '{"percentatge": 10, "max_us": 1}',
+        'bi-tag',
+        TRUE
+    ),
+    (
+        6,
+        'Descompte del 25%',
+        'Aprofita la teva col·laboració per obtenir un gran descompte del 25%.',
+        'descompte',
         200,
-        '{"badge_level": "especial"}',
-        '/icons/badges/colaborador_actiu.svg',
+        '{"percentatge": 25, "max_us": 1}',
+        'bi-stars',
         TRUE
     ),
     (
-        '10% de descompte',
-        'Descompte del 10% en la propera reserva',
-        'descompte',
-        50,
-        '{"percentatge": 10, "max_us": 1, "validesa_dies": 30}',
-        '/icons/rewards/descompte_10.svg',
-        TRUE
-    ),
-    (
-        '15% de descompte',
-        'Descompte del 15% en la propera reserva',
-        'descompte',
-        150,
-        '{"percentatge": 15, "max_us": 1, "validesa_dies": 30}',
-        '/icons/rewards/descompte_15.svg',
-        TRUE
-    ),
-    (
-        'Premium 1 mes gratis',
-        'Prova gratuïta d''1 mes de subscripció Premium',
+        7,
+        'Premium (30 dies)',
+        'Activa el mode Premium i gaudeix de tots els seus avantatges durant un mes sencer.',
         'premium_temporal',
-        300,
+        350,
         '{"dies": 30}',
-        '/icons/rewards/premium_trial.svg',
-        TRUE
-    ),
-    (
-        '+50 punts extra',
-        'Bonus de 50 punts de gamificació',
-        'punts_extra',
-        100,
-        '{"punts": 50}',
-        '/icons/rewards/bonus_punts.svg',
+        'bi-gem',
         TRUE
     );
 
--- 2. USUARIS-RECOMPENSES (recompenses obtingudes)
-INSERT INTO usuaris_recompenses (
-        usuari_id,
-        recompensa_id,
-        data_obtencio,
-        utilitzada,
-        data_utilitzacio
-    )
-VALUES (5, 1, '2025-03-02 10:15:00', FALSE, NULL),
-    (5, 2, '2025-08-10 14:30:00', FALSE, NULL),
-    (5, 5, '2025-10-05 09:20:00', TRUE, '2025-10-12 11:00:00'),
-    (6, 1, '2026-02-01 12:00:00', FALSE, NULL),
-    (6, 5, '2026-02-15 16:30:00', FALSE, NULL),
-    (9, 1, '2025-12-20 08:45:00', FALSE, NULL),
-    (9, 4, '2026-01-18 17:10:00', FALSE, NULL),
-    (9, 6, '2026-02-10 10:50:00', FALSE, NULL),
-    (12, 1, '2025-06-15 11:20:00', FALSE, NULL),
-    (12, 2, '2025-11-22 15:40:00', FALSE, NULL),
-    (12, 7, '2026-01-05 09:00:00', TRUE, '2026-01-06 10:30:00');
+-- 3. USUARIS-RECOMPENSES (Exemples inicials per a proves)
+-- Usuari 5 (Usuari de proves)
+INSERT INTO usuaris_recompenses (usuari_id, recompensa_id, data_obtencio, utilitzada)
+VALUES 
+    (5, 1, NOW(), FALSE), -- Té la insignia de benvinguda
+    (5, 2, NOW(), FALSE), -- Té la insignia d'explorador
+    (5, 5, NOW(), FALSE); -- Té un descompte del 10% pendent d'usar
+
+-- Usuari 6
+INSERT INTO usuaris_recompenses (usuari_id, recompensa_id, data_obtencio, utilitzada)
+VALUES 
+    (6, 1, NOW(), FALSE);

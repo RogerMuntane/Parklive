@@ -210,6 +210,11 @@ export function initReportDisponibilitat() {
       selectedStatus = 'available';
       setStatusButtons(statusButtons, selectedStatus);
       startCooldown(cooldownSeconds);
+
+      // Tornar al mapa després d'un breu retard
+      setTimeout(() => {
+        window.location.href = '/index.html';
+      }, 1500);
     } catch (error) {
       if (error?.status === 429) {
         const secondsLeft = Number(error?.data?.cooldown_seconds_left);

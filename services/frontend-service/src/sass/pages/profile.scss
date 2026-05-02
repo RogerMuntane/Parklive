@@ -799,6 +799,77 @@
     }
 }
 
+// Reward Points Section Styles
+.reward-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    &.locked {
+        opacity: 0.8;
+
+        .reward-points-badge {
+            background: rgba($off-white, 0.05);
+            color: $slate-gray;
+        }
+    }
+}
+
+.reward-icon-container {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba($crimson, 0.08);
+    color: $crimson;
+
+    [data-bs-theme="dark"] & {
+        background: rgba($crimson, 0.15);
+        color: lighten($crimson, 15%);
+    }
+}
+
+.reward-points-badge {
+    background: rgba($crimson, 0.05);
+    border: 1px solid rgba($crimson, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: $crimson;
+
+    [data-bs-theme="dark"] & {
+        background: rgba($crimson, 0.1);
+        color: lighten($crimson, 10%);
+    }
+}
+
+// Sidebar Badges
+.badge-icon-sm {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($white, 0.1);
+    color: $white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    cursor: help;
+    transition: transform 0.2s ease, background 0.2s ease;
+
+    &:hover {
+        transform: scale(1.2);
+        background: rgba($white, 0.2);
+    }
+}
+
 // Capçalera de la taula d'historial
 #section-history table thead tr {
     background-color: var(--bs-body-bg);

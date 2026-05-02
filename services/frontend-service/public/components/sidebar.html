@@ -19,6 +19,9 @@
       <i class="bi bi-star-fill" style="font-size: 0.6rem"></i>
       <span id="sidebar-user-plan"></span>
     </span>
+    <!-- Contenidor d'insignies -->
+    <div id="sidebar-badges-container" class="d-flex flex-wrap justify-content-center gap-1 mt-1">
+    </div>
   </div>
   <hr class="border-secondary opacity-25 my-1" />
   <nav class="d-flex flex-column gap-1 flex-grow-1 mt-2" role="navigation" aria-label="Seccions del perfil">
@@ -50,6 +53,10 @@
     <button class="sidebar-nav-item" data-section="payment">
       <span class="nav-icon"><i class="bi bi-credit-card"></i></span>
       Mètode de pagament
+    </button>
+    <button class="sidebar-nav-item non-admin-only" data-section="points">
+      <span class="nav-icon"><i class="bi bi-gift"></i></span>
+      Bescanviar punts
     </button>
     <button class="sidebar-nav-item" data-section="plan">
       <span class="nav-icon"><i class="bi bi-rocket-takeoff"></i></span>

@@ -310,22 +310,19 @@ async function initControllers() {
       initAuth();
     }
 
-    // ── Dashboard (aparcaments, reserves, contribucions) ────────
+    // ── Dashboard (aparcaments, reserves) ────────
     if (bodyClass.includes('page-dashboard')) {
-      // Carregar els tres controladors en paral·lel
+      // Carregar els dos controladors en paral·lel
       const [
         { initAparcaments },
         { initReserves },
-        { initContribucions },
       ] = await Promise.all([
         import(new URL('./controllers/aparcament.controller.js', import.meta.url).href),
         import(new URL('./controllers/reserves.controller.js', import.meta.url).href),
-        import(new URL('./controllers/contribucions.controller.js', import.meta.url).href),
       ]);
 
       initAparcaments();
       initReserves();
-      initContribucions();
     }
 
     // ── Pàgina Landing (mapa, filtres, responsive map view) ─────
@@ -392,7 +389,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       initProfilePlanSection,
       initProfileHistorySection,
       initProfileFavoritesSection,
-      initProfileImageUpload
+      initProfileImageUpload,
+      initProfilePointsSection
     } = await import(new URL('./controllers/profile.controller.js', import.meta.url).href);
     const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
     const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
@@ -408,6 +406,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initReserves();
     initAdminUserCRUD();
     initEstadistiques();
+    initProfilePointsSection();
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
@@ -441,7 +440,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       manage: 'Gestionar subscripció',
       // notifications: 'Notificacions',
       'admin-users': 'Admin: Gestió d\'Usuaris',
-      stadistics: 'Les teves estadístiques'
+      stadistics: 'Les teves estadístiques',
+      points: 'Canviar punts per recompenses'
     };
     sidebarBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -485,6 +485,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (stadisticsBtn) stadisticsBtn.style.display = 'none';
         }
 
+        // Amagar botó de punts per a administradors (només per a usuaris)
+        const pointsBtn = document.querySelector('.sidebar-nav-item[data-section="points"]');
+        if (userData.tipus_usuari === 'admin' && pointsBtn) {
+          pointsBtn.style.display = 'none';
+        }
+
         // Mostrar opcions d'administrador i ocultar coses d'usuari
         if (userData.tipus_usuari === 'admin') {
           document.querySelectorAll('.admin-only').forEach(el => {
@@ -492,7 +498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           // Ocultar seccions que l'admin no necessita (reserves, historial, pagaments, estadístiques, favorits, etc.)
-          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics', 'favorites'];
+          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics', 'favorites', 'points'];
           sectionsToHide.forEach(sec => {
             const btn = document.querySelector(`.sidebar-nav-item[data-section="${sec}"]`);
             if (btn) btn.style.display = 'none';

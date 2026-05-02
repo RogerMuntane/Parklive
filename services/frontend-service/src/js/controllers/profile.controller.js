@@ -894,3 +894,171 @@ export function initProfileImageUpload() {
     }
   });
 }
+
+/**
+ * Inicialitza la secció de Punts i Recompenses
+ */
+export async function initProfilePointsSection() {
+  const pointsText = document.getElementById('user-total-points');
+  const rewardsGrid = document.getElementById('rewards-grid');
+  const loading = document.getElementById('rewards-loading');
+  const empty = document.getElementById('rewards-empty');
+  const section = document.getElementById('section-points');
+
+  if (!pointsText || !rewardsGrid || !section) return;
+
+  const userId = getUserId();
+  if (!userId) return;
+
+  let userPoints = 0;
+
+  const fetchPoints = async () => {
+    try {
+      const data = await pythonApi.get(`/api/gamificacio/punts/${userId}`);
+      if (data.success) {
+        userPoints = data.punts;
+        pointsText.textContent = userPoints;
+      }
+    } catch (error) {
+      console.error('[ParkLive] Error carregant punts:', error);
+    }
+  };
+
+  const loadRewards = async () => {
+    loading.classList.remove('d-none');
+    rewardsGrid.classList.add('d-none');
+    empty.classList.add('d-none');
+
+    try {
+      const data = await pythonApi.get('/api/gamificacio/recompenses');
+      loading.classList.add('d-none');
+
+      if (data.success && data.recompenses.length > 0) {
+        renderRewards(data.recompenses);
+        rewardsGrid.classList.remove('d-none');
+      } else {
+        empty.classList.remove('d-none');
+      }
+    } catch (error) {
+      loading.classList.add('d-none');
+      empty.classList.remove('d-none');
+      console.error('[ParkLive] Error carregant recompenses:', error);
+    }
+  };
+
+  const renderRewards = (recompenses) => {
+    rewardsGrid.innerHTML = '';
+    
+    recompenses.forEach(reward => {
+      const isLocked = userPoints < reward.requisit_punts;
+      const card = document.createElement('div');
+      card.className = 'col';
+      
+      card.innerHTML = `
+        <div class="card h-100 reward-card shadow-sm border-0 ${isLocked ? 'locked' : ''}">
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="reward-icon-container">
+                <i class="bi ${reward.icona_url || 'bi-gift'} fs-4"></i>
+              </div>
+              <div class="reward-points-badge">
+                ${reward.requisit_punts} punts
+              </div>
+            </div>
+            <h3 class="h6 fw-bold mb-2">${reward.nom}</h3>
+            <p class="small text-body-secondary mb-4 flex-grow-1">${reward.descripcio}</p>
+            
+            <button 
+              class="btn ${isLocked ? 'btn-outline-secondary disabled' : 'btn-primary'} w-100 rounded-pill btn-redeem"
+              data-reward-id="${reward.id}"
+              data-reward-name="${reward.nom}"
+              ${isLocked ? 'disabled' : ''}
+            >
+              ${isLocked ? 'Falten punts' : 'Bescanviar'}
+            </button>
+          </div>
+        </div>
+      `;
+      rewardsGrid.appendChild(card);
+    });
+
+    // Vincular esdeveniments de bescanvi
+    rewardsGrid.querySelectorAll('.btn-redeem').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const rewardId = btn.dataset.rewardId;
+        const rewardName = btn.dataset.rewardName;
+
+        if (!confirm(`Vols bescanviar la teva recompensa: "${rewardName}"?`)) return;
+
+        btn.disabled = true;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        try {
+          const result = await pythonApi.post('/api/gamificacio/bescanvi', {
+            usuari_id: userId,
+            recompensa_id: rewardId
+          });
+
+          if (result.success) {
+            showBootstrapAlert('success', result.message || 'Recompensa bescanviada!', section);
+            // Recarregar punts i recompenses (per actualitzar estat de botons)
+            await fetchPoints();
+            await loadRewards();
+          } else {
+            showBootstrapAlert('danger', result.error || 'Error en el bescanvi.', section);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        } catch (error) {
+          const errorMsg = error.message || 'Error de xarxa al processar el bescanvi.';
+          showBootstrapAlert('danger', errorMsg, section);
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      });
+    });
+  };
+
+
+  await fetchPoints();
+  await loadRewards();
+  await loadSidebarBadges();
+}
+
+/**
+ * Carrega les insignies de l'usuari i les mostra al sidebar
+ */
+export async function loadSidebarBadges() {
+    const userId = getUserId();
+    const container = document.getElementById('sidebar-badges-container');
+    if (!userId || !container) return;
+
+    try {
+        const data = await pythonApi.get(`/api/gamificacio/usuari/${userId}/recompenses`);
+        if (data.success && data.recompenses) {
+            const insignies = data.recompenses.filter(r => r.tipus === 'insignia');
+            
+            if (insignies.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = insignies.map(ins => `
+                <div class="badge-icon-sm" title="${ins.nom}" data-bs-toggle="tooltip">
+                    <i class="${ins.icona_url || 'bi bi-award'}"></i>
+                </div>
+            `).join('');
+
+            // Inicialitzar tooltips de Bootstrap si n'hi ha
+            if (window.bootstrap && bootstrap.Tooltip) {
+                const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        }
+    } catch (err) {
+        console.error('[ParkLive] Error carregant insignies del sidebar:', err);
+    }
+}

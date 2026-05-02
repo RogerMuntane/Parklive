@@ -7,6 +7,7 @@ from routes.google_auth_routes import google_auth_routes
 from routes.stripe_routes import stripe_routes
 from routes.report_disponibilitat_routes import report_disponibilitat_routes
 from routes.estadistiques_routes import estadistiques_routes
+from routes.gamificacio_routes import gamificacio_bp
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -39,6 +40,7 @@ app.register_blueprint(google_auth_routes)
 app.register_blueprint(stripe_routes)
 app.register_blueprint(report_disponibilitat_routes)
 app.register_blueprint(estadistiques_routes)
+app.register_blueprint(gamificacio_bp, url_prefix='/api/gamificacio')
 
 
 # Health check endpoint per Docker

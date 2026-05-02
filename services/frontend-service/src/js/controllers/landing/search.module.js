@@ -890,7 +890,7 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-currency-euro"></i>${escapeHtml(spot.priceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-geo-alt"></i>${escapeHtml(spot.distanceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-house-door"></i>${escapeHtml(spot.typeLabel)}</span>
-          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-grid-3x3-gap"></i><span class="fw-medium">Disp:</span> <span data-avail-spot-id="${escapeHtml(String(spot.id))}">${spot.availabilitySummary}</span></span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-car-front"></i><span class="fw-medium">Disp:</span> <span data-avail-spot-id="${escapeHtml(String(spot.id))}">${spot.availabilitySummary}</span></span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-clock"></i>${escapeHtml(spot.scheduleLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
