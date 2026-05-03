@@ -288,7 +288,7 @@ CREATE TABLE punts_moviments (
     usuari_id INT UNSIGNED NOT NULL,
     tipus_moviment ENUM('guany', 'bescanvi', 'ajust') NOT NULL,
     punts INT NOT NULL,
-    origen_tipus ENUM('contribucio', 'recompensa', 'subscripcio', 'manual', 'reserva') NOT NULL,
+    origen_tipus ENUM('contribucio', 'recompensa', 'subscripcio', 'manual', 'reserva', 'valoracio') NOT NULL,
     origen_id BIGINT UNSIGNED NULL,
     descripcio VARCHAR(255) NULL,
     idempotency_key VARCHAR(120) NULL,
@@ -594,6 +594,16 @@ CREATE INDEX idx_geo_aparcaments ON aparcaments(latitud, longitud);
 CREATE INDEX idx_reserves_usuari_dates ON reserves(usuari_id, data_entrada, data_sortida);
 -- Índex per històric de disponibilitat per aparcament i data
 CREATE INDEX idx_historic_aparcament_date ON historic_disponibilitat(aparcament_id, timestamp DESC);
+
+-- Índex per subscripcions i data de caducitat (cron)
+CREATE INDEX idx_subscripcions_caducitat ON subscripcions(estat, data_final);
+-- Índex per ordre cronològic d'articles publicats al blog
+CREATE INDEX idx_blog_publicacio ON articles_blog(publicat, data_publicacio DESC);
+-- Índex per a la llista de recompenses actives
+CREATE INDEX idx_recompenses_activa_punts ON recompenses(activa, requisit_punts);
+-- Índex per al filtratge de recompenses utilitzades per usuari
+CREATE INDEX idx_usuari_recompensa_utilitzada ON usuaris_recompenses(usuari_id, utilitzada);
+
 -- SISTEMA DE NETEJA AUTOMÀTICA
 -- Nota: La neteja física s'ha desactivat per conservar l'historial d'usuari.
 -- El filtratge temporal es fa a nivell de consulta (API/Procediments).

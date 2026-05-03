@@ -8,6 +8,8 @@ from routes.stripe_routes import stripe_routes
 from routes.report_disponibilitat_routes import report_disponibilitat_routes
 from routes.estadistiques_routes import estadistiques_routes
 from routes.gamificacio_routes import gamificacio_bp
+from routes.faq_routes import faq_routes
+from routes.blog_routes import blog_routes
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -41,6 +43,8 @@ app.register_blueprint(stripe_routes)
 app.register_blueprint(report_disponibilitat_routes)
 app.register_blueprint(estadistiques_routes)
 app.register_blueprint(gamificacio_bp, url_prefix='/api/gamificacio')
+app.register_blueprint(faq_routes)
+app.register_blueprint(blog_routes)
 
 
 # Health check endpoint per Docker

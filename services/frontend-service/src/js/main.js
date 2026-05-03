@@ -361,6 +361,22 @@ async function initControllers() {
       initContacte();
     }
 
+    // ── FAQ ────────────────────────────────────────────────
+    if (bodyClass.includes('page-faq')) {
+      const { initFaq } = await import(new URL(`./controllers/faq.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initFaq();
+    }
+
+    // ── Blog ───────────────────────────────────────────────
+    if (bodyClass.includes('page-blog')) {
+      const { initBlogList } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initBlogList();
+    }
+    if (bodyClass.includes('page-blog-detall')) {
+      const { initBlogDetail } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initBlogDetail();
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
   }
@@ -396,6 +412,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
     const { initAdminParkingCRUD } = await import(new URL('./controllers/profile-admin-aparcaments.controller.js', import.meta.url).href);
     const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
+    const { initAdminBlog } = await import(new URL('./controllers/profile-admin-blog.controller.js', import.meta.url).href);
 
     initProfilePasswordForm();
     initProfileInfoForm();
@@ -409,6 +426,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initAdminParkingCRUD();
     initEstadistiques();
     initProfilePointsSection();
+    initAdminBlog();
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
@@ -443,6 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // notifications: 'Notificacions',
       'admin-users': 'Admin: Gestió d\'Usuaris',
       'admin-parkings': 'Admin: Gestió d\'Aparcaments',
+      'admin-blog': 'Admin: Gestió del Blog',
       stadistics: 'Les teves estadístiques',
       points: 'Canviar punts per recompenses'
     };

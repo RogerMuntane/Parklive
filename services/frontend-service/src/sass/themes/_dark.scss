@@ -25,6 +25,15 @@
     --bs-btn-hover-border-color: var(--bs-border-color);
   }
 
+  // Botons outline-primary: adaptar border i text per millorar la visibilitat en mode fosc
+  .btn-outline-primary {
+    --bs-btn-color: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-border-color: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-hover-bg: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-hover-border-color: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-hover-color: var(--bs-dark);
+  }
+
   // Botó tornar enrere (btn-light): adaptar a dark mode
   .page-auth .btn-light {
     --bs-btn-bg: var(--bs-tertiary-bg);
