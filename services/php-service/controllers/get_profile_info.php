@@ -1,9 +1,8 @@
 <?php
-session_start();
-require_once "../models/DatabaseConnection.php";
-require_once "../models/sessionModel.php";
-require_once "../models/validarUsuari.php";
-require_once "../models/loginModel.php";
+require_once __DIR__ . "/../models/DatabaseConnection.php";
+require_once __DIR__ . "/../models/validarUsuari.php";
+require_once __DIR__ . "/../models/loginModel.php";
+require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
 class GetProfileInfoController
 {
@@ -11,23 +10,17 @@ class GetProfileInfoController
 
     public function __construct()
     {
-        header('Content-Type: application/json');
         $this->loginModel = new LoginModel();
-        $this->processRequest();
     }
 
-    private function processRequest()
+    public function processRequest()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             $this->respond(['success' => false, 'error' => 'Mètode no permès'], 405);
         }
 
-        SessionModel::iniciarSessio();
-        if (!SessionModel::estaAutenticat()) {
-            $this->respond(['success' => false, 'error' => 'No autenticat'], 401);
-        }
-
-        $userId = SessionModel::obtenirIdUsuari();
+        AuthMiddleware::verificarAutenticacio();
+        $userId = AuthMiddleware::obtenirIdUsuari();
         $user = $this->loginModel->getUserById($userId);
 
         if (!$user) {
@@ -51,9 +44,4 @@ class GetProfileInfoController
         echo json_encode($data);
         exit();
     }
-}
-
-// Executar el controlador si l'accés és directe
-if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
-    new GetProfileInfoController();
 }

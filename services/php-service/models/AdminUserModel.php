@@ -13,7 +13,16 @@ class AdminUserModel
             $this->conexio = DatabaseConnection::create();
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
+            $this->conexio = null;
         }
+    }
+
+    /**
+     * Verifica si el model està llest per operar
+     */
+    public function isReady(): bool
+    {
+        return $this->conexio !== null && $this->conexio->connect_errno === 0;
     }
 
     /**
@@ -49,6 +58,10 @@ class AdminUserModel
             $params[] = $limit;
             $params[] = $offset;
             $types .= 'ii';
+
+            if (!$this->isReady()) {
+                throw new Exception("Conexió a la base de dades no disponible");
+            }
 
             $stmt = $this->conexio->prepare($query);
             if (!empty($params)) {
@@ -91,6 +104,10 @@ class AdminUserModel
                 $query .= " AND tipus_usuari = ?";
                 $params[] = $role;
                 $types .= 's';
+            }
+
+            if (!$this->isReady()) {
+                throw new Exception("Conexió a la base de dades no disponible");
             }
 
             $stmt = $this->conexio->prepare($query);

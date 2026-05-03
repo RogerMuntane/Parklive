@@ -14,19 +14,32 @@ from models.stripe_model import get_user_stripe_id, createPaymentIntent, registr
 from datetime import datetime, timedelta
 from utils.pdf_generator import generar_tiquet_pdf_python
 
+from middleware.jwt_auth import get_jwt_user_id
+
 def reserves_usuari_historial():
     """
     Controlador per obtenir l'historial de reserves d'un usuari
     """
     try:
+        # Validar JWT i obtenir l'ID de l'usuari autenticat
+        try:
+            usuari_autenticat_id = get_jwt_user_id()
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 401
+
         usuari_id = request.args.get('user_id')
-        estat = request.args.get('estat') # Opcional: pendent, confirmada, etc.
-        limit = request.args.get('limit', 20)
+        
+        # Si s'ha passat un user_id, verifiquem que coincideixi amb el del token
+        if usuari_id and int(usuari_id) != usuari_autenticat_id:
+            return jsonify({"error": "No tens permís per veure aquest historial"}), 403
+            
+        # Utilitzem l'ID del token per seguretat
+        usuari_id = usuari_autenticat_id
+
+        estat = request.args.get('estat')
+        limit = request.args.get('limit', 50)
         offset = request.args.get('offset', 0)
         search = request.args.get('search')
-
-        if not usuari_id:
-            return jsonify({"error": "Falta el paràmetre 'user_id'"}), 400
 
         filters = {
             'estat': estat,
@@ -81,129 +94,130 @@ def crear_nova_reserva():
     """
     Controlador per crear una nova reserva
     """
+    # Validar JWT
     try:
-        if not request.is_json:
-            return jsonify({"error": "El contingut ha de ser JSON"}), 400
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 401
 
-        data = request.get_json()
+    data = request.get_json()
 
-        required_fields = ['usuari_id', 'aparcament_id', 'data_entrada', 'data_sortida', 'preu_total']
-        missing_fields = [field for field in required_fields if field not in data]
+    # Forçar l'ID de l'usuari autenticat al payload per seguretat
+    data['usuari_id'] = usuari_autenticat_id
 
-        if missing_fields:
-            return jsonify({
-                "error": f"Falten els següents camps obligatoris: {', '.join(missing_fields)}"
-            }), 400
+    required_fields = ['aparcament_id', 'data_entrada', 'data_sortida', 'preu_total']
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({
+            "error": f"Falten els següents camps obligatoris: {', '.join(missing_fields)}"
+        }), 400
 
-        try:
-            data['usuari_id'] = int(data['usuari_id'])
-            data['aparcament_id'] = int(data['aparcament_id'])
-            data['preu_total'] = float(data['preu_total'])
+    try:
+        data['aparcament_id'] = int(data['aparcament_id'])
+        data['preu_total'] = float(data['preu_total'])
 
-            if 'descompte_aplicat' in data:
-                data['descompte_aplicat'] = float(data['descompte_aplicat'])
-        except (ValueError, TypeError):
-            return jsonify({"error": "Els camps numèrics tenen tipus invàlids"}), 400
+        if 'descompte_aplicat' in data:
+            data['descompte_aplicat'] = float(data['descompte_aplicat'])
+    except (ValueError, TypeError):
+        return jsonify({"error": "Els camps numèrics tenen tipus invàlids"}), 400
 
-        payment_method_id = data.get('payment_method_id')
-        if not payment_method_id:
-            return jsonify({"error": "Falta el paràmetre 'payment_method_id' per processar el pagament."}), 400
+    payment_method_id = data.get('payment_method_id')
+    if not payment_method_id:
+        return jsonify({"error": "Falta el paràmetre 'payment_method_id' per processar el pagament."}), 400
 
-        # ── Prevalidació de disponibilitat per franja ─────────────────────────
-        # Validem contra les reserves que solapen la franja sol·licitada,
-        # NO contra el camp estàtic places_disponibles (que reflecteix el moment actual).
-        FORMATS_DATA = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
+    # ── Prevalidació de disponibilitat per franja ─────────────────────────
+    # Validem contra les reserves que solapen la franja sol·licitada,
+    # NO contra el camp estàtic places_disponibles (que reflecteix el moment actual).
+    FORMATS_DATA = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
 
-        def parse_dt_flexible(s):
-            for fmt in FORMATS_DATA:
-                try:
-                    return datetime.strptime(s, fmt)
-                except ValueError:
-                    continue
-            raise ValueError(f"Format de data no reconegut: {s}")
-
-        try:
-            dt_entrada = parse_dt_flexible(data['data_entrada'])
-            dt_sortida = parse_dt_flexible(data['data_sortida'])
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-
-        disponibilitat = get_places_disponibles_per_franja(
-            data['aparcament_id'], dt_entrada, dt_sortida
-        )
-        if disponibilitat is None:
-            return jsonify({"error": "L'aparcament especificat no existeix."}), 404
-
-        if disponibilitat['places_lliures'] <= 0:
-            return jsonify({
-                "error": f"L'aparcament no té places disponibles per la franja "
-                         f"{data['data_entrada']} – {data['data_sortida']}. "
-                         f"Places lliures: {disponibilitat['places_lliures']} / "
-                         f"{disponibilitat['capacitat_total']}."
-            }), 409
-
-        try:
-            nova_reserva = crear_reserva(data)
-            if not nova_reserva or 'id' not in nova_reserva:
-                return jsonify({"error": "No s'ha pogut crear el registre de reserva."}), 500
-            
-            reserva_id = nova_reserva['id']
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-        except Exception as e:
-            return jsonify({"error": f"Error al reservar la plaça: {str(e)}"}), 500
-
-        try:
-            stripe_customer_id = get_user_stripe_id(data['usuari_id'])
-            if not stripe_customer_id:
-                actualitzar_estat_reserva(reserva_id, 'cancelada')
-                return jsonify({"error": "L'usuari no té un compte de pagament vinculat."}), 400
-
-            import_en_centims = int(data['preu_total'] * 100)
-            payment_intent = createPaymentIntent(
-                amount=import_en_centims,
-                currency='eur',
-                customer_id=stripe_customer_id,
-                payment_method_id=payment_method_id
-            )
-
-            if not payment_intent or payment_intent.status not in ['succeeded', 'requires_capture']:
-                actualitzar_estat_reserva(reserva_id, 'cancelada')
-                return jsonify({"error": "La targeta ha estat denegada pel banc o l'autorització ha fallat."}), 400
-
-            registrar_pagament_db(
-                reserva_id=reserva_id,
-                usuari_id=data['usuari_id'],
-                import_pagament=data['preu_total'],
-                metode='targeta_credit',
-                referencia_externa=payment_intent.id,
-                estat='autoritzat'
-            )
-
-            actualitzar_estat_reserva(reserva_id, 'confirmada')
-            
-            reserva_confirmada = obte_detall_reserva(reserva_id)
-
-            # Generació automàtica del PDF Backend
+    def parse_dt_flexible(s):
+        for fmt in FORMATS_DATA:
             try:
-                if reserva_confirmada:
-                    pdf_path = generar_tiquet_pdf_python(reserva_confirmada)
-                    actualitzar_tiquet_reserva(reserva_id, pdf_path)
-                    reserva_confirmada = obte_detall_reserva(reserva_id) # Refrescar db state
-            except Exception as e_pdf:
-                print(f"[PDF] Error autogenerant tiquet python per la reserva {reserva_id}: {e_pdf}")
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                continue
+        raise ValueError(f"Format de data no reconegut: {s}")
 
-            return jsonify({
-                "message": "Reserva confirmada i pagament realitzat amb èxit",
-                "reserva": reserva_confirmada
-            }), 201
+    try:
+        dt_entrada = parse_dt_flexible(data['data_entrada'])
+        dt_sortida = parse_dt_flexible(data['data_sortida'])
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
-        except Exception as e:
+    disponibilitat = get_places_disponibles_per_franja(
+        data['aparcament_id'], dt_entrada, dt_sortida
+    )
+
+    if disponibilitat is None:
+        return jsonify({"error": "L'aparcament especificat no existeix."}), 404
+
+    if disponibilitat['places_lliures'] <= 0:
+        return jsonify({
+            "error": f"L'aparcament no té places disponibles per la franja "
+                     f"{data['data_entrada']} – {data['data_sortida']}. "
+                     f"Places lliures: {disponibilitat['places_lliures']} / "
+                     f"{disponibilitat['capacitat_total']}."
+        }), 409
+
+    try:
+        nova_reserva = crear_reserva(data)
+        if not nova_reserva or 'id' not in nova_reserva:
+            return jsonify({"error": "No s'ha pogut crear el registre de reserva."}), 500
+        
+        reserva_id = nova_reserva['id']
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Error al reservar la plaça: {str(e)}"}), 500
+
+    try:
+        stripe_customer_id = get_user_stripe_id(data['usuari_id'])
+        if not stripe_customer_id:
             actualitzar_estat_reserva(reserva_id, 'cancelada')
-            return jsonify({"error": f"Error processant el pagament: {str(e)}"}), 400
+            return jsonify({"error": "L'usuari no té un compte de pagament vinculat."}), 400
+
+        import_en_centims = int(data['preu_total'] * 100)
+        payment_intent = createPaymentIntent(
+            amount=import_en_centims,
+            currency='eur',
+            customer_id=stripe_customer_id,
+            payment_method_id=payment_method_id
+        )
+
+        if not payment_intent or payment_intent.status not in ['succeeded', 'requires_capture']:
+            actualitzar_estat_reserva(reserva_id, 'cancelada')
+            return jsonify({"error": "La targeta ha estat denegada pel banc o l'autorització ha fallat."}), 400
+
+        registrar_pagament_db(
+            reserva_id=reserva_id,
+            usuari_id=data['usuari_id'],
+            import_pagament=data['preu_total'],
+            metode='targeta_credit',
+            referencia_externa=payment_intent.id,
+            estat='autoritzat'
+        )
+
+        actualitzar_estat_reserva(reserva_id, 'confirmada')
+        
+        reserva_confirmada = obte_detall_reserva(reserva_id)
+
+        # Generació automàtica del PDF Backend
+        try:
+            if reserva_confirmada:
+                pdf_path = generar_tiquet_pdf_python(reserva_confirmada)
+                actualitzar_tiquet_reserva(reserva_id, pdf_path)
+                reserva_confirmada = obte_detall_reserva(reserva_id) # Refrescar db state
+        except Exception as e_pdf:
+            print(f"[PDF] Error autogenerant tiquet python per la reserva {reserva_id}: {e_pdf}")
+
+        return jsonify({
+            "message": "Reserva confirmada i pagament realitzat amb èxit",
+            "reserva": reserva_confirmada
+        }), 201
 
     except Exception as e:
-        return jsonify({"error": f"Error crític en el controlador de reserves: {str(e)}"}), 500
+        actualitzar_estat_reserva(reserva_id, 'cancelada')
+        return jsonify({"error": f"Error processant el pagament: {str(e)}"}), 400
 
 def get_tiquet_pdf(reserva_id):
     """

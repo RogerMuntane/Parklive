@@ -6,7 +6,7 @@
 import { hideAllAlerts, setFormLoading, showBootstrapAlert, formatDate, formatCurrency, getUserId } from '../utils.js';
 import { obtenirReservesUsuari } from './reserves.controller.js';
 import { PHP_API_URL } from '../config.js';
-import { pythonApi } from '../api.js';
+import { pythonApi, phpApi } from '../api.js';
 
 
 /**
@@ -120,17 +120,11 @@ export function initProfilePasswordForm() {
     }
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/canvi_contrasenya_perfil.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          contrasenya_actual,
-          contrasenya_nova,
-          contrasenya_confirmar
-        }),
-        credentials: 'include' // Envia cookies de sessió PHP
+      const data = await phpApi.post('/api/profile/password', {
+        contrasenya_actual,
+        contrasenya_nova,
+        contrasenya_confirmar
       });
-      const data = await res.json();
       if (data.success) {
         showBootstrapAlert('success', data.message || 'Contrasenya actualitzada correctament.', section);
         actual.value = nova.value = confirm.value = '';
@@ -258,14 +252,13 @@ export function initProfileInfoSaveForm() {
     if (userId) body.append('user_id', userId);
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/update_profile_info.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-        credentials: 'include',
+      const data = await phpApi.post('/api/profile', {
+        nom,
+        cognom,
+        email,
+        telefon,
+        user_id: userId
       });
-
-      const data = await res.json();
 
       if (data.success) {
         // Actualitzar sessionStorage amb les noves dades
@@ -857,12 +850,7 @@ export function initProfileImageUpload() {
     uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Pujant…';
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/update_profile_picture.php`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      const data = await res.json();
+      const data = await phpApi.postForm('/api/profile/picture', formData);
 
       if (data.success) {
         const imageUrl = `${PHP_API_URL}/uploads/profiles/${data.foto_perfil}`;

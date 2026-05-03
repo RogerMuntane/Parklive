@@ -28,8 +28,16 @@ app.config['JSON_AS_ASCII'] = False
 if hasattr(app, 'json'):
     app.json.ensure_ascii = False
 
-# Habilitar CORS per permetre peticions del frontend
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# Habilitar CORS per permetre peticions del frontend amb credencials
+# Nota: amb supports_credentials=True no es pot utilitzar origins="*"
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": [
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000", 
+    "http://localhost:8080", 
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+]}})
 
 # Registrar les rutes
 app.register_blueprint(aparcament_routes)
@@ -63,11 +71,12 @@ def handle_exception(e):
     return jsonify(error="Error intern del servidor", details=str(e)), 500
 
 
+from flask import Flask, jsonify, request
+
 @app.before_request
 def before_request():
     if db.connection is None or not db.connection.is_connected():
         db.connect()
-
 
 if __name__ == "__main__":
     flask_port = int(os.getenv('FLASK_PORT', 5000))

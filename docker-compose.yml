@@ -48,6 +48,8 @@ services:
       PYTHON_SERVICE_URL: http://python-service:${FLASK_PORT}
       STRIPE_APIPrivada: ${STRIPE_APIPrivada}
       STRIPE_APIPublica: ${STRIPE_APIPublica}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      JWT_SECRET: ${JWT_SECRET}
       TZ: Europe/Madrid
     dns:
       - 8.8.8.8
@@ -99,6 +101,7 @@ services:
       STRIPE_APIPublica: ${STRIPE_APIPublica}
       STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID}
       STRIPE_Anual_PREMIUM_PRICE_ID: ${STRIPE_Anual_PREMIUM_PRICE_ID}
+      JWT_SECRET: ${JWT_SECRET}
       TZ: Europe/Madrid
     networks:
       - parklive_network

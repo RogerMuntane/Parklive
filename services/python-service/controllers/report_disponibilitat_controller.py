@@ -22,17 +22,20 @@ def _resolve_reporter_key(payload):
     return f'ip:{remote_addr}'
 
 
+from middleware.jwt_auth import get_jwt_user_id
+
 def _resolve_request_user_id(payload):
     candidate = payload.get('usuari_id')
-    if candidate is None or str(candidate).strip() == '':
-        candidate = request.headers.get('X-User-ID')
-
-    if candidate is None or str(candidate).strip() == '':
-        return None
+    if candidate is not None and str(candidate).strip() != '':
+        try:
+            return int(candidate)
+        except (TypeError, ValueError):
+            pass
 
     try:
-        return int(candidate)
-    except (TypeError, ValueError):
+        # JWT estrictament obligatori.
+        return get_jwt_user_id(fallback_to_header=False)
+    except ValueError:
         return None
 
 

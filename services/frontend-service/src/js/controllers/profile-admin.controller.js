@@ -5,6 +5,7 @@
  */
 
 import { PHP_API_URL } from '../config.js';
+import { phpApi } from '../api.js';
 import { showBootstrapAlert } from '../utils.js';
 
 export function initAdminUserCRUD() {
@@ -59,17 +60,12 @@ async function loadUsers(page = 1) {
     tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregant...</span></div></td></tr>`;
 
     try {
-        const queryParams = new URLSearchParams({
+        const result = await phpApi.get('/api/admin/users', {
             search: searchTerm,
             role: roleFilter,
             page: currentPage,
             limit: 10
         });
-
-        const response = await fetch(`${PHP_API_URL}/controllers/AdminUserController.php?${queryParams.toString()}`, {
-            credentials: 'include'
-        });
-        const result = await response.json();
 
         if (result.success) {
             renderUsers(result.data);
@@ -77,12 +73,13 @@ async function loadUsers(page = 1) {
                 renderPagination(result.pagination);
             }
         } else {
+            console.warn('[ParkLive] Error d\'API:', result.error);
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${result.error || 'Error al carregar usuaris'}</td></tr>`;
             document.getElementById('users-pagination').innerHTML = '';
         }
     } catch (err) {
-        console.error('[ParkLive] Error carregant usuaris:', err);
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error de connexió</td></tr>`;
+        console.error('[ParkLive] Error de connexió o de parseig JSON:', err);
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error de connexió (Veure consola)</td></tr>`;
         document.getElementById('users-pagination').innerHTML = '';
     }
 }
@@ -204,16 +201,9 @@ async function handleFormSubmit(e) {
 
     const isEdit = !!id;
     const action = isEdit ? 'update' : 'create';
-    const url = `${PHP_API_URL}/controllers/AdminUserController.php?action=${action}${isEdit ? '&id=' + id : ''}`;
-
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        });
-        const result = await response.json();
+        console.log('[ParkLive] Enviant dades d\'usuari:', { action, id, data });
+        const result = await phpApi.post(`/api/admin/users?action=${action}${isEdit ? '&id=' + id : ''}`, data);
 
         if (result.success) {
             // Tancar modal
@@ -253,12 +243,15 @@ window.editUser = function (id, nom, cognoms, email, telefon, rol, estat) {
     document.getElementById('password-group').style.display = 'none';
     document.getElementById('estat-group').style.display = 'block';
 
-    form.querySelector('[name="nom"]').value = nom;
-    form.querySelector('[name="cognoms"]').value = cognoms;
-    form.querySelector('[name="email"]').value = email;
-    form.querySelector('[name="telefon"]').value = (telefon === 'null' ? '' : telefon);
-    form.querySelector('[name="rol"]').value = rol;
-    form.querySelector('[name="estat"]').value = estat;
+    form.querySelector('[name="nom"]').value = nom || '';
+    form.querySelector('[name="cognoms"]').value = cognoms || '';
+    form.querySelector('[name="email"]').value = email || '';
+    form.querySelector('[name="telefon"]').value = (telefon === 'null' || !telefon ? '' : telefon);
+    
+    // Normalitzar a minúscules per coincidir amb els valors de les <option>
+    if (rol) form.querySelector('[name="rol"]').value = rol.toLowerCase();
+    if (estat) form.querySelector('[name="estat"]').value = estat.toLowerCase();
+    
     form.querySelector('[name="contrasenya"]').required = false;
 
     const modalEl = document.getElementById('modal-user');
@@ -275,11 +268,7 @@ window.deleteUser = function (id) {
 
 async function performDelete(id) {
     try {
-        const response = await fetch(`${PHP_API_URL}/controllers/AdminUserController.php?action=delete&id=${id}`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-        const result = await response.json();
+        const result = await phpApi.post(`/api/admin/users?action=delete&id=${id}`);
 
         if (result.success) {
             loadUsers();
