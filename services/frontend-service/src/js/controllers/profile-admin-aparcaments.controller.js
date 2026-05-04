@@ -4,7 +4,7 @@
  * Gestiona el CRUD d'aparcaments per a administradors.
  */
 
-import { PHP_API_URL } from '../config.js';
+import { phpApi } from '../api.js';
 import { showBootstrapAlert } from '../utils.js';
 
 export function initAdminParkingCRUD() {
@@ -86,18 +86,15 @@ async function loadParkings(page = 1) {
     tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregant...</span></div></td></tr>`;
 
     try {
-        const queryParams = new URLSearchParams({
+        const queryParams = {
             search: searchTerm,
             type: typeFilter,
             status: statusFilter,
             page: currentPage,
             limit: 10
-        });
+        };
 
-        const response = await fetch(`${PHP_API_URL}/controllers/AdminAparcamentController.php?${queryParams.toString()}`, {
-            credentials: 'include'
-        });
-        const result = await response.json();
+        const result = await phpApi.get(`/api/admin/aparcaments`, queryParams);
 
         if (result.success) {
             renderParkings(result.data);
@@ -250,16 +247,10 @@ async function handleFormSubmit(e) {
 
     const isEdit = !!id;
     const action = isEdit ? 'update' : 'create';
-    const url = `${PHP_API_URL}/controllers/AdminAparcamentController.php?action=${action}${isEdit ? '&id=' + id : ''}`;
+    const urlParams = `?action=${action}${isEdit ? '&id=' + id : ''}`;
 
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        });
-        const result = await response.json();
+        const result = await phpApi.post(`/api/admin/aparcaments${urlParams}`, data);
 
         if (result.success) {
             const modalEl = document.getElementById('modal-parking');
@@ -362,11 +353,7 @@ window.deleteParking = function (id) {
 
 async function performDelete(id) {
     try {
-        const response = await fetch(`${PHP_API_URL}/controllers/AdminAparcamentController.php?action=delete&id=${id}`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-        const result = await response.json();
+        const result = await phpApi.post(`/api/admin/aparcaments?action=delete&id=${id}`, {});
 
         if (result.success) {
             loadParkings();

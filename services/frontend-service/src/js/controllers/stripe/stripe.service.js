@@ -14,10 +14,12 @@ const API_STRIPE_PATH = '/api/stripe';
  * @returns {Promise<Object>} Objecte amb client_secret i stripe_publishable_key.
  */
 export async function fetchSetupIntent(userId) {
-    const res = await fetch(`${API_STRIPE_URL}/setup-intent?user_id=${userId}`);
-    if (res.status === 404) return { client_secret: null, stripe_publishable_key: null };
-    if (!res.ok) throw new Error(`Error ${res.status} en crear SetupIntent`);
-    return await res.json();
+    try {
+        return await pythonApi.get(`${API_STRIPE_PATH}/setup-intent`, { user_id: userId });
+    } catch (err) {
+        if (err.status === 404) return { client_secret: null, stripe_publishable_key: null };
+        throw new Error(`Error ${err.status} en crear SetupIntent`);
+    }
 }
 
 /**
@@ -27,10 +29,12 @@ export async function fetchSetupIntent(userId) {
  * @returns {Promise<Array>} Llista de mètodes de pagament.
  */
 export async function fetchPaymentMethods(userId) {
-    const response = await fetch(`${API_STRIPE_URL}/payment-methods?user_id=${userId}&t=${Date.now()}`);
-    if (response.status === 404) return [];
-    if (!response.ok) throw new Error('Error obtenint mètodes de pagament');
-    return await response.json();
+    try {
+        return await pythonApi.get(`${API_STRIPE_PATH}/payment-methods`, { user_id: userId, t: Date.now() });
+    } catch (err) {
+        if (err.status === 404) return [];
+        throw new Error('Error obtenint mètodes de pagament');
+    }
 }
 
 /**
