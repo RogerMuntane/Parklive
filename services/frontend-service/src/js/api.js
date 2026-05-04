@@ -108,8 +108,20 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        const errorMsg =
-          (typeof data === 'object' && data?.error) || `Error ${response.status}`;
+        let errorMsg = `Error ${response.status}`;
+        if (typeof data === 'object' && data !== null) {
+          if (data.error) {
+            errorMsg = data.error;
+          } else if (data.errors) {
+            if (Array.isArray(data.errors)) {
+              errorMsg = data.errors.join(' | ');
+            } else if (typeof data.errors === 'object') {
+              errorMsg = Object.values(data.errors).flat().join(' | ');
+            } else {
+              errorMsg = String(data.errors);
+            }
+          }
+        }
         throw new ApiError(errorMsg, response.status, data);
       }
 

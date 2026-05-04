@@ -236,6 +236,8 @@ async function handleFormSubmit(e) {
 
     payload.set('obert_24h', form.querySelector('[name="obert_24h"]').checked ? '1' : '0');
     payload.set('accessibilitat', form.querySelector('[name="accessibilitat"]').checked ? '1' : '0');
+    payload.set('carrega_electrica', form.querySelector('[name="carrega_electrica"]').checked ? '1' : '0');
+    payload.set('videovigilancia', form.querySelector('[name="videovigilancia"]').checked ? '1' : '0');
     payload.set('verificat', form.querySelector('[name="verificat"]').checked ? '1' : '0');
 
     // VALIDACIONS CLIENT-SIDE
@@ -296,7 +298,8 @@ async function handleFormSubmit(e) {
         }
     } catch (err) {
         console.error('[ParkLive] Error en guardar aparcament:', err);
-        showBootstrapAlert('danger', 'Error de connexió al servidor');
+        const errorDetail = err.message || 'Error de connexió al servidor';
+        showBootstrapAlert('danger', errorDetail);
     }
 }
 
@@ -332,6 +335,8 @@ window.editParking = function (p) {
     // Checkboxes
     form.querySelector('[name="obert_24h"]').checked = !!parseInt(p.obert_24h);
     form.querySelector('[name="accessibilitat"]').checked = !!parseInt(p.accessibilitat);
+    form.querySelector('[name="carrega_electrica"]').checked = !!parseInt(p.carrega_electrica);
+    form.querySelector('[name="videovigilancia"]').checked = !!parseInt(p.videovigilancia);
     form.querySelector('[name="verificat"]').checked = !!parseInt(p.verificat);
 
     // Activar/Desactivar horaris segons estat 24h
@@ -369,6 +374,8 @@ window.editParking = function (p) {
 
     form.querySelector('[name="obert_24h"]').checked = !!parseInt(p.obert_24h);
     form.querySelector('[name="accessibilitat"]').checked = !!parseInt(p.accessibilitat);
+    form.querySelector('[name="carrega_electrica"]').checked = !!parseInt(p.carrega_electrica);
+    form.querySelector('[name="videovigilancia"]').checked = !!parseInt(p.videovigilancia);
     form.querySelector('[name="verificat"]').checked = !!parseInt(p.verificat);
 
     const modalEl = document.getElementById('modal-parking');
