@@ -130,6 +130,18 @@ $routes = [
             'class' => 'AdminUserController',
             'action' => 'processRequest'
         ]
+    ],
+    'api/admin/aparcaments' => [
+        'GET' => [
+            'file' => 'controllers/AdminAparcamentController.php',
+            'class' => 'AdminAparcamentController',
+            'action' => 'processRequest'
+        ],
+        'POST' => [
+            'file' => 'controllers/AdminAparcamentController.php',
+            'class' => 'AdminAparcamentController',
+            'action' => 'processRequest'
+        ]
     ]
 ];
 

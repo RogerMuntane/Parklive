@@ -1,8 +1,7 @@
 <?php
 
-session_start();
 require_once __DIR__ . "/../models/AdminAparcamentModel.php";
-require_once __DIR__ . "/../models/sessionModel.php";
+require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
 class AdminAparcamentController
 {
@@ -10,27 +9,26 @@ class AdminAparcamentController
 
     public function __construct()
     {
-        header('Content-Type: application/json');
-        
-        // Verificar autenticació i rol
-        SessionModel::iniciarSessio();
-        if (!SessionModel::estaAutenticat() || !self::isAdmin()) {
-            $this->respond(['success' => false, 'error' => 'No tens permisos per realitzar aquesta acció'], 403);
-        }
-
-        $this->model = new AdminAparcamentModel();
-        $this->processRequest();
     }
 
     private static function isAdmin()
     {
-        $usuari = SessionModel::obtenirUsuari();
-        // El camp 'rol' de la sessió es mapeja des de 'tipus_usuari' de la BD
-        return ($usuari && isset($usuari['rol']) && $usuari['rol'] === 'admin');
+        $usuari = AuthMiddleware::obtenirUsuariAutenticat();
+        if (!$usuari || !isset($usuari['tipus_usuari'])) return false;
+        
+        $rol = strtolower($usuari['tipus_usuari']);
+        return $rol === 'administrador' || $rol === 'admin';
     }
 
-    private function processRequest()
+    public function processRequest()
     {
+        AuthMiddleware::verificarAutenticacio();
+        if (!self::isAdmin()) {
+            $this->respond(['success' => false, 'error' => 'No tens permisos per realitzar aquesta acció'], 403);
+        }
+
+        $this->model = new AdminAparcamentModel();
+
         $method = $_SERVER['REQUEST_METHOD'];
         $action = $_GET['action'] ?? '';
 
@@ -136,6 +134,7 @@ class AdminAparcamentController
     private function respond($data, $status = 200)
     {
         http_response_code($status);
+        header('Content-Type: application/json');
         echo json_encode($data);
         exit();
     }
