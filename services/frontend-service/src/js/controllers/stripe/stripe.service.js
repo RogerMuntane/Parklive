@@ -3,9 +3,9 @@
  * Gestiona les crides a l'API del backend de Python per a Stripe.
  */
 
-import { PYTHON_API_URL } from '../../config.js';
+import { pythonApi } from '../../api.js';
 
-const API_STRIPE_URL = `${PYTHON_API_URL}/api/stripe`;
+const API_STRIPE_PATH = '/api/stripe';
 
 /**
  * Obté el client secret i la clau pública per inicialitzar Stripe Elements.
@@ -14,9 +14,7 @@ const API_STRIPE_URL = `${PYTHON_API_URL}/api/stripe`;
  * @returns {Promise<Object>} Objecte amb client_secret i stripe_publishable_key.
  */
 export async function fetchSetupIntent(userId) {
-    const res = await fetch(`${API_STRIPE_URL}/setup-intent?user_id=${userId}`);
-    if (!res.ok) throw new Error(`Error ${res.status} en crear SetupIntent`);
-    return await res.json();
+    return await pythonApi.get(`${API_STRIPE_PATH}/setup-intent`, { user_id: userId });
 }
 
 /**
@@ -26,9 +24,10 @@ export async function fetchSetupIntent(userId) {
  * @returns {Promise<Array>} Llista de mètodes de pagament.
  */
 export async function fetchPaymentMethods(userId) {
-    const response = await fetch(`${API_STRIPE_URL}/payment-methods?user_id=${userId}&t=${Date.now()}`);
-    if (!response.ok) throw new Error('Error obtenint mètodes de pagament');
-    return await response.json();
+    return await pythonApi.get(`${API_STRIPE_PATH}/payment-methods`, { 
+        user_id: userId,
+        t: Date.now() 
+    });
 }
 
 /**
@@ -38,10 +37,12 @@ export async function fetchPaymentMethods(userId) {
  * @returns {Promise<boolean>} Cert si s'ha eliminat correctament.
  */
 export async function deleteStripeCard(methodId) {
-    const response = await fetch(`${API_STRIPE_URL}/payment-methods/${methodId}`, {
-        method: 'DELETE',
-    });
-    return response.ok;
+    try {
+        await pythonApi.delete(`${API_STRIPE_PATH}/payment-methods/${methodId}`);
+        return true;
+    } catch (err) {
+        return false;
+    }
 }
 
 /**
@@ -54,22 +55,16 @@ export async function deleteStripeCard(methodId) {
  * @returns {Promise<Object>} Resposta de Stripe (id, status, clientSecret).
  */
 export async function createStripeSubscription(userId, paymentMethodId, autorenovacio, planType = 'monthly') {
-    const response = await fetch(`${API_STRIPE_URL}/create-subscription`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    try {
+        return await pythonApi.post(`${API_STRIPE_PATH}/create-subscription`, {
             user_id: userId,
             payment_method_id: paymentMethodId,
             autorenovacio: autorenovacio,
             plan_type: planType
-        })
-    });
-
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'error_subscription');
+        });
+    } catch (err) {
+        throw new Error(err.data?.error || 'error_subscription');
     }
-    return await response.json();
 }
 
 /**
@@ -80,20 +75,15 @@ export async function createStripeSubscription(userId, paymentMethodId, autoreno
  * @returns {Promise<boolean>} Cert si s'ha actualitzat correctament.
  */
 export async function updateStripeAutorenewal(userId, autorenovacio) {
-    const response = await fetch(`${API_STRIPE_URL}/update-autorenewal`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    try {
+        await pythonApi.post(`${API_STRIPE_PATH}/update-autorenewal`, {
             user_id: userId,
             autorenovacio: autorenovacio
-        })
-    });
-
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'error_update_autorenewal');
+        });
+        return true;
+    } catch (err) {
+        throw new Error(err.data?.error || 'error_update_autorenewal');
     }
-    return true;
 }
 
 /**
@@ -103,10 +93,15 @@ export async function updateStripeAutorenewal(userId, autorenovacio) {
  * @returns {Promise<Object>} Detalls de la subscripció.
  */
 export async function fetchSubscriptionDetails(userId) {
-    const response = await fetch(`${API_STRIPE_URL}/subscription?user_id=${userId}&t=${Date.now()}`);
-    if (response.status === 404 || response.status === 204) return null;
-    if (!response.ok) throw new Error('Error obtenint detalls de la subscripció');
-    return await response.json();
+    try {
+        return await pythonApi.get(`${API_STRIPE_PATH}/subscription`, { 
+            user_id: userId,
+            t: Date.now() 
+        });
+    } catch (err) {
+        if (err.status === 404 || err.status === 204) return null;
+        throw new Error('Error obtenint detalls de la subscripció');
+    }
 }
 
 /**
@@ -117,11 +112,11 @@ export async function fetchSubscriptionDetails(userId) {
  * @returns {Promise<Object|null>} Resultat de la sincronització.
  */
 export async function syncSubscription(userId) {
-    const response = await fetch(`${API_STRIPE_URL}/sync-subscription`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId })
-    });
-    if (!response.ok) return null;
-    return await response.json();
+    try {
+        return await pythonApi.post(`${API_STRIPE_PATH}/sync-subscription`, { 
+            user_id: userId 
+        });
+    } catch (err) {
+        return null;
+    }
 }

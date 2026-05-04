@@ -1,8 +1,7 @@
 <?php
 
-session_start();
 require_once __DIR__ . "/../models/AdminUserModel.php";
-require_once __DIR__ . "/../models/sessionModel.php";
+require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
 class AdminUserController
 {
@@ -10,26 +9,33 @@ class AdminUserController
 
     public function __construct()
     {
-        header('Content-Type: application/json');
-        
-        // Verificar autenticació i rol
-        SessionModel::iniciarSessio();
-        if (!SessionModel::estaAutenticat() || !self::isAdmin()) {
-            $this->respond(['success' => false, 'error' => 'No tens permisos per realitzar aquesta acció'], 403);
-        }
-
-        $this->model = new AdminUserModel();
-        $this->processRequest();
     }
 
     private static function isAdmin()
     {
-        $usuari = SessionModel::obtenirUsuari();
-        return ($usuari && isset($usuari['rol']) && $usuari['rol'] === 'admin');
+        $usuari = AuthMiddleware::obtenirUsuariAutenticat();
+        if (!$usuari || !isset($usuari['tipus_usuari'])) return false;
+        
+        $rol = strtolower($usuari['tipus_usuari']);
+        return $rol === 'administrador' || $rol === 'admin';
     }
 
-    private function processRequest()
+    public function processRequest()
     {
+        AuthMiddleware::verificarAutenticacio();
+        if (!self::isAdmin()) {
+            $this->respond(['success' => false, 'error' => 'Accés denegat: es requereix rol administrador'], 403);
+        }
+
+        try {
+            $this->model = new AdminUserModel();
+            if (!$this->model->isReady()) {
+                throw new Exception("El model de dades no està a punt: " . implode(", ", $this->model->getErrors()));
+            }
+        } catch (Exception $e) {
+            $this->respond(['success' => false, 'error' => 'Error de base de dades: ' . $e->getMessage()], 500);
+        }
+
         $method = $_SERVER['REQUEST_METHOD'];
         $action = $_GET['action'] ?? '';
 
@@ -84,8 +90,20 @@ class AdminUserController
 
     private function handleCreate($data)
     {
-        if (empty($data['nom']) || empty($data['email']) || empty($data['contrasenya'])) {
-            $this->respond(['success' => false, 'error' => 'Falten dades obligatòries'], 400);
+        $errors = [];
+        if (empty($data['nom']))    $errors[] = 'El nom és obligatori.';
+        if (empty($data['cognoms'])) $errors[] = 'El cognom és obligatori.';
+        if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'El correu electrònic no és vàlid.';
+        }
+        if (empty($data['contrasenya']) || strlen($data['contrasenya']) < 8) {
+            $errors[] = 'La contrasenya ha de tenir com a mínim 8 caràcters.';
+        }
+        if (!empty($data['telefon']) && !preg_match('/^[+\d\s]{7,20}$/', $data['telefon'])) {
+            $errors[] = 'El telèfon no és vàlid.';
+        }
+        if ($errors) {
+            $this->respond(['success' => false, 'errors' => $errors], 400);
         }
 
         $result = $this->model->createUser($data);
@@ -100,6 +118,10 @@ class AdminUserController
     {
         if (!$id) {
             $this->respond(['success' => false, 'error' => 'ID d\'usuari no proporcionat'], 400);
+        }
+
+        if (empty($data['nom']) || empty($data['email'])) {
+            $this->respond(['success' => false, 'error' => 'El nom i l\'email són obligatoris'], 400);
         }
 
         $result = $this->model->updateUser($id, $data);
@@ -127,12 +149,8 @@ class AdminUserController
     private function respond($data, $status = 200)
     {
         http_response_code($status);
+        header('Content-Type: application/json');
         echo json_encode($data);
         exit();
     }
-}
-
-// Executar si l'accés és directe
-if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
-    new AdminUserController();
 }

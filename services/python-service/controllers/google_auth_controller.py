@@ -52,10 +52,15 @@ def google_login():
         if user:
             user["provider"] = "google"
 
+        # Generar el token JWT
+        from middleware.jwt_auth import generate_jwt_token
+        token = generate_jwt_token(user)
+
         return jsonify({
             "success": True,
             "message": "Registre completat!" if is_new else "Sessió iniciada correctament",
             "user": user,
+            "token": token,
             "is_new": is_new,
         }), 200
 

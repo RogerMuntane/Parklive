@@ -1,8 +1,7 @@
 <?php
-session_start();
-require_once "../models/sessionModel.php";
-require_once "../models/loginModel.php";
-require_once "../models/validarUsuari.php";
+require_once __DIR__ . "/../models/loginModel.php";
+require_once __DIR__ . "/../models/validarUsuari.php";
+require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
 class CanviContrasenyaPerfilController
 {
@@ -11,26 +10,25 @@ class CanviContrasenyaPerfilController
 
     public function __construct()
     {
-        header('Content-Type: application/json');
         $this->loginModel = new LoginModel();
-        $this->validador = new validarUsuari();
-        $this->processRequest();
+        $this->validador = new ValidarUsuari();
     }
 
-    private function processRequest()
+    public function processRequest()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
             $this->respond(['success' => false, 'error' => 'Mètode no permès'], 405);
         }
+
+        $inputJSON = file_get_contents('php://input');
+        $input = json_decode($inputJSON, TRUE);
         
-        SessionModel::iniciarSessio();
-        if (!SessionModel::estaAutenticat()) {
-            $this->respond(['success' => false, 'error' => 'No autenticat'], 401);
-        }
-        $userId = SessionModel::obtenirIdUsuari();
-        $contrasenyaActual = $_POST['contrasenya_actual'] ?? '';
-        $contrasenyaNova = $_POST['contrasenya_nova'] ?? '';
-        $contrasenyaConfirmar = $_POST['contrasenya_confirmar'] ?? '';
+        AuthMiddleware::verificarAutenticacio();
+        $userId = AuthMiddleware::obtenirIdUsuari();
+        
+        $contrasenyaActual = $_POST['contrasenya_actual'] ?? ($input['contrasenya_actual'] ?? '');
+        $contrasenyaNova = $_POST['contrasenya_nova'] ?? ($input['contrasenya_nova'] ?? '');
+        $contrasenyaConfirmar = $_POST['contrasenya_confirmar'] ?? ($input['contrasenya_confirmar'] ?? '');
 
         // Validació bàsica
         $errors = [];
@@ -78,12 +76,8 @@ class CanviContrasenyaPerfilController
     private function respond($data, $status = 200)
     {
         http_response_code($status);
+        header('Content-Type: application/json');
         echo json_encode($data);
         exit();
     }
-}
-
-// Executar el controlador si l'accés és directe
-if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
-    new CanviContrasenyaPerfilController();
 }

@@ -77,7 +77,19 @@ function baseChartOptions() {
       fontFamily: "'Inter', 'Segoe UI', sans-serif",
       foreColor: dark ? '#adb5bd' : COLORS.secondary,
       toolbar: { show: false },
-      animations: { enabled: true, easing: 'easeinout', speed: 600 },
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800,
+        animateGradually: {
+          enabled: true,
+          delay: 150
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350
+        }
+      },
     },
     grid: {
       borderColor: dark ? 'rgba(255,255,255,.06)' : 'rgba(43,45,66,.07)',
@@ -582,10 +594,17 @@ function showLoadingState() {
 function showErrorBanner(msg) {
   const section = document.getElementById('section-stadistics');
   if (!section) return;
+
+  // Evitar duplicats
+  if (section.querySelector('.stats-error-banner')) return;
+
   const banner = document.createElement('div');
-  banner.className = 'alert alert-danger border-0 rounded-3 mb-3 d-flex align-items-center gap-2';
+  banner.className = 'alert alert-danger border-0 rounded-3 mb-3 d-flex align-items-center gap-2 stats-error-banner';
   banner.innerHTML = `<i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i> <span>${msg}</span>`;
   section.prepend(banner);
+
+  // Alerta sonora/visual per al desenvolupador si cal (opcional)
+  // alert(msg);
 }
 
 // ─── Entrada principal ────────────────────────────────────────────────────────
@@ -631,8 +650,21 @@ export async function initEstadistiques() {
       const el = document.getElementById(id);
       if (el) el.textContent = '—';
     });
-    showErrorBanner('No s\'ha pogut carregar les estadístiques. Torna-ho a intentar més tard.');
+
+    const errorMsg = err.message || 'Error de connexió o de servidor';
+    showErrorBanner(`Error al carregar estadístiques: ${errorMsg}`);
   }
+}
+
+/**
+ * Torna a renderitzar totes les gràfiques actives per disparar les animacions d'entrada.
+ */
+export function refreshEstadistiques() {
+  Object.values(_charts).forEach(chart => {
+    if (chart && typeof chart.render === 'function') {
+      chart.render();
+    }
+  });
 }
 
 /**

@@ -6,7 +6,7 @@
  */
 
 import { phpApi, pythonApi } from '../api.js';
-import { REDIRECT_DELAY, GOOGLE_CLIENT_ID } from '../config.js';
+import { REDIRECT_DELAY, GOOGLE_CLIENT_ID, STORAGE_KEYS } from '../config.js';
 import {
   showAlert,
   hideAllAlerts,
@@ -74,20 +74,24 @@ function initLogin() {
     setFormLoading(form, true);
 
     try {
-      const result = await postToPhp('/controllers/login.php', payload);
+      const result = await postToPhp('/api/login', payload);
 
       if (result && result.success) {
         if (result.user) {
+          if (result.token) result.user.token = result.token;
           saveUserSession(result.user);
           if (typeof window.initAuthToggle === 'function') window.initAuthToggle();
         }
         // Neteja explícita de la sessió OAuth si NO és Google
         sessionStorage.removeItem('parklive_oauth');
-        
-        
-        showAlert('success', result.message || 'Sessió iniciada correctament.');
+
+        // showAlert('success', result.message || 'Sessió iniciada correctament.');
         showBootstrapAlert('success', result.message || 'Sessió iniciada correctament!');
-        redirectAfterDelay('index.html', REDIRECT_DELAY);
+
+        // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        const target = redirectParam ? decodeURIComponent(redirectParam) : 'index.html';
+        redirectAfterDelay(target, REDIRECT_DELAY);
       }
     } catch (err) {
       const msg = err.message || 'Error en iniciar sessió. Revisa les credencials.';
@@ -135,7 +139,7 @@ function initRegister() {
     setFormLoading(form, true);
 
     try {
-      const result = await postToPhp('/controllers/signin.php', payload);
+      const result = await postToPhp('/api/signin', payload);
 
       if (result && result.success) {
         showAlert('success', result.message || 'Registre completat correctament.');
@@ -363,6 +367,18 @@ async function handleGoogleTokenResponse(tokenResponse) {
     });
 
     if (result && result.success) {
+      // 2. Sincronitzar sessió amb PHP (Crea PHPSESSID i el token CSRF)
+      try {
+        const phpResult = await phpApi.post('/api/auth/google', { access_token: tokenResponse.access_token });
+        if (result.user) {
+          result.user.token = result.token || phpResult.token;
+        }
+      } catch (err) {
+        console.error('Error sincronitzant sessió amb PHP:', err);
+        showAlert('error', 'Error en completar la sessió.');
+        return;
+      }
+
       saveUserSession(result.user);
       // Si és Google OAuth, crea cookie per ocultar canvi contrasenya
       if (result.user && result.user.provider === 'google') {
@@ -370,7 +386,11 @@ async function handleGoogleTokenResponse(tokenResponse) {
         console.log('[ParkLive] OAuth guardat a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
       }
       showAlert('success', result.message || 'Sessió iniciada amb Google!');
-      redirectAfterDelay('index.html', REDIRECT_DELAY);
+
+      // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      const target = redirectParam ? decodeURIComponent(redirectParam) : 'index.html';
+      redirectAfterDelay(target, REDIRECT_DELAY);
     }
   } catch (err) {
     const msg = err.message || 'Error en l\'autenticació amb Google.';
@@ -440,51 +460,12 @@ async function initGoogleSignIn() {
  * @returns {Promise<{success: boolean, message?: string}>}
  */
 async function postToPhp(endpoint, payload) {
-  const { PHP_API_URL } = await import('../config.js');
-  const url = `${PHP_API_URL}${endpoint}`;
-
-  const formData = new FormData();
-  for (const [key, value] of Object.entries(payload)) {
-    formData.append(key, value);
+  try {
+    return await phpApi.post(endpoint, payload);
+  } catch (err) {
+    console.error('[postToPhp] Error:', err);
+    throw err;
   }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'Accept': 'application/json',
-    },
-    credentials: 'include',   // Enviar cookies de sessió PHP
-  });
-
-  console.log('[postToPhp]', endpoint, '→ status:', response.status, 'type:', response.type);
-
-  // Si retorna JSON (controlador modernitzat amb suport AJAX)
-  const contentType = response.headers.get('Content-Type') || '';
-  if (contentType.includes('application/json')) {
-    const data = await response.json();
-    console.log('[postToPhp] JSON response:', data);
-    if (!response.ok || data.success === false) {
-      throw new Error(data.error || data.message || `Error ${response.status}`);
-    }
-    return data;
-  }
-
-  // Resposta no-JSON: loguejar per debug
-  const body = await response.text();
-  console.warn('[postToPhp] Resposta no-JSON:', response.status, body.substring(0, 500));
-
-  // Fallback: PHP redirigeix (302) quan no detecta Accept JSON
-  if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
-    return { success: true };
-  }
-
-  // Si retorna 200 amb HTML (redirect seguit), considerar èxit
-  if (response.ok) {
-    return { success: true };
-  }
-
-  throw new Error(`Error ${response.status}`);
 }
 
 /*  LOGOUT                                                              */
@@ -499,7 +480,7 @@ export async function logoutUser(redirectUrl = 'login.html') {
     // Elimina l'estat OAuth
     sessionStorage.removeItem('parklive_oauth');
     console.log('[ParkLive] Sessió OAuth eliminada en logout:', sessionStorage.getItem('parklive_oauth'));
-    await phpApi.get('/controllers/logout.php');
+    await phpApi.post('/api/logout');
   } catch {
     // Ignorar errors de logout – la sessió client ja s'ha netejat
   }

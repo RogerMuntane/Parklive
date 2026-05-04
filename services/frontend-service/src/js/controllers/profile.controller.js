@@ -6,7 +6,7 @@
 import { hideAllAlerts, setFormLoading, showBootstrapAlert, formatDate, formatCurrency, getUserId } from '../utils.js';
 import { obtenirReservesUsuari } from './reserves.controller.js';
 import { PHP_API_URL } from '../config.js';
-import { pythonApi } from '../api.js';
+import { pythonApi, phpApi } from '../api.js';
 
 
 /**
@@ -120,17 +120,11 @@ export function initProfilePasswordForm() {
     }
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/canvi_contrasenya_perfil.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          contrasenya_actual,
-          contrasenya_nova,
-          contrasenya_confirmar
-        }),
-        credentials: 'include' // Envia cookies de sessió PHP
+      const data = await phpApi.post('/api/profile/password', {
+        contrasenya_actual,
+        contrasenya_nova,
+        contrasenya_confirmar
       });
-      const data = await res.json();
       if (data.success) {
         showBootstrapAlert('success', data.message || 'Contrasenya actualitzada correctament.', section);
         actual.value = nova.value = confirm.value = '';
@@ -142,7 +136,12 @@ export function initProfilePasswordForm() {
         }
       }
     } catch (err) {
-      showBootstrapAlert('danger', 'Error de xarxa o servidor.', section);
+      console.error('[ParkLive] Error canvi contrasenya:', err);
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per canviar la contrasenya.', document.body);
+      } else {
+        showBootstrapAlert('danger', 'Error de xarxa o servidor al canviar la contrasenya.', section);
+      }
     } finally {
       btn.disabled = false;
       setFormLoading(btn, false);
@@ -258,14 +257,13 @@ export function initProfileInfoSaveForm() {
     if (userId) body.append('user_id', userId);
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/update_profile_info.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-        credentials: 'include',
+      const data = await phpApi.post('/api/profile', {
+        nom,
+        cognom,
+        email,
+        telefon,
+        user_id: userId
       });
-
-      const data = await res.json();
 
       if (data.success) {
         // Actualitzar sessionStorage amb les noves dades
@@ -289,7 +287,12 @@ export function initProfileInfoSaveForm() {
         showBootstrapAlert('danger', errMsg, section);
       }
     } catch (err) {
-      showBootstrapAlert('danger', 'Error de xarxa o servidor.', section);
+      console.error('[ParkLive] Error desant dades personals:', err);
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per desar els canvis.', document.body);
+      } else {
+        showBootstrapAlert('danger', 'Error de xarxa o servidor al desar les dades.', section);
+      }
     } finally {
       btnSave.disabled = false;
       btnSave.innerHTML = originalText;
@@ -667,12 +670,24 @@ export function initProfileHistorySection() {
 
     } catch (err) {
       console.error('[ParkLive] Error carregant historial:', err);
-      tableBody.innerHTML = `
+
+      // Error personalitzat per sessió caducada (més amigable per l'usuari)
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per veure el teu historial.', document.body);
+        tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-warning">
+                        <i class="bi bi-clock-history me-1"></i> La sessió ha caducat. Torna a iniciar sessió.
+                    </td>
+                </tr>`;
+      } else {
+        tableBody.innerHTML = `
                 <tr>
                     <td colspan="5" class="text-center py-5 text-danger">
                         <i class="bi bi-exclamation-triangle me-1"></i> Error al carregar les dades.
                     </td>
                 </tr>`;
+      }
       if (paginationContainer) paginationContainer.innerHTML = '';
     }
   };
@@ -801,12 +816,22 @@ export async function initProfileFavoritesSection() {
       });
       renderItems(response?.favorits || []);
     } catch (error) {
-      listEl.innerHTML = `
-        <div class="alert alert-danger mb-0" role="alert">
-          No s'han pogut carregar els favorits.
-        </div>
-      `;
       console.error('[ParkLive] Error carregant favorits del perfil:', error);
+
+      if (error.message && error.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per veure els teus favorits.', document.body);
+        listEl.innerHTML = `
+          <div class="alert alert-warning mb-0" role="alert">
+            <i class="bi bi-clock-history me-1"></i> La sessió ha caducat. Torna a iniciar sessió.
+          </div>
+        `;
+      } else {
+        listEl.innerHTML = `
+          <div class="alert alert-danger mb-0" role="alert">
+            No s'han pogut carregar els favorits.
+          </div>
+        `;
+      }
     }
   };
 
@@ -857,12 +882,7 @@ export function initProfileImageUpload() {
     uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Pujant…';
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/update_profile_picture.php`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      const data = await res.json();
+      const data = await phpApi.postForm('/api/profile/picture', formData);
 
       if (data.success) {
         const imageUrl = `${PHP_API_URL}/uploads/profiles/${data.foto_perfil}`;
@@ -886,7 +906,11 @@ export function initProfileImageUpload() {
       }
     } catch (err) {
       console.error('[ParkLive] Error al pujar imatge:', err);
-      showBootstrapAlert('danger', 'Error de xarxa al pujar la imatge.', avatarContainer.closest('.card-body'));
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per pujar la imatge.', document.body);
+      } else {
+        showBootstrapAlert('danger', 'Error de xarxa al pujar la imatge.', avatarContainer.closest('.card-body'));
+      }
     } finally {
       uploadBtn.disabled = false;
       uploadBtn.innerHTML = originalContent;

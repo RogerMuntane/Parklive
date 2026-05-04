@@ -2,19 +2,25 @@ from flask import jsonify, request
 import os
 from models.stripe_model import get_user_stripe_id, list_user_payment_methods, delete_payment_method, create_setup_intent, create_subscription
 
+from middleware.jwt_auth import get_jwt_user_id
+
 def get_payment_methods():
     """Endpoint per obtenir les targetes guardades d'un usuari"""
+    try:
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
     user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'L\'ID d\'usuari és obligatori'}), 400
+    if user_id and int(user_id) != usuari_autenticat_id:
+        return jsonify({'error': 'Accés denegat'}), 403
     
-    stripe_id = get_user_stripe_id(user_id)
+    stripe_id = get_user_stripe_id(usuari_autenticat_id)
     if not stripe_id:
         return jsonify({'error': 'L\'usuari no té compte de Stripe associat'}), 404
     
     methods = list_user_payment_methods(stripe_id)
-    
-    # Formatejar la resposta per al frontend
+    # ... rest of formatting ...
     formatted_methods = []
     for m in methods:
         card = getattr(m, 'card', None)
@@ -33,6 +39,12 @@ def get_payment_methods():
 
 def detach_payment_method(method_id):
     """Endpoint per eliminar una targeta"""
+    # Validar que l'usuari estigui autenticat
+    try:
+        get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
     if not method_id:
         return jsonify({'error': 'L\'ID del mètode de pagament és obligatori'}), 400
     
@@ -44,11 +56,16 @@ def detach_payment_method(method_id):
 
 def get_setup_intent():
     """Endpoint per crear un SetupIntent client secret"""
+    try:
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
     user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'L\'ID d\'usuari és obligatori'}), 400
+    if user_id and int(user_id) != usuari_autenticat_id:
+        return jsonify({'error': 'Accés denegat'}), 403
     
-    stripe_id = get_user_stripe_id(user_id)
+    stripe_id = get_user_stripe_id(usuari_autenticat_id)
     if not stripe_id:
         return jsonify({'error': 'L\'usuari no té compte de Stripe associat'}), 404
     
@@ -63,20 +80,25 @@ def get_setup_intent():
 
 def handle_create_subscription():
     """Endpoint per crear una subscripció"""
+    try:
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
     data = request.get_json()
     user_id = data.get('user_id')
+    if user_id and int(user_id) != usuari_autenticat_id:
+        return jsonify({'error': 'Accés denegat'}), 403
+
     payment_method_id = data.get('payment_method_id')
     autorenovacio = data.get('autorenovacio', True)
     plan_type = data.get('plan_type', 'monthly')
 
-    if not user_id:
-        return jsonify({'error': 'L\'ID d\'usuari és obligatori'}), 400
-
-    stripe_id = get_user_stripe_id(user_id)
+    stripe_id = get_user_stripe_id(usuari_autenticat_id)
     if not stripe_id:
         return jsonify({'error': 'L\'usuari no té compte de Stripe associat'}), 404
 
-    subscription = create_subscription(stripe_id, payment_method_id, user_id, autorenovacio, plan_type)
+    subscription = create_subscription(stripe_id, payment_method_id, usuari_autenticat_id, autorenovacio, plan_type)
     
     if subscription:
         return jsonify({
@@ -89,15 +111,22 @@ def handle_create_subscription():
 
 def handle_update_autorenewal():
     """Endpoint per actualitzar l'autorenovació d'una subscripció existent"""
+    try:
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
     data = request.get_json()
     user_id = data.get('user_id')
-    autorenovacio = data.get('autorenovacio')
+    if user_id and int(user_id) != usuari_autenticat_id:
+        return jsonify({'error': 'Accés denegat'}), 403
 
-    if not user_id or autorenovacio is None:
-        return jsonify({'error': 'L\'ID d\'usuari i l\'estat d\'autorenovació són obligatoris'}), 400
+    autorenovacio = data.get('autorenovacio')
+    if autorenovacio is None:
+        return jsonify({'error': 'L\'estat d\'autorenovació és obligatori'}), 400
 
     from models.stripe_model import update_subscription_autorenewal
-    success = update_subscription_autorenewal(user_id, autorenovacio)
+    success = update_subscription_autorenewal(usuari_autenticat_id, autorenovacio)
     
     if success:
         return jsonify({'message': 'Autorenovació actualitzada correctament'}), 200
@@ -106,12 +135,17 @@ def handle_update_autorenewal():
 
 def get_subscription_details():
     """Endpoint per obtenir els detalls de la subscripció activa"""
+    try:
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
     user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'L\'ID d\'usuari és obligatori'}), 400
+    if user_id and int(user_id) != usuari_autenticat_id:
+        return jsonify({'error': 'Accés denegat'}), 403
     
     from models.stripe_model import get_active_subscription
-    sub = get_active_subscription(user_id)
+    sub = get_active_subscription(usuari_autenticat_id)
     
     if not sub:
         return jsonify({'error': 'No s\'ha trobat cap subscripció activa'}), 404
@@ -126,17 +160,20 @@ def get_subscription_details():
         'created': sub['created'] if isinstance(sub, dict) else (sub.start_date if hasattr(sub, 'start_date') and sub.start_date else sub.created)
     }), 200
 
-
 def handle_sync_subscription():
-    """Sincronitza la subscripció activa de Stripe amb la BD local.
-    Útil quan _persist_subscription_to_db va fallar en una compra anterior."""
+    """Sincronitza la subscripció activa de Stripe amb la BD local."""
     import stripe
+    try:
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
     data = request.get_json()
     user_id = data.get('user_id') if data else request.args.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'L\'ID d\'usuari és obligatori'}), 400
+    if user_id and int(user_id) != usuari_autenticat_id:
+        return jsonify({'error': 'Accés denegat'}), 403
 
-    stripe_id = get_user_stripe_id(user_id)
+    stripe_id = get_user_stripe_id(usuari_autenticat_id)
     if not stripe_id:
         return jsonify({'error': 'L\'usuari no té compte de Stripe associat'}), 404
 

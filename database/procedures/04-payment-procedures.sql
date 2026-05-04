@@ -4,7 +4,7 @@ USE parklive_db;
 -- 1. Registrar un pagament de reserva
 -- ===========================================
 -- Guarda el detall del cobrament rebut per Stripe
--- Exemple: CALL sp_registrar_pagament(7, 1, 23.50, 'targeta_credit', 'completat', 'pi_XXXX_XXXX', @pagament_id, @error_msg);
+-- Exemple: CALL sp_registrar_pagament(7, 1, 23.50, 'targeta_credit', 'completat', 'pi_XXXX_XXXX', @pagament_id, @error_msg); -- reserva_id pot ser NULL per a subscripcions
 
 DROP PROCEDURE IF EXISTS sp_registrar_pagament;
 

@@ -37,6 +37,7 @@ services:
     volumes:
       - ./services/php-service:/var/www/html
       - ./shared:/var/www/shared
+      - ./storage:/var/www/html/storage
     depends_on:
       - mysql
       - python-service
@@ -48,6 +49,10 @@ services:
       PYTHON_SERVICE_URL: http://python-service:${FLASK_PORT}
       STRIPE_APIPrivada: ${STRIPE_APIPrivada}
       STRIPE_APIPublica: ${STRIPE_APIPublica}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_ENV: ${APP_ENV}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       TZ: Europe/Madrid
     dns:
       - 8.8.8.8
@@ -99,6 +104,10 @@ services:
       STRIPE_APIPublica: ${STRIPE_APIPublica}
       STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID}
       STRIPE_Anual_PREMIUM_PRICE_ID: ${STRIPE_Anual_PREMIUM_PRICE_ID}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_ENV: ${APP_ENV}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      TICKET_STORAGE_PATH: ${TICKET_STORAGE_PATH}
       TZ: Europe/Madrid
     networks:
       - parklive_network
@@ -129,6 +138,7 @@ services:
       DB_NAME: ${MYSQL_DATABASE}
       STRIPE_APIPrivada: ${STRIPE_APIPrivada}
       STRIPE_APIPublica: ${STRIPE_APIPublica}
+      TICKET_STORAGE_PATH: ${TICKET_STORAGE_PATH}
       TZ: Europe/Madrid
     entrypoint: [ "/bin/sh", "/app/scripts/cron_scheduler.sh" ]
     networks:

@@ -18,11 +18,14 @@ def format_datetime(dt_str):
     except Exception:
         return dt_str, ""
 
-def generar_tiquet_pdf_python(reserva, storage_path="/app/storage/tickets"):
+def generar_tiquet_pdf_python(reserva, storage_path=None):
     """
     Genera un tiquet PDF usant ReportLab basat en el disseny del frontend.
     Es crida automàticament durant la confirmació de la reserva.
+    La ruta s'obté de la variable d'entorn TICKET_STORAGE_PATH.
     """
+    if storage_path is None:
+        storage_path = os.getenv("TICKET_STORAGE_PATH", "/app/storage/tickets")
     os.makedirs(storage_path, exist_ok=True)
     filename = f"tiquet_{reserva['codi_reserva']}.pdf"
     filepath = os.path.join(storage_path, filename)
