@@ -15,15 +15,15 @@ def _get_secret():
 def generate_jwt_token(user):
     """
     Genera un token JWT equivalent al de PHP.
-    
+
     :param user: Diccionari amb les dades de l'usuari (minim 'id').
     :return: String amb el token JWT.
     """
     secret_key = _get_secret()
     issued_at = int(time.time())
     expire = issued_at + 3600  # 1 hora
-    
-    # Intenta obtenir el server_name de request si estem dins d'un context Flask, 
+
+    # Intenta obtenir el server_name de request si estem dins d'un context Flask,
     # sinó usa un valor per defecte com PHP
     try:
         server_name = request.host
@@ -43,7 +43,7 @@ def generate_jwt_token(user):
             'tipus_usuari': user.get('tipus_usuari', 'basic')
         }
     }
-    
+
     token = jwt.encode(payload, secret_key, algorithm="HS256")
     return token
 
@@ -51,32 +51,32 @@ def get_jwt_user_id(fallback_to_header=False):
     """
     Extreu i valida el token JWT de la capçalera Authorization: Bearer <token>.
     Retorna l'ID de l'usuari si és vàlid, o llança ValueError si no ho és.
-    
+
     :param fallback_to_header: Si és True, permetrà utilitzar X-User-ID si no hi ha Bearer (per transició).
                                Per seguretat, s'hauria de posar a False quan tot estigui migrat.
     """
     auth_header = request.headers.get('Authorization')
-    
+
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
         secret_key = _get_secret()
-        
+
         try:
             # Utilitzem decode amb els mateixos algoritmes que usa PHP per defecte
             decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
             user_data = decoded.get('data', {})
             user_id = user_data.get('id')
-            
+
             if user_id:
                 return int(user_id)
             else:
                 raise ValueError("Token JWT vàlid però no conté ID d'usuari")
-                
+
         except jwt.ExpiredSignatureError:
             raise ValueError("El token d'autenticació ha caducat. Torna a iniciar sessió.")
         except jwt.InvalidTokenError:
             raise ValueError("Token d'autenticació invàlid.")
-    
+
     # DEPRECAT: El fallback X-User-ID ha estat eliminat per seguretat.
     # Tot l'accés requereix un Bearer JWT vàlid.
     raise ValueError("Cal iniciar sessió (Token no trobat)")
@@ -100,3 +100,41 @@ def get_jwt_full_data():
         except jwt.InvalidTokenError:
             raise ValueError("Token d'autenticació invàlid.")
     raise ValueError("Cal iniciar sessió (Token no trobat)")
+
+
+# Decoradors per a rutes protegides
+from functools import wraps
+from flask import jsonify
+
+
+def jwt_required(f):
+    """Decorador per requerir JWT vàlid en una ruta"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            get_jwt_user_id()  # Validar JWT
+            return f(*args, **kwargs)
+        except ValueError as e:
+            return jsonify({'success': False, 'error': str(e)}), 401
+    return decorated_function
+
+
+def admin_required(f):
+    """Decorador per requerir rol admin en una ruta"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            user_data = get_jwt_full_data()
+            user_role = user_data.get('tipus_usuari', '').lower()
+
+            # Acceptar 'admin' o 'administrador'
+            if user_role not in ['admin', 'administrador']:
+                return jsonify({
+                    'success': False,
+                    'error': 'No tens permisos per realitzar aquesta acció'
+                }), 403
+
+            return f(*args, **kwargs)
+        except ValueError as e:
+            return jsonify({'success': False, 'error': str(e)}), 401
+    return decorated_function

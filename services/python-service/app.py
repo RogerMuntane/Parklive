@@ -1,6 +1,7 @@
 from models.db_connection import db
 from routes.reset_routes import reset_routes
 from routes.aparcament_routes import aparcament_routes
+from routes.admin_aparcament_routes import admin_aparcament_routes
 from routes.reserves_routes import reserves_routes
 from routes.contribucions_routes import contribucions_routes
 from routes.google_auth_routes import google_auth_routes
@@ -55,6 +56,7 @@ CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": _allowed_
 
 # Registrar les rutes
 app.register_blueprint(aparcament_routes)
+app.register_blueprint(admin_aparcament_routes)
 app.register_blueprint(reset_routes)
 app.register_blueprint(reserves_routes)
 app.register_blueprint(contribucions_routes)
