@@ -23,7 +23,7 @@ VALUES -- Reserves completades (passat)
     -- Reserves en curs (durada d'un any per a tests d'ocupació)
     (8, 5, 6, NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 'en_curs', 7.50, 0.00, 'PLV-2025-000008', 'Reserva de llarga durada per test'),
     -- Reserves cancel·lades
-    (9, 6, 1, '2025-01-25 10:00:00', '2025-01-25 14:00:00', 'cancelada', 14.00, 0.00, 'PLV-2025-000009', 'Cancel·lada per l usuari');
+    (9, 6, 1, '2025-01-25 10:00:00', '2025-01-25 14:00:00', 'cancelada', 14.00, 0.00, 'PLV-2025-000009', 'Cancel·lada per l''usuari');
 
 -- Batch 2 RESERVES
 INSERT INTO reserves (
@@ -329,5 +329,3 @@ FROM (
     CROSS JOIN (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) b
 ) numbers
 WHERE n < 41;
-
-

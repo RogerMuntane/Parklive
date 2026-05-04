@@ -271,36 +271,16 @@ CREATE TABLE contribucions (
     usuari_id INT UNSIGNED NOT NULL,
     estat_reportat ENUM('lliure', 'ocupat') NOT NULL,
     dades JSON,
-    estat_validacio ENUM('pendent', 'validada', 'rebutjada') DEFAULT 'pendent',
-    validada BOOLEAN DEFAULT FALSE,
-    validacions_confirma INT UNSIGNED DEFAULT 0,
-    validacions_refuta INT UNSIGNED DEFAULT 0,
-    validada_at TIMESTAMP NULL,
     punts_guanyats INT UNSIGNED DEFAULT 0,
     latitud DECIMAL(10, 8),
     longitud DECIMAL(11, 8),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
-    INDEX idx_estat_validacio (estat_validacio),
+    INDEX idx_estat_reportat (estat_reportat),
     INDEX idx_created_at (created_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- Vots de validació comunitària de contribucions
-CREATE TABLE validacions_contribucions (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    contribucio_id BIGINT UNSIGNED NOT NULL,
-    validador_id INT UNSIGNED NOT NULL,
-    vot ENUM('confirma', 'refuta') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (contribucio_id) REFERENCES contribucions(id) ON DELETE CASCADE,
-    FOREIGN KEY (validador_id) REFERENCES usuaris(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_contribucio_validador (contribucio_id, validador_id),
-    INDEX idx_contribucio (contribucio_id),
-    INDEX idx_validador (validador_id),
-    INDEX idx_vot (vot)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Moviments de punts (ledger auditable)
 CREATE TABLE punts_moviments (
@@ -308,7 +288,7 @@ CREATE TABLE punts_moviments (
     usuari_id INT UNSIGNED NOT NULL,
     tipus_moviment ENUM('guany', 'bescanvi', 'ajust') NOT NULL,
     punts INT NOT NULL,
-    origen_tipus ENUM('contribucio', 'validacio', 'recompensa', 'subscripcio', 'manual') NOT NULL,
+    origen_tipus ENUM('contribucio', 'recompensa', 'subscripcio', 'manual', 'reserva', 'valoracio') NOT NULL,
     origen_id BIGINT UNSIGNED NULL,
     descripcio VARCHAR(255) NULL,
     idempotency_key VARCHAR(120) NULL,
@@ -541,50 +521,6 @@ WHERE r.estat IN ('confirmada', 'en_curs');
 -- Trigger per afegir punts quan es fa una contribució
 DELIMITER //
 
-DROP TRIGGER IF EXISTS before_contribucio_validacio_update//
-CREATE TRIGGER before_contribucio_validacio_update
-BEFORE UPDATE ON contribucions
-FOR EACH ROW
-BEGIN
-    IF NEW.estat_validacio = 'validada' THEN
-        SET NEW.validada = TRUE;
-        IF OLD.validada = FALSE THEN
-            SET NEW.validada_at = CURRENT_TIMESTAMP;
-        END IF;
-    ELSEIF NEW.estat_validacio = 'rebutjada' THEN
-        SET NEW.validada = FALSE;
-    END IF;
-END//
-
-DROP TRIGGER IF EXISTS after_contribucio_validacio_update//
-CREATE TRIGGER after_contribucio_validacio_update
-AFTER UPDATE ON contribucions
-FOR EACH ROW
-BEGIN
-    IF OLD.validada = FALSE AND NEW.validada = TRUE AND NEW.punts_guanyats > 0 THEN
-        UPDATE usuaris
-        SET punts_gamificacio = punts_gamificacio + NEW.punts_guanyats
-        WHERE id = NEW.usuari_id;
-
-        INSERT INTO punts_moviments (
-            usuari_id,
-            tipus_moviment,
-            punts,
-            origen_tipus,
-            origen_id,
-            descripcio,
-            idempotency_key
-        ) VALUES (
-            NEW.usuari_id,
-            'guany',
-            NEW.punts_guanyats,
-            'contribucio',
-            NEW.id,
-            'Punts per contribució validada',
-            CONCAT('contribucio-validada-', NEW.id)
-        );
-    END IF;
-END//
 
 -- Trigger per afegir punts immediatament quan es crea una contribució
 DROP TRIGGER IF EXISTS after_contribucio_insert//
@@ -618,6 +554,38 @@ BEGIN
     END IF;
 END//
 
+-- Trigger per afegir punts quan es completa una reserva
+DROP TRIGGER IF EXISTS after_reserva_update//
+CREATE TRIGGER after_reserva_update
+AFTER UPDATE ON reserves
+FOR EACH ROW
+BEGIN
+    -- Si l'estat canvia a 'completada' i abans no ho era
+    IF NEW.estat = 'completada' AND OLD.estat != 'completada' THEN
+        -- Afegir punts a l'usuari (10 punts per reserva)
+        UPDATE usuaris 
+        SET punts_gamificacio = punts_gamificacio + 10 
+        WHERE id = NEW.usuari_id;
+        
+        -- Registrar el moviment
+        INSERT INTO punts_moviments (
+            usuari_id, 
+            tipus_moviment, 
+            punts, 
+            origen_tipus, 
+            origen_id, 
+            descripcio
+        ) VALUES (
+            NEW.usuari_id, 
+            'guany', 
+            10, 
+            'reserva', 
+            NEW.id, 
+            CONCAT('Reserva completada: ', NEW.codi_reserva)
+        );
+    END IF;
+END//
+
 DELIMITER ;
 -- ÍNDEXS ADDICIONALS PER OPTIMITZACIÓ
 -- Índex per cerques geoespacials d'aparcaments
@@ -626,3 +594,17 @@ CREATE INDEX idx_geo_aparcaments ON aparcaments(latitud, longitud);
 CREATE INDEX idx_reserves_usuari_dates ON reserves(usuari_id, data_entrada, data_sortida);
 -- Índex per històric de disponibilitat per aparcament i data
 CREATE INDEX idx_historic_aparcament_date ON historic_disponibilitat(aparcament_id, timestamp DESC);
+
+-- Índex per subscripcions i data de caducitat (cron)
+CREATE INDEX idx_subscripcions_caducitat ON subscripcions(estat, data_final);
+-- Índex per ordre cronològic d'articles publicats al blog
+CREATE INDEX idx_blog_publicacio ON articles_blog(publicat, data_publicacio DESC);
+-- Índex per a la llista de recompenses actives
+CREATE INDEX idx_recompenses_activa_punts ON recompenses(activa, requisit_punts);
+-- Índex per al filtratge de recompenses utilitzades per usuari
+CREATE INDEX idx_usuari_recompensa_utilitzada ON usuaris_recompenses(usuari_id, utilitzada);
+
+-- SISTEMA DE NETEJA AUTOMÀTICA
+-- Nota: La neteja física s'ha desactivat per conservar l'historial d'usuari.
+-- El filtratge temporal es fa a nivell de consulta (API/Procediments).
+SET GLOBAL event_scheduler = ON;

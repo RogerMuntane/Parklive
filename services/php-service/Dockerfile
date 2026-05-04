@@ -23,5 +23,5 @@ RUN chown -R www-data:www-data /var/www/html && \
 # Exposar port
 EXPOSE 80
 
-# Iniciar Apache
-CMD ["apache2-foreground"]
+# Iniciar Apache després de garantir permisos d'escriptura sobre storage
+CMD ["sh", "-c", "mkdir -p /var/www/html/storage/profiles /var/www/html/storage/aparcaments && chown -R www-data:www-data /var/www/html/storage && apache2-foreground"]

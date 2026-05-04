@@ -1,4 +1,4 @@
--- STORED PROCEDURES PARKLIVE - GESTIÓ DE APARCAMENTS
+-- STORED PROCEDURES PARKLIVE - GESTIÓ D'APARCAMENTS
 USE parklive_db;
 -- Eliminar procedures si existeixen (per poder recrear-los)
 DROP PROCEDURE IF EXISTS sp_llistar_aparcaments;
@@ -89,7 +89,7 @@ BEGIN
     BEGIN
         ROLLBACK;
         SET p_resultat = FALSE;
-        SET p_error_msg = 'Error SQL en afegir l\'aparcament a favorits';
+        SET p_error_msg = 'Error SQL en afegir l''aparcament a favorits';
     END;
 
     START TRANSACTION;
@@ -150,7 +150,7 @@ BEGIN
         ROLLBACK;
         SET p_resultat = FALSE;
         SET p_files_afectades = 0;
-        SET p_error_msg = 'Error SQL en eliminar l\'aparcament de favorits';
+        SET p_error_msg = 'Error SQL en eliminar l''aparcament de favorits';
     END;
 
     START TRANSACTION;
@@ -295,6 +295,7 @@ BEGIN
     -- Seleccionar valoracions recents de l'aparcament
     SELECT
         v.id,
+        v.usuari_id,
         v.puntuacio,
         v.comentari,
         v.aspectes_valorats,

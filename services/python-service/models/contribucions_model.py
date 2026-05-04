@@ -116,7 +116,6 @@ def crear_contribucio(data):
                 u.nom as usuari_nom,
                 c.estat_reportat,
                 c.dades,
-                c.validada,
                 c.punts_guanyats,
                 c.latitud,
                 c.longitud,
@@ -141,7 +140,6 @@ def crear_contribucio(data):
             },
             'estat_reportat': contribucio['estat_reportat'],
             'dades': json.loads(contribucio['dades']) if contribucio['dades'] else None,
-            'validada': bool(contribucio['validada']),
             'punts_guanyats': contribucio['punts_guanyats'],
             'coordenades': {
                 'latitud': serialize_value(contribucio['latitud']),
@@ -178,7 +176,6 @@ def get_contribucions_usuari(usuari_id, filters=None):
         SELECT
             c.id,
             c.estat_reportat,
-            c.validada,
             c.punts_guanyats,
             c.created_at
         FROM contribucions c
@@ -187,10 +184,6 @@ def get_contribucions_usuari(usuari_id, filters=None):
 
     params = [usuari_id]
 
-    # Filtre per validada
-    if filters.get('validada') is not None:
-        query += " AND c.validada = %s"
-        params.append(filters['validada'])
 
     query += " ORDER BY c.created_at DESC"
 
@@ -212,7 +205,6 @@ def get_contribucions_usuari(usuari_id, filters=None):
         result.append({
             'id': c['id'],
             'estat_reportat': c['estat_reportat'],
-            'validada': bool(c['validada']),
             'punts_guanyats': c['punts_guanyats'],
             'created_at': serialize_value(c['created_at'])
         })

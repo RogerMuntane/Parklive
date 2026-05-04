@@ -12,6 +12,7 @@ import {
   isFavoriteParking,
   toggleFavoriteParking,
 } from './favorits.service.js';
+import { PHP_API_URL } from '../config.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -298,6 +299,9 @@ function renderDetall(a) {
   }
   /* ── Valoracions (Ressenyes) ─────────────────────────────────── */
   renderValoracions(a.valoracions || []);
+
+  /* ── Imatges (Carrusel) ──────────────────────────────────────── */
+  renderCarousel(a.fotos || []);
 }
 
 /* ------------------------------------------------------------------ */
@@ -418,22 +422,31 @@ async function initDetallFavoriteButton(aparcamentId) {
 /** Renderitza la llista de ressenyes recents */
 function renderValoracions(valoracions) {
   const container = document.querySelector('[data-detall-list="valoracions"]');
+  const allReviewsModalContainer = document.getElementById('all-reviews-container');
+  const btnVeureTotes = document.querySelector('button[data-bs-target="#allReviewsModal"]');
+  
   if (!container) return;
 
   if (!valoracions || valoracions.length === 0) {
-    // Ja hi ha el missatge de "no hi ha valoracions" al HTML inicialment o si el volem forçar:
     container.innerHTML = `
       <div class="py-4 text-center text-muted">
         <i class="bi bi-chat-left-text fs-2 d-block mb-2"></i>
         <p>Encara no hi ha valoracions per aquest aparcament.</p>
       </div>
     `;
+    if (allReviewsModalContainer) allReviewsModalContainer.innerHTML = container.innerHTML;
+    if (btnVeureTotes) btnVeureTotes.style.display = 'none';
     return;
   }
 
   container.innerHTML = ''; // Netejar
+  if (allReviewsModalContainer) allReviewsModalContainer.innerHTML = '';
+  
+  if (btnVeureTotes) {
+    btnVeureTotes.style.display = valoracions.length > 3 ? 'inline-block' : 'none';
+  }
 
-  valoracions.forEach((v) => {
+  valoracions.forEach((v, index) => {
     const data = v.created_at ? new Date(v.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'long' }) : 'Recent';
 
     const reviewHtml = `
@@ -448,8 +461,65 @@ function renderValoracions(valoracions) {
         <p class="mb-0">${esc(v.comentari || '')}</p>
       </div>
     `;
-    container.insertAdjacentHTML('beforeend', reviewHtml);
+    
+    // Mostrem només les 3 primeres a la vista principal
+    if (index < 3) {
+      container.insertAdjacentHTML('beforeend', reviewHtml);
+    }
+    
+    // Mostrem totes al modal
+    if (allReviewsModalContainer) {
+      allReviewsModalContainer.insertAdjacentHTML('beforeend', reviewHtml);
+    }
   });
+}
+
+/** Renderitza el carrusel d'imatges */
+function renderCarousel(fotos) {
+  const container = document.querySelector('#parkingCarousel .carousel-inner');
+  const prevBtn = document.querySelector('#parkingCarousel .carousel-control-prev');
+  const nextBtn = document.querySelector('#parkingCarousel .carousel-control-next');
+  
+  if (!container) return;
+
+  const defaultImages = [
+    "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=1200&h=600",
+    "https://images.unsplash.com/photo-1590674867551-11c3a2df5dc4?auto=format&fit=crop&q=80&w=1200&h=600"
+  ];
+
+  let imagesToRender = defaultImages;
+  
+  if (fotos && fotos.length > 0) {
+    imagesToRender = fotos.map(f => {
+      let url = f.url;
+      if (url && !url.startsWith('http') && !url.startsWith('data:')) {
+        if (url.startsWith('/')) {
+            url = PHP_API_URL + url;
+        } else {
+            if (!url.includes('/')) {
+                url = PHP_API_URL + '/uploads/parkings/' + url;
+            } else {
+                url = PHP_API_URL + '/' + url;
+            }
+        }
+      }
+      return url || defaultImages[0];
+    });
+  }
+
+  container.innerHTML = imagesToRender.map((url, index) => `
+    <div class="carousel-item ${index === 0 ? 'active' : ''}">
+      <img src="${esc(url)}" class="d-block w-100 object-fit-cover" style="height: 600px; max-height: 60vh;" alt="Imatge de l'aparcament" />
+    </div>
+  `).join('');
+
+  if (imagesToRender.length <= 1) {
+    if (prevBtn) prevBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'none';
+  } else {
+    if (prevBtn) prevBtn.style.display = '';
+    if (nextBtn) nextBtn.style.display = '';
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -477,6 +547,145 @@ function showError(msg = "No s'ha pogut carregar l'aparcament.") {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Gestió del Formulari de Valoració                                   */
+/* ------------------------------------------------------------------ */
+
+function initReviewForm(aparcamentId, valoracions = []) {
+  const section = document.getElementById('add-review-section');
+  const loginSection = document.getElementById('login-to-review');
+  if (!section || !loginSection) return;
+
+  if (!isAuthenticated()) {
+    section.style.display = 'none';
+    loginSection.style.display = 'block';
+    return;
+  }
+
+  // Comprovar si l'usuari ja ha valorat (per activar mode edició)
+  const currentUserId = sessionStorage.getItem('parklive_user_id');
+  const existingReview = valoracions.find(v => String(v.usuari_id) === String(currentUserId));
+  
+  let isEditMode = false;
+  let editValoracioId = null;
+
+  if (existingReview) {
+    isEditMode = true;
+    editValoracioId = existingReview.id;
+    // Canviar el títol del botó
+    const btn = document.getElementById('btn-submit-review');
+    if (btn) btn.textContent = 'Actualitzar valoració';
+  }
+
+  section.style.display = 'block';
+  loginSection.style.display = 'none';
+
+  const stars = document.querySelectorAll('#form-stars i');
+  const ratingInput = document.getElementById('rating-input');
+  const form = document.getElementById('review-form');
+
+  // Pre-omplir dades si està en mode edició
+  if (isEditMode) {
+    ratingInput.value = existingReview.puntuacio;
+    document.getElementById('review-comment').value = existingReview.comentari || '';
+    updateStarsUI(stars, existingReview.puntuacio);
+  } else {
+    ratingInput.value = 0;
+    document.getElementById('review-comment').value = '';
+    updateStarsUI(stars, 0);
+  }
+
+  // Gestió de les estrelles (hover i clic)
+  stars.forEach((star) => {
+    star.addEventListener('mouseover', () => {
+      const val = parseInt(star.dataset.value);
+      updateStarsUI(stars, val);
+    });
+
+    star.addEventListener('mouseout', () => {
+      const currentVal = parseInt(ratingInput.value);
+      updateStarsUI(stars, currentVal);
+    });
+
+    star.addEventListener('click', () => {
+      const val = parseInt(star.dataset.value);
+      ratingInput.value = val;
+      updateStarsUI(stars, val);
+    });
+  });
+
+  function updateStarsUI(starNodes, value) {
+    starNodes.forEach((s) => {
+      const sVal = parseInt(s.dataset.value);
+      if (sVal <= value) {
+        s.classList.replace('bi-star', 'bi-star-fill');
+      } else {
+        s.classList.replace('bi-star-fill', 'bi-star');
+      }
+    });
+  }
+
+  // Enviament del formulari
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const puntuacio = parseInt(ratingInput.value);
+    const comentari = document.getElementById('review-comment').value.trim();
+
+    if (puntuacio === 0) {
+      showBootstrapAlert('danger', 'Si us plau, selecciona una puntuació.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit-review');
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${isEditMode ? 'ACTUALITZANT...' : 'PUBLICANT...'}`;
+
+    try {
+      if (isEditMode) {
+        await pythonApi.put(`/api/aparcaments/${aparcamentId}/valoracions/${editValoracioId}`, {
+          puntuacio,
+          comentari
+        });
+        showBootstrapAlert('success', 'Valoració actualitzada correctament!');
+      } else {
+        await pythonApi.post(`/api/aparcaments/${aparcamentId}/valoracions`, {
+          puntuacio,
+          comentari
+        });
+        showBootstrapAlert('success', 'Ressenya publicada correctament. Has guanyat 10 punts! Gràcies per la teva opinió.');
+
+        // Actualitzar els punts localment a la sessió
+        try {
+          const raw = sessionStorage.getItem('parklive_user_data');
+          if (raw) {
+            const userData = JSON.parse(raw);
+            userData.punts_gamificacio = (userData.punts_gamificacio || 0) + 10;
+            sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
+          }
+        } catch(e) {
+          console.warn('[ParkLive] No s\'han pogut actualitzar els punts locals', e);
+        }
+      }
+
+      form.reset();
+      ratingInput.value = 0;
+      updateStarsUI(stars, 0);
+      
+      // Recarregar dades de l'aparcament per actualitzar la llista de ressenyes i la mitjana
+      const updatedAparcament = await pythonApi.get(`/api/aparcaments/${encodeURIComponent(aparcamentId)}`);
+      renderDetall(updatedAparcament);
+      initReviewForm(aparcamentId, updatedAparcament.valoracions || []);
+    } catch (err) {
+      console.error('[ParkLive] Error processant ressenya:', err);
+      showBootstrapAlert('danger', err.message || 'No s\'ha pogut processar la ressenya.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Inicialització pública                                              */
 /* ------------------------------------------------------------------ */
 
@@ -497,6 +706,7 @@ export async function initDetallAparcament() {
     // real per franja horària (ara → ara+2h), igual que la pàgina de reserva.
     fetchAndUpdateDisponibilitat(aparcament.id || id);
     await initDetallFavoriteButton(aparcament.id || id);
+    initReviewForm(aparcament.id || id, aparcament.valoracions || []);
     showContent();
 
 

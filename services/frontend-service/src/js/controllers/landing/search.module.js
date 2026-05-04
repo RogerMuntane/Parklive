@@ -1,5 +1,6 @@
 import { pythonApi } from '../../api.js';
 import { isAuthenticated, showBootstrapAlert } from '../../utils.js';
+import { PHP_API_URL } from '../../config.js';
 import {
   loadFavoriteIds,
   toggleFavoriteParking,
@@ -424,7 +425,17 @@ function normalizeParking(raw, origin = null) {
     ratingSummary: formatRatingSummary(raw.valoracio_mitjana, raw.total_valoracions),
     isAccessible: Boolean(raw.accessibilitat),
     hasCctv: Boolean(raw.videovigilancia),
-    imageUrl: raw.foto_principal || raw.imatge_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80',
+    imageUrl: (() => {
+      let url = raw.foto_principal || raw.imatge_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80';
+      if (url && !url.startsWith('http') && !url.startsWith('data:')) {
+        if (url.startsWith('/')) {
+          url = PHP_API_URL + url;
+        } else {
+          url = PHP_API_URL + '/uploads/parkings/' + url;
+        }
+      }
+      return url;
+    })(),
     raw,
   };
 }
@@ -890,7 +901,7 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-currency-euro"></i>${escapeHtml(spot.priceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-geo-alt"></i>${escapeHtml(spot.distanceLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-house-door"></i>${escapeHtml(spot.typeLabel)}</span>
-          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-grid-3x3-gap"></i><span class="fw-medium">Disp:</span> <span data-avail-spot-id="${escapeHtml(String(spot.id))}">${spot.availabilitySummary}</span></span>
+          <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-car-front"></i><span class="fw-medium">Disp:</span> <span data-avail-spot-id="${escapeHtml(String(spot.id))}">${spot.availabilitySummary}</span></span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-clock"></i>${escapeHtml(spot.scheduleLabel)}</span>
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
@@ -1098,20 +1109,29 @@ export function initLandingSearch({
   };
 
   const applyLocationSuggestion = async ({ label, lat, lon }) => {
-    if (!mapSearchInput) return;
-    mapSearchInput.value = label;
-    setUserLocation({ lat, lon });
-    // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
-    updateSearchAnchor({ lat, lon });
-    onSearchLocationResolved({ lat, lon });
-    hideSuggestions();
-    await runSearch({
-      resetPage: true,
-      resolveSearchLocation: false,
-      centerOnUserLocation: true,
-      forceIgnoreCityFilter: true,
-      expandRadiusFromUserLocation: true,
-    });
+    try {
+      if (!mapSearchInput) return;
+      mapSearchInput.value = label;
+      
+      const coords = { lat: Number(lat), lon: Number(lon) };
+      
+      // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
+      updateSearchAnchor(coords);
+      onSearchLocationResolved(coords);
+      hideSuggestions();
+      
+      await runSearch({
+        resetPage: true,
+        resolveSearchLocation: false,
+        centerOnUserLocation: false, // Ja hem centrat a dalt
+        forceIgnoreCityFilter: true,
+        expandRadiusFromUserLocation: true,
+        preserveViewport: true, // No volem que runSearch torni a moure el mapa
+      });
+    } catch (err) {
+      console.error('[ParkLive] Error aplicant suggeriment:', err);
+      hideSuggestions();
+    }
   };
 
   const applyParkingSuggestion = async ({ label, parkingId, parkingRaw }) => {
@@ -1123,7 +1143,6 @@ export function initLandingSearch({
     const lat = Number(parkingRaw?.latitud);
     const lon = Number(parkingRaw?.longitud);
     if (Number.isFinite(lat) && Number.isFinite(lon)) {
-      setUserLocation({ lat, lon });
       // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
       updateSearchAnchor({ lat, lon });
       onSearchLocationResolved({ lat, lon });
@@ -1187,7 +1206,8 @@ export function initLandingSearch({
         optionBtn.type = 'button';
         optionBtn.className = 'list-group-item list-group-item-action small d-flex align-items-center gap-2';
         optionBtn.innerHTML = `<i class="bi bi-p-square"></i><span>${escapeHtml(item.label)}</span>`;
-        optionBtn.addEventListener('click', async () => {
+        optionBtn.addEventListener('mousedown', async (e) => {
+          e.preventDefault(); // Evitar que el blur de l'input s'executi abans
           await applyParkingSuggestion(item);
         });
         suggestionsMenu.appendChild(optionBtn);
@@ -1201,7 +1221,8 @@ export function initLandingSearch({
         optionBtn.type = 'button';
         optionBtn.className = 'list-group-item list-group-item-action small d-flex align-items-center gap-2';
         optionBtn.innerHTML = `<i class="bi bi-geo-alt"></i><span>${escapeHtml(item.label)}</span>`;
-        optionBtn.addEventListener('click', async () => {
+        optionBtn.addEventListener('mousedown', async (e) => {
+          e.preventDefault(); // Evitar que el blur de l'input s'executi abans
           await applyLocationSuggestion(item);
         });
         suggestionsMenu.appendChild(optionBtn);
@@ -1297,7 +1318,6 @@ export function initLandingSearch({
       try {
         const resolvedLocation = await geocodeSearchLocation(searchTerm);
         if (resolvedLocation) {
-          setUserLocation(resolvedLocation);
           // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
           updateSearchAnchor(resolvedLocation);
           onSearchLocationResolved(resolvedLocation);
@@ -1378,11 +1398,15 @@ export function initLandingSearch({
         openFirstPopup: !preserveViewport,
       });
 
-      const shouldCenterAfterRender = (centerOnUserLocation || locationResolvedFromTerm) && userLocation;
+      const shouldCenterAfterRender = (centerOnUserLocation || locationResolvedFromTerm) && !preserveViewport;
       if (shouldCenterAfterRender) {
-        globalThis.requestAnimationFrame(() => {
-          onSearchLocationResolved(userLocation);
-        });
+        // Prioritzem el punt on s'ha buscat (searchAnchorLocation) sobre el GPS (userLocation)
+        const centerPos = searchAnchorLocation || userLocation;
+        if (centerPos) {
+          globalThis.requestAnimationFrame(() => {
+            onSearchLocationResolved(centerPos);
+          });
+        }
       }
     } catch (error) {
       console.error('[ParkLive] Error cercant aparcaments:', error);
@@ -1431,7 +1455,7 @@ export function initLandingSearch({
     mapSearchInput.addEventListener('blur', () => {
       globalThis.setTimeout(() => {
         hideSuggestions();
-      }, 120);
+      }, 250); // Un poc més de marge
     });
 
     mapSearchInput.addEventListener('focus', () => {

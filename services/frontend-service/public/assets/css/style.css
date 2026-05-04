@@ -21123,6 +21123,75 @@ textarea.form-control-lg {
   box-shadow: none;
 }
 
+.reward-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.reward-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.reward-card.locked {
+  opacity: 0.8;
+}
+
+.reward-card.locked .reward-points-badge {
+  background: rgba(237, 242, 244, 0.05);
+  color: #8d99ae;
+}
+
+.reward-icon-container {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(193, 18, 31, 0.08);
+  color: #c1121f;
+}
+
+[data-bs-theme=dark] .reward-icon-container {
+  background: rgba(193, 18, 31, 0.15);
+  color: rgb(236.018957346, 51.481042654, 65.1895734597);
+}
+
+.reward-points-badge {
+  background: rgba(193, 18, 31, 0.05);
+  border: 1px solid rgba(193, 18, 31, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #c1121f;
+}
+
+[data-bs-theme=dark] .reward-points-badge {
+  background: rgba(193, 18, 31, 0.1);
+  color: rgb(233.8436018957, 28.1563981043, 43.4360189573);
+}
+
+.badge-icon-sm {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: help;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.badge-icon-sm:hover {
+  transform: scale(1.2);
+  background: rgba(255, 255, 255, 0.2);
+}
+
 #section-history table thead tr {
   background-color: var(--bs-body-bg);
 }
@@ -21991,6 +22060,27 @@ body.page-tiquet {
     min-height: 340px;
   }
 }
+/* Admin Aparcaments CRUD Styles */
+[data-bs-theme=dark] #section-admin-parkings .form-control, [data-bs-theme=dark] #section-admin-parkings .form-select, [data-bs-theme=dark] #modal-parking .form-control, [data-bs-theme=dark] #modal-parking .form-select {
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #edf2f4;
+}
+
+[data-bs-theme=dark] #section-admin-parkings .form-control option, [data-bs-theme=dark] #section-admin-parkings .form-select option, [data-bs-theme=dark] #modal-parking .form-control option, [data-bs-theme=dark] #modal-parking .form-select option {
+  background-color: #2b2d42;
+  color: #edf2f4;
+}
+
+[data-bs-theme=dark] #section-admin-parkings .form-control:focus, [data-bs-theme=dark] #section-admin-parkings .form-select:focus, [data-bs-theme=dark] #modal-parking .form-control:focus, [data-bs-theme=dark] #modal-parking .form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.x-small {
+  font-size: 0.75rem;
+}
+
 [data-bs-theme=dark] .page-auth .main-content {
   background: linear-gradient(135deg, rgb(51.047706422, 53.4220183486, 78.352293578) 0%, #434667 100%);
 }
@@ -22009,6 +22099,14 @@ body.page-tiquet {
   --bs-btn-border-color: var(--bs-border-color);
   --bs-btn-hover-bg: var(--bs-secondary-bg);
   --bs-btn-hover-border-color: var(--bs-border-color);
+}
+
+[data-bs-theme=dark] .btn-outline-primary {
+  --bs-btn-color: var(--bs-primary-bg-subtle, #9ec5fe);
+  --bs-btn-border-color: var(--bs-primary-bg-subtle, #9ec5fe);
+  --bs-btn-hover-bg: var(--bs-primary-bg-subtle, #9ec5fe);
+  --bs-btn-hover-border-color: var(--bs-primary-bg-subtle, #9ec5fe);
+  --bs-btn-hover-color: var(--bs-dark);
 }
 
 [data-bs-theme=dark] .page-auth .btn-light {

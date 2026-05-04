@@ -361,7 +361,7 @@ VALUES -- Centre de Barcelona
         14,
         'Parking Camp Nou',
         'aire_lliure',
-        'Carrer d Aristides Maillol, s/n',
+        'Carrer d''Aristides Maillol, s/n',
         'Barcelona',
         '08028',
         41.380896,
@@ -529,7 +529,7 @@ VALUES (1, 3, 'https://cdn.parklive.cat/img/parking_1_entrada.jpg', 'Entrada pri
     (1, 5, 'https://cdn.parklive.cat/img/parking_1_carrega.jpg', 'Punt de càrrega elèctrica', TRUE, 3),
     (4, 4, 'https://cdn.parklive.cat/img/parking_4_entrada.jpg', 'Entrada Sagrada Família', TRUE, 1),
     (6, 6, 'https://cdn.parklive.cat/img/parking_6_vista.jpg', 'Vista al Port Olímpic', TRUE, 1),
-    (13, 3, 'https://cdn.parklive.cat/img/parking_13_estacio.jpg', 'Accés des de l estació', TRUE, 1),
+    (13, 3, 'https://cdn.parklive.cat/img/parking_13_estacio.jpg', 'Accés des de l''estació', TRUE, 1),
     -- Batch 2
     (1, 5, '/uploads/aparcaments/1/foto_entrada_principal.jpg', 'Entrada principal amb rampa d''accés', TRUE, 1),
     (1, 6, '/uploads/aparcaments/1/foto_interior_1.jpg', 'Interior planta -1 amb senyalització', TRUE, 2),

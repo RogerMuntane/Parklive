@@ -165,11 +165,27 @@ function calculateCost() {
      fill('descompte', `— 0,00 €`);
   }
 
-  const total = subtotal - descompte;
+  // Descompte per recompensa seleccionada
+  const selectedDiscountEl = document.querySelector('.discount-radio:checked');
+  let rewardDiscount = 0;
+  if (selectedDiscountEl) {
+      const percent = parseFloat(selectedDiscountEl.dataset.percent) || 0;
+      rewardDiscount = subtotal * (percent / 100);
+      fill('descompte-reward', `— ${formatCurrency(rewardDiscount)}`);
+      document.getElementById('resum-descompte-reward-row').classList.remove('d-none');
+  } else {
+      fill('descompte-reward', `— 0,00 €`);
+      document.getElementById('resum-descompte-reward-row').classList.add('d-none');
+  }
+
+  const total = subtotal - descompte - rewardDiscount;
   fill('total', formatCurrency(total));
   
   // Guardem el preu total al data per utilitzar-lo en la reserva
+  // ATENCIÓ: Enviem el preu ORIGINAL al backend perquè el backend recalcula el descompte per seguretat
+  // Però per ara, el procedure sp_crear_reserva espera el preu_total JA calculat
   document.getElementById('form-reserva').dataset.total = total.toFixed(2);
+  document.getElementById('form-reserva').dataset.subtotal = subtotal.toFixed(2);
 
   // Actualitzar disponibilitat per la franja seleccionada (amb debounce)
   if (aparcamentData?.id) {
@@ -274,6 +290,65 @@ async function renderPaymentMethods() {
 
     } catch (error) {
         container.innerHTML = `<p class="text-danger small">No s'han pogut carregar les targetes.</p>`;
+    }
+}
+
+async function renderDiscounts() {
+    const container = document.getElementById('discounts-container');
+    const section = document.getElementById('discounts-section');
+    if (!container || !section) return;
+
+    const userId = getUserId();
+    if (!userId) return;
+
+    try {
+        const data = await pythonApi.get(`/api/gamificacio/usuari/${userId}/recompenses`);
+        if (data.success && data.recompenses) {
+            const discounts = data.recompenses.filter(r => r.tipus === 'descompte' && !r.utilitzada);
+            
+            if (discounts.length === 0) {
+                section.classList.add('d-none');
+                return;
+            }
+
+            section.classList.remove('d-none');
+            container.innerHTML = `
+                <div class="form-check p-0 mb-2">
+                    <input class="btn-check discount-radio" type="radio" name="recompensa_id" id="no_discount" value="" checked data-percent="0">
+                    <label class="btn btn-outline-secondary w-100 text-start py-2 px-3 rounded-3 small" for="no_discount">
+                        Cap descompte aplicat
+                    </label>
+                </div>
+            ` + discounts.map(d => {
+                let percent = 0;
+                try {
+                    const valor = typeof d.valor === 'string' ? JSON.parse(d.valor) : d.valor;
+                    percent = valor.percentatge || 0;
+                } catch(e) {}
+
+                return `
+                    <div class="form-check p-0 mb-2">
+                        <input class="btn-check discount-radio" type="radio" name="recompensa_id" id="discount_${d.id}" value="${d.id}" data-percent="${percent}">
+                        <label class="btn btn-outline-danger w-100 text-start py-2 px-3 rounded-3 small" for="discount_${d.id}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-tag-fill me-2"></i>${d.nom}</span>
+                                <span class="badge bg-danger">-${percent}%</span>
+                            </div>
+                        </label>
+                    </div>
+                `;
+            }).join('');
+
+            // Listeners per actualitzar cost
+            container.querySelectorAll('.discount-radio').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    calculateCost();
+                });
+            });
+        }
+    } catch (error) {
+        console.error('[ParkLive] Error carregant descomptes:', error);
+        section.classList.add('d-none');
     }
 }
 
@@ -429,6 +504,8 @@ export async function initReservaAparcament() {
             }
 
             const totalAmount = document.getElementById('form-reserva').dataset.total || 0;
+            const subtotalAmount = document.getElementById('form-reserva').dataset.subtotal || 0;
+            const selectedDiscount = document.querySelector('.discount-radio:checked');
             const btn = document.getElementById('btn-confirm-reserva');
             const originalText = btn.innerHTML;
             
@@ -440,9 +517,10 @@ export async function initReservaAparcament() {
                 aparcament_id: id,
                 data_entrada: `${inDate} ${inTime}:00`,
                 data_sortida: `${outDate} ${outTime}:00`,
-                preu_total: parseFloat(totalAmount),
+                preu_total: parseFloat(subtotalAmount), // Enviem el SUBtotal perquè el backend aplicarà els descomptes
                 notes: `Matrícula: ${matricula}`,
-                payment_method_id: selectedCard.value
+                payment_method_id: selectedCard.value,
+                recompensa_id: selectedDiscount ? selectedDiscount.value : null
             };
 
             try {
@@ -464,8 +542,9 @@ export async function initReservaAparcament() {
         });
     }
 
-    // Load Cards
+    // Load Cards and Discounts
     await renderPaymentMethods();
+    await renderDiscounts();
 
     showContent();
 

@@ -1,12 +1,16 @@
 from models.db_connection import db
 from routes.reset_routes import reset_routes
 from routes.aparcament_routes import aparcament_routes
+from routes.admin_aparcament_routes import admin_aparcament_routes
 from routes.reserves_routes import reserves_routes
 from routes.contribucions_routes import contribucions_routes
 from routes.google_auth_routes import google_auth_routes
 from routes.stripe_routes import stripe_routes
 from routes.report_disponibilitat_routes import report_disponibilitat_routes
 from routes.estadistiques_routes import estadistiques_routes
+from routes.gamificacio_routes import gamificacio_bp
+from routes.faq_routes import faq_routes
+from routes.blog_routes import blog_routes
 from routes.suport_routes import suport_routes
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -52,6 +56,7 @@ CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": _allowed_
 
 # Registrar les rutes
 app.register_blueprint(aparcament_routes)
+app.register_blueprint(admin_aparcament_routes)
 app.register_blueprint(reset_routes)
 app.register_blueprint(reserves_routes)
 app.register_blueprint(contribucions_routes)
@@ -59,6 +64,9 @@ app.register_blueprint(google_auth_routes)
 app.register_blueprint(stripe_routes)
 app.register_blueprint(report_disponibilitat_routes)
 app.register_blueprint(estadistiques_routes)
+app.register_blueprint(gamificacio_bp, url_prefix='/api/gamificacio')
+app.register_blueprint(faq_routes)
+app.register_blueprint(blog_routes)
 app.register_blueprint(suport_routes)
 
 
