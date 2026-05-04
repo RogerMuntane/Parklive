@@ -29,15 +29,26 @@ if hasattr(app, 'json'):
     app.json.ensure_ascii = False
 
 # Habilitar CORS per permetre peticions del frontend amb credencials
-# Nota: amb supports_credentials=True no es pot utilitzar origins="*"
-CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": [
-    "http://localhost:3000", 
-    "http://127.0.0.1:3000", 
-    "http://localhost:8080", 
-    "http://127.0.0.1:8080",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
-]}})
+# Llegim els orígens permesos des de la variable d'entorn ALLOWED_ORIGINS (separats per comes).
+# En dev (APP_ENV != 'production'), si ALLOWED_ORIGINS és buit, fem fallback als ports locals.
+_raw_origins = os.getenv('ALLOWED_ORIGINS', '')
+if _raw_origins:
+    _allowed_origins = [o.strip() for o in _raw_origins.split(',') if o.strip()]
+elif os.getenv('APP_ENV', 'development') != 'production':
+    # Fallback per a entorns de dev sense ALLOWED_ORIGINS configurat
+    _allowed_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+else:
+    # En producció sense ALLOWED_ORIGINS configurat: no es permet cap origen
+    _allowed_origins = []
+
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": _allowed_origins}})
 
 # Registrar les rutes
 app.register_blueprint(aparcament_routes)

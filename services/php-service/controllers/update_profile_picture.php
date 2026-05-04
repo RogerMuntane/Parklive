@@ -43,16 +43,9 @@ class UpdateProfilePictureController
             }
 
             require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+            // JWT és obligatori. No hi ha fallback: si verificarAutenticacio() no fa exit(), userId és sempre vàlid.
             AuthMiddleware::verificarAutenticacio();
             $userId = AuthMiddleware::obtenirIdUsuari();
-
-            // Si no hi ha sessió PHP, intentar via user_id (per a OAuth o peticions desacoblades)
-            if (!$userId) {
-                $userId = intval($_POST['user_id'] ?? 0);
-                if (!$userId) {
-                    $this->respond(['success' => false, 'error' => 'No autenticat o falta ID d\'usuari'], 401);
-                }
-            }
 
             if (!isset($_FILES['profile_image'])) {
                 $this->respond(['success' => false, 'error' => 'No s\'ha rebut cap imatge'], 400);

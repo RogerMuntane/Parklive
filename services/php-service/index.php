@@ -1,14 +1,23 @@
 <?php
 
-// CORS dinàmic per a desenvolupament
+// CORS: orígens permesos via variable d'entorn ALLOWED_ORIGINS (llista separada per comes)
+// En producció, definir ALLOWED_ORIGINS al .env. En dev, fallback a localhost si APP_ENV != 'production'.
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     $origin = $_SERVER['HTTP_ORIGIN'];
-    // Permetre localhost en diversos ports comuns de dev
-    if (preg_match('/^http:\/\/localhost(:\d+)?$/', $origin) || preg_match('/^http:\/\/127\.0\.0\.1(:\d+)?$/', $origin)) {
+    $allowedOrigins = array_filter(array_map('trim', explode(',', getenv('ALLOWED_ORIGINS') ?: '')));
+
+    // Fallback segur per a entorns de dev: permet localhost NOMÉS si no estem en producció
+    if (empty($allowedOrigins) && getenv('APP_ENV') !== 'production') {
+        if (preg_match('/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/', $origin)) {
+            $allowedOrigins[] = $origin;
+        }
+    }
+
+    if (in_array($origin, $allowedOrigins, true)) {
         header("Access-Control-Allow-Origin: $origin");
         header("Access-Control-Allow-Credentials: true");
         header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-User-ID, X-CSRF-TOKEN");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN");
     }
 }
 

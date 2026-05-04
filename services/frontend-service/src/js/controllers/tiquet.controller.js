@@ -110,7 +110,16 @@ export async function initTiquetAparcament() {
       console.warn('[ParkLive] El QR no s\'ha carregat a temps, el PDF es generarà sense ell.', qrErr);
     }
 
-    await generarIEnviarPDF(reservaId, reservaData.codi_reserva);
+    // await generarIEnviarPDF(reservaId, reservaData.codi_reserva);
+    
+    // Configurar el botó de descàrrega cap al backend
+    const btnDownload = document.getElementById('btn-download-pdf');
+    if (btnDownload) {
+      // Obtenim la URL de l'API de Python des de la configuració o api.js
+      const apiUrl = pythonApi.baseURL; 
+      btnDownload.href = `${apiUrl}/api/reserves/${reservaId}/pdf`;
+      btnDownload.setAttribute('target', '_blank');
+    }
 
   } catch (error) {
     console.error('[ParkLive] Error carregant tiquet:', error);

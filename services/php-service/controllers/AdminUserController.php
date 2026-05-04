@@ -90,8 +90,20 @@ class AdminUserController
 
     private function handleCreate($data)
     {
-        if (empty($data['nom']) || empty($data['email']) || empty($data['contrasenya'])) {
-            $this->respond(['success' => false, 'error' => 'Falten dades obligatòries'], 400);
+        $errors = [];
+        if (empty($data['nom']))    $errors[] = 'El nom és obligatori.';
+        if (empty($data['cognoms'])) $errors[] = 'El cognom és obligatori.';
+        if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'El correu electrònic no és vàlid.';
+        }
+        if (empty($data['contrasenya']) || strlen($data['contrasenya']) < 8) {
+            $errors[] = 'La contrasenya ha de tenir com a mínim 8 caràcters.';
+        }
+        if (!empty($data['telefon']) && !preg_match('/^[+\d\s]{7,20}$/', $data['telefon'])) {
+            $errors[] = 'El telèfon no és vàlid.';
+        }
+        if ($errors) {
+            $this->respond(['success' => false, 'errors' => $errors], 400);
         }
 
         $result = $this->model->createUser($data);

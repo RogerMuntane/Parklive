@@ -52,6 +52,9 @@ export async function loadPaymentMethods(userId) {
         return methods;
     } catch (error) {
         console.error('[Stripe] loadPaymentMethods ERROR:', error);
+        if (error.message && error.message.includes('token d\'autenticació ha caducat')) {
+            showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per veure els teus mètodes de pagament.', document.body);
+        }
         if (container) {
             container.innerHTML = `<div class="alert alert-warning small">No s'han pogut carregar les targetes.</div>`;
         }
@@ -263,7 +266,12 @@ export async function updatePlanSummary(userId, methods = null) {
 
         try {
             sub = await stripeService.fetchSubscriptionDetails(userId);
-        } catch (_) {
+        } catch (err) {
+            console.error('[Stripe] fetchSubscriptionDetails ERROR:', err);
+            if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+                showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per veure els detalls del teu pla.', document.body);
+                return; // No continuem si la sessió ha caducat
+            }
             sub = null;
         }
 

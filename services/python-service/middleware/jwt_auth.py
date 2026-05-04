@@ -3,6 +3,15 @@ import jwt
 import time
 from flask import request
 
+def _get_secret():
+    """Obté el secret JWT des de l'entorn. Llança RuntimeError si no està configurat."""
+    secret = os.getenv('JWT_SECRET')
+    if not secret:
+        raise RuntimeError(
+            "JWT_SECRET no està configurat. Defineix la variable d'entorn al fitxer .env."
+        )
+    return secret
+
 def generate_jwt_token(user):
     """
     Genera un token JWT equivalent al de PHP.
@@ -10,7 +19,7 @@ def generate_jwt_token(user):
     :param user: Diccionari amb les dades de l'usuari (minim 'id').
     :return: String amb el token JWT.
     """
-    secret_key = os.getenv('JWT_SECRET', 'default_secret_key_needs_to_be_replaced')
+    secret_key = _get_secret()
     issued_at = int(time.time())
     expire = issued_at + 3600  # 1 hora
     
@@ -50,7 +59,7 @@ def get_jwt_user_id(fallback_to_header=False):
     
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
-        secret_key = os.getenv('JWT_SECRET', 'default_secret_key_needs_to_be_replaced')
+        secret_key = _get_secret()
         
         try:
             # Utilitzem decode amb els mateixos algoritmes que usa PHP per defecte
@@ -68,13 +77,26 @@ def get_jwt_user_id(fallback_to_header=False):
         except jwt.InvalidTokenError:
             raise ValueError("Token d'autenticació invàlid.")
     
-    # Fallback insegur per mantenir retrocompatibilitat transitòria si és necessari
-    if fallback_to_header:
-        user_id_value = request.headers.get('X-User-ID')
-        if user_id_value:
-            try:
-                return int(user_id_value)
-            except (TypeError, ValueError):
-                pass
-                
+    # DEPRECAT: El fallback X-User-ID ha estat eliminat per seguretat.
+    # Tot l'accés requereix un Bearer JWT vàlid.
+    raise ValueError("Cal iniciar sessió (Token no trobat)")
+
+
+def get_jwt_full_data():
+    """
+    Extreu i valida el JWT. Retorna el diccionari 'data' del payload
+    (id, nom, email, tipus_usuari). Llança ValueError si el token no és vàlid.
+    Útil per a comprovar el rol de l'usuari autenticat.
+    """
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        secret_key = _get_secret()
+        try:
+            decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
+            return decoded.get('data', {})
+        except jwt.ExpiredSignatureError:
+            raise ValueError("El token d'autenticació ha caducat. Torna a iniciar sessió.")
+        except jwt.InvalidTokenError:
+            raise ValueError("Token d'autenticació invàlid.")
     raise ValueError("Cal iniciar sessió (Token no trobat)")
