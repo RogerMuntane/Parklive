@@ -1,5 +1,5 @@
 -- 1. USUARIS (20 usuaris de diferents tipus)
--- Nota: Contrasenyes són totes "Password123!" amb hash bcrypt a la compte de apple es Password1234!
+-- Nota: Contrasenyes són totes "Password123!"
 -- Hash generat: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
 INSERT INTO usuaris (
         id,
@@ -12,6 +12,7 @@ INSERT INTO usuaris (
         estat,
         email_verificat,
         punts_gamificacio,
+        stripe_customer_id,
         data_registre,
         ultima_connexio
     )
@@ -27,6 +28,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
+        'cus_test_001',
         '2024-01-01 10:00:00',
         NOW()
     ),
@@ -41,6 +43,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
+        'cus_test_002',
         '2024-01-15 10:00:00',
         NOW()
     ),
@@ -56,6 +59,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
+        'cus_test_003',
         '2024-02-01 10:00:00',
         NOW()
     ),
@@ -70,6 +74,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
+        'cus_test_004',
         '2024-02-15 10:00:00',
         NOW()
     ),
@@ -85,6 +90,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         450,
+        'cus_test_005',
         '2024-06-01 10:00:00',
         NOW()
     ),
@@ -99,6 +105,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         780,
+        'cus_test_006',
         '2024-07-10 10:00:00',
         NOW()
     ),
@@ -113,6 +120,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         1200,
+        'cus_test_007',
         '2024-05-20 10:00:00',
         NOW()
     ),
@@ -127,6 +135,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         320,
+        'cus_test_008',
         '2024-08-15 10:00:00',
         NOW()
     ),
@@ -142,6 +151,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         150,
+        'cus_test_009',
         '2024-09-01 10:00:00',
         NOW()
     ),
@@ -156,6 +166,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         90,
+        'cus_test_010',
         '2024-09-15 10:00:00',
         NOW()
     ),
@@ -170,6 +181,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         210,
+        'cus_test_011',
         '2024-10-01 10:00:00',
         NOW()
     ),
@@ -184,6 +196,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         60,
+        'cus_test_012',
         '2024-10-20 10:00:00',
         NOW()
     ),
@@ -198,6 +211,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         340,
+        'cus_test_013',
         '2024-08-05 10:00:00',
         NOW()
     ),
@@ -212,6 +226,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         180,
+        'cus_test_014',
         '2024-11-01 10:00:00',
         NOW()
     ),
@@ -226,6 +241,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         420,
+        'cus_test_015',
         '2024-07-25 10:00:00',
         NOW()
     ),
@@ -240,6 +256,7 @@ VALUES -- Administradors
         'actiu',
         FALSE,
         30,
+        'cus_test_016',
         '2025-01-10 10:00:00',
         NOW()
     ),
@@ -254,6 +271,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         110,
+        'cus_test_017',
         '2024-12-01 10:00:00',
         NOW()
     ),
@@ -268,6 +286,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         270,
+        'cus_test_018',
         '2024-09-20 10:00:00',
         NOW()
     ),
@@ -282,6 +301,7 @@ VALUES -- Administradors
         'inactiu',
         TRUE,
         50,
+        'cus_test_019',
         '2024-06-15 10:00:00',
         '2024-12-01 10:00:00'
     ),
@@ -296,6 +316,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         390,
+        'cus_test_020',
         '2024-08-28 10:00:00',
         NOW()
     );
@@ -309,7 +330,8 @@ INSERT INTO subscripcions (
         data_final,
         preu,
         metode_pagament,
-        auto_renovacio
+        auto_renovacio,
+        stripe_subscription_id
     )
 VALUES (
         5,
@@ -319,7 +341,8 @@ VALUES (
         '2025-02-01',
         9.99,
         'targeta',
-        TRUE
+        TRUE,
+        'sub_test_001'
     ),
     (
         6,
@@ -329,7 +352,8 @@ VALUES (
         '2025-02-01',
         25.99,
         'paypal',
-        TRUE
+        TRUE,
+        'sub_test_002'
     ),
     (
         7,
@@ -339,7 +363,8 @@ VALUES (
         '2025-05-20',
         89.99,
         'targeta',
-        TRUE
+        TRUE,
+        'sub_test_003'
     ),
     (
         8,
@@ -349,7 +374,8 @@ VALUES (
         '2025-01-15',
         9.99,
         'targeta',
-        FALSE
+        FALSE,
+        'sub_test_004'
     );
 
 -- 3. SESSIONS (exemples de sessions actives)
@@ -422,7 +448,8 @@ INSERT INTO subscripcions (
         data_final,
         preu,
         metode_pagament,
-        auto_renovacio
+        auto_renovacio,
+        stripe_subscription_id
     )
 VALUES (
         5,
@@ -432,7 +459,8 @@ VALUES (
         '2026-03-01',
         59.99,
         'targeta',
-        TRUE
+        TRUE,
+        'sub_test_005'
     ),
     (
         6,
@@ -442,7 +470,8 @@ VALUES (
         '2026-03-01',
         6.99,
         'paypal',
-        TRUE
+        TRUE,
+        'sub_test_006'
     ),
     (
         9,
@@ -452,7 +481,8 @@ VALUES (
         '2026-03-15',
         17.99,
         'targeta',
-        FALSE
+        FALSE,
+        'sub_test_007'
     ),
     (
         12,
@@ -462,7 +492,8 @@ VALUES (
         '2026-06-10',
         59.99,
         'targeta',
-        TRUE
+        TRUE,
+        'sub_test_008'
     ),
     (
         14,
@@ -472,5 +503,6 @@ VALUES (
         '2026-02-05',
         6.99,
         'paypal',
-        FALSE
+        FALSE,
+        'sub_test_009'
     );

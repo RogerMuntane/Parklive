@@ -21,7 +21,7 @@
     <div class="template-slot no-print" data-template="./components/header.html" aria-label="Header"></div>
 
     <main class="flex-grow-1 py-5 d-flex align-items-center">
-        
+
         <!-- Skeleton per quan està carregant -->
         <div class="container text-center" data-tiquet-state="loading">
             <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
@@ -30,7 +30,7 @@
 
         <!-- Contingut del Tiquet -->
         <div class="container ticket-wrapper" data-tiquet-state="content" style="display: none;">
-            
+
             <div class="d-flex justify-content-between mb-3 no-print d-print-none">
                 <a href="/index.html" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-house me-1"></i> Tornar a l'Inici
@@ -40,13 +40,13 @@
                         <i class="bi bi-star-fill me-1"></i> Deixar Valoració
                     </a>
                     <button class="btn btn-primary btn-sm" onclick="window.print()">
-                        <i class="bi bi-printer me-1"></i> Imprimir
+                        <i class="bi bi-printer me-1"></i> Descarregar PDF
                     </button>
                 </div>
             </div>
 
             <div class="ticket-card">
-                
+
                 <!-- Capçalera del Tiquet -->
                 <div class="ticket-header">
                     <div class="success-checkmark"><i class="bi bi-check-lg"></i></div>
@@ -97,7 +97,7 @@
                 <!-- Peu del Tiquet i QR -->
                 <div class="ticket-footer">
                     <p class="small text-muted mb-3">Mostra aquest codi a l'entrada de l'aparcament.</p>
-                    
+
                     <div class="qr-placeholder mb-2">
                         <img id="tiquet-qr" src="" alt="Codi QR de la reserva" class="d-none">
                         <!-- Spinner de càrrega del QR -->
@@ -105,7 +105,7 @@
                             <span class="visually-hidden">Carregant QR...</span>
                         </div>
                     </div>
-                    
+
                     <small class="text-black-50" style="font-size: 0.70rem;">ParkLive Web App © 2026</small>
                 </div>
             </div>

@@ -315,9 +315,29 @@ export function updateManageSectionUI(subscription, primaryCard, callbacks) {
 
     // Callbacks listeners
     const autoRenewSwitch = document.getElementById('autoRenewSwitch');
+    const autoRenewVisual = document.getElementById('autoRenewSwitch-visual');
+    
     if (autoRenewSwitch) {
-        autoRenewSwitch.checked = !subscription.cancel_at_period_end;
-        autoRenewSwitch.onchange = (e) => callbacks.onAutorenewChange(autoRenewSwitch.checked);
+        const isActive = !subscription.cancel_at_period_end;
+        autoRenewSwitch.checked = isActive;
+        
+        // Sincronitzar visualment
+        if (autoRenewVisual) {
+            autoRenewVisual.classList.toggle('on', isActive);
+            
+            // Permetre clicar el visual per canviar el checkbox
+            autoRenewVisual.onclick = () => {
+                const newState = !autoRenewSwitch.checked;
+                autoRenewSwitch.checked = newState;
+                autoRenewVisual.classList.toggle('on', newState);
+                callbacks.onAutorenewChange(newState);
+            };
+        }
+
+        autoRenewSwitch.onchange = (e) => {
+            if (autoRenewVisual) autoRenewVisual.classList.toggle('on', autoRenewSwitch.checked);
+            callbacks.onAutorenewChange(autoRenewSwitch.checked);
+        };
     }
 
     const btnCancel = document.getElementById('btn-cancel-subscription');

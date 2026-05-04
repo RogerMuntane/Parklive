@@ -10,6 +10,7 @@ from routes.estadistiques_routes import estadistiques_routes
 from routes.gamificacio_routes import gamificacio_bp
 from routes.faq_routes import faq_routes
 from routes.blog_routes import blog_routes
+from routes.suport_routes import suport_routes
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -30,8 +31,27 @@ app.config['JSON_AS_ASCII'] = False
 if hasattr(app, 'json'):
     app.json.ensure_ascii = False
 
-# Habilitar CORS per permetre peticions del frontend
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# Habilitar CORS per permetre peticions del frontend amb credencials
+# Llegim els orígens permesos des de la variable d'entorn ALLOWED_ORIGINS (separats per comes).
+# En dev (APP_ENV != 'production'), si ALLOWED_ORIGINS és buit, fem fallback als ports locals.
+_raw_origins = os.getenv('ALLOWED_ORIGINS', '')
+if _raw_origins:
+    _allowed_origins = [o.strip() for o in _raw_origins.split(',') if o.strip()]
+elif os.getenv('APP_ENV', 'development') != 'production':
+    # Fallback per a entorns de dev sense ALLOWED_ORIGINS configurat
+    _allowed_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+else:
+    # En producció sense ALLOWED_ORIGINS configurat: no es permet cap origen
+    _allowed_origins = []
+
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": _allowed_origins}})
 
 # Registrar les rutes
 app.register_blueprint(aparcament_routes)
@@ -45,6 +65,7 @@ app.register_blueprint(estadistiques_routes)
 app.register_blueprint(gamificacio_bp, url_prefix='/api/gamificacio')
 app.register_blueprint(faq_routes)
 app.register_blueprint(blog_routes)
+app.register_blueprint(suport_routes)
 
 
 # Health check endpoint per Docker
@@ -67,11 +88,12 @@ def handle_exception(e):
     return jsonify(error="Error intern del servidor", details=str(e)), 500
 
 
+from flask import Flask, jsonify, request
+
 @app.before_request
 def before_request():
     if db.connection is None or not db.connection.is_connected():
         db.connect()
-
 
 if __name__ == "__main__":
     flask_port = int(os.getenv('FLASK_PORT', 5000))

@@ -39,7 +39,21 @@ export function showAlert(type, message, scope = document) {
  * @param {HTMLElement} parent - On penjar l'alerta (per defecte document.body)
  */
 export function showBootstrapAlert(type, message, parent = document.body) {
-    // Intentar netejar alertes prèvies si el mètode existeix localment
+    // Netejar alertes prèvies a la mateixa posició per evitar superposició
+    const existing = document.querySelector('.alert.position-fixed.top-0');
+    
+    // PRIORITAT: Si ja hi ha una alerta de sessió caducada, no la treiem per posar un error genèric.
+    // També evitem duplicar el mateix missatge de sessió caducada.
+    if (existing) {
+        const isExistingAuthError = existing.innerText.includes('Sessió caducada');
+        const isNewAuthError = message.includes('Sessió caducada');
+        
+        if (isExistingAuthError && !isNewAuthError) return; // No sobreescriure sessió per error genèric
+        if (isExistingAuthError && isNewAuthError) return;  // Ja n'hi ha una, no fem res
+        
+        existing.remove();
+    }
+
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
     alert.style.zIndex = 9999;
@@ -51,9 +65,11 @@ export function showBootstrapAlert(type, message, parent = document.body) {
     console.log(`[ParkLive] Mostrant alerta: ${type} - ${message}`);
     parent.appendChild(alert);
     setTimeout(() => {
-      alert.classList.remove('show');
-      alert.classList.add('hide');
-      setTimeout(() => alert.remove(), 500);
+      if (alert && alert.parentNode) {
+        alert.classList.remove('show');
+        alert.classList.add('hide');
+        setTimeout(() => alert.remove(), 500);
+      }
     }, 3500);
 }
 

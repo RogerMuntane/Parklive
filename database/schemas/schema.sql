@@ -187,7 +187,7 @@ CREATE TABLE reserves (
 -- Taula de pagaments
 CREATE TABLE pagaments (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    reserva_id INT UNSIGNED NOT NULL,
+    reserva_id INT UNSIGNED,
     usuari_id INT UNSIGNED NOT NULL,
     import DECIMAL(10, 2) NOT NULL,
     metode ENUM(

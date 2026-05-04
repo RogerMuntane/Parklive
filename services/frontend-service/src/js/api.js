@@ -77,29 +77,22 @@ class ApiClient {
       ...options.headers,
     };
 
-    // Només afegir Content-Type si no és un GET o DELETE (per evitar problemes amb alguns proxies)
-    if (options.method && !['GET', 'DELETE'].includes(options.method.toUpperCase())) {
-      headers['Content-Type'] = 'application/json';
+    // Només afegir Content-Type si no és un GET o DELETE i el body és JSON
+    if (options.method && !['GET', 'DELETE', 'OPTIONS', 'HEAD'].includes(options.method.toUpperCase())) {
+      if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
     }
 
-    // Injectar ID d'usuari si existeix a la sessió
-    const userId = sessionStorage.getItem(STORAGE_KEYS.USER_ID);
-    if (userId) {
-      headers['X-User-ID'] = userId;
-    }
-
-    // Injectar token d'autenticació si existeix
+    // Injectar token d'autenticació si existeix (JWT)
     const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Sempre incloure cookies per a backend PHP
-    const config = { ...options, headers };
-    // Si la baseURL és PHP_API_URL, afegir credentials: 'include'
-    if (this.baseURL === PHP_API_URL.replace(/\/+$/, '')) {
-      config.credentials = 'include';
-    }
+    // Sempre passar les capçaleres amb el JWT
+    // Nota: Mantenim credentials: 'include' perquè el backend està configurat amb supports_credentials=True
+    const config = { ...options, headers, credentials: 'include' };
 
     try {
       const response = await fetch(url, config);

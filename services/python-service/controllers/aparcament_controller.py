@@ -10,22 +10,23 @@ from models.aparcament_model import (
     get_places_disponibles_per_franja,
 )
 
+from middleware.jwt_auth import get_jwt_user_id
 
 def _get_authenticated_user_id(fallback_value=None):
-    """Obté l'usuari autenticat des de capçalera i, si cal, valor fallback."""
-    user_id_value = request.headers.get('X-User-ID') or fallback_value
-    if user_id_value is None:
-        raise ValueError("Cal iniciar sessió")
-
+    """
+    Obté l'usuari autenticat. Ara crida a la validació de JWT per major seguretat.
+    """
     try:
-        user_id = int(user_id_value)
-    except (TypeError, ValueError):
-        raise ValueError("ID d'usuari no vàlid")
-
-    if user_id <= 0:
-        raise ValueError("ID d'usuari no vàlid")
-
-    return user_id
+        # Eliminem el fallback_to_header per fer el JWT estrictament obligatori.
+        user_id = get_jwt_user_id(fallback_to_header=False)
+        return user_id
+    except ValueError as e:
+        if fallback_value is not None:
+            try:
+                return int(fallback_value)
+            except (ValueError, TypeError):
+                pass
+        raise e
 
 
 def list_aparcaments():

@@ -18,3 +18,7 @@ googleAuth.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Uploads & Storage
+storage/tickets/
+services/php-service/uploads/

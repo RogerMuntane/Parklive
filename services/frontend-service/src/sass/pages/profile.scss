@@ -369,10 +369,25 @@
 
 .profile-section {
     display: none;
+    opacity: 0;
 
     &.active {
         display: block;
-        animation: fadeUp .3s ease both;
+        animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        
+        // Staggered entry per als fills directes (rows o cards)
+        &.animate-stagger {
+            .row > div, > .card, > div:not(.row) {
+                opacity: 0;
+                animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                
+                @for $i from 1 through 12 {
+                    &:nth-child(#{$i}) {
+                        animation-delay: #{$i * 0.08}s;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -584,9 +599,11 @@
 
         .custom-switch {
             background-color: $crimson;
+            border-color: $crimson;
 
             &::after {
                 transform: translateX(22px);
+                background-color: white;
             }
         }
     }
@@ -604,11 +621,7 @@
         }
 
         .custom-switch {
-            background-color: rgba(var(--bs-secondary-rgb), 0.3);
-
-            &::after {
-                transform: translateX(0);
-            }
+            // Lògica delegada a la classe .custom-switch base
         }
 
         .toggle-desc {
@@ -652,6 +665,9 @@
     transition: all 0.3s ease;
     margin-left: auto;
     flex-shrink: 0;
+    // Fons gris quan està apagat
+    background-color: rgba(var(--bs-secondary-rgb), 0.2);
+    border: 1px solid var(--bs-border-color);
 
     &::after {
         content: '';
@@ -660,20 +676,32 @@
         height: 20px;
         background-color: white;
         border-radius: 50%;
-        top: 3px;
-        left: 3px;
+        top: 2px;
+        left: 2px;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    // Estat activat (on)
+    &.on {
+        background-color: $crimson;
+        border-color: $crimson;
+
+        &::after {
+            transform: translateX(22px);
+            background-color: white;
+        }
     }
 }
 
 @keyframes fadeUp {
     from {
         opacity: 0;
+        transform: translateY(15px);
     }
-
     to {
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
