@@ -342,16 +342,13 @@ function renderContribucions(contribucions) {
 
   // Agrupar per tipus
   const tipusSet = [...new Set(contribucions.map(c => c.tipus))];
-  const validades = tipusSet.map(t => {
-    const row = contribucions.find(c => c.tipus === t && c.validada);
-    return row ? row.count : 0;
-  });
-  const pendents = tipusSet.map(t => {
-    const row = contribucions.find(c => c.tipus === t && !c.validada);
+  const totals = tipusSet.map(t => {
+    const row = contribucions.find(c => c.tipus === t);
     return row ? row.count : 0;
   });
 
   const labels = tipusSet.map(t => t.charAt(0).toUpperCase() + t.slice(1, 5) + '.');
+  const colorsArr = tipusSet.map(t => (t === 'ocupat' ? '#ef4444' : '#22c55e'));
 
   const options = {
     ...base,
@@ -362,8 +359,10 @@ function renderContribucions(contribucions) {
       id: 'contribucions-tipus',
     },
     series: [
-      { name: 'Validada', data: validades },
-      { name: 'Pendent', data: pendents },
+      {
+        name: 'Contribucions',
+        data: totals,
+      },
     ],
     xaxis: {
       categories: labels,
@@ -377,15 +376,12 @@ function renderContribucions(contribucions) {
         style: { fontSize: '11px' },
       },
     },
-    colors: [COLORS.success, COLORS.secondary],
+    colors: colorsArr,
     plotOptions: {
-      bar: { borderRadius: 4, columnWidth: '60%' },
+      bar: { distributed: true, borderRadius: 4, columnWidth: '60%' },
     },
     legend: {
-      show: true,
-      position: 'top',
-      fontSize: '11px',
-      markers: { size: 6, shape: 'circle' },
+      show: false
     },
     dataLabels: { enabled: false },
     grid: base.grid,
@@ -467,7 +463,7 @@ function renderDadesDetall(detall) {
   const map = {
     'stat-despesa-mitja': fmtEur(detall.despesa_mitja),
     'stat-durada-mitja': detall.durada_mitja_fmt,
-    'stat-contribucions-validades': `${detall.contribucions_validades} / ${detall.total_contribucions}`,
+    'stat-contribucions-totals': detall.total_contribucions,
     'stat-valoracio-mitja': detall.valoracio_mitja > 0 ? `${detall.valoracio_mitja} / 5` : '—',
   };
 

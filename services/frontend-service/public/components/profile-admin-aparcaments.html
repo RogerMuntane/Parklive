@@ -1,0 +1,219 @@
+<section id="section-admin-parkings" class="profile-section animate__animated animate__fadeIn">
+<!-- Secció de Gestió d'Aparcaments (Només Admin) -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-primary text-white py-3 border-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0">Gestió d'Aparcaments</h5>
+                <p class="text-white-50 small mb-0">Administració de la xarxa de pàrquings</p>
+            </div>
+            <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold" id="btn-add-parking">
+                <i class="bi bi-plus-lg me-1"></i> Nou Aparcament
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <!-- Filtres i Cerca -->
+        <div class="p-3 bg-body-tertiary border-bottom border-light border-opacity-10">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0" id="parking-search" placeholder="Cerca per nom, adreça o ciutat...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" id="filter-parking-type">
+                        <option value="">Tots els tipus</option>
+                        <option value="carrer">Carrer</option>
+                        <option value="cobert">Cobert</option>
+                        <option value="subterrani">Subterrani</option>
+                        <option value="parking_public">Públic</option>
+                        <option value="parking_privat">Privat</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" id="filter-parking-status">
+                        <option value="">Tots els estats</option>
+                        <option value="actiu">Actiu</option>
+                        <option value="inactiu">Inactiu</option>
+                        <option value="manteniment">Manteniment</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-sm btn-outline-primary w-100" id="btn-refresh-parkings" title="Refrescar">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taula d'Aparcaments -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-body-secondary">
+                    <tr>
+                        <th class="ps-3 py-3 text-secondary x-small fw-bold text-uppercase" style="width: 30%;">Aparcament</th>
+                        <th class="py-3 text-secondary x-small fw-bold text-uppercase">Tipus</th>
+                        <th class="py-3 text-secondary x-small fw-bold text-uppercase">Ciutat</th>
+                        <th class="py-3 text-secondary x-small fw-bold text-uppercase">Capacitat</th>
+                        <th class="py-3 text-secondary x-small fw-bold text-uppercase">Estat</th>
+                        <th class="pe-3 py-3 text-secondary x-small fw-bold text-uppercase text-end">Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="parkings-table-body">
+                    <!-- Es carregarà dinàmicament -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginació -->
+        <div class="p-3 d-flex justify-content-between align-items-center bg-body-tertiary border-top border-light border-opacity-10">
+            <div class="small text-secondary" id="parkings-count-info">
+                Mostrant <span class="fw-bold">0</span> aparcaments
+            </div>
+            <nav aria-label="Paginació aparcaments">
+                <ul class="pagination pagination-sm mb-0" id="parkings-pagination">
+                    <!-- Dinàmic -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear/Editar Aparcament -->
+<div class="modal fade" id="modal-parking" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title fw-bold" id="modal-parking-title">Afegir Aparcament</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form-parking">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="parking-id" id="parking-id">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Nom de l'Aparcament</label>
+                            <input type="text" class="form-control" name="nom" required placeholder="Ex: Pàrquing Centre - Plaça Catalunya">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Tipus</label>
+                            <select class="form-select" name="tipus" required>
+                                <option value="carrer">Carrer</option>
+                                <option value="cobert">Cobert</option>
+                                <option value="aire_lliure">Aire lliure</option>
+                                <option value="subterrani">Subterrani</option>
+                                <option value="parking_public">Públic</option>
+                                <option value="parking_privat">Privat</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <label class="form-label small fw-bold">Adreça</label>
+                            <input type="text" class="form-control" name="adreca" required placeholder="Carrer, número, planta...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Codi Postal</label>
+                            <input type="text" class="form-control" name="codi_postal" placeholder="08001">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Ciutat</label>
+                            <input type="text" class="form-control" name="ciutat" required placeholder="Barcelona">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Latitud</label>
+                            <input type="number" step="0.00000001" class="form-control" name="latitud" required placeholder="41.385063">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Longitud</label>
+                            <input type="number" step="0.00000001" class="form-control" name="longitud" required placeholder="2.173403">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Capacitat Total</label>
+                            <input type="number" class="form-control" name="capacitat_total" required min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Disponibles</label>
+                            <input type="number" class="form-control" name="places_disponibles" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Tarifa Hora (€)</label>
+                            <input type="number" step="0.01" class="form-control" name="tarifa_hora" placeholder="2.50">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Tarifa Dia (€)</label>
+                            <input type="number" step="0.01" class="form-control" name="tarifa_dia" placeholder="25.00">
+                        </div>
+
+                        <div class="col-md-12">
+                            <hr class="my-2 border-light">
+                            <h6 class="fw-bold mb-3 small text-primary">Característiques i Estat</h6>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Estat</label>
+                            <select class="form-select" name="estat">
+                                <option value="actiu">Actiu</option>
+                                <option value="inactiu">Inactiu</option>
+                                <option value="manteniment">Manteniment</option>
+                                <option value="complet">Complet</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Horari Obertura</label>
+                            <input type="time" class="form-control" name="horari_obertura">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Horari Tancament</label>
+                            <input type="time" class="form-control" name="horari_tancament">
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end gap-3 pb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="obert_24h" id="check-24h">
+                                <label class="form-check-label small" for="check-24h">Obert 24h</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="accessibilitat" id="check-acc">
+                                <label class="form-check-label small" for="check-acc">Accessibilitat</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="verificat" id="check-ver">
+                                <label class="form-check-label small" for="check-ver">Verificat</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-light p-3">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel·lar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btn-save-parking">Guardar Aparcament</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Eliminació -->
+<div class="modal fade" id="modal-delete-parking" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 text-center">
+                <input type="hidden" id="delete-parking-id">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-trash fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Eliminar Aparcament?</h5>
+                <p class="text-secondary small mb-4">Aquesta acció no es pot desfer. L'aparcament i totes les seves dades associades seran eliminats.</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger rounded-pill py-2 fw-bold" id="btn-confirm-delete-parking">Sí, eliminar</button>
+                    <button type="button" class="btn btn-light rounded-pill py-2" data-bs-dismiss="modal">Cancel·lar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>

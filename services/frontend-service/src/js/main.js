@@ -377,22 +377,19 @@ async function initControllers() {
       initAuth();
     }
 
-    // ── Dashboard (aparcaments, reserves, contribucions) ────────
+    // ── Dashboard (aparcaments, reserves) ────────
     if (bodyClass.includes('page-dashboard')) {
-      // Carregar els tres controladors en paral·lel
+      // Carregar els dos controladors en paral·lel
       const [
         { initAparcaments },
         { initReserves },
-        { initContribucions },
       ] = await Promise.all([
         import(new URL('./controllers/aparcament.controller.js', import.meta.url).href),
         import(new URL('./controllers/reserves.controller.js', import.meta.url).href),
-        import(new URL('./controllers/contribucions.controller.js', import.meta.url).href),
       ]);
 
       initAparcaments();
       initReserves();
-      initContribucions();
     }
 
     // ── Pàgina Landing (mapa, filtres, responsive map view) ─────
@@ -431,6 +428,22 @@ async function initControllers() {
       initContacte();
     }
 
+    // ── FAQ ────────────────────────────────────────────────
+    if (bodyClass.includes('page-faq')) {
+      const { initFaq } = await import(new URL(`./controllers/faq.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initFaq();
+    }
+
+    // ── Blog ───────────────────────────────────────────────
+    if (bodyClass.includes('page-blog')) {
+      const { initBlogList } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initBlogList();
+    }
+    if (bodyClass.includes('page-blog-detall')) {
+      const { initBlogDetail } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initBlogDetail();
+    }
+
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);
   }
@@ -465,9 +478,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       initProfilePlanSection,
       initProfileHistorySection,
       initProfileFavoritesSection,
-      initProfileImageUpload
+      initProfileImageUpload,
+      initProfilePointsSection
     } = await import(new URL('./controllers/profile.controller.js', import.meta.url).href);
     const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
+    const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
+    const { initAdminParkingCRUD } = await import(new URL('./controllers/profile-admin-aparcaments.controller.js', import.meta.url).href);
+    const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
+    const { initAdminBlog } = await import(new URL('./controllers/profile-admin-blog.controller.js', import.meta.url).href);
 
     initProfilePasswordForm();
     initProfileInfoForm();
@@ -477,33 +495,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfileHistorySection();
     initProfileFavoritesSection();
     initReserves();
-
-    // ── Role Guard: controladors exclusius d'administrador ─────────────
-    // Només es carreguen si el rol és 'admin'. Si no ho és, els fitxers
-    // JS mai es descarreguen i la secció admin-users s'elimina del DOM.
-    if (hasRole('admin')) {
-      const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
-      initAdminUserCRUD();
-    }
-
-    // Inicialització d'estadístiques per a usuaris Premium i Admin
-    const userRole = getUserRole();
-    if (userRole === 'premium' || userRole === 'admin') {
-      const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
-      initEstadistiques();
-    } else {
-      // Eliminar físicament del DOM la secció i el botó del sidebar per evitar
-      // que un usuari pugui accedir-hi manipulant el DOM o la URL
-      document.getElementById('section-admin-users')?.remove();
-      document.querySelector('.sidebar-nav-item[data-section="admin-users"]')?.remove();
-
-      // Si algú ha manipulat la URL amb ?section=admin-users, redirigir a info
-      const sectionParam = new URLSearchParams(window.location.search).get('section');
-      if (sectionParam === 'admin-users') {
-        console.warn('[ParkLive] Role Guard: accés denegat a la secció admin-users.');
-        window.history.replaceState(null, '', window.location.pathname);
-      }
-    }
+    initAdminUserCRUD();
+    initAdminParkingCRUD();
+    initEstadistiques();
+    initProfilePointsSection();
+    initAdminBlog();
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'
@@ -537,7 +533,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       manage: 'Gestionar subscripció',
       // notifications: 'Notificacions',
       'admin-users': 'Admin: Gestió d\'Usuaris',
-      stadistics: 'Les teves estadístiques'
+      'admin-parkings': 'Admin: Gestió d\'Aparcaments',
+      'admin-blog': 'Admin: Gestió del Blog',
+      stadistics: 'Les teves estadístiques',
+      points: 'Canviar punts per recompenses'
     };
     sidebarBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -595,6 +594,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (stadisticsBtn) stadisticsBtn.style.display = 'none';
         }
 
+        // Amagar botó de punts per a administradors (només per a usuaris)
+        const pointsBtn = document.querySelector('.sidebar-nav-item[data-section="points"]');
+        if (userData.tipus_usuari === 'admin' && pointsBtn) {
+          pointsBtn.style.display = 'none';
+        }
+
         // Mostrar opcions d'administrador i ocultar coses d'usuari
         if (userData.tipus_usuari === 'admin') {
           document.querySelectorAll('.admin-only').forEach(el => {
@@ -602,7 +607,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           // Ocultar seccions que l'admin no necessita (reserves, historial, pagaments, estadístiques, favorits, etc.)
-          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics', 'favorites'];
+          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics', 'favorites', 'points'];
           sectionsToHide.forEach(sec => {
             const btn = document.querySelector(`.sidebar-nav-item[data-section="${sec}"]`);
             if (btn) btn.style.display = 'none';

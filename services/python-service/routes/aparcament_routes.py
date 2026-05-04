@@ -8,6 +8,7 @@ from controllers.aparcament_controller import (
     list_aparcaments_favorits_usuari,
     get_disponibilitat_franja,
 )
+from controllers.valoracio_controller import create_valoracio, update_user_valoracio
 
 
 aparcament_routes = Blueprint("aparcaments", __name__)
@@ -78,3 +79,16 @@ def add_usuari_favorit():
 def delete_usuari_favorit(aparcament_id):
     """Endpoint DELETE per eliminar un aparcament de favorits"""
     return remove_aparcament_favorit(aparcament_id)
+
+
+@aparcament_routes.route("/api/aparcaments/<int:id>/valoracions", methods=["POST"])
+def post_valoracio(id):
+    """Endpoint POST per crear una valoració per un aparcament"""
+    return create_valoracio(id)
+
+@aparcament_routes.route("/api/aparcaments/<int:id>/valoracions/<int:valoracio_id>", methods=["PUT"])
+def put_valoracio(id, valoracio_id):
+    """Endpoint PUT per actualitzar una valoració existent d'un aparcament"""
+    # Ensure the authenticated user is the owner; delegating logic to controller
+    return update_user_valoracio(id)
+

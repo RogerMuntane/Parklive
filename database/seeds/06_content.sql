@@ -18,7 +18,7 @@ VALUES (
         'Descobreix estratègies efectives per trobar aparcament ràpidament al centre de Barcelona',
         3,
         'consells',
-        '/blog/images/barcelona-parking-tips.jpg',
+        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
         TRUE,
         '2026-02-10 10:00:00',
         342
@@ -30,7 +30,7 @@ VALUES (
         'Com la mobilitat elèctrica està canviant els aparcaments a les ciutats catalanes',
         3,
         'sostenibilitat',
-        '/blog/images/electric-charging.jpg',
+        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
         TRUE,
         '2026-02-05 09:30:00',
         287
@@ -42,7 +42,7 @@ VALUES (
         'Presentem la nova funcionalitat de reserva express de Parklive',
         3,
         'novetats',
-        '/blog/images/reserva-rapida-feature.jpg',
+        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
         TRUE,
         '2026-02-18 11:00:00',
         521
@@ -54,7 +54,7 @@ VALUES (
         'Guia per evitar els errors més freqüents en les reserves d''aparcament',
         3,
         'consells',
-        '/blog/images/errors-reserva.jpg',
+        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
         TRUE,
         '2026-01-28 14:00:00',
         198
@@ -66,7 +66,7 @@ VALUES (
         'Tecnologies emergents que transformaran els aparcaments en els propers anys',
         3,
         'mobilitat',
-        '/blog/images/smart-parking-future.jpg',
+        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
         FALSE,
         NULL,
         0
@@ -115,7 +115,7 @@ VALUES (
     ),
     (
         'Com funciona el sistema de punts?',
-        'Guanyes punts per cada reserva completada, valoració deixada, o contribució validada. Els punts desbloquegen recompenses com descomptes, insignies i períodes Premium gratuïts.',
+        'Guanyes punts per cada reserva completada, valoració deixada i disponibilitat reportada a la comunitat. Els punts desbloquegen recompenses com descomptes, insignies i períodes Premium gratuïts.',
         'Gamificació',
         5,
         TRUE,
@@ -147,19 +147,11 @@ VALUES (
     ),
     (
         'Com puc contribuir amb informació sobre disponibilitat?',
-        'Des de l''app mòbil, pots reportar l''estat de disponibilitat dels aparcaments en temps real. Les contribucions validades et donen punts de gamificació.',
+        'Des de la nostra web, pots reportar l''estat de disponibilitat dels aparcaments en temps real. Les contribucions validades et donen punts de gamificació.',
         'Col·laboració',
         9,
         TRUE,
         178
-    ),
-    (
-        'On puc descarregar l''aplicació mòbil?',
-        'L''app de Parklive està disponible a l''App Store (iOS) i Google Play (Android). Cerca "Parklive" i descarrega-la gratuïtament. També pots usar la versió web des de qualsevol navegador.',
-        'General',
-        10,
-        TRUE,
-        712
     );
 
 -- 3. NOTIFICACIONS

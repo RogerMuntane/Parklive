@@ -587,6 +587,41 @@ def crear_reserva(data):
         """, (data_sortida, data_entrada, data['aparcament_id']))
         sync_cursor.close()
 
+        # ── Gestió de Descomptes (Gamificació) ───────────────────────────
+        recompensa_id = data.get('recompensa_id')
+        descompte_import = 0.0
+        
+        if recompensa_id:
+            cursor.execute("""
+                SELECT r.* FROM usuaris_recompenses ur
+                JOIN recompenses r ON ur.recompensa_id = r.id
+                WHERE ur.usuari_id = %s AND ur.recompensa_id = %s 
+                AND ur.utilitzada = FALSE AND r.tipus = 'descompte'
+            """, (data['usuari_id'], recompensa_id))
+            
+            recompensa = cursor.fetchone()
+            if recompensa:
+                import json
+                valor = json.loads(recompensa['valor']) if isinstance(recompensa['valor'], str) else recompensa['valor']
+                percentatge = valor.get('percentatge', 0)
+                
+                if percentatge > 0:
+                    descompte_import = float(data['preu_total']) * (percentatge / 100.0)
+                    # Arrodonir a 2 decimals
+                    descompte_import = round(descompte_import, 2)
+                    
+                    # Actualitzar preu_total en l'objecte data per al procedure
+                    # Nota: El preu_total que guardem a la BD ja hauria de ser el final
+                    data['preu_total'] = float(data['preu_total']) - descompte_import
+                    data['descompte_aplicat'] = descompte_import
+                    
+                    # Marcar com a utilitzada
+                    cursor.execute("""
+                        UPDATE usuaris_recompenses 
+                        SET utilitzada = TRUE, data_utilitzacio = NOW() 
+                        WHERE usuari_id = %s AND recompensa_id = %s
+                    """, (data['usuari_id'], recompensa_id))
+
         # Procedure equivalent: sp_crear_reserva(..., OUT reserva_id, OUT codi_reserva, OUT error_msg)
         proc_args = [
             data['usuari_id'],

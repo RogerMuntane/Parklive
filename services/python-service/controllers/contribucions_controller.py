@@ -66,7 +66,6 @@ def obtenir_contribucions_usuari():
 
     Query params:
     - usuari_id: ID de l'usuari (obligatori)
-    - validada: true/false (opcional)
     - limit: límit de resultats (opcional)
     - offset: offset per paginació (opcional)
     """
@@ -84,8 +83,6 @@ def obtenir_contribucions_usuari():
         # Construir filtres
         filters = {}
 
-        if request.args.get('validada'):
-            filters['validada'] = request.args.get('validada').lower() == 'true'
 
         if request.args.get('limit'):
             try:

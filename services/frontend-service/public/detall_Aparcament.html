@@ -106,14 +106,12 @@
 
             <!-- Descripció i Característiques -->
             <div class="card card-custom mb-4 p-4">
-              <!-- Etiqueta de tipus discreta -->
               <p class="text-muted small mb-3">
                 <span data-detall="tipus-text"></span>
               </p>
               <h3 class="mb-4 fw-bold">Sobre aquest aparcament</h3>
               <p class="lead text-muted mb-4" data-detall="descripcio">—</p>
 
-              <!-- Icones de característiques -->
               <div class="row g-4 text-center">
                 <div class="col-6 col-md-3" data-detall-feature="accessibilitat">
                   <div class="feature-icon">
@@ -133,10 +131,6 @@
                   </div>
                   <h6 class="mb-0">Videovigilància</h6>
                 </div>
-                <!-- <div class="col-6 col-md-3" data-detall-feature="obert_24h">
-                                    <div class="feature-icon"><i class="bi bi-clock"></i></div>
-                                    <h6 class="mb-0">Obert 24h</h6>
-                                </div> -->
                 <div class="col-6 col-md-3" data-detall-feature="altura_maxima">
                   <div class="feature-icon">
                     <i class="bi bi-arrows-expand"></i>
@@ -157,28 +151,54 @@
             </div>
 
             <!-- Valoracions -->
-            <div class="card card-custom p-4">
+            <div class="card card-custom mb-4 p-4">
               <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="mb-0 fw-bold">Ressenyes recents</h3>
-                <button class="btn btn-outline-primary btn-sm">
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#allReviewsModal">
                   Veure totes
                 </button>
               </div>
 
-              <!-- Contenidor per a les valoracions dinàmiques -->
               <div id="valoracions-container" data-detall-list="valoracions">
-                <!-- El JS injectarà les valoracions aquí -->
                 <div class="py-4 text-center text-muted">
                   <i class="bi bi-chat-left-text fs-2 d-block mb-2"></i>
                   <p>Encara no hi ha valoracions per aquest aparcament.</p>
                 </div>
+              </div>
+
+              <div id="add-review-section" class="mt-5 border-top pt-4" style="display: none;">
+                <h4 class="fw-bold mb-4">Deixa la teva opinió</h4>
+                <form id="review-form">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold small">Puntuació</label>
+                    <div class="star-rating fs-3 text-warning cursor-pointer" id="form-stars">
+                      <i class="bi bi-star" data-value="1"></i>
+                      <i class="bi bi-star" data-value="2"></i>
+                      <i class="bi bi-star" data-value="3"></i>
+                      <i class="bi bi-star" data-value="4"></i>
+                      <i class="bi bi-star" data-value="5"></i>
+                    </div>
+                    <input type="hidden" name="puntuacio" id="rating-input" value="0">
+                  </div>
+                  <div class="mb-3">
+                    <label for="review-comment" class="form-label fw-bold small">Comentari (opcional)</label>
+                    <textarea class="form-control" id="review-comment" name="comentari" rows="3" placeholder="Explica la teva experiència..."></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" id="btn-submit-review">
+                    PUBLICAR RESSENYA
+                  </button>
+                </form>
+              </div>
+
+              <div id="login-to-review" class="mt-5 border-top pt-4 text-center" style="display: none;">
+                <p class="text-muted mb-3">Inicia sessió per poder valorar aquest aparcament.</p>
+                <a href="/login.html" class="btn btn-outline-primary px-4">Inicia sessió</a>
               </div>
             </div>
           </div>
 
           <!-- ── Barra Lateral ───────────────────────────── -->
           <div class="col-lg-4">
-            <!-- Disponibilitat i Estat -->
             <div class="card card-custom mb-4 p-4 shadow-sm border-2 border-primary">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <span data-detall="estat-badge"></span>
@@ -193,28 +213,20 @@
                   Places lliures
                 </div>
               </div>
-
-              <!-- Barra de progres d'ocupació -->
               <div class="progress mb-2" style="height: 12px; border-radius: 6px">
                 <div class="progress-bar" role="progressbar" data-detall="progress-bar"
                   style="width: 0%; transition: width 0.6s ease" aria-valuenow="0" aria-valuemin="0"
                   aria-valuemax="100"></div>
               </div>
-
               <div class="d-flex justify-content-between text-muted small mb-4">
                 <span data-detall="places-totals">Capacitat: —</span>
                 <span data-detall="ocupacio-pct">—% ple</span>
               </div>
-
               <button class="btn btn-parklive-action btn-lg w-100 py-3 shadow-sm mb-3" data-detall="reserva-btn">
                 <i class="bi bi-calendar-check me-2"></i> RESERVA ARA
               </button>
-              <p class="text-center text-muted small mb-0">
-
-              </p>
             </div>
 
-            <!-- Tarifes -->
             <div class="card card-custom mb-4 p-4">
               <h4 class="fw-bold mb-4">Tarifes</h4>
               <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
@@ -237,11 +249,9 @@
               </div>
             </div>
 
-            <!-- Detalls del servei -->
             <div class="card card-custom p-4">
               <h4 class="fw-bold mb-4">Detalls del servei</h4>
               <ul class="list-unstyled mb-0">
-                <!-- Horari d'obertura -->
                 <li class="mb-3 d-flex align-items-start">
                   <i class="bi bi-clock-fill me-3 fs-4 text-primary flex-shrink-0"></i>
                   <div>
@@ -249,57 +259,55 @@
                     <div class="text-muted small" data-detall="horari-detail"></div>
                   </div>
                 </li>
-
-                <!-- Tipus (cobert / subterrani / aire lliure) -->
                 <li class="mb-3 d-flex align-items-start">
-                  <span data-detall="tipus-icon"><i
-                      class="bi bi-p-circle me-3 fs-4 text-primary flex-shrink-0"></i></span>
+                  <span data-detall="tipus-icon"><i class="bi bi-p-circle me-3 fs-4 text-primary flex-shrink-0"></i></span>
                   <div>
                     <div class="fw-bold" data-detall="tipus-label">—</div>
                     <div class="text-muted small" data-detall="tipus-detail"></div>
                   </div>
                 </li>
-
-                <!-- Altura màxima (opcional) -->
                 <li class="mb-3 d-flex align-items-start" data-detall-feature="altura-servei">
                   <i class="bi bi-arrows-expand me-3 fs-4 text-primary flex-shrink-0"></i>
                   <div>
                     <div class="fw-bold">Altura màxima</div>
-                    <div class="text-muted small" data-detall="altura-servei">
-                      —
-                    </div>
+                    <div class="text-muted small" data-detall="altura-servei">—</div>
                   </div>
                 </li>
-
-                <!-- Contacte Operador -->
                 <li class="mb-3 d-flex align-items-start">
                   <i class="bi bi-telephone-fill me-3 fs-4 text-primary flex-shrink-0"></i>
                   <div>
                     <div class="fw-bold">Contacte Operador</div>
-                    <div class="text-muted small" data-detall="telefon">
-                      —
-                    </div>
+                    <div class="text-muted small" data-detall="telefon">—</div>
                   </div>
                 </li>
-
-                <!-- Assegurança -->
                 <li class="d-flex align-items-start">
                   <i class="bi bi-shield-lock-fill me-3 fs-4 text-primary flex-shrink-0"></i>
                   <div>
                     <div class="fw-bold">Assegurança Inclosa</div>
-                    <div class="text-muted small">
-                      Protecció per a vehicles
-                    </div>
+                    <div class="text-muted small">Protecció per a vehicles</div>
                   </div>
                 </li>
               </ul>
             </div>
           </div>
-          <!-- /sidebar -->
         </div>
       </div>
     </div>
-    <!-- /content -->
+
+    <!-- Modal per a totes les ressenyes -->
+    <div class="modal fade" id="allReviewsModal" tabindex="-1" aria-labelledby="allReviewsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="allReviewsModalLabel">Totes les ressenyes</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tancar"></button>
+          </div>
+          <div class="modal-body" id="all-reviews-container">
+            <!-- Les ressenyes es carregaran dinàmicament aquí -->
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <div class="template-slot" data-template="components/footer.html" aria-label="Footer"></div>

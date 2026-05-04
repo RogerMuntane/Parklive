@@ -208,11 +208,10 @@ def get_contribucions_per_tipus(usuari_id):
         cursor.execute("""
             SELECT
                 estat_reportat AS tipus,
-                validada,
                 COUNT(*) AS count
             FROM contribucions
             WHERE usuari_id = %s
-            GROUP BY estat_reportat, validada
+            GROUP BY estat_reportat
             ORDER BY estat_reportat
         """, (usuari_id,))
 
@@ -220,7 +219,6 @@ def get_contribucions_per_tipus(usuari_id):
         return [
             {
                 'tipus': r['tipus'],
-                'validada': bool(r['validada']),
                 'count': int(r['count'])
             }
             for r in rows
@@ -325,8 +323,7 @@ def get_dades_detall(usuari_id):
 
         cursor.execute("""
             SELECT
-                COUNT(*) AS total_contribucions,
-                SUM(CASE WHEN validada = TRUE THEN 1 ELSE 0 END) AS validades
+                COUNT(*) AS total_contribucions
             FROM contribucions
             WHERE usuari_id = %s
         """, (usuari_id,))
@@ -348,7 +345,6 @@ def get_dades_detall(usuari_id):
             'durada_mitja_minuts': round(durada_min, 0),
             'durada_mitja_fmt': f"{hores}h {minuts:02d}min",
             'total_contribucions': int(contrib_stats['total_contribucions']),
-            'contribucions_validades': int(contrib_stats['validades'] or 0),
             'valoracio_mitja': round(float(val_stats['valoracio_mitja']), 1),
         }
     finally:
