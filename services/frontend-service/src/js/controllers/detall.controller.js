@@ -12,6 +12,7 @@ import {
   isFavoriteParking,
   toggleFavoriteParking,
 } from './favorits.service.js';
+import { PHP_API_URL } from '../config.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -298,6 +299,9 @@ function renderDetall(a) {
   }
   /* ── Valoracions (Ressenyes) ─────────────────────────────────── */
   renderValoracions(a.valoracions || []);
+
+  /* ── Imatges (Carrusel) ──────────────────────────────────────── */
+  renderCarousel(a.fotos || []);
 }
 
 /* ------------------------------------------------------------------ */
@@ -468,6 +472,54 @@ function renderValoracions(valoracions) {
       allReviewsModalContainer.insertAdjacentHTML('beforeend', reviewHtml);
     }
   });
+}
+
+/** Renderitza el carrusel d'imatges */
+function renderCarousel(fotos) {
+  const container = document.querySelector('#parkingCarousel .carousel-inner');
+  const prevBtn = document.querySelector('#parkingCarousel .carousel-control-prev');
+  const nextBtn = document.querySelector('#parkingCarousel .carousel-control-next');
+  
+  if (!container) return;
+
+  const defaultImages = [
+    "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=1200&h=600",
+    "https://images.unsplash.com/photo-1590674867551-11c3a2df5dc4?auto=format&fit=crop&q=80&w=1200&h=600"
+  ];
+
+  let imagesToRender = defaultImages;
+  
+  if (fotos && fotos.length > 0) {
+    imagesToRender = fotos.map(f => {
+      let url = f.url;
+      if (url && !url.startsWith('http') && !url.startsWith('data:')) {
+        if (url.startsWith('/')) {
+            url = PHP_API_URL + url;
+        } else {
+            if (!url.includes('/')) {
+                url = PHP_API_URL + '/uploads/parkings/' + url;
+            } else {
+                url = PHP_API_URL + '/' + url;
+            }
+        }
+      }
+      return url || defaultImages[0];
+    });
+  }
+
+  container.innerHTML = imagesToRender.map((url, index) => `
+    <div class="carousel-item ${index === 0 ? 'active' : ''}">
+      <img src="${esc(url)}" class="d-block w-100 object-fit-cover" style="height: 600px; max-height: 60vh;" alt="Imatge de l'aparcament" />
+    </div>
+  `).join('');
+
+  if (imagesToRender.length <= 1) {
+    if (prevBtn) prevBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'none';
+  } else {
+    if (prevBtn) prevBtn.style.display = '';
+    if (nextBtn) nextBtn.style.display = '';
+  }
 }
 
 /* ------------------------------------------------------------------ */

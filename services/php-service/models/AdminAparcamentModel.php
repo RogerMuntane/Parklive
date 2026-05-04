@@ -142,9 +142,14 @@ class AdminAparcamentModel
             throw new Exception("No s'ha trobat el directori base de storage.");
         }
 
-        $parkingDir = $baseStoragePath . '/aparcaments/' . (int)$parkingId;
+        $aparcamentsBaseDir = $baseStoragePath . '/aparcaments';
+        if (!is_dir($aparcamentsBaseDir) && !@mkdir($aparcamentsBaseDir, 0755, true)) {
+            throw new Exception("No s'ha pogut crear el directori base 'aparcaments' a storage. Revisa els permisos.");
+        }
+
+        $parkingDir = $aparcamentsBaseDir . '/' . (int)$parkingId;
         if (!is_dir($parkingDir) && !@mkdir($parkingDir, 0755, true)) {
-            throw new Exception("No s'ha pogut crear el directori de les imatges de l'aparcament.");
+            throw new Exception("No s'ha pogut crear el directori per a l'aparcament " . (int)$parkingId . ". Revisa els permisos d'escriptura.");
         }
 
         $ordre = $existingCount + 1;

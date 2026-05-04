@@ -113,7 +113,12 @@ class AdminAparcamentController
         if ($result) {
             $this->respond(['success' => true, 'message' => 'Aparcament creat correctament', 'id' => $result]);
         } else {
-            $this->respond(['success' => false, 'errors' => $this->model->getErrors()], 500);
+            $errors = $this->model->getErrors();
+            $this->respond([
+                'success' => false,
+                'error' => !empty($errors) ? $errors[0] : 'Error en crear l\'aparcament',
+                'errors' => $errors
+            ], 500);
         }
     }
 
@@ -127,7 +132,12 @@ class AdminAparcamentController
         if ($result) {
             $this->respond(['success' => true, 'message' => 'Aparcament actualitzat correctament']);
         } else {
-            $this->respond(['success' => false, 'errors' => $this->model->getErrors()], 500);
+            $errors = $this->model->getErrors();
+            $this->respond([
+                'success' => false,
+                'error' => !empty($errors) ? $errors[0] : 'Error en actualitzar l\'aparcament',
+                'errors' => $errors
+            ], 500);
         }
     }
 
@@ -141,7 +151,12 @@ class AdminAparcamentController
         if ($result) {
             $this->respond(['success' => true, 'message' => 'Aparcament eliminat correctament']);
         } else {
-            $this->respond(['success' => false, 'errors' => $this->model->getErrors()], 500);
+            $errors = $this->model->getErrors();
+            $this->respond([
+                'success' => false,
+                'error' => !empty($errors) ? $errors[0] : 'Error en eliminar l\'aparcament',
+                'errors' => $errors
+            ], 500);
         }
     }
 

@@ -1,5 +1,6 @@
 import { pythonApi } from '../../api.js';
 import { isAuthenticated, showBootstrapAlert } from '../../utils.js';
+import { PHP_API_URL } from '../../config.js';
 import {
   loadFavoriteIds,
   toggleFavoriteParking,
@@ -424,7 +425,17 @@ function normalizeParking(raw, origin = null) {
     ratingSummary: formatRatingSummary(raw.valoracio_mitjana, raw.total_valoracions),
     isAccessible: Boolean(raw.accessibilitat),
     hasCctv: Boolean(raw.videovigilancia),
-    imageUrl: raw.foto_principal || raw.imatge_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80',
+    imageUrl: (() => {
+      let url = raw.foto_principal || raw.imatge_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80';
+      if (url && !url.startsWith('http') && !url.startsWith('data:')) {
+        if (url.startsWith('/')) {
+          url = PHP_API_URL + url;
+        } else {
+          url = PHP_API_URL + '/uploads/parkings/' + url;
+        }
+      }
+      return url;
+    })(),
     raw,
   };
 }

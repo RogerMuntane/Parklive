@@ -3,6 +3,53 @@ from shared.serializers import serialize_row, serialize_rows
 import math
 from datetime import datetime, timedelta
 
+def enrich_records_with_photos(records):
+    """Enriqueix una llista de registres d'aparcament amb la URL de la seva primera foto."""
+    if not records:
+        return records
+    
+    # Determinar si és una llista o un objecte sol (com el detall)
+    is_list = isinstance(records, list)
+    items = records if is_list else [records]
+    
+    # Obtenir els IDs dels aparcaments
+    ids = [item['id'] for item in items if 'id' in item and item.get('id')]
+    if not ids:
+        return records
+        
+    conn = get_new_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Aquesta subquery busca la URL de la primera foto per a cada ID d'aparcament
+        # Es basa en l'ordre i després en l'ID per consistència
+        placeholders = ','.join(['%s'] * len(ids))
+        query = f"""
+            SELECT f.aparcament_id, f.url
+            FROM fotografies_aparcaments f
+            INNER JOIN (
+                SELECT aparcament_id, MIN(ordre) as min_ordre
+                FROM fotografies_aparcaments
+                WHERE aparcament_id IN ({placeholders})
+                GROUP BY aparcament_id
+            ) m ON f.aparcament_id = m.aparcament_id AND f.ordre = m.min_ordre
+        """
+        
+        cursor.execute(query, ids)
+        photos_map = {row['aparcament_id']: row['url'] for row in cursor.fetchall()}
+        
+        for item in items:
+            if 'id' in item and item['id'] in photos_map:
+                item['foto_principal'] = photos_map[item['id']]
+                
+        return records
+    except Exception as e:
+        print(f"[ParkLive] Error enriquint registres amb fotos: {e}")
+        return records
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 def get_all_aparcaments():
     """Obté tots els aparcaments de la base de dades"""
@@ -16,7 +63,7 @@ def get_all_aparcaments():
         for result in cursor.stored_results():
             aparcaments = result.fetchall()
             break
-        return serialize_rows(aparcaments)
+        return enrich_records_with_photos(serialize_rows(aparcaments))
     finally:
         cursor.close()
         conn.close()
@@ -125,7 +172,7 @@ def get_aparcaments_by_filters(filters):
 
             return {
                 'total': len(aparcaments),
-                'resultats': serialize_rows(aparcaments),
+                'resultats': enrich_records_with_photos(serialize_rows(aparcaments)),
                 'paginacio': {
                     'limit': limite,
                     'offset': offset,
@@ -308,7 +355,7 @@ def get_aparcaments_by_filters(filters):
         # Retornar resultats amb metadades de paginació
         return {
             'total': total,
-            'resultats': serialize_rows(aparcaments),
+            'resultats': enrich_records_with_photos(serialize_rows(aparcaments)),
             'paginacio': {
                 'limit': limite,
                 'offset': offset,
@@ -390,7 +437,7 @@ def get_user_favorite_parkings(usuari_id, limit=1000, offset=0):
             if rows:
                 favorits.extend(rows)
 
-        return serialize_rows(favorits)
+        return enrich_records_with_photos(serialize_rows(favorits))
     finally:
         cursor.close()
         conn.close()
