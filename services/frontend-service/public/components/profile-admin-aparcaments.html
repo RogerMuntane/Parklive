@@ -93,7 +93,7 @@
             <form id="form-parking">
                 <div class="modal-body p-4">
                     <input type="hidden" name="parking-id" id="parking-id">
-                    
+
                     <div class="row g-3">
                         <div class="col-md-8">
                             <label class="form-label small fw-bold">Nom de l'Aparcament</label>
@@ -110,7 +110,7 @@
                                 <option value="parking_privat">Privat</option>
                             </select>
                         </div>
-                        
+
                         <div class="col-md-9">
                             <label class="form-label small fw-bold">Adreça</label>
                             <input type="text" class="form-control" name="adreca" required placeholder="Carrer, número, planta...">
@@ -119,7 +119,7 @@
                             <label class="form-label small fw-bold">Codi Postal</label>
                             <input type="text" class="form-control" name="codi_postal" placeholder="08001">
                         </div>
-                        
+
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Ciutat</label>
                             <input type="text" class="form-control" name="ciutat" required placeholder="Barcelona">
@@ -132,7 +132,7 @@
                             <label class="form-label small fw-bold">Longitud</label>
                             <input type="number" step="0.00000001" class="form-control" name="longitud" required placeholder="2.173403">
                         </div>
-                        
+
                         <div class="col-md-3">
                             <label class="form-label small fw-bold">Capacitat Total</label>
                             <input type="number" class="form-control" name="capacitat_total" required min="1">
@@ -186,6 +186,19 @@
                                 <label class="form-check-label small" for="check-ver">Verificat</label>
                             </div>
                         </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Imatges de l'aparcament (màxim 10)</label>
+                                <input
+                                    type="file"
+                                    class="form-control"
+                                    id="parking-images"
+                                    name="parking_images[]"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    multiple>
+                                <div class="form-text">
+                                    Pots pujar fins a 10 imatges en format JPG, PNG o WebP (màxim 5MB per imatge).
+                                </div>
+                            </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top border-light p-3">
