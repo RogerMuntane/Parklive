@@ -1,27 +1,44 @@
 <?php
 
-// CORS: orígens permesos via variable d'entorn ALLOWED_ORIGINS (llista separada per comes)
-// En producció, definir ALLOWED_ORIGINS al .env. En dev, fallback a localhost si APP_ENV != 'production'.
+// ====================================================================
+// CORS Configuration – Robusta per a entorns Docker
+// ====================================================================
+// Permet requests cross-origin del frontend (localhost:3000)
+// als ports 8080 (PHP) i 5000 (Python Flask)
+
+$corsOrigin = null;
+
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     $origin = $_SERVER['HTTP_ORIGIN'];
-    $allowedOrigins = array_filter(array_map('trim', explode(',', getenv('ALLOWED_ORIGINS') ?: '')));
 
-    // Fallback segur per a entorns de dev: permet localhost NOMÉS si no estem en producció
-    if (empty($allowedOrigins) && getenv('APP_ENV') !== 'production') {
-        if (preg_match('/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/', $origin)) {
-            $allowedOrigins[] = $origin;
+    // 1. Intenta llegir ALLOWED_ORIGINS de .env (via $_ENV o getenv)
+    $envOrigins = getenv('ALLOWED_ORIGINS');
+    if ($envOrigins) {
+        $allowedOrigins = array_filter(array_map('trim', explode(',', $envOrigins)));
+        if (in_array($origin, $allowedOrigins, true)) {
+            $corsOrigin = $origin;
         }
     }
 
-    if (in_array($origin, $allowedOrigins, true)) {
-        header("Access-Control-Allow-Origin: $origin");
+    // 2. Fallback segur: localhost en dev (si no estem en production)
+    if (!$corsOrigin && getenv('APP_ENV') !== 'production') {
+        // Permet qualsevol localhost (localhost:3000, 127.0.0.1:3000, etc.)
+        if (preg_match('/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/', $origin)) {
+            $corsOrigin = $origin;
+        }
+    }
+
+    // 3. Enviar headers si l'origen és permès
+    if ($corsOrigin) {
+        header("Access-Control-Allow-Origin: $corsOrigin");
         header("Access-Control-Allow-Credentials: true");
-        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN");
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN, Accept");
+        header("Access-Control-Max-Age: 86400");
     }
 }
 
-// CORS pre-flight en PHP per si Apache falla
+// CORS pre-flight (OPTIONS requests)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -121,12 +138,12 @@ if (isset($routes[$route])) {
     if (isset($routes[$route][$method])) {
         $handler = $routes[$route][$method];
         require_once __DIR__ . '/' . $handler['file'];
-        
+
         // Ara la instanciem
         $className = $handler['class'];
         $controller = new $className();
-        
-        // Si hem definit una acció específica, cridem-la, 
+
+        // Si hem definit una acció específica, cridem-la,
         // sinó el constructor ho està fent (antic comportament).
         if (isset($handler['action']) && method_exists($controller, $handler['action'])) {
             $action = $handler['action'];
