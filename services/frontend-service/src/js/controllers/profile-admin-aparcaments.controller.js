@@ -4,7 +4,7 @@
  * Gestiona el CRUD d'aparcaments per a administradors.
  */
 
-import { phpApi } from '../api.js';
+import { pythonApi } from '../api.js';
 import { showBootstrapAlert } from '../utils.js';
 
 const MAX_PARKING_IMAGES = 10;
@@ -106,7 +106,7 @@ async function loadParkings(page = 1) {
             limit: 10
         };
 
-        const result = await phpApi.get(`/api/admin/aparcaments`, queryParams);
+        const result = await pythonApi.get(`/api/admin/aparcaments`, queryParams);
 
         if (result.success) {
             renderParkings(result.data);
@@ -134,7 +134,16 @@ function renderParkings(parkings) {
         return;
     }
 
-    tableBody.innerHTML = parkings.map(p => `
+    tableBody.innerHTML = parkings.map(p => {
+        const estatColors = {
+            'actiu': 'bg-success text-white',
+            'inactiu': 'bg-secondary text-white',
+            'manteniment': 'bg-warning text-dark',
+            'complet': 'bg-danger text-white'
+        };
+        const badgeColor = estatColors[p.estat] || 'bg-light text-dark border';
+
+        return `
         <tr>
             <td class="ps-3">
                 <div class="fw-bold">${p.nom}</div>
@@ -151,7 +160,7 @@ function renderParkings(parkings) {
                 <div class="text-secondary x-small">places</div>
             </td>
             <td>
-                <span class="badge rounded-pill px-2 py-1 x-small fw-medium badge-status-${p.estat}">
+                <span class="badge rounded-pill px-2 py-1 x-small fw-medium ${badgeColor}">
                     ${p.estat.toUpperCase()}
                 </span>
             </td>
@@ -164,7 +173,7 @@ function renderParkings(parkings) {
                 </button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function renderPagination(pagination) {
@@ -273,7 +282,7 @@ async function handleFormSubmit(e) {
     const urlParams = `?action=${action}${isEdit ? '&id=' + id : ''}`;
 
     try {
-        const result = await phpApi.postForm(`/api/admin/aparcaments${urlParams}`, payload);
+        const result = await pythonApi.postForm(`/api/admin/aparcaments${urlParams}`, payload);
 
         if (result.success) {
             const modalEl = document.getElementById('modal-parking');
@@ -376,7 +385,7 @@ window.deleteParking = function (id) {
 
 async function performDelete(id) {
     try {
-        const result = await phpApi.post(`/api/admin/aparcaments?action=delete&id=${id}`, {});
+        const result = await pythonApi.post(`/api/admin/aparcaments?action=delete&id=${id}`, {});
 
         if (result.success) {
             loadParkings();

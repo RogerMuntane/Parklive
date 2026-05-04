@@ -130,20 +130,10 @@ $routes = [
             'class' => 'AdminUserController',
             'action' => 'processRequest'
         ]
-    ],
-    'api/admin/aparcaments' => [
-        'GET' => [
-            'file' => 'controllers/AdminAparcamentController.php',
-            'class' => 'AdminAparcamentController',
-            'action' => 'processRequest'
-        ],
-        'POST' => [
-            'file' => 'controllers/AdminAparcamentController.php',
-            'class' => 'AdminAparcamentController',
-            'action' => 'processRequest'
-        ]
     ]
+    // DEPRECATED: Admin parking CRUD moved to Python backend (/api/admin/aparcaments on port 5000)
 ];
+// Note: AdminAparcamentController.php and AdminAparcamentModel.php have been removed
 
 // Comprovar si existeix la ruta
 if (isset($routes[$route])) {
