@@ -1,11 +1,15 @@
 /**
  * ParkLive – profile-admin-aparcaments.controller.js
- * 
+ *
  * Gestiona el CRUD d'aparcaments per a administradors.
  */
 
 import { phpApi } from '../api.js';
 import { showBootstrapAlert } from '../utils.js';
+
+const MAX_PARKING_IMAGES = 10;
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export function initAdminParkingCRUD() {
     const section = document.getElementById('section-admin-parkings');
@@ -20,7 +24,15 @@ export function initAdminParkingCRUD() {
     document.getElementById('filter-parking-status')?.addEventListener('change', () => loadParkings());
     document.getElementById('form-parking')?.addEventListener('submit', handleFormSubmit);
     document.getElementById('btn-add-parking')?.addEventListener('click', resetForm);
-    
+
+    document.getElementById('parking-images')?.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > MAX_PARKING_IMAGES) {
+            showBootstrapAlert('danger', `Només pots seleccionar fins a ${MAX_PARKING_IMAGES} imatges`);
+            e.target.value = '';
+        }
+    });
+
     // Validació interactiva: si obert_24h està marcat, deshabilitar horaris
     const check24h = document.getElementById('check-24h');
     if (check24h) {
@@ -28,7 +40,7 @@ export function initAdminParkingCRUD() {
             const form = e.target.closest('form');
             const hObertura = form.querySelector('[name="horari_obertura"]');
             const hTancament = form.querySelector('[name="horari_tancament"]');
-            
+
             if (e.target.checked) {
                 hObertura.value = '';
                 hTancament.value = '';
@@ -209,37 +221,48 @@ function renderPagination(pagination) {
 async function handleFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
-    const formData = new FormData(form);
-    const id = formData.get('parking-id');
-    
-    // Convertir dades del formulari a objecte JSON, manejant els checkboxes
-    const data = {};
-    formData.forEach((value, key) => {
-        if (key === 'parking-id') return;
-        data[key] = value;
-    });
-    
-    // Afegir checkboxes explícitament ja que FormData només els inclou si estan checked
-    data.obert_24h = form.querySelector('[name="obert_24h"]').checked;
-    data.accessibilitat = form.querySelector('[name="accessibilitat"]').checked;
-    data.verificat = form.querySelector('[name="verificat"]').checked;
+    const payload = new FormData(form);
+    const id = payload.get('parking-id');
+    payload.delete('parking-id');
+
+    payload.set('obert_24h', form.querySelector('[name="obert_24h"]').checked ? '1' : '0');
+    payload.set('accessibilitat', form.querySelector('[name="accessibilitat"]').checked ? '1' : '0');
+    payload.set('verificat', form.querySelector('[name="verificat"]').checked ? '1' : '0');
 
     // VALIDACIONS CLIENT-SIDE
-    const capTotal = parseInt(data.capacitat_total) || 0;
-    const placesDisp = parseInt(data.places_disponibles) || 0;
+    const capTotal = parseInt(payload.get('capacitat_total')) || 0;
+    const placesDisp = parseInt(payload.get('places_disponibles')) || 0;
 
     if (placesDisp > capTotal) {
         showBootstrapAlert('danger', 'Les places disponibles no poden ser superiors a la capacitat total');
         return;
     }
 
-    if (data.obert_24h) {
+    const files = Array.from(form.querySelector('#parking-images')?.files || []);
+
+    if (files.length > MAX_PARKING_IMAGES) {
+        showBootstrapAlert('danger', `Només pots pujar fins a ${MAX_PARKING_IMAGES} imatges`);
+        return;
+    }
+
+    for (const file of files) {
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            showBootstrapAlert('danger', `Format no permès: ${file.name}. Només JPG, PNG o WebP`);
+            return;
+        }
+        if (file.size > MAX_IMAGE_SIZE_BYTES) {
+            showBootstrapAlert('danger', `La imatge ${file.name} supera els 5MB`);
+            return;
+        }
+    }
+
+    if (payload.get('obert_24h') === '1') {
         // Si és 24h, forcem horaris buits
-        data.horari_obertura = null;
-        data.horari_tancament = null;
+        payload.set('horari_obertura', '');
+        payload.set('horari_tancament', '');
     } else {
         // Si no és 24h, ambdós horaris han d'estar definits
-        if (!data.horari_obertura || !data.horari_tancament) {
+        if (!payload.get('horari_obertura') || !payload.get('horari_tancament')) {
             showBootstrapAlert('danger', 'Si l\'aparcament no és 24h, has d\'especificar l\'horari d\'obertura i tancament');
             return;
         }
@@ -250,7 +273,7 @@ async function handleFormSubmit(e) {
     const urlParams = `?action=${action}${isEdit ? '&id=' + id : ''}`;
 
     try {
-        const result = await phpApi.post(`/api/admin/aparcaments${urlParams}`, data);
+        const result = await phpApi.postForm(`/api/admin/aparcaments${urlParams}`, payload);
 
         if (result.success) {
             const modalEl = document.getElementById('modal-parking');
@@ -283,7 +306,7 @@ function resetForm() {
 window.editParking = function (p) {
     const form = document.getElementById('form-parking');
     if (!form) return;
-    
+
     // Reset modal state
     form.reset();
     document.getElementById('parking-id').value = p.id;
@@ -334,7 +357,7 @@ window.editParking = function (p) {
     form.querySelector('[name="estat"]').value = p.estat;
     form.querySelector('[name="horari_obertura"]').value = p.horari_obertura || '';
     form.querySelector('[name="horari_tancament"]').value = p.horari_tancament || '';
-    
+
     form.querySelector('[name="obert_24h"]').checked = !!parseInt(p.obert_24h);
     form.querySelector('[name="accessibilitat"]').checked = !!parseInt(p.accessibilitat);
     form.querySelector('[name="verificat"]').checked = !!parseInt(p.verificat);

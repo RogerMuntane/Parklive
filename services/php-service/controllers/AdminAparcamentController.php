@@ -15,7 +15,7 @@ class AdminAparcamentController
     {
         $usuari = AuthMiddleware::obtenirUsuariAutenticat();
         if (!$usuari || !isset($usuari['tipus_usuari'])) return false;
-        
+
         $rol = strtolower($usuari['tipus_usuari']);
         return $rol === 'administrador' || $rol === 'admin';
     }
@@ -37,14 +37,14 @@ class AdminAparcamentController
                 $search = trim($_GET['search'] ?? '');
                 $type = trim($_GET['type'] ?? '');
                 $status = trim($_GET['status'] ?? '');
-                
+
                 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
                 $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
                 $offset = ($page - 1) * $limit;
 
                 $total = $this->model->getTotalAparcamentsCount($search, $type, $status);
                 $parkings = $this->model->getAllAparcaments($search, $type, $status, $limit, $offset);
-                
+
                 if (!empty($this->model->getErrors())) {
                     $this->respond([
                         'success' => false,
@@ -56,7 +56,7 @@ class AdminAparcamentController
                 $totalPages = ceil($total / $limit);
 
                 $this->respond([
-                    'success' => true, 
+                    'success' => true,
                     'data' => $parkings,
                     'pagination' => [
                         'total' => $total,
@@ -68,13 +68,27 @@ class AdminAparcamentController
                 break;
 
             case 'POST':
-                $data = json_decode(file_get_contents('php://input'), true);
-                
+                $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+                $isMultipart = stripos($contentType, 'multipart/form-data') !== false;
+
+                if ($isMultipart) {
+                    $data = $_POST;
+                } else {
+                    $data = json_decode(file_get_contents('php://input'), true);
+                }
+
+                if (!is_array($data)) {
+                    $data = [];
+                }
+
+                $uploadedImages = $_FILES['parking_images'] ?? null;
+                $userId = AuthMiddleware::obtenirIdUsuari();
+
                 if ($action === 'create') {
-                    $this->handleCreate($data);
+                    $this->handleCreate($data, $uploadedImages, $userId);
                 } elseif ($action === 'update') {
                     $id = $_GET['id'] ?? null;
-                    $this->handleUpdate($id, $data);
+                    $this->handleUpdate($id, $data, $uploadedImages, $userId);
                 } elseif ($action === 'delete') {
                     $id = $_GET['id'] ?? null;
                     $this->handleDelete($id);
@@ -89,13 +103,13 @@ class AdminAparcamentController
         }
     }
 
-    private function handleCreate($data)
+    private function handleCreate($data, $uploadedImages = null, $userId = null)
     {
         if (empty($data['nom']) || empty($data['tipus']) || empty($data['adreca']) || empty($data['latitud']) || empty($data['longitud'])) {
             $this->respond(['success' => false, 'error' => 'Falten dades obligatòries'], 400);
         }
 
-        $result = $this->model->createAparcament($data);
+        $result = $this->model->createAparcament($data, $uploadedImages, $userId);
         if ($result) {
             $this->respond(['success' => true, 'message' => 'Aparcament creat correctament', 'id' => $result]);
         } else {
@@ -103,13 +117,13 @@ class AdminAparcamentController
         }
     }
 
-    private function handleUpdate($id, $data)
+    private function handleUpdate($id, $data, $uploadedImages = null, $userId = null)
     {
         if (!$id) {
             $this->respond(['success' => false, 'error' => 'ID d\'aparcament no proporcionat'], 400);
         }
 
-        $result = $this->model->updateAparcament($id, $data);
+        $result = $this->model->updateAparcament($id, $data, $uploadedImages, $userId);
         if ($result) {
             $this->respond(['success' => true, 'message' => 'Aparcament actualitzat correctament']);
         } else {
