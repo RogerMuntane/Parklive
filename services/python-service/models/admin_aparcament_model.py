@@ -1,6 +1,8 @@
 """
 Model per gestionar operacions administratives dels aparcaments.
 Inclou CRUD, validacions de fotos i transaccions.
+Les imatges de parkings passen per Cloudinary per ser optimitzades (q_auto, f_webp)
+i es guarden localment un cop descarregades. L'espai al núvol s'allibera immediatament.
 """
 
 from models.db_connection import get_new_connection
@@ -8,6 +10,22 @@ from shared.serializers import serialize_rows
 import os
 from pathlib import Path
 import hashlib
+import cloudinary.uploader
+import requests as http_requests
+import logging
+from PIL import Image
+
+# Configurar logger per a fallades de Cloudinary
+log_file = Path(__file__).parent.parent.parent / "logs" / "image_processing.log"
+# Ens assegurem que el directori existeix (tot i que ja hauria d'existir)
+log_file.parent.mkdir(parents=True, exist_ok=True)
+
+logging.basicConfig(
+    filename=str(log_file),
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 MAX_PARKING_IMAGES = 10
 MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
@@ -264,18 +282,20 @@ def save_parking_images(parking_id, files, user_id=None):
     if not files:
         return []
 
-    # Normalitzar a llista si és un dict multipart
+    # Normalitzar a llista si és un dict multipart de Flask (ImmutableMultiDict)
+    # IMPORTANT: usar getlist() és obligatori per obtenir TOTS els fitxers amb el
+    # mateix nom de camp. Amb files['parking_images[]'] Flask retorna només el primer.
     files_list = []
-    if isinstance(files, dict) and 'parking_images[]' in files:
+    if hasattr(files, 'getlist'):
+        # Flask ImmutableMultiDict: getlist() retorna tots els fitxers del camp
+        files_list = files.getlist('parking_images[]')
+    elif isinstance(files, dict) and 'parking_images[]' in files:
         file_obj = files['parking_images[]']
-        if isinstance(file_obj, list):
-            files_list = file_obj
-        else:
-            files_list = [file_obj]
+        files_list = file_obj if isinstance(file_obj, list) else [file_obj]
     elif isinstance(files, list):
         files_list = files
 
-    # Filtrar fitxers buits
+    # Filtrar fitxers buits o sense nom
     files_list = [f for f in files_list if f and f.filename]
 
     if not files_list:
@@ -327,38 +347,66 @@ def save_parking_images(parking_id, files, user_id=None):
                     f"La imatge {file_obj.filename} supera la mida màxima de 5MB."
                 )
 
-            # Generar nom únic i segur
-            ext_map = {
-                'image/jpeg': 'jpg',
-                'image/png': 'png',
-                'image/webp': 'webp'
-            }
-            ext = ext_map.get(mime_type, 'jpg')
-
-            # Nom: parking_{id}_{hash_aleatori}.{ext}
+            # Nom local: sempre .webp (Cloudinary la convertirà i descarregarem el resultat)
             random_hash = hashlib.md5(
                 f"{parking_id}_{ordre}_{file_size}".encode()
             ).hexdigest()[:8]
-            safe_filename = f"parking_{parking_id}_{random_hash}.{ext}"
-
-            # Guardar fitxer
+            safe_filename = f"parking_{parking_id}_{random_hash}.webp"
             target_path = parking_dir / safe_filename
-            file_obj.save(str(target_path))
-
-            # Inserir registre a BD
             relative_url = f"/storage/aparcaments/{parking_id}/{safe_filename}"
+            cloud_public_id = f"parklive_tmp/parking_{parking_id}_{random_hash}"
 
+            try:
+                try:
+                    # 1. Pujar a Cloudinary → transformació q_auto + f_webp
+                    file_obj.seek(0)
+                    upload_result = cloudinary.uploader.upload(
+                        file_obj,
+                        public_id=cloud_public_id,
+                        overwrite=True,
+                        resource_type='image',
+                        format='webp',
+                        transformation=[{'quality': 'auto', 'fetch_format': 'webp'}]
+                    )
+                    optimized_url = upload_result.get('secure_url')
+
+                    # 2. Descarregar la versió optimitzada i desar localment
+                    img_response = http_requests.get(optimized_url, timeout=30)
+                    img_response.raise_for_status()
+                    with open(target_path, 'wb') as out_file:
+                        out_file.write(img_response.content)
+
+                except Exception as cloud_err:
+                    # FALLBACK: Si falla Cloudinary, optimitzem localment amb Pillow
+                    logger.error(f"Error Cloudinary (parking {parking_id}): {str(cloud_err)}")
+                    
+                    file_obj.seek(0)
+                    img = Image.open(file_obj)
+                    
+                    # Convertir a RGB/RGBA si cal per desar com a WebP
+                    if img.mode in ("RGBA", "P"):
+                        img = img.convert("RGBA")
+                    else:
+                        img = img.convert("RGB")
+                    
+                    # Desar localment com a WebP optimitzat
+                    img.save(target_path, "WEBP", quality=80)
+            finally:
+                # 3. JA NO esborrem de Cloudinary per mantenir una còpia al núvol
+                # L'espai s'anirà ocupant, però així es manté el backup demanat.
+                pass
+
+            # 4. Inserir registre a BD amb la ruta local
             query = """
                 INSERT INTO fotografies_aparcaments
                 (aparcament_id, usuari_id, url, verificada, ordre)
                 VALUES (%s, %s, %s, %s, %s)
             """
-
             cursor.execute(query, (
                 parking_id,
                 user_id,
                 relative_url,
-                1,  # verificada=true
+                1,  # verificada=true per imatges d'admin
                 ordre
             ))
 

@@ -17,11 +17,20 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import sys
 import os
+import cloudinary
 
 # Carregar variables d'entorn des del fitxer .env (a l'arrel o al directori actual)
 # Primer busquem a l'arrel del projecte (un nivell amunt del servei) i després al directori actual
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
 load_dotenv()
+
+# Inicialitzar Cloudinary per a l'optimització d'imatges
+cloudinary.config(
+    cloud_name=os.getenv('cloud_name'),
+    api_key=os.getenv('Cloudinary_API_KEY'),
+    api_secret=os.getenv('Cloudinary_API_Secret'),
+    secure=True
+)
 
 # Afegir el directori actual al PYTHONPATH
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -31,6 +40,21 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 if hasattr(app, 'json'):
     app.json.ensure_ascii = False
+
+# Registrar les rutes
+app.register_blueprint(aparcament_routes)
+app.register_blueprint(admin_aparcament_routes)
+app.register_blueprint(reset_routes)
+app.register_blueprint(reserves_routes)
+app.register_blueprint(contribucions_routes)
+app.register_blueprint(google_auth_routes)
+app.register_blueprint(stripe_routes)
+app.register_blueprint(report_disponibilitat_routes)
+app.register_blueprint(estadistiques_routes)
+app.register_blueprint(gamificacio_bp, url_prefix='/api/gamificacio')
+app.register_blueprint(faq_routes)
+app.register_blueprint(blog_routes)
+app.register_blueprint(suport_routes)
 
 # Habilitar CORS per permetre peticions del frontend amb credencials
 # Llegim els orígens permesos des de la variable d'entorn ALLOWED_ORIGINS (separats per comes).
@@ -52,22 +76,8 @@ else:
     # En producció sense ALLOWED_ORIGINS configurat: no es permet cap origen
     _allowed_origins = []
 
-CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": _allowed_origins}})
-
-# Registrar les rutes
-app.register_blueprint(aparcament_routes)
-app.register_blueprint(admin_aparcament_routes)
-app.register_blueprint(reset_routes)
-app.register_blueprint(reserves_routes)
-app.register_blueprint(contribucions_routes)
-app.register_blueprint(google_auth_routes)
-app.register_blueprint(stripe_routes)
-app.register_blueprint(report_disponibilitat_routes)
-app.register_blueprint(estadistiques_routes)
-app.register_blueprint(gamificacio_bp, url_prefix='/api/gamificacio')
-app.register_blueprint(faq_routes)
-app.register_blueprint(blog_routes)
-app.register_blueprint(suport_routes)
+# Apliquem CORS després de registrar els blueprints per assegurar que s'aplica a totes les rutes
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": _allowed_origins}})
 
 
 # Health check endpoint per Docker
@@ -89,8 +99,6 @@ def handle_exception(e):
     traceback.print_exc()
     return jsonify(error="Error intern del servidor", details=str(e)), 500
 
-
-from flask import Flask, jsonify, request
 
 @app.before_request
 def before_request():

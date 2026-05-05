@@ -483,6 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       initProfileInfoSaveForm,
       initProfilePlanSection,
       initProfileHistorySection,
+      initProfileTicketsSection,
       initProfileFavoritesSection,
       initProfileImageUpload,
       initProfilePointsSection
@@ -499,13 +500,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfileInfoSaveForm();
     initProfilePlanSection();
     initProfileHistorySection();
+    initProfileTicketsSection();
     initProfileFavoritesSection();
     initReserves();
-    initAdminUserCRUD();
-    initAdminParkingCRUD();
-    initEstadistiques();
-    initProfilePointsSection();
-    initAdminBlog();
+
+    // Només inicialitzar controladors d'admin si l'usuari és admin
+    if (hasRole('admin')) {
+      initAdminUserCRUD();
+      initAdminParkingCRUD();
+      initAdminBlog();
+    }
+
+    // Estadístiques només per a Premium (i no per admin segons la lògica de sidebar)
+    if (getUserRole() === 'premium') {
+      initEstadistiques();
+    }
+
+    // Punts i recompenses només per a usuaris (no admin)
+    if (getUserRole() !== 'admin') {
+      initProfilePointsSection();
+    }
 
     // Integració Stripe
     const userId = getUserId();  // sessionStorage → 'parklive_user_id'

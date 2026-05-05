@@ -227,9 +227,18 @@ function renderPagination(pagination) {
     });
 }
 
+let isSubmitting = false;
+
 async function handleFormSubmit(e) {
     e.preventDefault();
+
+    // Guardia anti-doble enviament (prevé crear N parkings per N imatges)
+    if (isSubmitting) return;
+
     const form = e.target;
+    const btn = document.getElementById('btn-save-parking');
+    const originalBtnHtml = btn?.innerHTML;
+
     const payload = new FormData(form);
     const id = payload.get('parking-id');
     payload.delete('parking-id');
@@ -268,11 +277,9 @@ async function handleFormSubmit(e) {
     }
 
     if (payload.get('obert_24h') === '1') {
-        // Si és 24h, forcem horaris buits
         payload.set('horari_obertura', '');
         payload.set('horari_tancament', '');
     } else {
-        // Si no és 24h, ambdós horaris han d'estar definits
         if (!payload.get('horari_obertura') || !payload.get('horari_tancament')) {
             showBootstrapAlert('danger', 'Si l\'aparcament no és 24h, has d\'especificar l\'horari d\'obertura i tancament');
             return;
@@ -282,6 +289,19 @@ async function handleFormSubmit(e) {
     const isEdit = !!id;
     const action = isEdit ? 'update' : 'create';
     const urlParams = `?action=${action}${isEdit ? '&id=' + id : ''}`;
+
+    // Bloquejar enviament i mostrar spinner
+    isSubmitting = true;
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('disabled', 'opacity-75');
+        const imageCount = files.length;
+        if (imageCount > 0) {
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Guardant i optimitzant ${imageCount} imatge(s)...`;
+        } else {
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Guardant...`;
+        }
+    }
 
     try {
         const result = await pythonApi.postForm(`/api/admin/aparcaments${urlParams}`, payload);
@@ -300,6 +320,14 @@ async function handleFormSubmit(e) {
         console.error('[ParkLive] Error en guardar aparcament:', err);
         const errorDetail = err.message || 'Error de connexió al servidor';
         showBootstrapAlert('danger', errorDetail);
+    } finally {
+        // Sempre restaurar el botó i alliberar el bloqueig
+        isSubmitting = false;
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('disabled', 'opacity-75');
+            btn.innerHTML = originalBtnHtml;
+        }
     }
 }
 

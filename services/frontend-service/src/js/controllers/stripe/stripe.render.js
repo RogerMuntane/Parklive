@@ -192,7 +192,7 @@ export function renderBasicPlanUI() {
  * 
  * @param {Object} subscription - Objecte amb dades de subscripció.
  * @param {Object} [primaryCard] - Targeta principal.
- * @param {Object} callbacks - Objecte amb callbacks (onAutorenewChange, onCancelClick).
+ * @param {Object} callbacks - Objecte amb callbacks (onAutorenewChange).
  */
 export function updateManageSectionUI(subscription, primaryCard, callbacks) {
     const manageSection = document.getElementById('section-manage');
@@ -304,14 +304,7 @@ export function updateManageSectionUI(subscription, primaryCard, callbacks) {
             : `Si desactives la renovació, mantindràs el pla Premium fins a l'<strong>${renewalDateStr}</strong>. Podràs tornar a activar-la quan vulguis.`;
     }
 
-    const cancelNotice = document.getElementById('cancel-notice');
-    if (cancelNotice) {
-        cancelNotice.textContent = `Mantindràs els avantatges fins a l'${renewalDateStr}. Després passaràs al pla gratuït automàticament.`;
-    }
 
-    // Modal date
-    const modalCancelDate = document.getElementById('modal-cancel-date');
-    if (modalCancelDate) modalCancelDate.textContent = renewalDateStr;
 
     // Callbacks listeners
     const autoRenewSwitch = document.getElementById('autoRenewSwitch');
@@ -340,10 +333,7 @@ export function updateManageSectionUI(subscription, primaryCard, callbacks) {
         };
     }
 
-    const btnCancel = document.getElementById('btn-cancel-subscription');
-    if (btnCancel) {
-        btnCancel.onclick = () => callbacks.onCancelClick();
-    }
+
 }
 
 /**
