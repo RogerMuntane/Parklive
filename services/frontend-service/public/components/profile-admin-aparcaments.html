@@ -176,26 +176,39 @@
                             <label class="form-label small fw-bold">Altura Màxima (m)</label>
                             <input type="number" step="0.01" class="form-control" name="altura_maxima" placeholder="2.10">
                         </div>
-                        <div class="col-md-9 d-flex align-items-end gap-3 pb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="obert_24h" id="check-24h">
-                                <label class="form-check-label small" for="check-24h">Obert 24h</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="accessibilitat" id="check-acc">
-                                <label class="form-check-label small" for="check-acc">Accessibilitat</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="carrega_electrica" id="check-elec">
-                                <label class="form-check-label small" for="check-elec">Càrrega Elèctrica</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="videovigilancia" id="check-video">
-                                <label class="form-check-label small" for="check-video">Videovigilància</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="verificat" id="check-ver">
-                                <label class="form-check-label small" for="check-ver">Verificat</label>
+                        <div class="col-12 mt-3 mb-2">
+                            <label class="form-label small fw-bold mb-3">Opcions Addicionals</label>
+                            <div class="row g-3">
+                                <div class="col-6 col-md-4">
+                                    <div class="form-check form-switch border rounded-3 p-3 bg-light d-flex align-items-center justify-content-between h-100">
+                                        <label class="form-check-label small fw-semibold mb-0 text-nowrap" for="check-24h">Obert 24h</label>
+                                        <input class="form-check-input m-0" type="checkbox" role="switch" name="obert_24h" id="check-24h">
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <div class="form-check form-switch border rounded-3 p-3 bg-light d-flex align-items-center justify-content-between h-100">
+                                        <label class="form-check-label small fw-semibold mb-0 text-nowrap" for="check-acc">Accessibilitat</label>
+                                        <input class="form-check-input m-0" type="checkbox" role="switch" name="accessibilitat" id="check-acc">
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <div class="form-check form-switch border rounded-3 p-3 bg-light d-flex align-items-center justify-content-between h-100">
+                                        <label class="form-check-label small fw-semibold mb-0 text-nowrap" for="check-elec">Càrrega Elèct.</label>
+                                        <input class="form-check-input m-0" type="checkbox" role="switch" name="carrega_electrica" id="check-elec">
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-6">
+                                    <div class="form-check form-switch border rounded-3 p-3 bg-light d-flex align-items-center justify-content-between h-100">
+                                        <label class="form-check-label small fw-semibold mb-0 text-nowrap" for="check-video">Videovigilància</label>
+                                        <input class="form-check-input m-0" type="checkbox" role="switch" name="videovigilancia" id="check-video">
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-6">
+                                    <div class="form-check form-switch border rounded-3 p-3 bg-light d-flex align-items-center justify-content-between h-100 border-primary-subtle">
+                                        <label class="form-check-label small fw-bold text-primary mb-0 text-nowrap" for="check-ver">Aparcament Verificat</label>
+                                        <input class="form-check-input m-0" type="checkbox" role="switch" name="verificat" id="check-ver">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                             <div class="col-12">

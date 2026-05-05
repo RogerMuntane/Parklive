@@ -67,7 +67,10 @@ function renderBlogTable() {
   document.querySelectorAll('.btn-delete-article').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const id = e.currentTarget.dataset.id;
-      deleteArticle(id);
+      document.getElementById('delete-blog-id').value = id;
+      const modalEl = document.getElementById('modal-delete-blog');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
     });
   });
 }
@@ -197,8 +200,6 @@ async function saveArticle(e) {
 }
 
 async function deleteArticle(id) {
-  if (!confirm('Estàs segur que vols eliminar aquest article de forma permanent?')) return;
-
   try {
     const response = await pythonApi.delete(`/api/blog/${id}`);
     if (response && response.success) {
@@ -234,6 +235,24 @@ export function initAdminBlog() {
           .replace(/[^\w-]+/g, '');
         slugInput.value = slug;
       }
+    });
+  }
+
+  const btnConfirmDelete = document.getElementById('btn-confirm-delete-blog');
+  if (btnConfirmDelete) {
+    btnConfirmDelete.addEventListener('click', async () => {
+      const id = document.getElementById('delete-blog-id').value;
+      const originalText = btnConfirmDelete.innerHTML;
+      btnConfirmDelete.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Eliminant...';
+      btnConfirmDelete.disabled = true;
+
+      await deleteArticle(id);
+
+      btnConfirmDelete.innerHTML = originalText;
+      btnConfirmDelete.disabled = false;
+      const modalEl = document.getElementById('modal-delete-blog');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
     });
   }
 

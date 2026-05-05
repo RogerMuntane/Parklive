@@ -24,7 +24,7 @@ def has_usuari_valorat(usuari_id, aparcament_id, conn=None):
         if local_conn:
             conn.close()
 
-def add_valoracio(usuari_id, aparcament_id, puntuacio, comentari=None):
+def add_valoracio(usuari_id, aparcament_id, puntuacio, comentari=None, aspectes_valorats=None, fotos_url=None):
     """
     Afegeix una nova valoració a la base de dades.
     """
@@ -40,10 +40,14 @@ def add_valoracio(usuari_id, aparcament_id, puntuacio, comentari=None):
             raise ValueError("Ja has valorat aquest aparcament anteriorment")
         
         query = """
-            INSERT INTO valoracions (usuari_id, aparcament_id, puntuacio, comentari)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO valoracions (usuari_id, aparcament_id, puntuacio, comentari, aspectes_valorats, fotos_url)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (usuari_id, aparcament_id, puntuacio, comentari))
+        import json
+        aspectes_json = json.dumps(aspectes_valorats) if aspectes_valorats else None
+        fotos_json = json.dumps(fotos_url) if fotos_url else None
+        
+        cursor.execute(query, (usuari_id, aparcament_id, puntuacio, comentari, aspectes_json, fotos_json))
         valoracio_id = cursor.lastrowid
         
         # Atorgar punts de gamificació (ex: 10 punts)

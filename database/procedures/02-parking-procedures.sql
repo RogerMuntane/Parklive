@@ -299,6 +299,7 @@ BEGIN
         v.puntuacio,
         v.comentari,
         v.aspectes_valorats,
+        v.fotos_url,
         v.util_count,
         v.created_at,
         u.nom as usuari_nom

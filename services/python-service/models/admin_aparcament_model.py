@@ -119,11 +119,11 @@ def create_aparcament(data):
             )
         """
 
-        obert_24h = 1 if data.get('obert_24h') else 0
-        accessibilitat = 1 if data.get('accessibilitat') else 0
-        carrega_electrica = 1 if data.get('carrega_electrica') else 0
-        videovigilancia = 1 if data.get('videovigilancia') else 0
-        verificat = 1 if data.get('verificat') else 0
+        obert_24h = 1 if str(data.get('obert_24h', '0')) == '1' else 0
+        accessibilitat = 1 if str(data.get('accessibilitat', '0')) == '1' else 0
+        carrega_electrica = 1 if str(data.get('carrega_electrica', '0')) == '1' else 0
+        videovigilancia = 1 if str(data.get('videovigilancia', '0')) == '1' else 0
+        verificat = 1 if str(data.get('verificat', '0')) == '1' else 0
 
         capacitat_total = int(data.get('capacitat_total', 0))
         places_disponibles = int(data.get('places_disponibles', capacitat_total))
@@ -184,11 +184,11 @@ def update_aparcament(parking_id, data):
             WHERE id = %s
         """
 
-        obert_24h = 1 if data.get('obert_24h') else 0
-        accessibilitat = 1 if data.get('accessibilitat') else 0
-        carrega_electrica = 1 if data.get('carrega_electrica') else 0
-        videovigilancia = 1 if data.get('videovigilancia') else 0
-        verificat = 1 if data.get('verificat') else 0
+        obert_24h = 1 if str(data.get('obert_24h', '0')) == '1' else 0
+        accessibilitat = 1 if str(data.get('accessibilitat', '0')) == '1' else 0
+        carrega_electrica = 1 if str(data.get('carrega_electrica', '0')) == '1' else 0
+        videovigilancia = 1 if str(data.get('videovigilancia', '0')) == '1' else 0
+        verificat = 1 if str(data.get('verificat', '0')) == '1' else 0
 
         capacitat_total = int(data.get('capacitat_total', 0))
         places_disponibles = int(data.get('places_disponibles', capacitat_total))

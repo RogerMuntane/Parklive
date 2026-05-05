@@ -37,12 +37,11 @@
                         <form id="form-valoracio">
                             <!-- Selecció de l'aparcament (Info) -->
                             <div class="d-flex align-items-center gap-3 mb-5 p-3 bg-light rounded-3 border">
-                                <img src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=100&h=100"
-                                    class="rounded-2 shadow-sm" alt="Parking Central">
+                                <img id="parking-image" src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=100&h=100"
+                                    class="rounded-2 shadow-sm object-fit-cover" style="width: 100px; height: 100px;" alt="Parking Central">
                                 <div>
-                                    <h5 class="mb-1 fw-bold">Parking Central Barcelona</h5>
-                                    <p class="mb-0 text-muted small"><i class="bi bi-geo-alt-fill me-1"></i> Carrer de
-                                        la Diputació, 250, Barcelona</p>
+                                    <h5 class="mb-1 fw-bold" id="parking-name">Carregant...</h5>
+                                    <p class="mb-0 text-muted small"><i class="bi bi-geo-alt-fill me-1"></i> <span id="parking-address">...</span></p>
                                 </div>
                             </div>
 
@@ -68,25 +67,25 @@
                                 <label class="form-label d-block fs-5 mb-3">Què t'ha agradat més?</label>
                                 <div class="row g-3">
                                     <div class="col-6 col-md-3 text-center">
-                                        <input type="checkbox" class="btn-check" id="asp-neteja" autocomplete="off">
+                                        <input type="checkbox" class="btn-check aspect-checkbox" id="asp-neteja" value="neteja" autocomplete="off">
                                         <label class="btn btn-outline-secondary w-100 py-3" for="asp-neteja">
                                             <i class="bi bi-trash  d-block fs-3 mb-2"></i>Neteja
                                         </label>
                                     </div>
                                     <div class="col-6 col-md-3 text-center">
-                                        <input type="checkbox" class="btn-check" id="asp-seguretat" autocomplete="off">
+                                        <input type="checkbox" class="btn-check aspect-checkbox" id="asp-seguretat" value="seguretat" autocomplete="off">
                                         <label class="btn btn-outline-secondary w-100 py-3" for="asp-seguretat">
                                             <i class="bi bi-shield-check d-block fs-3 mb-2"></i> Seguretat
                                         </label>
                                     </div>
                                     <div class="col-6 col-md-3 text-center">
-                                        <input type="checkbox" class="btn-check" id="asp-preu" autocomplete="off">
+                                        <input type="checkbox" class="btn-check aspect-checkbox" id="asp-preu" value="preu" autocomplete="off">
                                         <label class="btn btn-outline-secondary w-100 py-3" for="asp-preu">
                                             <i class="bi bi-currency-euro d-block fs-3 mb-2"></i> Preu
                                         </label>
                                     </div>
                                     <div class="col-6 col-md-3 text-center">
-                                        <input type="checkbox" class="btn-check" id="asp-ubicacio" autocomplete="off">
+                                        <input type="checkbox" class="btn-check aspect-checkbox" id="asp-ubicacio" value="ubicacio" autocomplete="off">
                                         <label class="btn btn-outline-secondary w-100 py-3" for="asp-ubicacio">
                                             <i class="bi bi-geo-fill d-block fs-3 mb-2"></i> Ubicació
                                         </label>
@@ -105,19 +104,20 @@
                             <!-- Fotografies -->
                             <div class="mb-5">
                                 <label class="form-label fs-5 mb-3">Vols afegir alguna foto?</label>
-                                <div class="upload-area border border-2 border-dashed rounded-3 p-5 text-center">
+                                <div class="upload-area border border-2 border-dashed rounded-3 p-5 text-center cursor-pointer" id="foto-upload-area" onclick="document.getElementById('foto-input').click()">
                                     <i class="bi bi-cloud-arrow-up display-4 text-primary"></i>
-                                    <p class="mt-2 mb-0">Arrossega els teus fitxers aquí o <a href="#"
-                                            class="text-primary fw-bold">selecciona'ls</a></p>
+                                    <p class="mt-2 mb-0">Fes clic aquí per <span class="text-primary fw-bold">seleccionar fitxers</span></p>
                                     <small class="text-muted">Màxim 3 fotos (JPG, PNG)</small>
                                 </div>
+                                <input type="file" id="foto-input" name="fotos_url[]" accept="image/jpeg,image/png,image/webp" multiple style="display: none;">
+                                <div id="foto-preview-container" class="d-flex gap-2 mt-3 flex-wrap"></div>
                             </div>
 
                             <!-- Botons -->
                             <div class="d-flex gap-3 justify-content-end mt-5 pt-4 border-top">
                                 <button type="button" class="btn btn-light btn-lg px-5 border"
                                     onclick="history.back()">Cancel·lar</button>
-                                <button type="submit" class="btn btn-parklive-action btn-lg px-5">Publicar
+                                <button type="submit" id="btn-submit-review" class="btn btn-parklive-action btn-lg px-5">Publicar
                                     valoració</button>
                             </div>
                         </form>

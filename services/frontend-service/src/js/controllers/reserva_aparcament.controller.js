@@ -529,7 +529,7 @@ export async function initReservaAparcament() {
                 if (res && res.reserva && res.reserva.id) {
                     showBootstrapAlert('success', 'Pagament autoritzat amb èxit! Generant tiquet...');
                     setTimeout(() => {
-                        window.location.href = `/tiquet_Aparcament.html?id=${res.reserva.id}`;
+                        window.location.href = `/tiquet_Aparcament.html?id=${res.reserva.id}&p_id=${id}`;
                     }, 1500);
                 } else {
                     throw new Error("La resposta del servidor no conté la reserva.");

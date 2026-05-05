@@ -66,6 +66,14 @@ export async function initTiquetAparcament() {
   if (stateLoading) stateLoading.style.setProperty('display', '', 'important');
   if (stateContent) stateContent.style.setProperty('display', 'none', 'important');
 
+  // SOLUCIÓ VIA RÀPIDA: Si tenim el p_id a la URL, actualitzem el botó JA mateix
+  const btnValoracio = document.getElementById('btn-valoracio-link');
+  const fastParkingId = getQueryParam('p_id');
+  if (btnValoracio && fastParkingId) {
+    btnValoracio.href = `/nova_Valoracio.html?id=${fastParkingId}`;
+    console.log(`[ParkLive] Enllaç de valoració fixat via URL: ${fastParkingId}`);
+  }
+
   try {
     const reservaData = await obtenirDetallReserva(reservaId);
 
@@ -85,6 +93,19 @@ export async function initTiquetAparcament() {
       matricula = reservaData.notes.split('Matrícula:')[1].trim();
     }
     fillTiquetData('matricula', matricula);
+    
+    // Actualitzar enllaç de valoració
+    const btnValoracio = document.getElementById('btn-valoracio-link');
+    const aparcamentId = reservaData.aparcament?.id || reservaData.aparcament_id || reservaData.aparcament?.aparcament_id;
+    
+    if (btnValoracio && aparcamentId) {
+      btnValoracio.href = `/nova_Valoracio.html?id=${aparcamentId}`;
+      console.log(`[ParkLive] Enllaç de valoració actualitzat per a l'aparcament: ${aparcamentId}`);
+    } else if (btnValoracio) {
+      console.warn('[ParkLive] No s\'ha trobat l\'ID de l\'aparcament a les dades de la reserva:', reservaData);
+      // Opcionalment podem amagar el botó si no tenim ID
+      btnValoracio.classList.add('d-none');
+    }
 
     // Generar i injectar el QR
     const qrImg     = document.getElementById('tiquet-qr');

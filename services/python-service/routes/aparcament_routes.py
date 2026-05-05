@@ -8,7 +8,7 @@ from controllers.aparcament_controller import (
     list_aparcaments_favorits_usuari,
     get_disponibilitat_franja,
 )
-from controllers.valoracio_controller import create_valoracio, update_user_valoracio
+from controllers.valoracio_controller import create_valoracio, update_user_valoracio, serve_valoracio_photo
 
 
 aparcament_routes = Blueprint("aparcaments", __name__)
@@ -91,4 +91,9 @@ def put_valoracio(id, valoracio_id):
     """Endpoint PUT per actualitzar una valoració existent d'un aparcament"""
     # Ensure the authenticated user is the owner; delegating logic to controller
     return update_user_valoracio(id)
+
+@aparcament_routes.route("/api/storage/valoracions/<filename>", methods=["GET"])
+def get_valoracio_foto(filename):
+    """Endpoint GET per servir fotos de valoracions des de l'emmagatzematge"""
+    return serve_valoracio_photo(filename)
 
