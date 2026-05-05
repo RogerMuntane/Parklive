@@ -38,3 +38,8 @@ def stripe_webhook():
 def sync_subscription_route():
     from controllers.stripe_controller import handle_sync_subscription
     return handle_sync_subscription()
+
+@stripe_routes.route("/api/stripe/subscription-history", methods=["GET"])
+def subscription_history_route():
+    from controllers.stripe_controller import get_subscription_history
+    return get_subscription_history()

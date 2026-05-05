@@ -1,5 +1,6 @@
 <!-- Historial Component -->
 <section class="profile-section" id="section-history">
+    <!-- ── HISTORIAL DE RESERVES ─────────────────────────────────────── -->
     <div class="card shadow-sm border-0 rounded-4 mb-3">
         <div class="card-body p-4">
 
@@ -61,6 +62,111 @@
 
             <!-- Paginació Bootstrap generada dinàmicament -->
             <div id="history-pagination-container" class="d-flex justify-content-center mt-4">
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── HISTORIAL DE TIQUETS DE SUBSCRIPCIÓ ──────────────────────── -->
+    <div class="card shadow-sm border-0 rounded-4" id="tickets-card">
+        <div class="card-body p-4">
+
+            <!-- Capçalera -->
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger fs-5">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </span>
+                    <div>
+                        <h2 class="card-title h6 fw-bold mb-0">Historial de tiquets</h2>
+                        <p class="card-subtitle text-body-secondary small mb-0">Facturació i renovacions del teu pla</p>
+                    </div>
+                </div>
+
+                <!-- Controls de cerca per referència -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <input type="text" id="input-search-tickets"
+                           class="form-control form-control-sm history-search-input"
+                           placeholder="Cerca per referència...">
+                    <select id="select-status-tickets" class="form-select form-select-sm history-status-select">
+                        <option value="">Tots els estats</option>
+                        <option value="activa">Actiu</option>
+                        <option value="pendent">Pendent</option>
+                        <option value="cancelada">Cancel·lat</option>
+                        <option value="caducada">Caducat</option>
+                    </select>
+                    <button id="btn-search-tickets-submit" class="btn btn-sm btn-primary history-search-btn px-3">
+                        Cerca
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pills informatius del pla actual -->
+            <div class="d-flex flex-wrap gap-2 mb-3" id="tickets-info-pills">
+                <span class="subscription-info-pill">
+                    <i class="bi bi-star-fill text-danger me-1"></i>
+                    Pla actual: <strong id="pill-pla-actual" class="ms-1">—</strong>
+                </span>
+                <span class="subscription-info-pill">
+                    <i class="bi bi-person-check me-1"></i>
+                    Membre des de: <strong id="pill-membre-des-de" class="ms-1">—</strong>
+                </span>
+                <span class="subscription-info-pill">
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    Renovació: <strong id="pill-renovacio" class="ms-1">—</strong>
+                </span>
+                <span class="subscription-info-pill">
+                    <i class="bi bi-credit-card me-1"></i>
+                    Mètode: <strong id="pill-metode" class="ms-1">—</strong>
+                </span>
+            </div>
+
+            <!-- Alert informatiu de renovació (dinàmic) -->
+            <div id="tickets-renewal-alert" class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 py-2 px-3 small mb-3 d-none" role="alert">
+                <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+                <span id="tickets-renewal-alert-text"></span>
+                <a id="tickets-manage-link" href="#" class="ms-auto text-danger fw-semibold text-nowrap small">Gestionar pla</a>
+            </div>
+
+            <!-- Switcher Tots / Mensual / Anual -->
+            <div class="plan-switcher-container mb-3">
+                <div class="plan-switcher" id="tickets-cycle-switcher" role="group" aria-label="Filtre de cicle">
+                    <button type="button" id="btn-tickets-all"      class="btn active" data-cycle="">Tots</button>
+                    <button type="button" id="btn-tickets-mensual"  class="btn" data-cycle="mensual">Mensual</button>
+                    <button type="button" id="btn-tickets-anual"    class="btn" data-cycle="anual">Anual</button>
+                </div>
+            </div>
+
+            <!-- Taula de tiquets -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="text-uppercase text-body-secondary"
+                            style="letter-spacing:.06em;font-size:.72rem!important;">
+                            <th class="border-0 fw-semibold">Data</th>
+                            <th class="border-0 fw-semibold">Referència</th>
+                            <th class="border-0 fw-semibold">Periode</th>
+                            <th class="border-0 fw-semibold">Cicle</th>
+                            <th class="border-0 fw-semibold">Import</th>
+                            <th class="border-0 fw-semibold">Estat</th>
+                            <th class="border-0"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tickets-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                Carregant tiquets...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Resum de resultats + Paginació -->
+            <div class="d-flex align-items-center justify-content-between mt-4 flex-wrap gap-2">
+                <p id="tickets-count-label" class="small text-body-secondary mb-0"></p>
+                <div id="tickets-pagination-container" class="d-flex justify-content-center"></div>
             </div>
 
         </div>

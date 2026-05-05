@@ -482,8 +482,8 @@ export function renderProfileReserves(reserves, container) {
       badgeClass = 'bg-danger';
       statusLabel = 'Cancel·lada';
     } else if (normalizedEstat === 'en_curs') {
-      borderClass = 'border-primary';
-      badgeClass = 'bg-primary';
+      borderClass = 'border-in-progress';
+      badgeClass = 'badge-in-progress';
       statusLabel = 'En curs';
     }
 

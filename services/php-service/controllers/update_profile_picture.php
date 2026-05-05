@@ -2,6 +2,13 @@
 /**
  * Controller per actualitzar la imatge de perfil de l'usuari.
  * Gestiona la pujada de fitxers, validació de tipus/mida i actualització a la BDD.
+ *
+ * Flux Cloudinary:
+ *   1. Rep la imatge pujada per l'usuari.
+ *   2. L'envia a Cloudinary amb transformació q_auto + format webp.
+ *   3. Descarrega la versió optimitzada i la desa localment.
+ *   4. Esborra l'actiu de Cloudinary per alliberar quota.
+ *   5. Actualitza la BD amb el nom del fitxer local.
  */
 require_once __DIR__ . "/../models/DatabaseConnection.php";
 
@@ -35,7 +42,7 @@ class UpdateProfilePictureController
             $this->respond(['success' => false, 'error' => 'Error de configuració: ' . $this->uploadError], 500);
         }
 
-        // Capturar qualsevol output inesperat (warnings, etc.) per no trencari el JSON
+        // Capturar qualsevol output inesperat (warnings, etc.) per no trencar el JSON
         ob_start();
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -79,20 +86,93 @@ class UpdateProfilePictureController
                 }
             }
 
-            // Generar nom únic per evitar col·lisions i caching
-            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            if (empty($extension)) {
-                $extension = ($mimeType === 'image/jpeg') ? 'jpg' : (($mimeType === 'image/png') ? 'png' : 'webp');
-            }
-            $fileName = 'profile_' . $userId . '_' . time() . '.' . $extension;
+            // Nom de destinació: sempre .webp (Cloudinary fa la conversió)
+            $fileName  = 'profile_' . $userId . '_' . time() . '.webp';
             $targetPath = $this->uploadDir . $fileName;
 
-            // Moure fitxer al directori final
-            if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            // ── Cloudinary: pujar → descarregar optimitzada → esborrar del núvol ──
+            $cloudName = getenv('cloud_name');
+            $apiKey    = trim(getenv('Cloudinary_API_KEY'));
+            $apiSecret = trim(getenv('Cloudinary_API_Secret'));
+
+            if (!$cloudName || !$apiKey || !$apiSecret) {
+                $this->respond(['success' => false, 'error' => 'Credencials de Cloudinary no configurades.'], 500);
+            }
+
+            $publicId  = 'parklive_tmp/profile_' . $userId . '_' . time();
+            $timestamp = time();
+
+            // Signature per a signed upload
+            $signatureStr = "format=webp&public_id={$publicId}&timestamp={$timestamp}&transformation=q_auto" . $apiSecret;
+            $signature    = sha1($signatureStr);
+
+            $uploadUrl = "https://api.cloudinary.com/v1_1/{$cloudName}/image/upload";
+
+            // 1. Pujar a Cloudinary via cURL amb transformació q_auto + f_webp
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL            => $uploadUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => [
+                    'file'           => new CURLFile($file['tmp_name'], $mimeType, $file['name']),
+                    'api_key'        => $apiKey,
+                    'timestamp'      => $timestamp,
+                    'public_id'      => $publicId,
+                    'signature'      => $signature,
+                    'format'         => 'webp',
+                    'transformation' => 'q_auto',
+                ],
+                CURLOPT_TIMEOUT        => 30,
+            ]);
+            $uploadResponse = curl_exec($ch);
+            $uploadHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if (!$uploadResponse || $uploadHttpCode !== 200) {
+                $this->respond(['success' => false, 'error' => 'Error en pujar la imatge a Cloudinary (HTTP ' . $uploadHttpCode . ').'], 502);
+            }
+
+            $uploadData = json_decode($uploadResponse, true);
+            if (empty($uploadData['secure_url'])) {
+                $this->respond(['success' => false, 'error' => 'Cloudinary no ha retornat una URL vàlida.'], 502);
+            }
+
+            $optimizedUrl = $uploadData['secure_url'];
+
+            // 2. Descarregar la imatge optimitzada i desar-la localment
+            $imgContent = file_get_contents($optimizedUrl);
+            if ($imgContent === false) {
+                $this->respond(['success' => false, 'error' => 'No s\'ha pogut descarregar la imatge optimitzada de Cloudinary.'], 502);
+            }
+
+            if (file_put_contents($targetPath, $imgContent) === false) {
                 $this->respond(['success' => false, 'error' => 'No s\'ha pogut desar la imatge al servidor. Comprova permisos.'], 500);
             }
 
-            // Actualitzar base de dades
+            // 3. Esborrar de Cloudinary per alliberar quota del núvol
+            $destroyTimestamp = time();
+            $destroySignature = sha1("public_id={$publicId}&timestamp={$destroyTimestamp}" . $apiSecret);
+            $destroyUrl = "https://api.cloudinary.com/v1_1/{$cloudName}/image/destroy";
+
+            $chDel = curl_init();
+            curl_setopt_array($chDel, [
+                CURLOPT_URL            => $destroyUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => http_build_query([
+                    'public_id' => $publicId,
+                    'api_key'   => $apiKey,
+                    'timestamp' => $destroyTimestamp,
+                    'signature' => $destroySignature,
+                ]),
+                CURLOPT_TIMEOUT        => 10,
+            ]);
+            curl_exec($chDel);
+            curl_close($chDel);
+            // No bloquejar el flux si la neteja del núvol falla
+
+            // 4. Actualitzar base de dades
             $this->conexio = DatabaseConnection::create();
 
             $stmt = $this->conexio->prepare("UPDATE usuaris SET foto_perfil = ? WHERE id = ?");
@@ -110,16 +190,16 @@ class UpdateProfilePictureController
             }
 
             $this->respond([
-                'success' => true,
-                'message' => 'Imatge de perfil actualitzada correctament.',
+                'success'     => true,
+                'message'     => 'Imatge de perfil actualitzada correctament.',
                 'foto_perfil' => $fileName
             ]);
 
         } catch (Throwable $e) {
             $this->respond([
                 'success' => false,
-                'error' => 'Error intern del servidor: ' . $e->getMessage(),
-                'type' => get_class($e)
+                'error'   => 'Error intern del servidor: ' . $e->getMessage(),
+                'type'    => get_class($e)
             ], 500);
         }
     }
