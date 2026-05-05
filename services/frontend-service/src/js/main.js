@@ -477,6 +477,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       initProfileInfoSaveForm,
       initProfilePlanSection,
       initProfileHistorySection,
+      initProfileTicketsSection,
       initProfileFavoritesSection,
       initProfileImageUpload,
       initProfilePointsSection
@@ -493,6 +494,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfileInfoSaveForm();
     initProfilePlanSection();
     initProfileHistorySection();
+    initProfileTicketsSection();
     initProfileFavoritesSection();
     initReserves();
 

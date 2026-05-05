@@ -976,3 +976,133 @@
         }
     }
 }
+
+// ── Historial de Tiquets de Subscripció ──────────────────────────────────────
+
+// Pills informatius (pla, membre, renovació, mètode)
+.subscription-info-pill {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 2rem;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.8rem;
+    color: var(--bs-body-color);
+    transition: background 0.2s ease, border-color 0.2s ease;
+
+    strong {
+        font-weight: 700;
+    }
+
+    [data-bs-theme="dark"] & {
+        background-color: rgba($off-white, 0.04);
+        border-color: rgba($off-white, 0.12);
+        color: rgba($off-white, 0.85);
+    }
+}
+
+// Badge de cicle (Mensual / Anual) dins la taula
+.ticket-cycle-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.73rem;
+    font-weight: 600;
+
+    &.ticket-cycle-mensual {
+        background-color: rgba($dark-navy, 0.08);
+        color: $dark-navy;
+
+        [data-bs-theme="dark"] & {
+            background-color: rgba($off-white, 0.08);
+            color: $off-white;
+        }
+    }
+
+    &.ticket-cycle-anual {
+        background-color: rgba($crimson, 0.1);
+        color: $crimson;
+
+        [data-bs-theme="dark"] & {
+            background-color: rgba($crimson, 0.18);
+            color: lighten($crimson, 15%);
+        }
+    }
+}
+
+// Taula de tiquets: capçalera
+#tickets-card table thead tr {
+    background-color: var(--bs-body-bg);
+
+    th {
+        padding: 0.75rem;
+        color: var(--bs-secondary-color);
+        font-size: 0.7rem;
+    }
+}
+
+// Paginació de tiquets — hereta el mateix estil que la de reserves
+#tickets-pagination-container {
+    .pagination {
+        gap: 0.2rem;
+
+        .page-item {
+            .page-link {
+                border-radius: 0.45rem !important;
+                border-color: var(--bs-border-color);
+                background-color: transparent;
+                color: $dark-navy;
+                font-size: 0.85rem;
+                padding: 0.35rem 0.65rem;
+                transition: all 0.18s ease;
+                line-height: 1.4;
+
+                &:hover {
+                    background-color: rgba($dark-navy, 0.06);
+                    border-color: rgba($dark-navy, 0.4);
+                    color: $dark-navy;
+                    transform: translateY(-1px);
+                }
+
+                [data-bs-theme="dark"] & {
+                    color: $off-white;
+                    border-color: rgba($off-white, 0.15);
+                    background-color: transparent;
+
+                    &:hover {
+                        background-color: rgba($off-white, 0.08);
+                        border-color: rgba($off-white, 0.3);
+                        color: $off-white;
+                    }
+                }
+            }
+
+            &.active .page-link {
+                background-color: $dark-navy;
+                border-color: $dark-navy;
+                color: $off-white;
+                font-weight: 600;
+                box-shadow: 0 2px 8px rgba($dark-navy, 0.3);
+                transform: none;
+
+                [data-bs-theme="dark"] & {
+                    background-color: $crimson;
+                    border-color: $crimson;
+                    box-shadow: 0 2px 8px rgba($crimson, 0.4);
+                }
+            }
+
+            &.disabled .page-link {
+                opacity: 0.35;
+                pointer-events: none;
+
+                [data-bs-theme="dark"] & {
+                    color: rgba($off-white, 0.35);
+                    border-color: rgba($off-white, 0.1);
+                }
+            }
+        }
+    }
+}

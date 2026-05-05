@@ -1086,3 +1086,264 @@ export async function loadSidebarBadges() {
         console.error('[ParkLive] Error carregant insignies del sidebar:', err);
     }
 }
+
+/**
+ * Inicialitza la secció d'historial de tiquets de subscripció.
+ * Completament independent de l'historial de reserves.
+ */
+export function initProfileTicketsSection() {
+  const tableBody       = document.getElementById('tickets-table-body');
+  const searchInput     = document.getElementById('input-search-tickets');
+  const statusSelect    = document.getElementById('select-status-tickets');
+  const searchBtn       = document.getElementById('btn-search-tickets-submit');
+  const paginationContainer = document.getElementById('tickets-pagination-container');
+  const countLabel      = document.getElementById('tickets-count-label');
+
+  if (!tableBody) return;
+
+  let currentPage   = 1;
+  let currentSearch = '';
+  let currentCicle  = '';  // '' | 'mensual' | 'anual'
+  const limit = 6;
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  const formatCurrency = (val) =>
+    Number(val).toLocaleString('ca-ES', { style: 'currency', currency: 'EUR' });
+
+  const fillPill = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '—';
+  };
+
+  // ── Resum del pla (pills + alert) ────────────────────────────────────────
+  const renderResum = (resum) => {
+    if (!resum || !resum.pla_actual) return;
+
+    fillPill('pill-pla-actual',    resum.pla_actual);
+    fillPill('pill-membre-des-de', resum.membre_des_de);
+    fillPill('pill-renovacio',     resum.renovacio);
+
+    // Mètode: enmascarar les últimes 4 xifres
+    const metodePill = document.getElementById('pill-metode');
+    if (metodePill) {
+      if (resum.metode_pagament === 'targeta') {
+        metodePill.textContent = '•••• ••••';
+      } else {
+        metodePill.textContent = resum.metode_pagament;
+      }
+    }
+
+    // Alert informatiu de renovació
+    const alertEl   = document.getElementById('tickets-renewal-alert');
+    const alertText = document.getElementById('tickets-renewal-alert-text');
+    if (alertEl && alertText && resum.auto_renovacio && resum.preu && resum.renovacio) {
+      const planNom = resum.pla_actual || 'Premium';
+      alertText.innerHTML =
+        `La teva subscripció <strong>${planNom}</strong> es renovarà automàticament el ` +
+        `<strong>${resum.renovacio}</strong> per <strong>${formatCurrency(resum.preu)}</strong>.`;
+      alertEl.classList.remove('d-none');
+    }
+  };
+
+  // ── Paginació ─────────────────────────────────────────────────────────────
+  const renderPagination = (paginacio) => {
+    if (!paginationContainer) return;
+    if (!paginacio || paginacio.total_pagines <= 1) {
+      paginationContainer.innerHTML = '';
+      return;
+    }
+
+    const isPrevDisabled = paginacio.pagina_actual === 1;
+    const isNextDisabled = paginacio.pagina_actual === paginacio.total_pagines;
+
+    let pagesHtml = '';
+    for (let i = 1; i <= paginacio.total_pagines; i++) {
+      const isActive = i === paginacio.pagina_actual;
+      pagesHtml += `
+        <li class="page-item ${isActive ? 'active' : ''}">
+          <button class="page-link" data-page="${i}" ${isActive ? 'aria-current="page"' : ''}>${i}</button>
+        </li>`;
+    }
+
+    paginationContainer.innerHTML = `
+      <nav aria-label="Navegació historial de tiquets">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item ${isPrevDisabled ? 'disabled' : ''}">
+            <button class="page-link" data-page="${paginacio.pagina_actual - 1}"
+              ${isPrevDisabled ? 'disabled aria-disabled="true"' : ''} aria-label="Pàgina anterior">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          ${pagesHtml}
+          <li class="page-item ${isNextDisabled ? 'disabled' : ''}">
+            <button class="page-link" data-page="${paginacio.pagina_actual + 1}"
+              ${isNextDisabled ? 'disabled aria-disabled="true"' : ''} aria-label="Pàgina següent">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>`;
+
+    paginationContainer.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const newPage = parseInt(btn.dataset.page);
+        if (newPage && newPage !== currentPage && newPage > 0 && newPage <= paginacio.total_pagines) {
+          currentPage = newPage;
+          fetchTickets();
+        }
+      });
+    });
+  };
+
+  // ── Fetch + render ────────────────────────────────────────────────────────
+  const fetchTickets = async () => {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-5 text-muted">
+          <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+          Carregant tiquets...
+        </td>
+      </tr>`;
+
+    try {
+      const offset = (currentPage - 1) * limit;
+      const params = { limit, offset };
+      if (currentCicle) params.cicle = currentCicle;
+      if (statusSelect?.value) params.estat = statusSelect.value;
+      if (currentSearch.trim()) params.search = currentSearch.trim();
+
+      const data = await pythonApi.get('/api/stripe/subscription-history', params);
+
+      // Pills i alert (única vegada, quan tenim el resum)
+      if (data.resum && Object.keys(data.resum).length) renderResum(data.resum);
+
+      renderPagination(data.paginacio);
+
+      // Etiqueta de resultats
+      if (countLabel && data.paginacio) {
+        const fi = Math.min(offset + limit, data.paginacio.total);
+        countLabel.textContent =
+          data.paginacio.total > 0
+            ? `Mostrant ${offset + 1}–${fi} de ${data.paginacio.total} tiquets`
+            : '';
+      }
+
+      const tiquets = data.tiquets || [];
+
+      if (tiquets.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="bi bi-receipt me-1"></i> No s'han trobat tiquets de subscripció.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = tiquets.map(t => {
+        // Estat badge
+        let badgeClass = 'bg-secondary text-white';
+        let badgeIcon  = 'bi-dash-circle';
+        let badgeLabel = t.estat || 'Desconegut';
+
+        const estat = (t.estat || '').toLowerCase();
+        if      (estat === 'activa')    { badgeClass = 'status-ok';   badgeIcon = 'bi-check-circle-fill'; badgeLabel = 'Actiu'; }
+        else if (estat === 'cancelada') { badgeClass = 'status-err';  badgeIcon = 'bi-x-circle-fill';     badgeLabel = 'Cancel·lat'; }
+        else if (estat === 'pendent')   { badgeClass = 'status-pend'; badgeIcon = 'bi-clock-fill';        badgeLabel = 'Pendent'; }
+        else if (estat === 'caducada')  { badgeClass = 'bg-secondary text-white'; badgeIcon = 'bi-dash-circle'; badgeLabel = 'Caducat'; }
+
+        // Cicle badge
+        const isAnual = (t.cicle || '').toLowerCase() === 'anual';
+        const cicleBadge = isAnual
+          ? `<span class="ticket-cycle-badge ticket-cycle-anual"><i class="bi bi-calendar-year me-1"></i>Anual</span>`
+          : `<span class="ticket-cycle-badge ticket-cycle-mensual"><i class="bi bi-calendar-month me-1"></i>Mensual</span>`;
+
+        // Botó PDF — receipt_url del Charge de Stripe (rebut de pagament)
+        const pdfHref = t.pdf_url || t.stripe_invoice_url || null;
+        const pdfBtn = pdfHref
+          ? `<a href="${pdfHref}" target="_blank" rel="noopener noreferrer"
+               class="d-flex align-items-center gap-1 badge bg-danger bg-opacity-10 text-danger rounded-pill px-2 py-1 text-decoration-none"
+               title="${t.pdf_url ? 'Veure rebut de pagament' : 'Veure factura a Stripe'}"
+               style="font-size:.75rem;">
+               <i class="bi bi-file-earmark-pdf"></i> PDF
+             </a>`
+          : `<span class="d-flex align-items-center gap-1 badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1 opacity-40"
+               style="cursor:default;font-size:.75rem;" title="Rebut no disponible">
+               <i class="bi bi-file-earmark-pdf"></i> PDF
+             </span>`;
+
+        return `
+          <tr>
+            <td class="text-body-secondary small text-nowrap">${t.data_inici || '—'}</td>
+            <td>
+              <span class="fw-semibold small text-primary" style="font-family:monospace;">
+                ${t.referencia}
+              </span>
+            </td>
+            <td class="small text-nowrap text-body-secondary">
+              ${t.data_inici ? t.data_inici.split(' ')[0] : '—'}
+              ${t.data_final ? `<span class="mx-1 text-body-tertiary">–</span>${t.data_final}` : ''}
+            </td>
+            <td>${cicleBadge}</td>
+            <td>
+              <span class="badge bg-light text-dark border px-2 py-1 fw-semibold">
+                ${formatCurrency(t.import)}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge ${badgeClass}">
+                <i class="bi ${badgeIcon}"></i> ${badgeLabel}
+              </span>
+            </td>
+            <td class="text-end">${pdfBtn}</td>
+          </tr>`;
+      }).join('');
+
+    } catch (err) {
+      console.error('[ParkLive] Error carregant tiquets subscripció:', err);
+
+      if (err.message?.includes('token d\'autenticació ha caducat')) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5 text-warning">
+              <i class="bi bi-clock-history me-1"></i> La sessió ha caducat. Torna a iniciar sessió.
+            </td>
+          </tr>`;
+      } else {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5 text-danger">
+              <i class="bi bi-exclamation-triangle me-1"></i> Error al carregar els tiquets.
+            </td>
+          </tr>`;
+      }
+      if (paginationContainer) paginationContainer.innerHTML = '';
+    }
+  };
+
+  // ── Switcher de cicle ─────────────────────────────────────────────────────
+  document.getElementById('tickets-cycle-switcher')?.querySelectorAll('button[data-cycle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tickets-cycle-switcher .btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCicle = btn.dataset.cycle;
+      currentPage  = 1;
+      fetchTickets();
+    });
+  });
+
+  // ── Cerca ─────────────────────────────────────────────────────────────────
+  const performSearch = () => {
+    if (searchInput) currentSearch = searchInput.value;
+    currentPage = 1;
+    fetchTickets();
+  };
+
+  searchBtn?.addEventListener('click', performSearch);
+  searchInput?.addEventListener('keyup', (e) => { if (e.key === 'Enter') performSearch(); });
+  statusSelect?.addEventListener('change', () => { currentPage = 1; fetchTickets(); });
+
+  // Càrrega inicial
+  fetchTickets();
+}

@@ -232,3 +232,200 @@ def handle_sync_subscription():
     except Exception as e:
         print(f"[Sync] Error en sincronitzar: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+def get_subscription_history():
+    """
+    Endpoint GET per obtenir l'historial de tiquets de subscripció d'un usuari.
+    Consulta les taules subscripcions + factures de la BD local (sense cridar Stripe).
+
+    Query params:
+      - cicle: 'mensual' | 'anual' | '' (tots)
+      - estat: 'activa' | 'cancelada' | 'caducada' | '' (tots)
+      - limit: int (default 6)
+      - offset: int (default 0)
+    """
+    try:
+        usuari_autenticat_id = get_jwt_user_id()
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 401
+
+    # Paràmetres de filtre i paginació
+    cicle  = request.args.get('cicle', '').strip().lower()
+    estat  = request.args.get('estat', '').strip().lower()
+    try:
+        limit  = max(1, min(int(request.args.get('limit', 6)), 50))
+        offset = max(0, int(request.args.get('offset', 0)))
+    except (ValueError, TypeError):
+        limit, offset = 6, 0
+
+    from models.db_connection import get_new_connection
+    from datetime import datetime
+
+    conn = get_new_connection()
+    if not conn:
+        return jsonify({'error': 'Error de connexió a la BD'}), 500
+
+    try:
+        cursor = conn.cursor(dictionary=True)
+
+        # ── Resum del pla actual ──────────────────────────────────────────
+        cursor.execute(
+            """
+            SELECT s.tipus, s.data_inici, s.data_final, s.estat, s.preu,
+                   s.auto_renovacio, s.metode_pagament
+            FROM subscripcions s
+            WHERE s.usuari_id = %s
+            ORDER BY s.id DESC
+            LIMIT 1
+            """,
+            (usuari_autenticat_id,)
+        )
+        sub_activa = cursor.fetchone()
+
+        resum = {}
+        if sub_activa:
+            cicle_label = 'Anual' if sub_activa['tipus'] == 'anual' else 'Mensual'
+            resum = {
+                'pla_actual':     f"Premium {cicle_label}",
+                'membre_des_de':  sub_activa['data_inici'].strftime('%d/%m/%Y') if sub_activa['data_inici'] else None,
+                'renovacio':      sub_activa['data_final'].strftime('%d/%m/%Y') if sub_activa['data_final'] else None,
+                'preu':           float(sub_activa['preu']) if sub_activa['preu'] else None,
+                'metode_pagament': sub_activa['metode_pagament'] or 'targeta',
+                'auto_renovacio': bool(sub_activa['auto_renovacio']),
+            }
+
+        # ── Construcció de la query paginada ─────────────────────────────
+        base_where = "WHERE s.usuari_id = %s"
+        params = [usuari_autenticat_id]
+
+        if cicle in ('mensual', 'anual'):
+            base_where += " AND s.tipus = %s"
+            params.append(cicle)
+
+        if estat in ('activa', 'cancelada', 'caducada', 'pendent'):
+            base_where += " AND s.estat = %s"
+            params.append(estat)
+
+        # Comptar total
+        cursor.execute(
+            f"SELECT COUNT(*) AS total FROM subscripcions s {base_where}",
+            params
+        )
+        total = cursor.fetchone()['total']
+
+        query = f"""
+            SELECT
+                s.id,
+                s.tipus,
+                s.estat,
+                s.data_inici,
+                s.data_final,
+                s.preu,
+                s.auto_renovacio,
+                s.stripe_subscription_id,
+                f.numero_factura,
+                f.import_total
+            FROM subscripcions s
+            LEFT JOIN factures f ON f.pagament_id = (
+                SELECT p.id FROM pagaments p
+                WHERE p.usuari_id = s.usuari_id
+                  AND p.referencia_externa = s.stripe_subscription_id
+                LIMIT 1
+            )
+            {base_where}
+            ORDER BY s.id DESC
+            LIMIT %s OFFSET %s
+        """
+        params_page = params + [limit, offset]
+        cursor.execute(query, params_page)
+        rows = cursor.fetchall()
+        cursor.close()
+
+        # ── Obtenir Receipts des de Stripe (crida única per tot el client) ─
+        # El Receipt (rebut) de Stripe és el receipt_url del Charge associat
+        # al PaymentIntent de cada factura.
+        # Ruta: Invoice → payment_intent → latest_charge → receipt_url
+        stripe_invoice_map = {}
+        try:
+            import stripe as stripe_lib
+            stripe_customer_id = get_user_stripe_id(usuari_autenticat_id)
+            if stripe_customer_id:
+                invoices = stripe_lib.Invoice.list(
+                    customer=stripe_customer_id,
+                    limit=50,
+                    expand=['data.payment_intent.latest_charge']  # Expandim fins al Charge
+                )
+                for inv in invoices.data:
+                    # Obtenir l'ID de subscripció (pot ser string o objecte)
+                    sub_id = inv.subscription if isinstance(inv.subscription, str) else (
+                        inv.subscription.id if inv.subscription else None
+                    )
+                    if not sub_id:
+                        continue
+
+                    # Obtenir receipt_url del Charge
+                    receipt_url = None
+                    try:
+                        pi = getattr(inv, 'payment_intent', None)
+                        if pi:
+                            charge = getattr(pi, 'latest_charge', None)
+                            if charge:
+                                receipt_url = getattr(charge, 'receipt_url', None)
+                    except Exception:
+                        pass
+
+                    stripe_invoice_map[sub_id] = {
+                        'pdf_url':             receipt_url,            # URL del Receipt (rebut)
+                        'stripe_invoice_url':  inv.hosted_invoice_url, # Pàgina de factura Stripe
+                    }
+        except Exception as stripe_err:
+            print(f"[SubscriptionHistory] Advertència: no s'han pogut obtenir rebuts de Stripe: {stripe_err}")
+            # No trenquem la resposta: continuem sense URLs de receipt
+
+        # ── Serialització ─────────────────────────────────────────────────
+        tiquets = []
+        for r in rows:
+            any_inici = r['data_inici'].year if r['data_inici'] else datetime.now().year
+            referencia = f"#SUB-{any_inici}-{r['id']:04d}"
+
+            import_val = float(r['import_total']) if r['import_total'] else \
+                         (float(r['preu']) if r['preu'] else 0.0)
+
+            # Cercar URL de PDF a Stripe pel stripe_subscription_id d'aquesta fila
+            invoice_info = stripe_invoice_map.get(r['stripe_subscription_id'], {})
+
+            tiquets.append({
+                'id':                  r['id'],
+                'referencia':          referencia,
+                'data_inici':          r['data_inici'].strftime('%d/%m/%Y %H:%M') if r['data_inici'] else None,
+                'data_final':          r['data_final'].strftime('%d/%m/%Y') if r['data_final'] else None,
+                'cicle':               r['tipus'],
+                'estat':               r['estat'],
+                'import':              import_val,
+                'numero_factura':      r['numero_factura'],
+                'auto_renovacio':      bool(r['auto_renovacio']),
+                'pdf_url':             invoice_info.get('pdf_url'),           # URL directa al PDF
+                'stripe_invoice_url':  invoice_info.get('stripe_invoice_url'), # Pàgina de Stripe
+            })
+
+        total_pagines = max(1, -(-total // limit))  # ceil division
+        pagina_actual = (offset // limit) + 1
+
+        return jsonify({
+            'tiquets':   tiquets,
+            'resum':     resum,
+            'paginacio': {
+                'total':         total,
+                'pagina_actual': pagina_actual,
+                'total_pagines': total_pagines,
+                'limit':         limit,
+                'offset':        offset,
+            }
+        }), 200
+
+    except Exception as e:
+        print(f"[SubscriptionHistory] Error: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
