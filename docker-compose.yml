@@ -53,6 +53,9 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       APP_ENV: ${APP_ENV}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      cloud_name: ${cloud_name}
+      Cloudinary_API_KEY: ${Cloudinary_API_KEY}
+      Cloudinary_API_Secret: ${Cloudinary_API_Secret}
       TZ: Europe/Madrid
     dns:
       - 8.8.8.8
@@ -108,6 +111,9 @@ services:
       APP_ENV: ${APP_ENV}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       TICKET_STORAGE_PATH: ${TICKET_STORAGE_PATH}
+      cloud_name: ${cloud_name}
+      Cloudinary_API_KEY: ${Cloudinary_API_KEY}
+      Cloudinary_API_Secret: ${Cloudinary_API_Secret}
       TZ: Europe/Madrid
     networks:
       - parklive_network
