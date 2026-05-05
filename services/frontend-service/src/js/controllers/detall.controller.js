@@ -12,7 +12,7 @@ import {
   isFavoriteParking,
   toggleFavoriteParking,
 } from './favorits.service.js';
-import { PHP_API_URL } from '../config.js';
+import { PHP_API_URL, PYTHON_API_URL } from '../config.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -449,6 +449,42 @@ function renderValoracions(valoracions) {
   valoracions.forEach((v, index) => {
     const data = v.created_at ? new Date(v.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'long' }) : 'Recent';
 
+    let aspectesHtml = '';
+    if (v.aspectes_valorats) {
+      try {
+        const aspectes = typeof v.aspectes_valorats === 'string' ? JSON.parse(v.aspectes_valorats) : v.aspectes_valorats;
+        if (Array.isArray(aspectes) && aspectes.length > 0) {
+          aspectesHtml = '<div class="d-flex flex-wrap gap-2 mt-3">';
+          aspectes.forEach(asp => {
+            let icon = 'bi-check-circle';
+            let label = asp;
+            if (asp === 'neteja' || asp === 'Neteja') { icon = 'bi-trash'; label = 'Neteja'; }
+            if (asp === 'seguretat' || asp === 'Seguretat') { icon = 'bi-shield-check'; label = 'Seguretat'; }
+            if (asp === 'preu' || asp === 'Preu') { icon = 'bi-currency-euro'; label = 'Preu'; }
+            if (asp === 'ubicacio' || asp === 'Ubicació') { icon = 'bi-geo-fill'; label = 'Ubicació'; }
+            aspectesHtml += `<span class="badge bg-light text-dark border"><i class="bi ${icon} me-1 text-primary"></i>${label}</span>`;
+          });
+          aspectesHtml += '</div>';
+        }
+      } catch(e) {}
+    }
+
+    let fotosHtml = '';
+    if (v.fotos_url) {
+      try {
+        const fotos = typeof v.fotos_url === 'string' ? JSON.parse(v.fotos_url) : v.fotos_url;
+        if (Array.isArray(fotos) && fotos.length > 0) {
+          fotosHtml = '<div class="d-flex gap-2 mt-3 overflow-auto pb-2">';
+          fotos.forEach(foto => {
+            // Serve the photos using python api directly
+            const fotoUrl = `${PYTHON_API_URL}/api/storage/valoracions/${foto}`; 
+            fotosHtml += `<a href="${fotoUrl}" target="_blank"><img src="${fotoUrl}" class="rounded object-fit-cover shadow-sm border" style="width: 80px; height: 80px;" alt="Foto de ressenya" loading="lazy"></a>`;
+          });
+          fotosHtml += '</div>';
+        }
+      } catch(e) {}
+    }
+
     const reviewHtml = `
       <div class="border-bottom mb-4 pb-4">
         <div class="d-flex gap-3 mb-2">
@@ -459,6 +495,8 @@ function renderValoracions(valoracions) {
           <span class="text-muted small">${data}</span>
         </div>
         <p class="mb-0">${esc(v.comentari || '')}</p>
+        ${aspectesHtml}
+        ${fotosHtml}
       </div>
     `;
     
@@ -547,145 +585,6 @@ function showError(msg = "No s'ha pogut carregar l'aparcament.") {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Gestió del Formulari de Valoració                                   */
-/* ------------------------------------------------------------------ */
-
-function initReviewForm(aparcamentId, valoracions = []) {
-  const section = document.getElementById('add-review-section');
-  const loginSection = document.getElementById('login-to-review');
-  if (!section || !loginSection) return;
-
-  if (!isAuthenticated()) {
-    section.style.display = 'none';
-    loginSection.style.display = 'block';
-    return;
-  }
-
-  // Comprovar si l'usuari ja ha valorat (per activar mode edició)
-  const currentUserId = sessionStorage.getItem('parklive_user_id');
-  const existingReview = valoracions.find(v => String(v.usuari_id) === String(currentUserId));
-  
-  let isEditMode = false;
-  let editValoracioId = null;
-
-  if (existingReview) {
-    isEditMode = true;
-    editValoracioId = existingReview.id;
-    // Canviar el títol del botó
-    const btn = document.getElementById('btn-submit-review');
-    if (btn) btn.textContent = 'Actualitzar valoració';
-  }
-
-  section.style.display = 'block';
-  loginSection.style.display = 'none';
-
-  const stars = document.querySelectorAll('#form-stars i');
-  const ratingInput = document.getElementById('rating-input');
-  const form = document.getElementById('review-form');
-
-  // Pre-omplir dades si està en mode edició
-  if (isEditMode) {
-    ratingInput.value = existingReview.puntuacio;
-    document.getElementById('review-comment').value = existingReview.comentari || '';
-    updateStarsUI(stars, existingReview.puntuacio);
-  } else {
-    ratingInput.value = 0;
-    document.getElementById('review-comment').value = '';
-    updateStarsUI(stars, 0);
-  }
-
-  // Gestió de les estrelles (hover i clic)
-  stars.forEach((star) => {
-    star.addEventListener('mouseover', () => {
-      const val = parseInt(star.dataset.value);
-      updateStarsUI(stars, val);
-    });
-
-    star.addEventListener('mouseout', () => {
-      const currentVal = parseInt(ratingInput.value);
-      updateStarsUI(stars, currentVal);
-    });
-
-    star.addEventListener('click', () => {
-      const val = parseInt(star.dataset.value);
-      ratingInput.value = val;
-      updateStarsUI(stars, val);
-    });
-  });
-
-  function updateStarsUI(starNodes, value) {
-    starNodes.forEach((s) => {
-      const sVal = parseInt(s.dataset.value);
-      if (sVal <= value) {
-        s.classList.replace('bi-star', 'bi-star-fill');
-      } else {
-        s.classList.replace('bi-star-fill', 'bi-star');
-      }
-    });
-  }
-
-  // Enviament del formulari
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const puntuacio = parseInt(ratingInput.value);
-    const comentari = document.getElementById('review-comment').value.trim();
-
-    if (puntuacio === 0) {
-      showBootstrapAlert('danger', 'Si us plau, selecciona una puntuació.');
-      return;
-    }
-
-    const btn = document.getElementById('btn-submit-review');
-    btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${isEditMode ? 'ACTUALITZANT...' : 'PUBLICANT...'}`;
-
-    try {
-      if (isEditMode) {
-        await pythonApi.put(`/api/aparcaments/${aparcamentId}/valoracions/${editValoracioId}`, {
-          puntuacio,
-          comentari
-        });
-        showBootstrapAlert('success', 'Valoració actualitzada correctament!');
-      } else {
-        await pythonApi.post(`/api/aparcaments/${aparcamentId}/valoracions`, {
-          puntuacio,
-          comentari
-        });
-        showBootstrapAlert('success', 'Ressenya publicada correctament. Has guanyat 10 punts! Gràcies per la teva opinió.');
-
-        // Actualitzar els punts localment a la sessió
-        try {
-          const raw = sessionStorage.getItem('parklive_user_data');
-          if (raw) {
-            const userData = JSON.parse(raw);
-            userData.punts_gamificacio = (userData.punts_gamificacio || 0) + 10;
-            sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
-          }
-        } catch(e) {
-          console.warn('[ParkLive] No s\'han pogut actualitzar els punts locals', e);
-        }
-      }
-
-      form.reset();
-      ratingInput.value = 0;
-      updateStarsUI(stars, 0);
-      
-      // Recarregar dades de l'aparcament per actualitzar la llista de ressenyes i la mitjana
-      const updatedAparcament = await pythonApi.get(`/api/aparcaments/${encodeURIComponent(aparcamentId)}`);
-      renderDetall(updatedAparcament);
-      initReviewForm(aparcamentId, updatedAparcament.valoracions || []);
-    } catch (err) {
-      console.error('[ParkLive] Error processant ressenya:', err);
-      showBootstrapAlert('danger', err.message || 'No s\'ha pogut processar la ressenya.');
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-    }
-  };
-}
-
-/* ------------------------------------------------------------------ */
 /*  Inicialització pública                                              */
 /* ------------------------------------------------------------------ */
 
@@ -706,7 +605,6 @@ export async function initDetallAparcament() {
     // real per franja horària (ara → ara+2h), igual que la pàgina de reserva.
     fetchAndUpdateDisponibilitat(aparcament.id || id);
     await initDetallFavoriteButton(aparcament.id || id);
-    initReviewForm(aparcament.id || id, aparcament.valoracions || []);
     showContent();
 
 

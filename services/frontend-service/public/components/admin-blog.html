@@ -104,3 +104,23 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Confirmar Eliminació Blog -->
+<div class="modal fade" id="modal-delete-blog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 text-center">
+                <input type="hidden" id="delete-blog-id">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-trash fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Eliminar Article?</h5>
+                <p class="text-secondary small mb-4">Aquesta acció no es pot desfer. L'article serà eliminat de forma permanent.</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger rounded-pill py-2 fw-bold" id="btn-confirm-delete-blog">Sí, eliminar</button>
+                    <button type="button" class="btn btn-light rounded-pill py-2" data-bs-dismiss="modal">Cancel·lar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

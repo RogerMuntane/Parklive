@@ -657,7 +657,7 @@ export function initProfileHistorySection() {
                         </td>
                         <td class="text-end">
                             ${potVeureTiquet ?
-            `<a href="/tiquet_Aparcament.html?id=${r.id}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Veure tiquet PDF">
+            `<a href="/tiquet_Aparcament.html?id=${r.id}&p_id=${r.aparcament?.id || ''}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Veure tiquet PDF">
                                     <i class="bi bi-file-earmark-pdf me-1"></i> PDF
                                  </a>` :
             `<button class="btn btn-outline-secondary btn-sm rounded-pill px-3 opacity-25" disabled title="Tiquet no disponible">

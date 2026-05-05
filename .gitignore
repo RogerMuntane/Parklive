@@ -20,5 +20,5 @@ googleAuth.json
 Thumbs.db
 
 # Uploads & Storage
-storage/tickets/
+storage/
 services/php-service/uploads/
