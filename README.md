@@ -13,6 +13,8 @@ Parklive és un sistema complet de gestió d'aparcaments que implementa una arqu
   - `Bcrypt`: Encriptació de contrasenyes.
   - `MySQL Connector`: Connexió amb la base de dades.
   - `ReportLab`: Generació de tiquets i factures en PDF.
+  - `Cloudinary`: Optimització d'imatges al núvol.
+  - `Pillow`: Processament i optimització d'imatges local (fallback).
 - **PHP Service**: Servei especialitzat en autenticació i processos legacy.
   - `Firebase PHP-JWT`: Validació de tokens.
   - `Stripe PHP`: Gestió de clients i pagaments.
@@ -32,7 +34,8 @@ Parklive és un sistema complet de gestió d'aparcaments que implementa una arqu
 ## APIs i Serveis Externs
 - **Stripe API**: Pasarel·la de pagament per a reserves puntuals i subscripcions Premium. S'utilitzen *Stripe Elements*, *SetupIntents* i *Webhooks*.
 - **Google OAuth 2.0**: Autenticació d'usuaris mitjançant Google Identity Services.
-- **Servidor SMTP**: Servei per a l'enviament de correus electrònics (recuperació de contrasenyes)
+- **Cloudinary API**: Optimització automàtica d'imatges (WebP, qualitat auto). S'utilitza com a motor principal de transformació amb un sistema de **fallback local (Pillow)** per garantir el funcionament en cas de fallada de xarxa.
+- **Servidor SMTP**: Servei per a l'enviament de correus electrònics (recuperació de contrasenyes).
 ## Arquitectura del Projecte
 
 El projecte segueix una arquitectura de microserveis on cada servei implementa el seu propi patró MVC:
@@ -70,7 +73,10 @@ parklive/
 │   └── constants/               # Constants globals
 │
 ├── storage/                     # Emmagatzematge persistent de fitxers
-│   └── tickets/                 # Tiquets de reserva generats en PDF
+│   ├── tickets/                 # Tiquets de reserva generats en PDF
+│   └── aparcaments/             # Imatges optimitzades dels aparcaments (WebP)
+│
+├── logs/                        # Registres d'execució i errors de processament
 │
 ├── database/                    # Scripts i configuració de base de dades
 │   ├── migrations/              # Migracions de BD
@@ -140,4 +146,4 @@ docker-compose down
 - Roger Muntané - [@RogerMuntane](https://github.com/RogerMuntane)
 - Xavier Ruiz - [@Emperor-Xizzle](https://github.com/Emperor-Xizzle)
 
-**Última actualització**: 2026-05-03
+**Última actualització**: 2026-05-05

@@ -18,6 +18,7 @@
     /* Left border accent */
     &.border-confirmed { border-left: 4px solid #10b981 !important; }
     &.border-imminent { border-left: 4px solid #f59e0b !important; }
+    &.border-in-progress { border-left: 4px solid $dark-navy !important; }
 
     .reservation-body {
       padding: 1.5rem;
@@ -31,12 +32,16 @@
       font-size: 0.8rem;
       
       &.badge-confirmed {
-        background-color: #d1fae5;
-        color: #065f46;
+        background-color: $status-confirmed-bg;
+        color: $status-confirmed-text;
       }
       &.badge-imminent {
-        background-color: #fef3c7;
-        color: #92400e;
+        background-color: $status-imminent-bg;
+        color: $status-imminent-text;
+      }
+      &.badge-in-progress {
+        background-color: $status-in-progress-bg;
+        color: $status-in-progress-text;
       }
     }
 
@@ -107,6 +112,10 @@
         &.badge-imminent {
           background-color: rgba(245, 158, 11, 0.2);
           color: #fbbf24;
+        }
+        &.badge-in-progress {
+          background-color: rgba($off-white, 0.1);
+          color: $off-white;
         }
       }
       

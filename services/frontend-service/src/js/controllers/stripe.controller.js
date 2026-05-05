@@ -373,45 +373,12 @@ export async function updatePlanSummary(userId, methods = null) {
                     autoRenewSwitch.disabled = false;
                 }
             },
-            onCancelClick: () => {
-                const modalEl = document.getElementById('cancelSubscriptionModal');
-                if (modalEl) {
-                    const bsModal = new bootstrap.Modal(modalEl);
-                    bsModal.show();
-                }
-            }
         });
-
-        const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
-        if (btnConfirmCancel) {
-            btnConfirmCancel.onclick = async () => {
-                const modalEl = document.getElementById('cancelSubscriptionModal');
-                const bsModal = bootstrap.Modal.getInstance(modalEl);
-                try {
-                    btnConfirmCancel.disabled = true;
-                    btnConfirmCancel.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cancel·lant...';
-                    const res = await updateSubscriptionAutorenewal(userId, false);
-                    if (bsModal) bsModal.hide();
-                    if (res.success) {
-                        showBootstrapAlert('success', 'Subscripció modificada.');
-                        await updatePlanSummary(userId);
-                    } else {
-                        showBootstrapAlert('danger', 'No s\'ha pogut cancel·lar.');
-                    }
-                } catch {
-                    if (bsModal) bsModal.hide();
-                    showBootstrapAlert('danger', 'Error de connexió.');
-                } finally {
-                    btnConfirmCancel.disabled = false;
-                    btnConfirmCancel.innerHTML = '<i class="bi bi-x-octagon me-2"></i>Sí, cancel·la';
-                }
-            };
-        }
-
     } catch (err) {
         console.error('[Stripe] updatePlanSummary:', err);
     }
 }
+
 
 /**
  * Inicialitza la secció de pagaments.

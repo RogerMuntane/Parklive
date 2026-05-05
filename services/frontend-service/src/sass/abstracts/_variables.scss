@@ -6,6 +6,14 @@ $crimson: #c1121f;
 $deep-red: #780000;
 $dark-theme: #434667;
 
+// ─── Status Colors ──────────────────────────────────────────────
+$status-confirmed-bg: #d1fae5;
+$status-confirmed-text: #065f46;
+$status-imminent-bg: #fef3c7;
+$status-imminent-text: #92400e;
+$status-in-progress-bg: rgba($dark-navy, 0.1);
+$status-in-progress-text: $dark-navy;
+
 // ─── Overrides de Bootstrap: Tema claro ───────────────────────
 $primary: $dark-navy;
 $secondary: $slate-gray;
