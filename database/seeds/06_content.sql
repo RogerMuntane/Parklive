@@ -18,7 +18,7 @@ VALUES (
         'Descobreix estratègies efectives per trobar aparcament ràpidament al centre de Barcelona',
         3,
         'consells',
-        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
+        '/storage/blog/blog_vista_parking.jpg',
         TRUE,
         '2026-02-10 10:00:00',
         342
@@ -30,7 +30,7 @@ VALUES (
         'Com la mobilitat elèctrica està canviant els aparcaments a les ciutats catalanes',
         3,
         'sostenibilitat',
-        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
+        '/storage/blog/blog_cotxe_electric.jpg',
         TRUE,
         '2026-02-05 09:30:00',
         287
@@ -42,7 +42,7 @@ VALUES (
         'Presentem la nova funcionalitat de reserva express de Parklive',
         3,
         'novetats',
-        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
+        '/storage/blog/blog_smart_parking.jpg',
         TRUE,
         '2026-02-18 11:00:00',
         521
@@ -54,7 +54,7 @@ VALUES (
         'Guia per evitar els errors més freqüents en les reserves d''aparcament',
         3,
         'consells',
-        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
+        '/storage/blog/blog_vista_parking.jpg',
         TRUE,
         '2026-01-28 14:00:00',
         198
@@ -66,7 +66,7 @@ VALUES (
         'Tecnologies emergents que transformaran els aparcaments en els propers anys',
         3,
         'mobilitat',
-        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800',
+        '/storage/blog/blog_smart_parking.jpg',
         FALSE,
         NULL,
         0
