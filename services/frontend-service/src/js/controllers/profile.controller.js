@@ -1256,8 +1256,8 @@ export function initProfileTicketsSection() {
         // Cicle badge
         const isAnual = (t.cicle || '').toLowerCase() === 'anual';
         const cicleBadge = isAnual
-          ? `<span class="ticket-cycle-badge ticket-cycle-anual"><i class="bi bi-calendar-year me-1"></i>Anual</span>`
-          : `<span class="ticket-cycle-badge ticket-cycle-mensual"><i class="bi bi-calendar-month me-1"></i>Mensual</span>`;
+          ? `<span class="ticket-cycle-badge ticket-cycle-anual">Anual</span>`
+          : `<span class="ticket-cycle-badge ticket-cycle-mensual">Mensual</span>`;
 
         // Botó PDF — receipt_url del Charge de Stripe (rebut de pagament)
         const pdfHref = t.pdf_url || t.stripe_invoice_url || null;

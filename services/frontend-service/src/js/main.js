@@ -485,7 +485,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
     const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
     const { initAdminParkingCRUD } = await import(new URL('./controllers/profile-admin-aparcaments.controller.js', import.meta.url).href);
-    const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
     const { initAdminBlog } = await import(new URL('./controllers/profile-admin-blog.controller.js', import.meta.url).href);
 
     initProfilePasswordForm();
@@ -505,10 +504,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       initAdminBlog();
     }
 
-    // Estadístiques només per a Premium (i no per admin segons la lògica de sidebar)
-    if (getUserRole() === 'premium') {
-      initEstadistiques();
-    }
+    // Estadístiques: es carreguen de manera LAZY quan l'usuari accedeix a la secció.
+    // No es pre-carreguen en inicialitzar la pàgina per evitar peticions innecessàries.
 
     // Punts i recompenses només per a usuaris (no admin)
     if (getUserRole() !== 'admin') {
@@ -572,10 +569,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           
           target.classList.add('active');
 
-          // Si entrem a estadístiques, disparem les animacions de les gràfiques
-          if (sec === 'stadistics') {
-            const { refreshEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
-            refreshEstadistiques();
+          // Si entrem a estadístiques:
+          // - Primera vegada: inicialitzem (fetch + render + skeleton)
+          // - Visites posteriors: re-animem les gràfiques existents
+          if (sec === 'stadistics' && getUserRole() === 'premium') {
+            const estadistiquesModule = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
+            const container = document.getElementById('chart-despesa-mensual');
+            const jaInicialitzat = container && container.querySelector('.apexcharts-canvas');
+            if (jaInicialitzat) {
+              estadistiquesModule.refreshEstadistiques();
+            } else {
+              estadistiquesModule.initEstadistiques();
+            }
           }
         }
         if (sectionTitle) sectionTitle.textContent = sectionTitles[sec] || '';
