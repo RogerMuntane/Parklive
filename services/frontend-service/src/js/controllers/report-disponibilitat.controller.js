@@ -96,9 +96,46 @@ export function initReportDisponibilitat() {
 
   let selectedStatus = 'available';
   let currentCoords = null;
+  let userGpsCoords = null;    // Posició GPS real de l'usuari (referència per al radi)
   let marker = null;
+  let allowedCircle = null;    // Cercle visual de l'àrea permesa
   let cooldownUntilMs = getCooldownUntil();
   let cooldownTimerId = null;
+
+  const MAX_RADIUS_M = 500; // Radi màxim permès en metres
+
+  // Fórmula Haversine: distància en metres entre dos punts lat/lon
+  const haversineMeters = (a, b) => {
+    const R = 6371000;
+    const toRad = (d) => (d * Math.PI) / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLon = toRad(b.lon - a.lon);
+    const sinLat = Math.sin(dLat / 2);
+    const sinLon = Math.sin(dLon / 2);
+    const h = sinLat * sinLat + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * sinLon * sinLon;
+    return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  };
+
+  // Retorna el punt clamped al radi màxim si queda fora
+  const clampToRadius = (target, origin) => {
+    const dist = haversineMeters(origin, target);
+    if (dist <= MAX_RADIUS_M) return target;
+
+    // Projectar sobre el cercle: bearing conservat, distància = MAX_RADIUS_M
+    const R = 6371000;
+    const toRad = (d) => (d * Math.PI) / 180;
+    const toDeg = (r) => (r * 180) / Math.PI;
+    const φ1 = toRad(origin.lat);
+    const λ1 = toRad(origin.lon);
+    const bearing = Math.atan2(
+      Math.sin(toRad(target.lon - origin.lon)) * Math.cos(toRad(target.lat)),
+      Math.cos(φ1) * Math.sin(toRad(target.lat)) - Math.sin(φ1) * Math.cos(toRad(target.lat)) * Math.cos(toRad(target.lon - origin.lon))
+    );
+    const d = MAX_RADIUS_M / R;
+    const φ2 = Math.asin(Math.sin(φ1) * Math.cos(d) + Math.cos(φ1) * Math.sin(d) * Math.cos(bearing));
+    const λ2 = λ1 + Math.atan2(Math.sin(bearing) * Math.sin(d) * Math.cos(φ1), Math.cos(d) - Math.sin(φ1) * Math.sin(φ2));
+    return { lat: toDeg(φ2), lon: toDeg(λ2) };
+  };
 
   const clearCooldownTimer = () => {
     if (cooldownTimerId) {
@@ -134,30 +171,97 @@ export function initReportDisponibilitat() {
     }, 500);
   };
 
-  const map = globalThis.L.map(mapEl).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-  globalThis.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; Col·laboradors d\'OpenStreetMap',
-  }).addTo(map);
+  // ── Inicialitzar mapa amb estil CartoDB (igual que el landing) ─────────────
+  const map = globalThis.L.map(mapEl, {
+    zoomControl: false,
+    attributionControl: false,
+    preferCanvas: true,
+  }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
-  const syncMapPosition = ({ lat, lon }) => {
+  globalThis.L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+  globalThis.L.control.zoom({ position: 'bottomright' }).addTo(map);
+  globalThis.L.control
+    .attribution({ position: 'bottomleft', prefix: false })
+    .addTo(map)
+    .addAttribution('© OpenStreetMap contributors, © CARTO');
+
+  globalThis.L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    { subdomains: 'abcd', minZoom: 4, maxZoom: 20 },
+  ).addTo(map);
+
+  const updateCoordDisplay = ({ lat, lon }) => {
+    coordsEl.innerHTML = `<i class="bi bi-geo-alt"></i><span>Lat ${lat.toFixed(5)} · Lon ${lon.toFixed(5)}</span>`;
+  };
+
+  const syncMapPosition = ({ lat, lon }, animate = true) => {
     const latLng = [lat, lon];
 
     if (marker) {
       marker.setLatLng(latLng);
     } else {
-      marker = globalThis.L.marker(latLng).addTo(map);
+      marker = globalThis.L.marker(latLng, { draggable: true }).addTo(map);
+      marker.bindPopup('Arrossega per ajustar · Radi màxim 500 m').openPopup();
+
+      marker.on('dragend', () => {
+        const pos = marker.getLatLng();
+        let clamped = { lat: pos.lat, lon: pos.lng };
+
+        if (userGpsCoords) {
+          const dist = haversineMeters(userGpsCoords, clamped);
+          if (dist > MAX_RADIUS_M) {
+            clamped = clampToRadius(clamped, userGpsCoords);
+            marker.setLatLng([clamped.lat, clamped.lon]);
+            showToast(toastEl, `Ubicació limitada a ${MAX_RADIUS_M} m de la teva posició.`, 'error');
+          }
+        }
+
+        currentCoords = clamped;
+        updateCoordDisplay(clamped);
+      });
     }
 
-    marker.bindPopup('Ubicació del report').openPopup();
-    map.flyTo(latLng, 17, { duration: 0.8 });
-
-    coordsEl.innerHTML = `<i class="bi bi-geo-alt"></i><span>Lat ${lat.toFixed(5)} · Lon ${lon.toFixed(5)}</span>`;
+    if (animate) map.flyTo(latLng, 17, { duration: 0.8 });
+    updateCoordDisplay({ lat, lon });
   };
+
+  // Clic al mapa per posar la ubicació manualment (amb limitació de radi)
+  map.on('click', (e) => {
+    const clicked = { lat: e.latlng.lat, lon: e.latlng.lng };
+
+    if (userGpsCoords) {
+      const dist = haversineMeters(userGpsCoords, clicked);
+      if (dist > MAX_RADIUS_M) {
+        const clamped = clampToRadius(clicked, userGpsCoords);
+        currentCoords = clamped;
+        syncMapPosition(clamped, false);
+        showToast(toastEl, `Ubicació limitada a ${MAX_RADIUS_M} m de la teva posició.`, 'error');
+        return;
+      }
+    }
+
+    currentCoords = clicked;
+    syncMapPosition(clicked, false);
+  });
 
   const loadPosition = async () => {
     try {
-      currentCoords = await resolveCurrentPosition();
-      syncMapPosition(currentCoords);
+      const gps = await resolveCurrentPosition();
+      userGpsCoords = gps;
+      currentCoords = gps;
+
+      // Dibuixar cercle de l'àrea permesa
+      if (allowedCircle) allowedCircle.remove();
+      allowedCircle = globalThis.L.circle([gps.lat, gps.lon], {
+        radius: MAX_RADIUS_M,
+        color: '#2563eb',
+        weight: 1.5,
+        fillColor: '#2563eb',
+        fillOpacity: 0.07,
+        dashArray: '6 4',
+      }).addTo(map);
+
+      syncMapPosition(gps);
     } catch (error) {
       coordsEl.innerHTML = `<i class="bi bi-exclamation-triangle"></i><span>${error.message}</span>`;
       showToast(toastEl, error.message, 'error');

@@ -150,7 +150,13 @@ export function updatePlanSummaryUI(sub, primaryCard) {
 
     // Preu i interval dinàmic
     const planAmount = sub.plan_amount ?? 5;
-    const planInterval = sub.plan_interval === 'year' ? 'any' : 'mes';
+    
+    let planInterval = 'mes';
+    const intervalRaw = (sub.plan_interval || '').toLowerCase();
+    if (intervalRaw === 'year' || intervalRaw === 'anual') {
+        planInterval = 'any';
+    }
+
     const price = planAmount.toLocaleString('ca-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
     const amountUi = document.getElementById('plan-amount-ui');
@@ -269,7 +275,15 @@ export function updateManageSectionUI(subscription, primaryCard, callbacks) {
 
     // Preu
     const planAmount = subscription.plan_amount ?? 5;
-    const planInterval = subscription.plan_interval === 'year' ? 'any' : 'mes';
+    
+    // Suport per a intervals de Stripe (year, month) i locals (anual, mensual, trimestral)
+    let planInterval = 'mes';
+    const intervalRaw = (subscription.plan_interval || '').toLowerCase();
+    
+    if (intervalRaw === 'year' || intervalRaw === 'anual') {
+        planInterval = 'any';
+    }
+    
     const price = planAmount.toLocaleString('ca-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
     const priceHeader = document.getElementById('plan-price-header');
@@ -284,7 +298,10 @@ export function updateManageSectionUI(subscription, primaryCard, callbacks) {
     }
 
     const planIntervalDetail = document.getElementById('plan-interval-detail');
-    if (planIntervalDetail) planIntervalDetail.textContent = planInterval === 'mes' ? 'Mensual' : 'Anual';
+    if (planIntervalDetail) {
+        if (planInterval === 'any') planIntervalDetail.textContent = 'Anual';
+        else planIntervalDetail.textContent = 'Mensual';
+    }
 
     // Targeta
     if (primaryCard) {

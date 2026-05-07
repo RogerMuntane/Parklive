@@ -7569,6 +7569,10 @@ textarea.form-control-lg {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.5rem;
+  padding: 1.25rem !important;
+}
+.page-landing #map .leaflet-bottom.leaflet-left {
+  padding: 1.25rem !important;
 }
 .page-landing #map .leaflet-bottom.leaflet-right > .leaflet-control {
   float: none;
@@ -21758,6 +21762,38 @@ body.page-tiquet {
   min-height: 480px;
   border-radius: 0.86rem;
   overflow: hidden;
+  cursor: crosshair;
+}
+.page-report-disponibilitat #reportDisponibilitatMap .leaflet-tile-pane {
+  filter: brightness(0.82) contrast(1.2) saturate(0.92);
+}
+.page-report-disponibilitat #reportDisponibilitatMap .leaflet-control-zoom {
+  border: 0;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.22);
+}
+.page-report-disponibilitat #reportDisponibilitatMap .leaflet-control-zoom a {
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  color: var(--bs-body-color);
+  background: var(--bs-body-bg);
+  border: 0;
+}
+.page-report-disponibilitat #reportDisponibilitatMap .leaflet-control-scale-line {
+  border-color: rgba(31, 41, 55, 0.55);
+  color: var(--bs-body-color);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(3px);
+  border-radius: 0.35rem;
+  font-size: 0.8rem;
+  padding: 0.18rem 0.42rem;
+}
+@media (max-width: 991px) {
+  .page-report-disponibilitat .report-map {
+    min-height: 340px;
+  }
 }
 .page-report-disponibilitat .report-map-panel {
   position: relative;
@@ -21767,6 +21803,7 @@ body.page-tiquet {
   left: 1rem;
   right: 1rem;
   bottom: 1rem;
+  z-index: 1000;
   border-radius: 0.6rem;
   padding: 0.75rem 0.9rem;
   color: #fff;

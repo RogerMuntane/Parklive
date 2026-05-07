@@ -59,8 +59,9 @@ export function initLandingMap() {
 
   globalThis.map = map;
 
-  leaflet.control.zoom({ position: 'bottomright' }).addTo(map);
+  // Afegim els controls en l'ordre que quedi l'escala a sota de tot
   leaflet.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+  leaflet.control.zoom({ position: 'bottomright' }).addTo(map);
 
   let locateMeHandler = null;
   let userLocationMarker = null;
