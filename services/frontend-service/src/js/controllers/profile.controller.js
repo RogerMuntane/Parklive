@@ -649,7 +649,7 @@ export function initProfileHistorySection() {
                     <tr>
                         <td class="text-body-secondary small">${dataFmt}</td>
                         <td class="fw-medium">${desc}</td>
-                        <td><span class="badge bg-light text-dark border px-2 py-1">${preu}</span></td>
+                        <td><span class="badge bg-body-secondary text-body-emphasis border border-secondary border-opacity-25 px-2 py-1">${preu}</span></td>
                         <td>
                             <span class="status-badge ${badgeClass}">
                                 <i class="bi ${icon}"></i> ${labelText}
@@ -1101,6 +1101,16 @@ export function initProfileTicketsSection() {
 
   if (!tableBody) return;
 
+  // Enllaçar el botó "Gestionar pla" de l'alert cap a la secció de gestió
+  const manageLink = document.getElementById('tickets-manage-link');
+  if (manageLink) {
+    manageLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sidebarBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
+      if (sidebarBtn) sidebarBtn.click();
+    });
+  }
+
   let currentPage = 1;
   let currentSearch = '';
   let currentCicle = '';  // '' | 'mensual' | 'anual'
@@ -1287,7 +1297,7 @@ export function initProfileTicketsSection() {
             </td>
             <td>${cicleBadge}</td>
             <td>
-              <span class="badge bg-light text-dark border px-2 py-1 fw-semibold">
+              <span class="badge bg-body-secondary text-body-emphasis border border-secondary border-opacity-25 px-2 py-1 fw-semibold">
                 ${formatCurrency(t.import)}
               </span>
             </td>

@@ -34,7 +34,7 @@ Parklive és un sistema complet de gestió d'aparcaments que implementa una arqu
 ## APIs i Serveis Externs
 - **Stripe API**: Pasarel·la de pagament per a reserves puntuals i subscripcions Premium. S'utilitzen *Stripe Elements*, *SetupIntents* i *Webhooks*.
 - **Google OAuth 2.0**: Autenticació d'usuaris mitjançant Google Identity Services.
-- **Cloudinary API**: Optimització automàtica d'imatges (WebP, qualitat auto). S'utilitza com a motor principal de transformació amb un sistema de **fallback local (Pillow)** per garantir el funcionament en cas de fallada de xarxa.
+- **Cloudinary API**: Optimització automàtica d'imatges (WebP, qualitat auto). S'utilitza com a motor principal de transformació amb un sistema de 
 - **Servidor SMTP**: Servei per a l'enviament de correus electrònics (recuperació de contrasenyes).
 ## Arquitectura del Projecte
 
@@ -45,25 +45,23 @@ parklive/
 ├── services/
 │   ├── python-service/          # Servei backend Python (API REST)
 │   │   ├── models/              # Models de dades i lògica de negoci
-│   │   ├── controllers/         # Controladors i lògica de rutes
-│   │   ├── scripts/             # Tasques programades (Crons de pagaments i subscripcions)
-│   │   ├── config/              # Configuració del servei
+│   │   ├── controllers/         # Controladors de la lògica de negoci
+│   │   ├── routes/              # Definicions de les rutes de l'API
+│   │   ├── middleware/          # Middlewares d'autenticació i validació
+│   │   ├── scripts/             # Tasques programades i utilitats
 │   │   ├── requirements.txt     # Dependències Python
 │   │   └── Dockerfile           # Contenidor Docker
 │   │
 │   ├── php-service/             # Servei backend PHP (API REST)
 │   │   ├── models/              # Models de dades i accés a BD
-│   │   ├── controllers/         # Controladors PHP
-│   │   ├── config/              # Configuració del servei
+│   │   ├── controllers/         # Controladors de processos d'auth i legacy
+│   │   ├── routes/              # Configuració de rutes del servei
 │   │   ├── composer.json        # Dependències PHP
 │   │   └── Dockerfile           # Contenidor Docker
 │   │
-│   └── frontend-service/        # Servei Frontend
-│       ├── src/
-│       │   ├── assets/          
-│       │   ├── js/           
-│       │   └── sass/        
-│       ├── public/              # Recursos estàtics
+│   └── frontend-service/        # Servei Frontend (Nginx + JS)
+│       ├── src/                 # Codi font (JS, SASS)
+│       ├── public/              # Recursos estàtics i HTML
 │       └── Dockerfile           # Contenidor Docker
 │
 ├── shared/                      # Recursos compartits entre serveis
@@ -72,9 +70,12 @@ parklive/
 │   ├── validators/              # Validadors de dades
 │   └── constants/               # Constants globals
 │
-├── storage/                     # Emmagatzematge persistent de fitxers
+├── storage/                     # Emmagatzematge persistent de fitxers (Volum Docker)
 │   ├── tickets/                 # Tiquets de reserva generats en PDF
-│   └── aparcaments/             # Imatges optimitzades dels aparcaments (WebP)
+│   ├── aparcaments/             # Imatges optimitzades dels aparcaments (WebP)
+│   ├── blog/                    # Imatges del blog i contingut multimèdia
+│   ├── profiles/                # Fotos de perfil dels usuaris
+│   └── street_reports.jsonl     # Base de dades de reports de places en carrer
 │
 ├── logs/                        # Registres d'execució i errors de processament
 │
@@ -146,4 +147,4 @@ docker-compose down
 - Roger Muntané - [@RogerMuntane](https://github.com/RogerMuntane)
 - Xavier Ruiz - [@Emperor-Xizzle](https://github.com/Emperor-Xizzle)
 
-**Última actualització**: 2026-05-05
+**Última actualització**: 2026-05-07
