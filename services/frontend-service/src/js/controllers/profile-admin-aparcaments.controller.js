@@ -251,10 +251,9 @@ async function handleFormSubmit(e) {
 
     // VALIDACIONS CLIENT-SIDE
     const capTotal = parseInt(payload.get('capacitat_total')) || 0;
-    const placesDisp = parseInt(payload.get('places_disponibles')) || 0;
 
-    if (placesDisp > capTotal) {
-        showBootstrapAlert('danger', 'Les places disponibles no poden ser superiors a la capacitat total');
+    if (capTotal < 1) {
+        showBootstrapAlert('danger', 'La capacitat total ha de ser d\'almenys 1 plaça');
         return;
     }
 
@@ -393,7 +392,6 @@ window.editParking = function (p) {
     form.querySelector('[name="latitud"]').value = p.latitud;
     form.querySelector('[name="longitud"]').value = p.longitud;
     form.querySelector('[name="capacitat_total"]').value = p.capacitat_total;
-    form.querySelector('[name="places_disponibles"]').value = p.places_disponibles;
     form.querySelector('[name="tarifa_hora"]').value = p.tarifa_hora || '';
     form.querySelector('[name="tarifa_dia"]').value = p.tarifa_dia || '';
     form.querySelector('[name="estat"]').value = p.estat;

@@ -339,18 +339,18 @@ VALUES (
         'activa',
         '2025-01-01',
         '2025-02-01',
-        9.99,
+        4.99,
         'targeta',
         TRUE,
         'sub_test_001'
     ),
     (
         6,
-        'trimestral',
+        'mensual',
         'activa',
         '2024-11-01',
-        '2025-02-01',
-        25.99,
+        '2024-12-01',
+        4.99,
         'paypal',
         TRUE,
         'sub_test_002'
@@ -361,7 +361,7 @@ VALUES (
         'activa',
         '2024-05-20',
         '2025-05-20',
-        89.99,
+        49.99,
         'targeta',
         TRUE,
         'sub_test_003'
@@ -372,7 +372,7 @@ VALUES (
         'activa',
         '2024-12-15',
         '2025-01-15',
-        9.99,
+        4.99,
         'targeta',
         FALSE,
         'sub_test_004'
@@ -457,7 +457,7 @@ VALUES (
         'activa',
         '2025-03-01',
         '2026-03-01',
-        59.99,
+        49.99,
         'targeta',
         TRUE,
         'sub_test_005'
@@ -468,18 +468,18 @@ VALUES (
         'activa',
         '2026-02-01',
         '2026-03-01',
-        6.99,
+        4.99,
         'paypal',
         TRUE,
         'sub_test_006'
     ),
     (
         9,
-        'trimestral',
+        'mensual',
         'activa',
         '2025-12-15',
-        '2026-03-15',
-        17.99,
+        '2026-01-15',
+        4.99,
         'targeta',
         FALSE,
         'sub_test_007'
@@ -490,7 +490,7 @@ VALUES (
         'activa',
         '2025-06-10',
         '2026-06-10',
-        59.99,
+        49.99,
         'targeta',
         TRUE,
         'sub_test_008'
@@ -501,7 +501,7 @@ VALUES (
         'cancelada',
         '2026-01-05',
         '2026-02-05',
-        6.99,
+        4.99,
         'paypal',
         FALSE,
         'sub_test_009'

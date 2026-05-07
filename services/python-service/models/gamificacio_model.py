@@ -65,10 +65,11 @@ def redeem_reward(user_id, reward_id):
         if usuari['punts_gamificacio'] < cost:
             return False, f"No tens prou punts (en tens {usuari['punts_gamificacio']}, en calen {cost})"
         
-        # 4. Comprovar si ja té aquesta recompensa (Constraint UNIQUE a la BD)
-        cursor.execute("SELECT id FROM usuaris_recompenses WHERE usuari_id = %s AND recompensa_id = %s", (user_id, reward_id))
-        if cursor.fetchone():
-            return False, "Ja has obtingut aquesta recompensa anteriorment i no es pot repetir"
+        # 4. Comprovar si ja té aquesta recompensa (excepte premium_temporal que es pot renovar)
+        if recompensa['tipus'] != 'premium_temporal':
+            cursor.execute("SELECT id FROM usuaris_recompenses WHERE usuari_id = %s AND recompensa_id = %s", (user_id, reward_id))
+            if cursor.fetchone():
+                return False, "Ja has obtingut aquesta recompensa anteriorment i no es pot repetir"
 
         # 5. Iniciar transacció per al bescanvi
         # mysql-connector-python sol tenir autocommit=False per defecte,
@@ -78,10 +79,19 @@ def redeem_reward(user_id, reward_id):
         cursor.execute("UPDATE usuaris SET punts_gamificacio = punts_gamificacio - %s WHERE id = %s", (cost, user_id))
         
         # B. Registrar a usuaris_recompenses
-        cursor.execute(
-            "INSERT INTO usuaris_recompenses (usuari_id, recompensa_id) VALUES (%s, %s)",
-            (user_id, reward_id)
-        )
+        # Per premium_temporal: INSERT IGNORE + reset, per la resta: INSERT normal
+        if recompensa['tipus'] == 'premium_temporal':
+            cursor.execute(
+                """INSERT INTO usuaris_recompenses (usuari_id, recompensa_id, data_obtencio, utilitzada)
+                   VALUES (%s, %s, NOW(), FALSE)
+                   ON DUPLICATE KEY UPDATE data_obtencio = NOW(), utilitzada = FALSE""",
+                (user_id, reward_id)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO usuaris_recompenses (usuari_id, recompensa_id) VALUES (%s, %s)",
+                (user_id, reward_id)
+            )
         
         # C. Registrar el moviment de punts
         cursor.execute(
@@ -97,6 +107,37 @@ def redeem_reward(user_id, reward_id):
         )
         
         conn.commit()
+
+        # E. Si la recompensa és de tipus premium_temporal, activar el premium
+        if recompensa['tipus'] == 'premium_temporal':
+            try:
+                dies = 30  # Valor per defecte: 1 mes
+                if recompensa.get('valor'):
+                    import json as _json
+                    valor_data = recompensa['valor'] if isinstance(recompensa['valor'], dict) else _json.loads(recompensa['valor'])
+                    dies = int(valor_data.get('dies', 30))
+
+                # Actualitzar tipus_usuari
+                cursor.execute(
+                    "UPDATE usuaris SET tipus_usuari = 'premium' WHERE id = %s",
+                    (user_id,)
+                )
+
+                # Crear registre a subscripcions
+                cursor.execute("""
+                    INSERT INTO subscripcions 
+                        (usuari_id, tipus, estat, data_inici, data_final, preu, metode_pagament, auto_renovacio)
+                    VALUES 
+                        (%s, 'mensual', 'activa', CURDATE(), DATE_ADD(CURDATE(), INTERVAL %s DAY), 0.00, 'altres', FALSE)
+                """, (user_id, dies))
+
+                conn.commit()
+                print(f"[GAMIFICACIO] Premium activat per {dies} dies a usuari {user_id}")
+            except Exception as premium_err:
+                print(f"[GAMIFICACIO] Error activant premium: {premium_err}")
+                # No fem rollback del bescanvi de punts, però avisem
+                return True, f"Recompensa '{recompensa['nom']}' bescanviada, però hi ha hagut un error activant el premium. Contacta suport."
+
         return True, f"Recompensa '{recompensa['nom']}' bescanviada amb èxit!"
         
     except Exception as e:
