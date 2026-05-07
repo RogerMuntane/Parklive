@@ -1,4 +1,5 @@
 import { pythonApi } from '../api.js';
+import { PHP_API_URL } from '../config.js';
 
 /**
  * Utilitat per formatar dates de manera llegible.
@@ -32,7 +33,11 @@ function renderBlogList(articles) {
     col.className = 'col-md-6 col-lg-4';
 
     const defaultImage = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800';
-    const imgSrc = article.imatge_destacada || defaultImage;
+    let imgSrc = article.imatge_destacada || defaultImage;
+    
+    if (imgSrc && imgSrc.startsWith('/storage/')) {
+      imgSrc = PHP_API_URL + imgSrc;
+    }
     
     col.innerHTML = `
       <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden text-decoration-none">
@@ -76,7 +81,11 @@ function renderBlogArticle(article) {
   document.getElementById('article-visites').textContent = article.visites || 0;
 
   const defaultImage = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800';
-  const imgSrc = article.imatge_destacada || defaultImage;
+  let imgSrc = article.imatge_destacada || defaultImage;
+
+  if (imgSrc && imgSrc.startsWith('/storage/')) {
+    imgSrc = PHP_API_URL + imgSrc;
+  }
 
   const imgEl = document.getElementById('article-imatge');
   if (imgEl) {

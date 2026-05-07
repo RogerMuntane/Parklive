@@ -649,7 +649,7 @@ export function initProfileHistorySection() {
                     <tr>
                         <td class="text-body-secondary small">${dataFmt}</td>
                         <td class="fw-medium">${desc}</td>
-                        <td><span class="badge bg-light text-dark border px-2 py-1">${preu}</span></td>
+                        <td><span class="badge bg-body-secondary text-body-emphasis border border-secondary border-opacity-25 px-2 py-1">${preu}</span></td>
                         <td>
                             <span class="status-badge ${badgeClass}">
                                 <i class="bi ${icon}"></i> ${labelText}
@@ -972,12 +972,12 @@ export async function initProfilePointsSection() {
 
   const renderRewards = (recompenses) => {
     rewardsGrid.innerHTML = '';
-    
+
     recompenses.forEach(reward => {
       const isLocked = userPoints < reward.requisit_punts;
       const card = document.createElement('div');
       card.className = 'col';
-      
+
       card.innerHTML = `
         <div class="card h-100 reward-card shadow-sm border-0 ${isLocked ? 'locked' : ''}">
           <div class="card-body p-4 d-flex flex-column">
@@ -1054,37 +1054,37 @@ export async function initProfilePointsSection() {
  * Carrega les insignies de l'usuari i les mostra al sidebar
  */
 export async function loadSidebarBadges() {
-    const userId = getUserId();
-    const container = document.getElementById('sidebar-badges-container');
-    if (!userId || !container) return;
+  const userId = getUserId();
+  const container = document.getElementById('sidebar-badges-container');
+  if (!userId || !container) return;
 
-    try {
-        const data = await pythonApi.get(`/api/gamificacio/usuari/${userId}/recompenses`);
-        if (data.success && data.recompenses) {
-            const insignies = data.recompenses.filter(r => r.tipus === 'insignia');
-            
-            if (insignies.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
+  try {
+    const data = await pythonApi.get(`/api/gamificacio/usuari/${userId}/recompenses`);
+    if (data.success && data.recompenses) {
+      const insignies = data.recompenses.filter(r => r.tipus === 'insignia');
 
-            container.innerHTML = insignies.map(ins => `
+      if (insignies.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = insignies.map(ins => `
                 <div class="badge-icon-sm" title="${ins.nom}" data-bs-toggle="tooltip">
                     <i class="${ins.icona_url || 'bi bi-award'}"></i>
                 </div>
             `).join('');
 
-            // Inicialitzar tooltips de Bootstrap si n'hi ha
-            if (window.bootstrap && bootstrap.Tooltip) {
-                const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            }
-        }
-    } catch (err) {
-        console.error('[ParkLive] Error carregant insignies del sidebar:', err);
+      // Inicialitzar tooltips de Bootstrap si n'hi ha
+      if (window.bootstrap && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      }
     }
+  } catch (err) {
+    console.error('[ParkLive] Error carregant insignies del sidebar:', err);
+  }
 }
 
 /**
@@ -1092,18 +1092,28 @@ export async function loadSidebarBadges() {
  * Completament independent de l'historial de reserves.
  */
 export function initProfileTicketsSection() {
-  const tableBody       = document.getElementById('tickets-table-body');
-  const searchInput     = document.getElementById('input-search-tickets');
-  const statusSelect    = document.getElementById('select-status-tickets');
-  const searchBtn       = document.getElementById('btn-search-tickets-submit');
+  const tableBody = document.getElementById('tickets-table-body');
+  const searchInput = document.getElementById('input-search-tickets');
+  const statusSelect = document.getElementById('select-status-tickets');
+  const searchBtn = document.getElementById('btn-search-tickets-submit');
   const paginationContainer = document.getElementById('tickets-pagination-container');
-  const countLabel      = document.getElementById('tickets-count-label');
+  const countLabel = document.getElementById('tickets-count-label');
 
   if (!tableBody) return;
 
-  let currentPage   = 1;
+  // Enllaçar el botó "Gestionar pla" de l'alert cap a la secció de gestió
+  const manageLink = document.getElementById('tickets-manage-link');
+  if (manageLink) {
+    manageLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sidebarBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
+      if (sidebarBtn) sidebarBtn.click();
+    });
+  }
+
+  let currentPage = 1;
   let currentSearch = '';
-  let currentCicle  = '';  // '' | 'mensual' | 'anual'
+  let currentCicle = '';  // '' | 'mensual' | 'anual'
   const limit = 6;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -1119,9 +1129,9 @@ export function initProfileTicketsSection() {
   const renderResum = (resum) => {
     if (!resum || !resum.pla_actual) return;
 
-    fillPill('pill-pla-actual',    resum.pla_actual);
+    fillPill('pill-pla-actual', resum.pla_actual);
     fillPill('pill-membre-des-de', resum.membre_des_de);
-    fillPill('pill-renovacio',     resum.renovacio);
+    fillPill('pill-renovacio', resum.renovacio);
 
     // Mètode: enmascarar les últimes 4 xifres
     const metodePill = document.getElementById('pill-metode');
@@ -1134,7 +1144,7 @@ export function initProfileTicketsSection() {
     }
 
     // Alert informatiu de renovació
-    const alertEl   = document.getElementById('tickets-renewal-alert');
+    const alertEl = document.getElementById('tickets-renewal-alert');
     const alertText = document.getElementById('tickets-renewal-alert-text');
     if (alertEl && alertText && resum.auto_renovacio && resum.preu && resum.renovacio) {
       const planNom = resum.pla_actual || 'Premium';
@@ -1244,20 +1254,20 @@ export function initProfileTicketsSection() {
       tableBody.innerHTML = tiquets.map(t => {
         // Estat badge
         let badgeClass = 'bg-secondary text-white';
-        let badgeIcon  = 'bi-dash-circle';
+        let badgeIcon = 'bi-dash-circle';
         let badgeLabel = t.estat || 'Desconegut';
 
         const estat = (t.estat || '').toLowerCase();
-        if      (estat === 'activa')    { badgeClass = 'status-ok';   badgeIcon = 'bi-check-circle-fill'; badgeLabel = 'Actiu'; }
-        else if (estat === 'cancelada') { badgeClass = 'status-err';  badgeIcon = 'bi-x-circle-fill';     badgeLabel = 'Cancel·lat'; }
-        else if (estat === 'pendent')   { badgeClass = 'status-pend'; badgeIcon = 'bi-clock-fill';        badgeLabel = 'Pendent'; }
-        else if (estat === 'caducada')  { badgeClass = 'bg-secondary text-white'; badgeIcon = 'bi-dash-circle'; badgeLabel = 'Caducat'; }
+        if (estat === 'activa') { badgeClass = 'status-ok'; badgeIcon = 'bi-check-circle-fill'; badgeLabel = 'Actiu'; }
+        else if (estat === 'cancelada') { badgeClass = 'status-err'; badgeIcon = 'bi-x-circle-fill'; badgeLabel = 'Cancel·lat'; }
+        else if (estat === 'pendent') { badgeClass = 'status-pend'; badgeIcon = 'bi-clock-fill'; badgeLabel = 'Pendent'; }
+        else if (estat === 'caducada') { badgeClass = 'bg-secondary text-white'; badgeIcon = 'bi-dash-circle'; badgeLabel = 'Caducat'; }
 
         // Cicle badge
         const isAnual = (t.cicle || '').toLowerCase() === 'anual';
         const cicleBadge = isAnual
-          ? `<span class="ticket-cycle-badge ticket-cycle-anual"><i class="bi bi-calendar-year me-1"></i>Anual</span>`
-          : `<span class="ticket-cycle-badge ticket-cycle-mensual"><i class="bi bi-calendar-month me-1"></i>Mensual</span>`;
+          ? `<span class="ticket-cycle-badge ticket-cycle-anual">Anual</span>`
+          : `<span class="ticket-cycle-badge ticket-cycle-mensual">Mensual</span>`;
 
         // Botó PDF — receipt_url del Charge de Stripe (rebut de pagament)
         const pdfHref = t.pdf_url || t.stripe_invoice_url || null;
@@ -1287,7 +1297,7 @@ export function initProfileTicketsSection() {
             </td>
             <td>${cicleBadge}</td>
             <td>
-              <span class="badge bg-light text-dark border px-2 py-1 fw-semibold">
+              <span class="badge bg-body-secondary text-body-emphasis border border-secondary border-opacity-25 px-2 py-1 fw-semibold">
                 ${formatCurrency(t.import)}
               </span>
             </td>
@@ -1328,7 +1338,7 @@ export function initProfileTicketsSection() {
       document.querySelectorAll('#tickets-cycle-switcher .btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentCicle = btn.dataset.cycle;
-      currentPage  = 1;
+      currentPage = 1;
       fetchTickets();
     });
   });

@@ -58,6 +58,56 @@ function destroyChart(id) {
   }
 }
 
+/**
+ * Mostra un skeleton shimmer dins d'un contenidor de gràfica.
+ * @param {string} elId   - ID del div contenidor.
+ * @param {'area'|'donut'|'bar'|'spark'} variant
+ * @param {number} height - Alçada en píxels.
+ */
+function showChartSkeleton(elId, variant = 'bar', height = 190) {
+  const el = document.getElementById(elId);
+  if (!el || el.dataset.skeletonActive) return;
+  el.dataset.skeletonActive = '1';
+
+  let inner = '';
+  if (variant === 'donut') {
+    inner = `<div class="skel-circle"></div>
+      <div class="skel-legend">
+        <div class="skel-line"></div>
+        <div class="skel-line"></div>
+        <div class="skel-line"></div>
+      </div>`;
+  } else if (variant === 'spark') {
+    inner = '<div class="skel-col"></div>'.repeat(7);
+  } else if (variant === 'area') {
+    inner = '<div class="skel-area-shape"></div>';
+  } else {
+    inner = '<div class="skel-col"></div>'.repeat(5);
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = `chart-skeleton chart-skeleton--${variant}`;
+  wrapper.style.height = `${height}px`;
+  wrapper.dataset.skeletonWrapper = '1';
+  wrapper.innerHTML = inner;
+
+  el.innerHTML = '';
+  el.appendChild(wrapper);
+}
+
+/**
+ * Elimina el skeleton i prepara el contenidor per a la gràfica.
+ * @param {string} elId - ID del div contenidor.
+ */
+function clearChartSkeleton(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  delete el.dataset.skeletonActive;
+  // ApexCharts escriurà el SVG, però primer netegem el skeleton
+  const skeleton = el.querySelector('[data-skeleton-wrapper]');
+  if (skeleton) skeleton.remove();
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
@@ -79,16 +129,16 @@ function baseChartOptions() {
       toolbar: { show: false },
       animations: {
         enabled: true,
-        easing: 'easeinout',
-        speed: 800,
+        easing: 'easeout',
+        speed: 600,
         animateGradually: {
           enabled: true,
-          delay: 150
+          delay: 120,
         },
         dynamicAnimation: {
           enabled: true,
-          speed: 350
-        }
+          speed: 450,
+        },
       },
     },
     grid: {
@@ -156,57 +206,48 @@ function renderKpis(kpis) {
 // ─── Gràfica 1: Despesa mensual (Area Chart) ─────────────────────────────────
 
 function renderDespesaMensual(dades) {
-  destroyChart('despesa-mensual');
+  clearChartSkeleton('chart-despesa-mensual');
   const el = document.getElementById('chart-despesa-mensual');
   if (!el) return;
 
-  // ApexCharts necessita un <div> contenidor, no <canvas>
-  el.innerHTML = '';
-
   const base = baseChartOptions();
+  const series = [{ name: 'Despesa (€)', data: dades.map(d => parseFloat(d.total.toFixed(2))) }];
+  const categories = dades.map(d => d.mes_label);
 
+  // Si la gràfica ja existeix i l'element encara la conté: actualitzar
+  if (_charts['despesa-mensual'] && el.querySelector('.apexcharts-canvas')) {
+    _charts['despesa-mensual'].updateOptions({ xaxis: { categories } }, false, false);
+    _charts['despesa-mensual'].updateSeries(series, true);
+    return;
+  }
+
+  // Si l'element és buit (p.ex. canvi de tab) però teníem instància, la destruïm
+  if (_charts['despesa-mensual']) {
+    _charts['despesa-mensual'].destroy();
+  }
+
+  el.innerHTML = '';
   const options = {
     ...base,
-    chart: {
-      ...base.chart,
-      type: 'area',
-      height: 200,
-      id: 'despesa-mensual',
-    },
-    series: [{
-      name: 'Despesa (€)',
-      data: dades.map(d => parseFloat(d.total.toFixed(2))),
-    }],
+    chart: { ...base.chart, type: 'area', height: 200, id: 'despesa-mensual' },
+    series,
     xaxis: {
-      categories: dades.map(d => d.mes_label),
+      categories,
       labels: { style: { fontSize: '11px' } },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
-    yaxis: {
-      labels: {
-        formatter: v => `${v.toFixed(0)}€`,
-        style: { fontSize: '11px' },
-      },
-    },
+    yaxis: { labels: { formatter: v => `${v.toFixed(0)}€`, style: { fontSize: '11px' } } },
     colors: [COLORS.success],
     fill: {
       type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.35,
-        opacityTo: 0.02,
-        stops: [0, 100],
-      },
+      gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 100] },
     },
     stroke: { curve: 'smooth', width: 2 },
     markers: { size: 0 },
     dataLabels: { enabled: false },
     grid: base.grid,
-    tooltip: {
-      ...base.tooltip,
-      y: { formatter: v => fmtEur(v) },
-    },
+    tooltip: { ...base.tooltip, y: { formatter: v => fmtEur(v) } },
   };
 
   _charts['despesa-mensual'] = new ApexCharts(el, options);
@@ -216,10 +257,9 @@ function renderDespesaMensual(dades) {
 // ─── Gràfica 2: Distribució per tipus (Donut) ────────────────────────────────
 
 function renderTipusAparcament(distribucio) {
-  destroyChart('tipus-aparcament');
+  clearChartSkeleton('chart-tipus-aparcament');
   const el = document.getElementById('chart-tipus-aparcament');
   if (!el) return;
-  el.innerHTML = '';
 
   const base = baseChartOptions();
   const labels = distribucio.map(d => TIPUS_LABELS[d.tipus] || d.tipus);
@@ -236,14 +276,20 @@ function renderTipusAparcament(distribucio) {
       </span>`).join('');
   }
 
+  if (_charts['tipus-aparcament'] && el.querySelector('.apexcharts-canvas')) {
+    _charts['tipus-aparcament'].updateOptions({ labels, colors: colorsArr }, false, false);
+    _charts['tipus-aparcament'].updateSeries(series, true);
+    return;
+  }
+
+  if (_charts['tipus-aparcament']) {
+    _charts['tipus-aparcament'].destroy();
+  }
+
+  el.innerHTML = '';
   const options = {
     ...base,
-    chart: {
-      ...base.chart,
-      type: 'donut',
-      height: 175,
-      id: 'tipus-aparcament',
-    },
+    chart: { ...base.chart, type: 'donut', height: 175, id: 'tipus-aparcament' },
     series,
     labels,
     colors: colorsArr,
@@ -265,10 +311,7 @@ function renderTipusAparcament(distribucio) {
     legend: { show: false },
     dataLabels: { enabled: false },
     stroke: { width: 0 },
-    tooltip: {
-      ...base.tooltip,
-      y: { formatter: v => `${v} reserves` },
-    },
+    tooltip: { ...base.tooltip, y: { formatter: v => `${v} reserves` } },
   };
 
   _charts['tipus-aparcament'] = new ApexCharts(el, options);
@@ -278,24 +321,32 @@ function renderTipusAparcament(distribucio) {
 // ─── Gràfica 3: Reserves per estat (Bar radial) ──────────────────────────────
 
 function renderReservesEstat(estats) {
-  destroyChart('reserves-estat');
+  clearChartSkeleton('chart-reserves-estat');
   const el = document.getElementById('chart-reserves-estat');
   if (!el) return;
-  el.innerHTML = '';
 
   const base = baseChartOptions();
   const labels = estats.map(e => ESTAT_MAP[e.estat]?.label || e.estat);
   const series = estats.map(e => e.count);
   const colorsArr = estats.map(e => ESTAT_MAP[e.estat]?.color || COLORS.secondary);
 
+  if (_charts['reserves-estat'] && el.querySelector('.apexcharts-canvas')) {
+    _charts['reserves-estat'].updateOptions(
+      { xaxis: { categories: labels }, colors: colorsArr },
+      false, false
+    );
+    _charts['reserves-estat'].updateSeries([{ name: 'Reserves', data: series }], true);
+    return;
+  }
+
+  if (_charts['reserves-estat']) {
+    _charts['reserves-estat'].destroy();
+  }
+
+  el.innerHTML = '';
   const options = {
     ...base,
-    chart: {
-      ...base.chart,
-      type: 'bar',
-      height: 190,
-      id: 'reserves-estat',
-    },
+    chart: { ...base.chart, type: 'bar', height: 190, id: 'reserves-estat' },
     series: [{ name: 'Reserves', data: series }],
     xaxis: {
       categories: labels,
@@ -303,27 +354,13 @@ function renderReservesEstat(estats) {
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
-    yaxis: {
-      labels: {
-        formatter: v => Math.round(v),
-        style: { fontSize: '11px' },
-      },
-    },
+    yaxis: { labels: { formatter: v => Math.round(v), style: { fontSize: '11px' } } },
     colors: colorsArr,
-    plotOptions: {
-      bar: {
-        distributed: true,
-        borderRadius: 5,
-        columnWidth: '55%',
-      },
-    },
+    plotOptions: { bar: { distributed: true, borderRadius: 5, columnWidth: '55%' } },
     legend: { show: false },
     dataLabels: { enabled: false },
     grid: base.grid,
-    tooltip: {
-      ...base.tooltip,
-      y: { formatter: v => `${v} reserve${v !== 1 ? 's' : ''}` },
-    },
+    tooltip: { ...base.tooltip, y: { formatter: v => `${v} reserve${v !== 1 ? 's' : ''}` } },
   };
 
   _charts['reserves-estat'] = new ApexCharts(el, options);
@@ -333,56 +370,47 @@ function renderReservesEstat(estats) {
 // ─── Gràfica 4: Contribucions per tipus (Grouped Bar) ────────────────────────
 
 function renderContribucions(contribucions) {
-  destroyChart('contribucions-tipus');
+  clearChartSkeleton('chart-contribucions-tipus');
   const el = document.getElementById('chart-contribucions-tipus');
   if (!el) return;
-  el.innerHTML = '';
 
   const base = baseChartOptions();
-
-  // Agrupar per tipus
   const tipusSet = [...new Set(contribucions.map(c => c.tipus))];
   const totals = tipusSet.map(t => {
     const row = contribucions.find(c => c.tipus === t);
     return row ? row.count : 0;
   });
-
   const labels = tipusSet.map(t => t.charAt(0).toUpperCase() + t.slice(1, 5) + '.');
   const colorsArr = tipusSet.map(t => (t === 'ocupat' ? '#ef4444' : '#22c55e'));
 
+  if (_charts['contribucions-tipus'] && el.querySelector('.apexcharts-canvas')) {
+    _charts['contribucions-tipus'].updateOptions(
+      { xaxis: { categories: labels }, colors: colorsArr },
+      false, false
+    );
+    _charts['contribucions-tipus'].updateSeries([{ name: 'Contribucions', data: totals }], true);
+    return;
+  }
+
+  if (_charts['contribucions-tipus']) {
+    _charts['contribucions-tipus'].destroy();
+  }
+
+  el.innerHTML = '';
   const options = {
     ...base,
-    chart: {
-      ...base.chart,
-      type: 'bar',
-      height: 190,
-      id: 'contribucions-tipus',
-    },
-    series: [
-      {
-        name: 'Contribucions',
-        data: totals,
-      },
-    ],
+    chart: { ...base.chart, type: 'bar', height: 190, id: 'contribucions-tipus' },
+    series: [{ name: 'Contribucions', data: totals }],
     xaxis: {
       categories: labels,
       labels: { style: { fontSize: '11px' } },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
-    yaxis: {
-      labels: {
-        formatter: v => Math.round(v),
-        style: { fontSize: '11px' },
-      },
-    },
+    yaxis: { labels: { formatter: v => Math.round(v), style: { fontSize: '11px' } } },
     colors: colorsArr,
-    plotOptions: {
-      bar: { distributed: true, borderRadius: 4, columnWidth: '60%' },
-    },
-    legend: {
-      show: false
-    },
+    plotOptions: { bar: { distributed: true, borderRadius: 4, columnWidth: '60%' } },
+    legend: { show: false },
     dataLabels: { enabled: false },
     grid: base.grid,
   };
@@ -394,41 +422,42 @@ function renderContribucions(contribucions) {
 // ─── Gràfica 5: Reserves per dia de la setmana (Bar petit) ──────────────────
 
 function renderDiesSetmana(dies) {
-  destroyChart('dies-setmana');
+  clearChartSkeleton('chart-dies-setmana');
   const el = document.getElementById('chart-dies-setmana');
   if (!el) return;
-  el.innerHTML = '';
 
   const base = baseChartOptions();
+  const series = [{ name: 'Reserves', data: dies.map(d => d.count) }];
+  const categories = dies.map(d => d.dia_label);
 
+  if (_charts['dies-setmana'] && el.querySelector('.apexcharts-canvas')) {
+    _charts['dies-setmana'].updateOptions({ xaxis: { categories } }, false, false);
+    _charts['dies-setmana'].updateSeries(series, true);
+    return;
+  }
+
+  if (_charts['dies-setmana']) {
+    _charts['dies-setmana'].destroy();
+  }
+
+  el.innerHTML = '';
   const options = {
     ...base,
-    chart: {
-      ...base.chart,
-      type: 'bar',
-      height: 90,
-      id: 'dies-setmana',
-      sparkline: { enabled: false },
-    },
-    series: [{ name: 'Reserves', data: dies.map(d => d.count) }],
+    chart: { ...base.chart, type: 'bar', height: 90, id: 'dies-setmana', sparkline: { enabled: false } },
+    series,
     xaxis: {
-      categories: dies.map(d => d.dia_label),
+      categories,
       labels: { style: { fontSize: '9px' } },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
     yaxis: { show: false, min: 0 },
     colors: [COLORS.danger],
-    plotOptions: {
-      bar: { borderRadius: 2, columnWidth: '65%' },
-    },
+    plotOptions: { bar: { borderRadius: 2, columnWidth: '65%' } },
     dataLabels: { enabled: false },
     legend: { show: false },
     grid: { show: false },
-    tooltip: {
-      ...base.tooltip,
-      y: { formatter: v => `${v} reserva${v !== 1 ? 'es' : ''}` },
-    },
+    tooltip: { ...base.tooltip, y: { formatter: v => `${v} reserva${v !== 1 ? 'es' : ''}` } },
   };
 
   _charts['dies-setmana'] = new ApexCharts(el, options);
@@ -580,10 +609,29 @@ function renderTipusPreferits(distribucio) {
 // ─── Estat de càrrega / error ─────────────────────────────────────────────────
 
 function showLoadingState() {
-  // Substitueix els "—" per spinners petits als KPI cards
+  // KPI cards: spinner petit
   ['stat-total-reserves', 'stat-total-despesa', 'stat-temps-aparcat', 'stat-punts'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<span class="spinner-border spinner-border-sm text-secondary opacity-50" role="status"></span>';
+  });
+
+  // Chart skeletons: NOMÉS en el primer carregament (quan la gràfica no existeix).
+  // En recàrregues, la gràfica existent roman visible i s'actualitza amb updateSeries.
+  const chartConfigs = [
+    { id: 'despesa-mensual',      variant: 'area',  height: 200 },
+    { id: 'tipus-aparcament',     variant: 'donut', height: 175 },
+    { id: 'reserves-estat',       variant: 'bar',   height: 190 },
+    { id: 'contribucions-tipus',  variant: 'bar',   height: 190 },
+    { id: 'dies-setmana',         variant: 'spark', height: 90 }
+  ];
+
+  chartConfigs.forEach(conf => {
+    const containerId = `chart-${conf.id}`;
+    // Si la gràfica existeix però volem forçar skeleton (per exemple si el DOM és nou),
+    // hauríem de destruir-la primer. Però aquí prioritzem mantenir-la si hi és.
+    if (!_charts[conf.id]) {
+      showChartSkeleton(containerId, conf.variant, conf.height);
+    }
   });
 }
 
@@ -653,12 +701,19 @@ export async function initEstadistiques() {
 }
 
 /**
- * Torna a renderitzar totes les gràfiques actives per disparar les animacions d'entrada.
+ * Torna a disparar les animacions de les gràfiques sense duplicar elements.
  */
 export function refreshEstadistiques() {
-  Object.values(_charts).forEach(chart => {
-    if (chart && typeof chart.render === 'function') {
-      chart.render();
+  Object.keys(_charts).forEach(id => {
+    const chart = _charts[id];
+    if (chart && typeof chart.updateSeries === 'function') {
+      try {
+        // En lloc de render(), fem un updateSeries amb les mateixes dades per re-animar.
+        // Això és molt més segur i evita duplicats.
+        chart.updateSeries(chart.w.config.series, true);
+      } catch (e) {
+        console.warn(`[ParkLive] No s'ha pogut refrescar la gràfica ${id}:`, e);
+      }
     }
   });
 }

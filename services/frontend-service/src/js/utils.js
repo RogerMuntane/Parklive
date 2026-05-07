@@ -220,6 +220,36 @@ export function isAuthenticated() {
   return sessionStorage.getItem(STORAGE_KEYS.USER_ID) !== null;
 }
 
+/**
+ * Comprova si l'usuari autenticat és premium (o admin/operador).
+ * @returns {boolean}
+ */
+export function isPremiumUser() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEYS.USER_DATA);
+    if (!raw) return false;
+    const user = JSON.parse(raw);
+    const role = (user.tipus_usuari || 'basic').toLowerCase();
+    return role === 'premium' || role === 'admin' || role === 'operador';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Redirigeix l'usuari a la pàgina de perfil per millorar el pla.
+ * Mostra un avís informatiu previ.
+ */
+export function redirectToUpgradePlan() {
+  showBootstrapAlert(
+    'warning',
+    '<i class="bi bi-lock-fill me-1"></i> Funció exclusiva <strong>Premium</strong>. Millora el teu pla per guardar aparcaments favorits.',
+  );
+  setTimeout(() => {
+    window.location.href = '/perfil.html?upgrade=1';
+  }, 1800);
+}
+
 /*  4. FORMATADORS                                                      */
 
 /**
