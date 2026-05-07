@@ -20,5 +20,9 @@ googleAuth.json
 Thumbs.db
 
 # Uploads & Storage
-storage/tickets/
+storage/*
+!storage/aparcaments/cataleg/
+!storage/blog/
 services/php-service/uploads/
+services/frontend-service/storage/
+services/python-service/storage/
