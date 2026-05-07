@@ -41,6 +41,11 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 0.5rem;
+    padding: 1.25rem !important;
+  }
+
+  #map .leaflet-bottom.leaflet-left {
+    padding: 1.25rem !important;
   }
 
   #map .leaflet-bottom.leaflet-right > .leaflet-control {

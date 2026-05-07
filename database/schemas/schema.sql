@@ -58,7 +58,7 @@ CREATE TABLE codis_reset_contrasenya (
 CREATE TABLE subscripcions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
-    tipus ENUM('mensual', 'trimestral', 'anual') NOT NULL,
+    tipus ENUM('mensual', 'anual') NOT NULL,
     estat ENUM('activa', 'cancelada', 'caducada') DEFAULT 'activa',
     data_inici DATE NOT NULL,
     data_final DATE NOT NULL,
