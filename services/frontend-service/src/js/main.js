@@ -443,6 +443,12 @@ async function initControllers() {
       const { initBlogDetail } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
       initBlogDetail();
     }
+    
+    // ── Nova Valoració ───────────────────────────────────────────────
+    if (bodyClass.includes('page-nova-valoracio')) {
+      const { initNovaValoracio } = await import(new URL(`./controllers/nova_valoracio.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initNovaValoracio();
+    }
 
   } catch (err) {
     console.error('[ParkLive] Error al carregar controladors:', err);

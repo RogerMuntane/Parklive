@@ -1,4 +1,21 @@
-from flask import jsonify, request
+from flask import jsonify, request, send_from_directory
+import os
+from pathlib import Path
+
+def serve_valoracio_photo(filename):
+    """
+    Serveix una imatge de valoració des del directori storage/valoracions
+    """
+    try:
+        # Ruta absoluta al directori de valoracions
+        base_storage = Path(__file__).parent.parent / "storage"
+        valoracions_dir = base_storage / "valoracions"
+        
+        return send_from_directory(str(valoracions_dir), filename)
+    except Exception as e:
+        print(f"[ParkLive] Error servint foto de valoració: {e}")
+        return jsonify({"error": "Imatge no trobada"}), 404
+
 from models.db_connection import get_new_connection
 from models.valoracio_model import add_valoracio
 from controllers.aparcament_controller import _get_authenticated_user_id
@@ -50,10 +67,43 @@ def create_valoracio(aparcament_id):
     Controlador per crear una nova valoració per a un aparcament.
     """
     try:
-        if not request.is_json:
-            return jsonify({"success": False, "error": "El contingut ha de ser JSON"}), 400
+        import os
+        from werkzeug.utils import secure_filename
+        import uuid
+        import json
+        from pathlib import Path
+        
+        # Determinar si és multipart o json
+        is_multipart = request.content_type and request.content_type.startswith('multipart/form-data')
+        
+        if is_multipart:
+            data = request.form.to_dict()
+            aspectes_raw = data.get('aspectes_valorats')
+            aspectes_valorats = json.loads(aspectes_raw) if aspectes_raw else []
             
-        data = request.get_json()
+            fotos_url = []
+            # 'fotos_url[]' o 'fotos_url'
+            files = request.files.getlist('fotos_url[]') if 'fotos_url[]' in request.files else request.files.getlist('fotos_url')
+            
+            if files:
+                base_storage = Path(__file__).parent.parent / "storage"
+                valoracions_dir = base_storage / "valoracions"
+                valoracions_dir.mkdir(parents=True, exist_ok=True)
+                
+                for file_obj in files[:3]:
+                    if file_obj and file_obj.filename:
+                        ext = file_obj.filename.rsplit('.', 1)[1].lower() if '.' in file_obj.filename else 'jpg'
+                        filename = f"{uuid.uuid4().hex}.{ext}"
+                        filepath = valoracions_dir / filename
+                        file_obj.save(filepath)
+                        fotos_url.append(filename)
+        else:
+            if not request.is_json:
+                return jsonify({"success": False, "error": "El format de la petició no és vàlid"}), 400
+            data = request.get_json()
+            aspectes_valorats = data.get('aspectes_valorats', [])
+            fotos_url = []
+
         puntuacio = data.get('puntuacio')
         comentari = data.get('comentari')
         
@@ -77,7 +127,7 @@ def create_valoracio(aparcament_id):
         except (ValueError, TypeError):
             return jsonify({"success": False, "error": "ID d'aparcament no vàlid"}), 400
             
-        valoracio_id = add_valoracio(usuari_id, aparcament_id, puntuacio, comentari)
+        valoracio_id = add_valoracio(usuari_id, aparcament_id, puntuacio, comentari, aspectes_valorats, fotos_url)
         
         return jsonify({
             "success": True,

@@ -71,16 +71,44 @@ async function refreshStreetReportsFromApi(setStreetReports) {
 
 function getCurrentBrowserLocation() {
   return new Promise((resolve, reject) => {
+    try {
+      const cached = sessionStorage.getItem('parklive_last_location');
+      if (cached) {
+        const { lat, lon, timestamp } = JSON.parse(cached);
+        // Valid for 10 minutes (600000 ms)
+        if (Date.now() - timestamp < 600000) {
+          console.log('[ParkLive] Utilitzant ubicació en memòria cau (sessionStorage)');
+          resolve({ coords: { latitude: lat, longitude: lon } });
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading location from sessionStorage', e);
+    }
+
     if (!globalThis.navigator?.geolocation) {
       reject(new Error('El navegador no admet geolocalització.'));
       return;
     }
 
-    globalThis.navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    });
+    globalThis.navigator.geolocation.getCurrentPosition(
+      (position) => {
+        try {
+          sessionStorage.setItem('parklive_last_location', JSON.stringify({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+            timestamp: Date.now()
+          }));
+        } catch (e) {}
+        resolve(position);
+      },
+      reject,
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
   });
 }
 

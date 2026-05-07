@@ -242,6 +242,7 @@ CREATE TABLE valoracions (
     ),
     comentari TEXT,
     aspectes_valorats JSON,
+    fotos_url JSON,
     verificada BOOLEAN DEFAULT FALSE,
     util_count INT UNSIGNED DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
