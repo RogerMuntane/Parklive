@@ -4,11 +4,11 @@ import stripe
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv('Parklive/.env')
+load_dotenv('.env')
 
 stripe.api_key = os.getenv('STRIPE_APIPrivada')
 
-sql_path = 'Parklive/database/seeds/01_users.sql'
+sql_path = 'database/seeds/01_users.sql'
 
 with open(sql_path, 'r') as f:
     sql_content = f.read()
