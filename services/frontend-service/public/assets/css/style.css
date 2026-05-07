@@ -7221,6 +7221,192 @@ textarea.form-control-lg {
   font-size: 0.75rem;
 }
 
+@keyframes chart-shimmer {
+  0% {
+    background-position: -700px 0;
+  }
+  100% {
+    background-position: 700px 0;
+  }
+}
+.kpi-skeleton .skel-label, .kpi-skeleton .skel-number, .chart-skeleton.chart-skeleton--bar .skel-col, .chart-skeleton.chart-skeleton--area .skel-area-shape, .chart-skeleton.chart-skeleton--spark .skel-col, .chart-skeleton.chart-skeleton--donut .skel-legend .skel-line, .chart-skeleton.chart-skeleton--donut .skel-circle, .chart-skeleton .skel-bar {
+  background-color: #edeef1;
+  background-image: linear-gradient(90deg, #edeef1 0%, #f6f7f8 40%, #edeef1 80%);
+  background-size: 700px 100%;
+  background-repeat: no-repeat;
+  animation: chart-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.chart-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-skeleton .skel-bar {
+  width: 100%;
+  flex: 1;
+  min-height: 8px;
+  border-radius: 4px;
+}
+
+.chart-skeleton.chart-skeleton--donut {
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.chart-skeleton.chart-skeleton--donut .skel-circle {
+  width: 145px;
+  height: 145px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-skeleton.chart-skeleton--donut .skel-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.chart-skeleton.chart-skeleton--donut .skel-legend .skel-line {
+  height: 10px;
+  border-radius: 4px;
+}
+
+.chart-skeleton.chart-skeleton--donut .skel-legend .skel-line:nth-child(1) {
+  width: 80%;
+}
+
+.chart-skeleton.chart-skeleton--donut .skel-legend .skel-line:nth-child(2) {
+  width: 60%;
+}
+
+.chart-skeleton.chart-skeleton--donut .skel-legend .skel-line:nth-child(3) {
+  width: 70%;
+}
+
+.chart-skeleton.chart-skeleton--spark {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px;
+  height: 90px;
+  padding: 0;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col:nth-child(1) {
+  height: 45%;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col:nth-child(2) {
+  height: 70%;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col:nth-child(3) {
+  height: 60%;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col:nth-child(4) {
+  height: 90%;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col:nth-child(5) {
+  height: 55%;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col:nth-child(6) {
+  height: 80%;
+}
+
+.chart-skeleton.chart-skeleton--spark .skel-col:nth-child(7) {
+  height: 40%;
+}
+
+.chart-skeleton.chart-skeleton--area {
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 200px;
+}
+
+.chart-skeleton.chart-skeleton--area .skel-area-shape {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+}
+
+.chart-skeleton.chart-skeleton--bar {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+  height: 190px;
+}
+
+.chart-skeleton.chart-skeleton--bar .skel-col {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+}
+
+.chart-skeleton.chart-skeleton--bar .skel-col:nth-child(1) {
+  height: 65%;
+}
+
+.chart-skeleton.chart-skeleton--bar .skel-col:nth-child(2) {
+  height: 40%;
+}
+
+.chart-skeleton.chart-skeleton--bar .skel-col:nth-child(3) {
+  height: 80%;
+}
+
+.chart-skeleton.chart-skeleton--bar .skel-col:nth-child(4) {
+  height: 55%;
+}
+
+.chart-skeleton.chart-skeleton--bar .skel-col:nth-child(5) {
+  height: 30%;
+}
+
+.kpi-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kpi-skeleton .skel-number {
+  height: 36px;
+  width: 60%;
+  border-radius: 6px;
+}
+
+.kpi-skeleton .skel-label {
+  height: 12px;
+  width: 80%;
+  border-radius: 4px;
+}
+
+[data-bs-theme=dark] .chart-skeleton .skel-bar,
+[data-bs-theme=dark] .chart-skeleton .skel-circle,
+[data-bs-theme=dark] .chart-skeleton .skel-line,
+[data-bs-theme=dark] .chart-skeleton .skel-col,
+[data-bs-theme=dark] .chart-skeleton .skel-area-shape,
+[data-bs-theme=dark] .kpi-skeleton .skel-number,
+[data-bs-theme=dark] .kpi-skeleton .skel-label {
+  background-color: rgba(255, 255, 255, 0.05);
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0.04) 80%);
+}
+
 .site-footer a.text-white-50 {
   transition: color 0.2s ease-in-out;
 }

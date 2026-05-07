@@ -28,7 +28,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_test_001',
+        'cus_USikNLDGTeyFHm',
         '2024-01-01 10:00:00',
         NOW()
     ),
@@ -43,7 +43,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_test_002',
+        'cus_USiknNN1W6HtJy',
         '2024-01-15 10:00:00',
         NOW()
     ),
@@ -59,7 +59,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_test_003',
+        'cus_USikyvM1Z2f0nV',
         '2024-02-01 10:00:00',
         NOW()
     ),
@@ -74,7 +74,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_test_004',
+        'cus_USiks2yd7Dghb2',
         '2024-02-15 10:00:00',
         NOW()
     ),
@@ -90,7 +90,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         450,
-        'cus_test_005',
+        'cus_USikNlp8kTPlJ5',
         '2024-06-01 10:00:00',
         NOW()
     ),
@@ -105,7 +105,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         780,
-        'cus_test_006',
+        'cus_USikxUeRNyTDBy',
         '2024-07-10 10:00:00',
         NOW()
     ),
@@ -120,7 +120,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         1200,
-        'cus_test_007',
+        'cus_USik8XWv24hYBd',
         '2024-05-20 10:00:00',
         NOW()
     ),
@@ -135,7 +135,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         320,
-        'cus_test_008',
+        'cus_USik5d1OawNOmp',
         '2024-08-15 10:00:00',
         NOW()
     ),
@@ -151,7 +151,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         150,
-        'cus_test_009',
+        'cus_USikuLtLVPhyE5',
         '2024-09-01 10:00:00',
         NOW()
     ),
@@ -166,7 +166,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         90,
-        'cus_test_010',
+        'cus_USikODhYtkcNnF',
         '2024-09-15 10:00:00',
         NOW()
     ),
@@ -181,7 +181,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         210,
-        'cus_test_011',
+        'cus_USik2ybAGtGw5R',
         '2024-10-01 10:00:00',
         NOW()
     ),
@@ -196,7 +196,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         60,
-        'cus_test_012',
+        'cus_USikbLsGrC0jGy',
         '2024-10-20 10:00:00',
         NOW()
     ),
@@ -211,7 +211,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         340,
-        'cus_test_013',
+        'cus_USikKuJvgRfZJb',
         '2024-08-05 10:00:00',
         NOW()
     ),
@@ -226,7 +226,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         180,
-        'cus_test_014',
+        'cus_USikTLXgr0tinh',
         '2024-11-01 10:00:00',
         NOW()
     ),
@@ -241,7 +241,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         420,
-        'cus_test_015',
+        'cus_USikC24rTa7B5T',
         '2024-07-25 10:00:00',
         NOW()
     ),
@@ -256,7 +256,7 @@ VALUES -- Administradors
         'actiu',
         FALSE,
         30,
-        'cus_test_016',
+        'cus_USikz8iK5nv6b3',
         '2025-01-10 10:00:00',
         NOW()
     ),
@@ -271,7 +271,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         110,
-        'cus_test_017',
+        'cus_USikqAxez8agxA',
         '2024-12-01 10:00:00',
         NOW()
     ),
@@ -286,7 +286,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         270,
-        'cus_test_018',
+        'cus_USik4fd7ZzgnDV',
         '2024-09-20 10:00:00',
         NOW()
     ),
@@ -301,7 +301,7 @@ VALUES -- Administradors
         'inactiu',
         TRUE,
         50,
-        'cus_test_019',
+        'cus_USikMZ9pGQnH66',
         '2024-06-15 10:00:00',
         '2024-12-01 10:00:00'
     ),
@@ -316,7 +316,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         390,
-        'cus_test_020',
+        'cus_USikvvD7RrsHwu',
         '2024-08-28 10:00:00',
         NOW()
     );

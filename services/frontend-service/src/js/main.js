@@ -85,7 +85,7 @@ function initThemeToggle() {
 
 /*  3. BOTÓ AUTH DEL HEADER (SESSIÓ)                                   */
 
-import { isAuthenticated, clearUserSession, getUserId } from './utils.js';
+import { isAuthenticated, clearUserSession, getUserId, isPremiumUser } from './utils.js';
 import { phpApi } from './api.js';
 import { logoutUser } from './controllers/auth.controller.js';
 import { PHP_API_URL } from './config.js';
@@ -491,7 +491,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
     const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
     const { initAdminParkingCRUD } = await import(new URL('./controllers/profile-admin-aparcaments.controller.js', import.meta.url).href);
-    const { initEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
     const { initAdminBlog } = await import(new URL('./controllers/profile-admin-blog.controller.js', import.meta.url).href);
 
     initProfilePasswordForm();
@@ -501,7 +500,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProfilePlanSection();
     initProfileHistorySection();
     initProfileTicketsSection();
-    initProfileFavoritesSection();
+    // Favorits: només es carrega el component complet per a usuaris premium
+    if (isPremiumUser()) {
+      initProfileFavoritesSection();
+    } else {
+      // Per a usuaris bàsics, mostrar un CTA dins la secció de favorits
+      const favListEl = document.getElementById('favorites-list');
+      if (favListEl) {
+        favListEl.innerHTML = `
+          <div class="text-center py-5">
+            <i class="bi bi-lock-fill fs-2 text-muted d-block mb-3"></i>
+            <h5 class="fw-bold mb-2">Funció exclusiva Premium</h5>
+            <p class="text-body-secondary small mb-4">Guarda els teus aparcaments preferits i accedeix-hi ràpidament en qualsevol moment.</p>
+            <button class="btn btn-danger rounded-pill px-4" id="btn-upgrade-from-favorites">
+              <i class="bi bi-rocket-takeoff me-2"></i>Millorar a Premium
+            </button>
+          </div>
+        `;
+        document.getElementById('btn-upgrade-from-favorites')?.addEventListener('click', () => {
+          const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
+          if (planBtn) planBtn.click();
+        });
+      }
+    }
     initReserves();
 
     // Només inicialitzar controladors d'admin si l'usuari és admin
@@ -511,10 +532,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       initAdminBlog();
     }
 
-    // Estadístiques només per a Premium (i no per admin segons la lògica de sidebar)
-    if (getUserRole() === 'premium') {
-      initEstadistiques();
-    }
+    // Estadístiques: es carreguen de manera LAZY quan l'usuari accedeix a la secció.
+    // No es pre-carreguen en inicialitzar la pàgina per evitar peticions innecessàries.
 
     // Punts i recompenses només per a usuaris (no admin)
     if (getUserRole() !== 'admin') {
@@ -578,15 +597,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           
           target.classList.add('active');
 
-          // Si entrem a estadístiques, disparem les animacions de les gràfiques
-          if (sec === 'stadistics') {
-            const { refreshEstadistiques } = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
-            refreshEstadistiques();
+          // Si entrem a estadístiques:
+          // - Primera vegada: inicialitzem (fetch + render + skeleton)
+          // - Visites posteriors: re-animem les gràfiques existents
+          if (sec === 'stadistics' && getUserRole() === 'premium') {
+            const estadistiquesModule = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
+            const container = document.getElementById('chart-despesa-mensual');
+            const jaInicialitzat = container && container.querySelector('.apexcharts-canvas');
+            if (jaInicialitzat) {
+              estadistiquesModule.refreshEstadistiques();
+            } else {
+              estadistiquesModule.initEstadistiques();
+            }
           }
         }
         if (sectionTitle) sectionTitle.textContent = sectionTitles[sec] || '';
       });
     });
+    
+    // Suport per a enllaços directes a seccions via URL (?section=XXX o ?upgrade=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const sectionParam = urlParams.get('section');
+    const isUpgrade = urlParams.get('upgrade') === '1';
+    
+    if (isUpgrade) {
+      const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
+      if (planBtn) planBtn.click();
+    } else if (sectionParam) {
+      const targetBtn = document.querySelector(`.sidebar-nav-item[data-section="${sectionParam}"]`);
+      if (targetBtn) targetBtn.click();
+    }
 
     // Oculta el botó de sidebar si la secció de contrasenya està oculta o si l'usuari és OAuth
     const passwordSection = document.getElementById('section-password');
@@ -612,6 +652,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
           if (manageBtn) manageBtn.style.display = 'none';
           if (stadisticsBtn) stadisticsBtn.style.display = 'none';
+          // Ocultar elements premium per a usuaris no premium (sidebar, filtres, etc.)
+          document.querySelectorAll('.premium-only').forEach(el => {
+            el.style.display = 'none';
+          });
         }
 
         // Amagar botó de punts per a administradors (només per a usuaris)

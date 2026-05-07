@@ -1,10 +1,12 @@
 import { pythonApi } from '../../api.js';
-import { isAuthenticated, showBootstrapAlert } from '../../utils.js';
+import { isAuthenticated, showBootstrapAlert, isPremiumUser, redirectToUpgradePlan } from '../../utils.js';
 import { PHP_API_URL } from '../../config.js';
 import {
   loadFavoriteIds,
   toggleFavoriteParking,
 } from '../favorits.service.js';
+
+
 
 const PAGE_SIZE = 5;
 const MAX_RESULTS_FOR_MAP = 1000;
@@ -602,15 +604,24 @@ function normalizeAndSortSpots(records, origin) {
 }
 
 async function resolveFavoritesState(favoritesOnly) {
-  const favoritesEnabled = isAuthenticated();
+  // Favorits: requereix estar autenticat I ser usuari premium
+  const isLoggedIn = isAuthenticated();
+  const isPremium = isPremiumUser();
+  const favoritesEnabled = isLoggedIn && isPremium;
   let favoriteIds = new Set();
   let effectiveFavoritesOnly = favoritesOnly;
 
-  if (favoritesOnly && !favoritesEnabled) {
+  if (favoritesOnly) {
     const favoritesOnlyInput = document.getElementById('favoritesOnly');
-    if (favoritesOnlyInput) favoritesOnlyInput.checked = false;
-    showBootstrapAlert('warning', 'Inicia sessio per filtrar només per favorits');
-    effectiveFavoritesOnly = false;
+    if (!isLoggedIn) {
+      if (favoritesOnlyInput) favoritesOnlyInput.checked = false;
+      showBootstrapAlert('warning', 'Inicia sessió per filtrar només per favorits');
+      effectiveFavoritesOnly = false;
+    } else if (!isPremium) {
+      if (favoritesOnlyInput) favoritesOnlyInput.checked = false;
+      redirectToUpgradePlan();
+      effectiveFavoritesOnly = false;
+    }
   }
 
   if (favoritesEnabled) {
@@ -1154,7 +1165,9 @@ export function initLandingSearch({
     });
 
     if (normalizedSpot) {
-      const favoritesEnabled = isAuthenticated();
+      const isLoggedIn = isAuthenticated();
+      const isPremium = isPremiumUser();
+      const favoritesEnabled = isLoggedIn && isPremium;
       let favoriteIds = new Set();
       if (favoritesEnabled) {
         try {
@@ -1174,6 +1187,10 @@ export function initLandingSearch({
         favoritesEnabled,
         favoriteIds,
         onToggleFavorite: async (id) => {
+          if (!isPremiumUser()) {
+            redirectToUpgradePlan();
+            return false;
+          }
           const nextIsFavorite = await toggleFavoriteParking(id);
           const msg = nextIsFavorite
             ? 'Aparcament afegit a favorits'
@@ -1376,6 +1393,10 @@ export function initLandingSearch({
         favoritesEnabled,
         favoriteIds,
         onToggleFavorite: async (parkingId) => {
+          if (!isPremiumUser()) {
+            redirectToUpgradePlan();
+            return false;
+          }
           const nextIsFavorite = await toggleFavoriteParking(parkingId);
           const msg = nextIsFavorite
             ? 'Aparcament afegit a favorits'

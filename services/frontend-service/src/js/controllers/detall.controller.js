@@ -7,7 +7,7 @@
  */
 
 import { pythonApi } from '../api.js';
-import { getQueryParam, isAuthenticated, showBootstrapAlert } from '../utils.js';
+import { getQueryParam, isAuthenticated, showBootstrapAlert, isPremiumUser, redirectToUpgradePlan } from '../utils.js';
 import {
   isFavoriteParking,
   toggleFavoriteParking,
@@ -401,6 +401,11 @@ async function initDetallFavoriteButton(aparcamentId) {
   }
 
   favoriteBtn.addEventListener('click', async () => {
+    if (!isPremiumUser()) {
+      redirectToUpgradePlan();
+      return;
+    }
+    
     favoriteBtn.disabled = true;
     try {
       const nextIsFavorite = await toggleFavoriteParking(aparcamentId);

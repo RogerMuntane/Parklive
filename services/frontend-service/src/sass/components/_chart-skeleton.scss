@@ -1,0 +1,179 @@
+// _chart-skeleton.scss
+// Skeleton shimmer per als contenidors d'ApexCharts mentre carreguen dades.
+
+// ─── Keyframe ─────────────────────────────────────────────────────────────────
+
+@keyframes chart-shimmer {
+  0%   { background-position: -700px 0; }
+  100% { background-position: 700px 0; }
+}
+
+// ─── Base shimmer ──────────────────────────────────────────────────────────────
+
+%shimmer-base {
+  background-color: #edeef1;
+  background-image: linear-gradient(
+    90deg,
+    #edeef1 0%,
+    #f6f7f8 40%,
+    #edeef1 80%
+  );
+  background-size: 700px 100%;
+  background-repeat: no-repeat;
+  animation: chart-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+// ─── Skeleton contenidor ───────────────────────────────────────────────────────
+
+.chart-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+  width: 100%;
+  height: 100%;
+
+  // Barres de skeleton que simulen les columnes/línies de la gràfica
+  .skel-bar {
+    @extend %shimmer-base;
+    width: 100%;
+    flex: 1;
+    min-height: 8px;
+    border-radius: 4px;
+  }
+
+  // Variant circular (per als donuts)
+  &.chart-skeleton--donut {
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: 16px;
+
+    .skel-circle {
+      @extend %shimmer-base;
+      width: 145px;
+      height: 145px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .skel-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+
+      .skel-line {
+        @extend %shimmer-base;
+        height: 10px;
+        border-radius: 4px;
+
+        &:nth-child(1) { width: 80%; }
+        &:nth-child(2) { width: 60%; }
+        &:nth-child(3) { width: 70%; }
+      }
+    }
+  }
+
+  // Variant sparkline (per al chart de dies)
+  &.chart-skeleton--spark {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 6px;
+    height: 90px;
+    padding: 0;
+
+    .skel-col {
+      @extend %shimmer-base;
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+
+      // Alçades variants per simular un bar chart real
+      &:nth-child(1)  { height: 45%; }
+      &:nth-child(2)  { height: 70%; }
+      &:nth-child(3)  { height: 60%; }
+      &:nth-child(4)  { height: 90%; }
+      &:nth-child(5)  { height: 55%; }
+      &:nth-child(6)  { height: 80%; }
+      &:nth-child(7)  { height: 40%; }
+    }
+  }
+
+  // Variant area (per al chart de despesa mensual)
+  &.chart-skeleton--area {
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 4px;
+    height: 200px;
+
+    .skel-area-shape {
+      @extend %shimmer-base;
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+    }
+  }
+
+  // Variant bar vertical (reserves-estat, contribucions)
+  &.chart-skeleton--bar {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+    height: 190px;
+
+    .skel-col {
+      @extend %shimmer-base;
+      flex: 1;
+      border-radius: 4px 4px 0 0;
+
+      &:nth-child(1) { height: 65%; }
+      &:nth-child(2) { height: 40%; }
+      &:nth-child(3) { height: 80%; }
+      &:nth-child(4) { height: 55%; }
+      &:nth-child(5) { height: 30%; }
+    }
+  }
+}
+
+// ─── Skeleton per als KPI cards ───────────────────────────────────────────────
+
+.kpi-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .skel-number {
+    @extend %shimmer-base;
+    height: 36px;
+    width: 60%;
+    border-radius: 6px;
+  }
+
+  .skel-label {
+    @extend %shimmer-base;
+    height: 12px;
+    width: 80%;
+    border-radius: 4px;
+  }
+}
+
+// ─── Mode fosc ────────────────────────────────────────────────────────────────
+
+[data-bs-theme="dark"] {
+  .chart-skeleton .skel-bar,
+  .chart-skeleton .skel-circle,
+  .chart-skeleton .skel-line,
+  .chart-skeleton .skel-col,
+  .chart-skeleton .skel-area-shape,
+  .kpi-skeleton .skel-number,
+  .kpi-skeleton .skel-label {
+    background-color: rgba(255, 255, 255, 0.05);
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.10) 40%,
+      rgba(255, 255, 255, 0.04) 80%
+    );
+  }
+}
