@@ -27,6 +27,7 @@ let userLocation = null;
 let setUserLocationMarker = () => {};
 let setSearchAnchor = () => {};
 let searchAnchorLocation = null;
+let hideParkingMarkerById = null;
 
 function setUserLocation(nextLocation) {
   if (
@@ -547,16 +548,20 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null, 
   }
 
   // Filtre per dates
+  // Si l'usuari omple la data però deixa l'hora en blanc, s'usa una hora
+  // per defecte raonable (00:00 d'entrada, 23:59 de sortida) per tal que
+  // el backend rebi sempre data_entrada/data_sortida i filtri per solapament
+  // de reserves, en comptes de mostrar disponibilitat estàtica instantània.
   const entryDate = document.getElementById('entryDate')?.value;
   const entryTime = document.getElementById('entryTime')?.value;
-  const exitDate = document.getElementById('exitDate')?.value;
-  const exitTime = document.getElementById('exitTime')?.value;
+  const exitDate  = document.getElementById('exitDate')?.value;
+  const exitTime  = document.getElementById('exitTime')?.value;
 
-  if (entryDate && entryTime) {
-    params.data_entrada = `${entryDate} ${entryTime}:00`;
+  if (entryDate) {
+    params.data_entrada = `${entryDate} ${entryTime ? `${entryTime}:00` : '00:00:00'}`;
   }
-  if (exitDate && exitTime) {
-    params.data_sortida = `${exitDate} ${exitTime}:00`;
+  if (exitDate) {
+    params.data_sortida = `${exitDate} ${exitTime ? `${exitTime}:00` : '23:59:00'}`;
   }
 
   return { params, searchTerm };
@@ -768,6 +773,10 @@ async function enrichDisponibilitatAsync(spots) {
 
   const [dataEntrada, dataSortida] = getDisponibilitatFranja();
 
+  // Només amaguem targetes si l'usuari ha seleccionat dates explícitament
+  const hasDatesFilter = Boolean(document.getElementById('entryDate')?.value);
+  let hiddenCount = 0;
+
   for (let i = 0; i < spots.length; i += AVAIL_CONCURRENCY) {
     const batch = spots.slice(i, i + AVAIL_CONCURRENCY);
 
@@ -789,6 +798,23 @@ async function enrichDisponibilitatAsync(spots) {
         const totals  = res.capacitat_total ?? 0;
         const ocupacioPct = totals > 0 ? Math.round(((totals - lliures) / totals) * 100) : 0;
 
+        // Amagar la targeta si l'aparcament és ple i hi ha filtre de dates actiu.
+        // Doble protecció: el backend ja hauria d'excloure'ls, però per robustesa
+        // també ho apliquem al frontend usant la resposta real de /disponibilitat.
+        if (hasDatesFilter && lliures === 0 && totals > 0) {
+          const card = document
+            .querySelector(`.parking-result-card [data-parking-id="${spot.id}"]`)
+            ?.closest('.parking-result-card');
+          if (card) {
+            card.style.display = 'none';
+            hiddenCount++;
+          }
+          if (typeof hideParkingMarkerById === 'function') {
+            hideParkingMarkerById(spot.id);
+          }
+          continue;
+        }
+
         const resum = totals > 0
           ? `<span class="fw-bold">${lliures}</span>/${totals} <small>(${ocupacioPct}% ple)</small>`
           : 'No disponible';
@@ -806,6 +832,16 @@ async function enrichDisponibilitatAsync(spots) {
         const el = document.querySelector(`[data-avail-spot-id="${spot.id}"]`);
         if (el) el.textContent = 'Error';
       }
+    }
+  }
+
+  // Actualitzar el comptador de resultats per reflectir les targetes visibles
+  if (hiddenCount > 0) {
+    const subtitle = document.querySelector('.parking-results-subtitle');
+    if (subtitle) {
+      const visibleCount = spots.length - hiddenCount;
+      subtitle.textContent =
+        visibleCount === 1 ? '1 aparcament trobat' : `${visibleCount} aparcaments trobats`;
     }
   }
 }
@@ -1019,11 +1055,13 @@ async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadi
 export function initLandingSearch({
   setParkingSpots,
   focusParkingById,
+  hideParkingMarkerById: hideMarkerFn,
   closeFilters,
   onSearchLocationResolved = () => {},
   setUserLocationMarker: updateUserLocationMarker = () => {},
 }) {
   setUserLocationMarker = updateUserLocationMarker;
+  hideParkingMarkerById = hideMarkerFn;
   const mapSearchBar = document.getElementById('mapSearchBar');
   const mapSearchInput = document.getElementById('mapSearchInput');
   const applyFiltersBtn = document.querySelector('#filtresSidepanel .btn-danger.w-50');
@@ -1367,6 +1405,19 @@ export function initLandingSearch({
       let visibleSpots = effectiveFavoritesOnly
         ? allSpots.filter((spot) => favoriteIds.has(String(spot.id)))
         : allSpots;
+
+      // Filtre preventiu per disponibilitat: si hi ha dates, amaguem els que ja estan plens estàticament.
+      // Això evita que apareguin un moment i després desapareguin (flicker).
+      const hasDatesForFiltering = Boolean(document.getElementById('entryDate')?.value);
+      if (hasDatesForFiltering) {
+        visibleSpots = visibleSpots.filter(spot => {
+          const p = spot.raw || {};
+          if (p.estat === 'complet') return false;
+          // Si el backend ens diu que no hi ha places, l'ignorem abans de renderitzar.
+          if (p.places_disponibles !== undefined && Number(p.places_disponibles) <= 0) return false;
+          return true;
+        });
+      }
 
       const distanceRangeVal = document.getElementById('distanceRange')?.value;
       const maxDistance = parsePositiveNumber(distanceRangeVal);

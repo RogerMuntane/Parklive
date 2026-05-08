@@ -309,6 +309,15 @@ export function initLandingMap() {
     }
   };
 
+  const hideParkingMarkerById = (parkingId) => {
+    const marker = parkingMarkers.get(String(parkingId));
+    if (marker) {
+      map.removeLayer(marker);
+      markerGroup.removeLayer(marker);
+      parkingMarkers.delete(String(parkingId));
+    }
+  };
+
   const focusParkingById = (parkingId) => {
     const marker = parkingMarkers.get(String(parkingId));
     if (!marker) return;
@@ -381,6 +390,7 @@ export function initLandingMap() {
     focusUserLocation,
     setLocateMeAction,
     focusParkingById,
+    hideParkingMarkerById,
     updateOpenPopupsLayout,
     fitToParkingSpots,
     ensureValidViewport,

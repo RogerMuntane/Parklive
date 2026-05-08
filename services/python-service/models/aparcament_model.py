@@ -137,7 +137,7 @@ def get_aparcaments_by_filters(filters):
     }
 
     # Forçar consulta manual si hi ha disponibilitat o dates per fer el càlcul dinàmic
-    if filters.get('disponibilitat') or filters.get('data_entrada'):
+    if filters.get('disponibilitat') or filters.get('data_entrada') or filters.get('data_sortida'):
         unsupported_filters.add('dynamic_availability')
 
     if not unsupported_filters:
@@ -248,35 +248,69 @@ def get_aparcaments_by_filters(filters):
             params.append(filters['obert_24h'])
 
         # Filtre de disponibilitat dinàmica (Basat en reserves)
-        if filters.get('disponibilitat') or filters.get('data_entrada'):
-            # Si no hi ha dates, usem ara -> ara + 2h
+        if filters.get('disponibilitat') or filters.get('data_entrada') or filters.get('data_sortida'):
             data_entrada = filters.get('data_entrada')
             data_sortida = filters.get('data_sortida')
             
-            if not data_entrada or not data_sortida:
+            # Si falten les dues dates, usem ara -> ara + 2h
+            if not data_entrada and not data_sortida:
                 now = datetime.now()
                 # Arrodonir a 30 min superiors
                 now = now.replace(minute=(now.minute // 30) * 30, second=0, microsecond=0)
                 data_entrada = now.strftime('%Y-%m-%d %H:%M')
                 data_sortida = (now + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
+            # Si en falta només una, posem un default raonable per l'altra
+            elif not data_entrada:
+                # Entrada = sortida - 2h (o ara si sortida és molt propera)
+                # Per simplicitat usem ara
+                data_entrada = datetime.now().strftime('%Y-%m-%d %H:%M')
+            elif not data_sortida:
+                # Sortida = entrada + 2h
+                try:
+                    dt_in = datetime.strptime(data_entrada, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    try:
+                        dt_in = datetime.strptime(data_entrada, '%Y-%m-%d %H:%M')
+                    except ValueError:
+                        dt_in = datetime.now()
+                data_sortida = (dt_in + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
 
             disp = filters.get('disponibilitat', [])
             if isinstance(disp, str): disp = [disp]
             
             # Només apliquem el filtre restrictiu si s'ha marcat explícitament "disponible" 
             # o si l'usuari ha posat dates al cercador
-            if 'disponible' in disp or filters.get('data_entrada'):
+            if 'disponible' in disp or filters.get('data_entrada') or filters.get('data_sortida'):
+                # 1. Excloure per reserves (dinàmic)
                 query += """
                 AND id NOT IN (
                     SELECT r.aparcament_id
                     FROM reserves r
+                    JOIN aparcaments a ON a.id = r.aparcament_id
                     WHERE r.estat IN ('confirmada', 'pendent', 'en_curs')
                     AND NOT (r.data_sortida <= %s OR r.data_entrada >= %s)
-                    GROUP BY r.aparcament_id
-                    HAVING COUNT(*) >= (SELECT a.capacitat_total FROM aparcaments a WHERE a.id = r.aparcament_id)
+                    GROUP BY r.aparcament_id, a.capacitat_total
+                    HAVING COUNT(*) >= a.capacitat_total
                 )
                 """
                 params.extend([data_entrada, data_sortida])
+
+                # 2. Excloure si està estàticament ple ARA (només si l'interval inclou "ara")
+                try:
+                    # Intentem parsejar per comparar com a datetime objectes, és més segur
+                    fmt = '%Y-%m-%d %H:%M:%S' if len(data_entrada) > 16 else '%Y-%m-%d %H:%M'
+                    dt_in = datetime.strptime(data_entrada, fmt)
+                    fmt_out = '%Y-%m-%d %H:%M:%S' if len(data_sortida) > 16 else '%Y-%m-%d %H:%M'
+                    dt_out = datetime.strptime(data_sortida, fmt_out)
+                    now = datetime.now()
+                    
+                    if dt_in <= now <= dt_out:
+                        query += " AND places_disponibles > 0"
+                except Exception:
+                    # Fallback a comparació de strings si el format és inesperat
+                    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    if data_entrada <= now_str <= data_sortida:
+                        query += " AND places_disponibles > 0"
             
             elif 'ocupat' in disp:
                 # Cas contrari: mostrar només els plens
@@ -284,10 +318,11 @@ def get_aparcaments_by_filters(filters):
                 AND id IN (
                     SELECT r.aparcament_id
                     FROM reserves r
+                    JOIN aparcaments a ON a.id = r.aparcament_id
                     WHERE r.estat IN ('confirmada', 'pendent', 'en_curs')
                     AND NOT (r.data_sortida <= %s OR r.data_entrada >= %s)
-                    GROUP BY r.aparcament_id
-                    HAVING COUNT(*) >= (SELECT a.capacitat_total FROM aparcaments a WHERE a.id = r.aparcament_id)
+                    GROUP BY r.aparcament_id, a.capacitat_total
+                    HAVING COUNT(*) >= a.capacitat_total
                 )
                 """
                 params.extend([data_entrada, data_sortida])
