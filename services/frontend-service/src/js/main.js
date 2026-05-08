@@ -258,7 +258,7 @@ function initSidebarData() {
     if (user.foto_perfil) {
       const avatarContainer = document.getElementById('sidebar-avatar-container');
       if (avatarContainer) {
-        const imageUrl = `${PHP_API_URL}/uploads/profiles/${user.foto_perfil}`;
+        const imageUrl = `${PHP_API_URL}/storage/profiles/${user.foto_perfil}`;
         avatarContainer.innerHTML = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
       }
     }

@@ -185,7 +185,7 @@ export async function initProfileInfoForm() {
     if (sessionData.foto_perfil) {
       const avatarContainer = document.getElementById('profile-avatar-container');
       if (avatarContainer) {
-        const imageUrl = `${PHP_API_URL}/uploads/profiles/${sessionData.foto_perfil}`;
+        const imageUrl = `${PHP_API_URL}/storage/profiles/${sessionData.foto_perfil}`;
         avatarContainer.innerHTML = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
       }
     }
@@ -885,7 +885,7 @@ export function initProfileImageUpload() {
       const data = await phpApi.postForm('/api/profile/picture', formData);
 
       if (data.success) {
-        const imageUrl = `${PHP_API_URL}/uploads/profiles/${data.foto_perfil}`;
+        const imageUrl = `${PHP_API_URL}/storage/profiles/${data.foto_perfil}`;
 
         // Actualitzar imatges a la UI
         const imgHtml = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
