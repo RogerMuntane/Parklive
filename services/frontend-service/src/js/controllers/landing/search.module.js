@@ -993,7 +993,7 @@ function renderResults({
     button.addEventListener('click', () => {
       const id = button.dataset.parkingId;
       onFocusParking(id);
-      globalThis.location.href = `/detall_Aparcament.html?id=${encodeURIComponent(id)}`;
+      globalThis.location.href = `/detall_Aparcament?id=${encodeURIComponent(id)}`;
     });
   });
 

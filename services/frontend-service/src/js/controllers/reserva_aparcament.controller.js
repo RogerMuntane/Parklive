@@ -251,7 +251,7 @@ async function renderPaymentMethods() {
             container.innerHTML = `
                 <div class="alert alert-warning mb-0 small">
                     No tens cap mètode de pagament guardat. 
-                    <a href="/perfil.html" class="alert-link text-decoration-underline ms-1">Afegeix-ne un al teu perfil.</a>
+                    <a href="/perfil" class="alert-link text-decoration-underline ms-1">Afegeix-ne un al teu perfil.</a>
                 </div>
             `;
             return;
@@ -529,7 +529,7 @@ export async function initReservaAparcament() {
                 if (res && res.reserva && res.reserva.id) {
                     showBootstrapAlert('success', 'Pagament autoritzat amb èxit! Generant tiquet...');
                     setTimeout(() => {
-                        window.location.href = `/tiquet_Aparcament.html?id=${res.reserva.id}&p_id=${id}`;
+                        window.location.href = `/tiquet_Aparcament?id=${res.reserva.id}&p_id=${id}`;
                     }, 1500);
                 } else {
                     throw new Error("La resposta del servidor no conté la reserva.");

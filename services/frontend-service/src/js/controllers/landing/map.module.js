@@ -280,7 +280,7 @@ export function initLandingMap() {
             <p class="mb-2 small text-body-secondary">${escapeHtml(spot.priceLabel)} · ${escapeHtml(spot.distanceLabel)}</p>
             <span class="badge text-bg-success">${escapeHtml(spot.statusLabel || 'Disponible')}</span>
             <a
-              href="/detall_Aparcament.html?id=${encodeURIComponent(String(spot.id))}"
+              href="/detall_Aparcament?id=${encodeURIComponent(String(spot.id))}"
               class="btn btn-danger btn-sm w-100 mt-2"
               aria-label="Veure detall de l'aparcament ${escapeHtml(spot.name)}"
             >

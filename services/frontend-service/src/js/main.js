@@ -130,8 +130,8 @@ function initAuthToggle() {
     newBtn.setAttribute('data-bs-toggle', 'dropdown');
     newBtn.setAttribute('aria-expanded', 'false');
 
-    // // L'usuari autenticat per email ha d'anar a perfil.html, l'OAuth també
-    // newBtn.setAttribute('href', '/perfil.html');
+    // // L'usuari autenticat per email ha d'anar a perfil, l'OAuth també
+    // newBtn.setAttribute('href', '/perfil');
 
     // Afegir fletxa animada
     let arrowIcon = newBtn.querySelector('.user-dropdown-arrow');
@@ -158,7 +158,7 @@ function initAuthToggle() {
     let profileItem = document.createElement('li');
     let profileLink = document.createElement('a');
     profileLink.classList.add('dropdown-item', 'text-primary');
-    profileLink.href = '/perfil.html';
+    profileLink.href = '/perfil';
     profileLink.textContent = 'Perfil d\'usuari';
     profileItem.appendChild(profileLink);
     dropdownMenu.appendChild(profileItem);
@@ -172,7 +172,7 @@ function initAuthToggle() {
     logoutLink.addEventListener('click', async (e) => {
       e.preventDefault();
       // Utilitza la funció centralitzada de logout
-      await logoutUser('/index.html');
+      await logoutUser('/');
     });
     logoutItem.appendChild(logoutLink);
     dropdownMenu.appendChild(logoutItem);
@@ -273,7 +273,7 @@ function initSidebarData() {
 /**
  * Llista de classes `body` que requereixen que l'usuari estigui autenticat.
  * Si la pàgina actual conté alguna d'aquestes classes i l'usuari no té sessió,
- * se'l redirigeix immediatament a login.html sense carregar cap controlador.
+ * se'l redirigeix immediatament a login sense carregar cap controlador.
  */
 const PROTECTED_PAGES = [
   'page-dashboard',
@@ -286,7 +286,7 @@ const PROTECTED_PAGES = [
 
 /**
  * Comprova si la pàgina actual és protegida i, si l'usuari no té sessió,
- * oculta el contingut i redirigeix a login.html.
+ * oculta el contingut i redirigeix a login.
  * Retorna `true` si cal bloquejar l'execució (no autenticat a pàgina protegida).
  */
 function applyAuthGuard() {
@@ -300,7 +300,7 @@ function applyAuthGuard() {
   // Usuari NO autenticat a pàgina protegida → bloquejar i redirigir
   // Ocultar tot el body per evitar el "flash" de contingut
   document.body.style.visibility = 'hidden';
-  const redirectTarget = `login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  const redirectTarget = `login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   console.warn(`[ParkLive] Auth Guard: accés denegat a "${window.location.pathname}". Redirigint a login...`);
   window.location.replace(redirectTarget);
   return true; // Bloquejar la resta de la inicialització
@@ -394,7 +394,7 @@ async function initControllers() {
 
     // ── Pàgina Landing (mapa, filtres, responsive map view) ─────
     if (bodyClass.includes('page-landing')) {
-      const { initLanding } = await import(new URL('./controllers/landing.controller.js', import.meta.url).href);
+      const { initLanding } = await import(new URL(`./controllers/landing.controller.js?v=${Date.now()}`, import.meta.url).href);
       initLanding();
     }
 
@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.addEventListener('click', async () => {
         const sec = btn.dataset.section;
         if (sec === 'logout') {
-          logoutUser('/index.html');
+          logoutUser('/');
           return;
         }
         sidebarBtns.forEach(b => b.classList.remove('active'));

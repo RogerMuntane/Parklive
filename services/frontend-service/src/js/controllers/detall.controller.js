@@ -227,7 +227,7 @@ function renderDetall(a) {
   const reservaBtn = document.querySelector('[data-detall="reserva-btn"]');
   if (reservaBtn) {
     reservaBtn.addEventListener('click', () => {
-      window.location.href = `/reserva_Aparcament.html?id=${a.id}`;
+      window.location.href = `/reserva_Aparcament?id=${a.id}`;
     });
   }
 

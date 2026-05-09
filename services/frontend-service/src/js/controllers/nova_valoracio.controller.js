@@ -138,7 +138,7 @@ export async function initNovaValoracio() {
             }
           } catch(err) {}
 
-          window.location.href = `/detall_Aparcament.html?id=${aparcamentId}`;
+          window.location.href = `/detall_Aparcament?id=${aparcamentId}`;
         } else {
           showBootstrapAlert('danger', result.error || 'Error en publicar la valoració');
         }

@@ -70,7 +70,7 @@ export async function initTiquetAparcament() {
   const btnValoracio = document.getElementById('btn-valoracio-link');
   const fastParkingId = getQueryParam('p_id');
   if (btnValoracio && fastParkingId) {
-    btnValoracio.href = `/nova_Valoracio.html?id=${fastParkingId}`;
+    btnValoracio.href = `/nova_Valoracio?id=${fastParkingId}`;
     console.log(`[ParkLive] Enllaç de valoració fixat via URL: ${fastParkingId}`);
   }
 
@@ -99,7 +99,7 @@ export async function initTiquetAparcament() {
     const aparcamentId = reservaData.aparcament?.id || reservaData.aparcament_id || reservaData.aparcament?.aparcament_id;
     
     if (btnValoracio && aparcamentId) {
-      btnValoracio.href = `/nova_Valoracio.html?id=${aparcamentId}`;
+      btnValoracio.href = `/nova_Valoracio?id=${aparcamentId}`;
       console.log(`[ParkLive] Enllaç de valoració actualitzat per a l'aparcament: ${aparcamentId}`);
     } else if (btnValoracio) {
       console.warn('[ParkLive] No s\'ha trobat l\'ID de l\'aparcament a les dades de la reserva:', reservaData);

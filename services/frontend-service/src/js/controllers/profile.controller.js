@@ -657,7 +657,7 @@ export function initProfileHistorySection() {
                         </td>
                         <td class="text-end">
                             ${potVeureTiquet ?
-            `<a href="/tiquet_Aparcament.html?id=${r.id}&p_id=${r.aparcament?.id || ''}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Veure tiquet PDF">
+            `<a href="/tiquet_Aparcament?id=${r.id}&p_id=${r.aparcament?.id || ''}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Veure tiquet PDF">
                                     <i class="bi bi-file-earmark-pdf me-1"></i> PDF
                                  </a>` :
             `<button class="btn btn-outline-secondary btn-sm rounded-pill px-3 opacity-25" disabled title="Tiquet no disponible">
@@ -768,7 +768,7 @@ export async function initProfileFavoritesSection() {
             <p class="small mb-0">${tarifaHora}</p>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <a class="btn btn-outline-secondary btn-sm" href="/detall_Aparcament.html?id=${encodeURIComponent(parkingId)}">
+            <a class="btn btn-outline-secondary btn-sm" href="/detall_Aparcament?id=${encodeURIComponent(parkingId)}">
               Veure
             </a>
             <button

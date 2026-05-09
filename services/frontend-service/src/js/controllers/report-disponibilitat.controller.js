@@ -317,7 +317,7 @@ export function initReportDisponibilitat() {
 
       // Tornar al mapa després d'un breu retard
       setTimeout(() => {
-        window.location.href = '/index.html';
+        window.location.href = '/';
       }, 1500);
     } catch (error) {
       if (error?.status === 429) {

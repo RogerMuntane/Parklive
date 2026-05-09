@@ -90,7 +90,7 @@ function initLogin() {
 
         // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
         const redirectParam = new URLSearchParams(window.location.search).get('redirect');
-        const target = redirectParam ? decodeURIComponent(redirectParam) : 'index.html';
+        const target = redirectParam ? decodeURIComponent(redirectParam) : '/';
         redirectAfterDelay(target, REDIRECT_DELAY);
       }
     } catch (err) {
@@ -144,7 +144,7 @@ function initRegister() {
       if (result && result.success) {
         showAlert('success', result.message || 'Registre completat correctament.');
         showBootstrapAlert('success', result.message || 'Benvingut/da a ParkLive! Registre completat.');
-        redirectAfterDelay('login.html', REDIRECT_DELAY);
+        redirectAfterDelay('login', REDIRECT_DELAY);
       }
     } catch (err) {
       const msg = err.message || 'No s\'ha pogut completar el registre.';
@@ -389,7 +389,7 @@ async function handleGoogleTokenResponse(tokenResponse) {
 
       // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
       const redirectParam = new URLSearchParams(window.location.search).get('redirect');
-      const target = redirectParam ? decodeURIComponent(redirectParam) : 'index.html';
+      const target = redirectParam ? decodeURIComponent(redirectParam) : '/';
       redirectAfterDelay(target, REDIRECT_DELAY);
     }
   } catch (err) {
@@ -474,7 +474,7 @@ async function postToPhp(endpoint, payload) {
 /**
  * Fa logout de l'usuari: neteja sessió, crida backend i redirigeix.
  */
-export async function logoutUser(redirectUrl = 'login.html') {
+export async function logoutUser(redirectUrl = 'login') {
   clearUserSession();
   try {
     // Elimina l'estat OAuth
@@ -496,7 +496,7 @@ function initLogout() {
   logoutBtns.forEach((btn) => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      await logoutUser('login.html');
+      await logoutUser('login');
     });
   });
 }
