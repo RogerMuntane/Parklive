@@ -1,7 +1,7 @@
 FROM nginx:alpine
 
-# Copiar configuració personalitzada de Nginx (opcional)
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Copiar configuració personalitzada de Nginx per ocultar .html
+COPY default.conf /etc/nginx/conf.d/default.conf
 
 # Crear directori per a l'aplicació
 RUN mkdir -p /usr/share/nginx/html/src
