@@ -121,6 +121,25 @@ body.page-tiquet {
         background-color: #fff;
         border-color: #444;
     }
+
+    .ticket-body {
+        .text-danger {
+            color: lighten($crimson, 15%) !important;
+        }
+        
+        // Títols i dades importants
+        h3.text-body, .fw-bold, [data-tiquet] {
+            color: #f8f9fa !important;
+        }
+        
+        .text-muted {
+            color: rgba(248, 249, 250, 0.6) !important;
+        }
+    }
+
+    .ticket-footer small {
+        color: rgba(248, 249, 250, 0.4) !important;
+    }
 }
 
 @media print {

@@ -7523,6 +7523,40 @@ textarea.form-control-lg {
     max-height: 2.5rem !important;
   }
 }
+.site-header .dropdown-menu {
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  background-color: var(--bs-body-bg);
+}
+
+.site-header .dropdown-menu .dropdown-item {
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  color: var(--bs-body-color);
+}
+
+.site-header .dropdown-menu .dropdown-item:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.site-header .dropdown-menu .dropdown-item.text-danger {
+  color: #c1121f !important;
+}
+
+.site-header .dropdown-menu .dropdown-item.text-danger:hover {
+  background-color: rgba(193, 18, 31, 0.1) !important;
+  color: #c1121f !important;
+}
+
+[data-bs-theme=dark] .site-header .dropdown-menu .dropdown-item.text-danger:hover {
+  background-color: rgba(193, 18, 31, 0.15) !important;
+  color: #e63946 !important;
+}
+
 .layout {
   height: 100dvh;
 }
@@ -7532,6 +7566,38 @@ textarea.form-control-lg {
   flex-shrink: 0;
   border-right: 1px solid #434667;
   transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-bs-theme=dark] .page-about h2, [data-bs-theme=dark] .page-about .h2, [data-bs-theme=dark] .page-about h3, [data-bs-theme=dark] .page-about .h3, [data-bs-theme=dark] .page-about h5, [data-bs-theme=dark] .page-about .h5, [data-bs-theme=dark] .page-about .fw-bold, [data-bs-theme=dark] .page-about [data-tiquet] {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] .page-about .text-muted {
+  color: rgba(248, 249, 250, 0.6) !important;
+}
+[data-bs-theme=dark] .page-about .text-primary, [data-bs-theme=dark] .page-about .text-success, [data-bs-theme=dark] .page-about .text-info, [data-bs-theme=dark] .page-about .bi-check2 {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] .page-about .bg-body-secondary {
+  background-color: rgba(248, 249, 250, 0.05) !important;
+}
+[data-bs-theme=dark] .page-about .bg-primary.bg-opacity-10,
+[data-bs-theme=dark] .page-about .bg-success.bg-opacity-10,
+[data-bs-theme=dark] .page-about .bg-info.bg-opacity-10 {
+  background-color: rgba(248, 249, 250, 0.05) !important;
+  color: #f8f9fa !important;
+  border: 1px solid rgba(248, 249, 250, 0.1) !important;
+}
+[data-bs-theme=dark] .page-about .bg-primary.bg-opacity-10 i,
+[data-bs-theme=dark] .page-about .bg-success.bg-opacity-10 i,
+[data-bs-theme=dark] .page-about .bg-info.bg-opacity-10 i {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] .page-about .card {
+  background-color: rgba(248, 249, 250, 0.02);
+  border-color: rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] .page-about .list-unstyled li strong {
+  color: #f8f9fa;
 }
 
 .page-landing {
@@ -20464,44 +20530,70 @@ textarea.form-control-lg {
   display: block;
   animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-.profile-section.active.animate-stagger .row > div, .profile-section.active.animate-stagger > .card, .profile-section.active.animate-stagger > div:not(.row) {
+.profile-section.active.animate-stagger .row > div,
+.profile-section.active.animate-stagger > .card,
+.profile-section.active.animate-stagger > div:not(.row) {
   opacity: 0;
   animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(1), .profile-section.active.animate-stagger > .card:nth-child(1), .profile-section.active.animate-stagger > div:not(.row):nth-child(1) {
+.profile-section.active.animate-stagger .row > div:nth-child(1),
+.profile-section.active.animate-stagger > .card:nth-child(1),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(1) {
   animation-delay: 0.08s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(2), .profile-section.active.animate-stagger > .card:nth-child(2), .profile-section.active.animate-stagger > div:not(.row):nth-child(2) {
+.profile-section.active.animate-stagger .row > div:nth-child(2),
+.profile-section.active.animate-stagger > .card:nth-child(2),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(2) {
   animation-delay: 0.16s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(3), .profile-section.active.animate-stagger > .card:nth-child(3), .profile-section.active.animate-stagger > div:not(.row):nth-child(3) {
+.profile-section.active.animate-stagger .row > div:nth-child(3),
+.profile-section.active.animate-stagger > .card:nth-child(3),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(3) {
   animation-delay: 0.24s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(4), .profile-section.active.animate-stagger > .card:nth-child(4), .profile-section.active.animate-stagger > div:not(.row):nth-child(4) {
+.profile-section.active.animate-stagger .row > div:nth-child(4),
+.profile-section.active.animate-stagger > .card:nth-child(4),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(4) {
   animation-delay: 0.32s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(5), .profile-section.active.animate-stagger > .card:nth-child(5), .profile-section.active.animate-stagger > div:not(.row):nth-child(5) {
+.profile-section.active.animate-stagger .row > div:nth-child(5),
+.profile-section.active.animate-stagger > .card:nth-child(5),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(5) {
   animation-delay: 0.4s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(6), .profile-section.active.animate-stagger > .card:nth-child(6), .profile-section.active.animate-stagger > div:not(.row):nth-child(6) {
+.profile-section.active.animate-stagger .row > div:nth-child(6),
+.profile-section.active.animate-stagger > .card:nth-child(6),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(6) {
   animation-delay: 0.48s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(7), .profile-section.active.animate-stagger > .card:nth-child(7), .profile-section.active.animate-stagger > div:not(.row):nth-child(7) {
+.profile-section.active.animate-stagger .row > div:nth-child(7),
+.profile-section.active.animate-stagger > .card:nth-child(7),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(7) {
   animation-delay: 0.56s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(8), .profile-section.active.animate-stagger > .card:nth-child(8), .profile-section.active.animate-stagger > div:not(.row):nth-child(8) {
+.profile-section.active.animate-stagger .row > div:nth-child(8),
+.profile-section.active.animate-stagger > .card:nth-child(8),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(8) {
   animation-delay: 0.64s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(9), .profile-section.active.animate-stagger > .card:nth-child(9), .profile-section.active.animate-stagger > div:not(.row):nth-child(9) {
+.profile-section.active.animate-stagger .row > div:nth-child(9),
+.profile-section.active.animate-stagger > .card:nth-child(9),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(9) {
   animation-delay: 0.72s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(10), .profile-section.active.animate-stagger > .card:nth-child(10), .profile-section.active.animate-stagger > div:not(.row):nth-child(10) {
+.profile-section.active.animate-stagger .row > div:nth-child(10),
+.profile-section.active.animate-stagger > .card:nth-child(10),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(10) {
   animation-delay: 0.8s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(11), .profile-section.active.animate-stagger > .card:nth-child(11), .profile-section.active.animate-stagger > div:not(.row):nth-child(11) {
+.profile-section.active.animate-stagger .row > div:nth-child(11),
+.profile-section.active.animate-stagger > .card:nth-child(11),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(11) {
   animation-delay: 0.88s;
 }
-.profile-section.active.animate-stagger .row > div:nth-child(12), .profile-section.active.animate-stagger > .card:nth-child(12), .profile-section.active.animate-stagger > div:not(.row):nth-child(12) {
+.profile-section.active.animate-stagger .row > div:nth-child(12),
+.profile-section.active.animate-stagger > .card:nth-child(12),
+.profile-section.active.animate-stagger > div:not(.row):nth-child(12) {
   animation-delay: 0.96s;
 }
 
@@ -20527,15 +20619,98 @@ textarea.form-control-lg {
 [data-bs-theme=dark] .profile-section .bg-danger.bg-opacity-10.text-danger {
   color: rgba(238.1943127962, 74.8056872038, 86.9431279621, 0.9) !important;
 }
-[data-bs-theme=dark] .profile-section span.rounded-3.p-2.bg-danger.bg-opacity-10.text-danger {
-  background-color: rgba(193, 18, 31, 0.1) !important;
-  color: rgb(236.018957346, 51.481042654, 65.1895734597) !important;
-  border: 1px solid rgba(193, 18, 31, 0.2);
+[data-bs-theme=dark] .profile-section .bg-danger.bg-opacity-10,
+[data-bs-theme=dark] .profile-section .bg-warning.bg-opacity-10,
+[data-bs-theme=dark] .profile-section .bg-success.bg-opacity-10,
+[data-bs-theme=dark] .profile-section .bg-secondary.bg-opacity-10 {
+  background-color: #2b2d42 !important;
+  color: white !important;
+  border: 1px solid rgba(237, 242, 244, 0.1) !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
+[data-bs-theme=dark] .profile-section .bg-danger.bg-opacity-10 i,
+[data-bs-theme=dark] .profile-section .bg-danger.bg-opacity-10 span,
+[data-bs-theme=dark] .profile-section .bg-danger.bg-opacity-10 strong,
+[data-bs-theme=dark] .profile-section .bg-warning.bg-opacity-10 i,
+[data-bs-theme=dark] .profile-section .bg-warning.bg-opacity-10 span,
+[data-bs-theme=dark] .profile-section .bg-warning.bg-opacity-10 strong,
+[data-bs-theme=dark] .profile-section .bg-success.bg-opacity-10 i,
+[data-bs-theme=dark] .profile-section .bg-success.bg-opacity-10 span,
+[data-bs-theme=dark] .profile-section .bg-success.bg-opacity-10 strong,
+[data-bs-theme=dark] .profile-section .bg-secondary.bg-opacity-10 i,
+[data-bs-theme=dark] .profile-section .bg-secondary.bg-opacity-10 span,
+[data-bs-theme=dark] .profile-section .bg-secondary.bg-opacity-10 strong {
+  color: white !important;
+}
+[data-bs-theme=dark] .profile-section .icon-box-reservations {
+  background-color: #2b2d42 !important;
+}
+[data-bs-theme=dark] .profile-section .card {
+  background-color: rgba(237, 242, 244, 0.03) !important;
+  border: 1px solid rgba(237, 242, 244, 0.1) !important;
+  color: #edf2f4 !important;
+}
+[data-bs-theme=dark] .profile-section .card .card-header {
+  background-color: rgba(237, 242, 244, 0.05) !important;
+  border-bottom: 1px solid rgba(237, 242, 244, 0.1) !important;
+}
+[data-bs-theme=dark] .profile-section .card .text-muted,
+[data-bs-theme=dark] .profile-section .card .text-body-secondary {
+  color: rgba(237, 242, 244, 0.6) !important;
+}
+[data-bs-theme=dark] .profile-section .card h1, [data-bs-theme=dark] .profile-section .card .h1,
+[data-bs-theme=dark] .profile-section .card h2,
+[data-bs-theme=dark] .profile-section .card .h2,
+[data-bs-theme=dark] .profile-section .card h3,
+[data-bs-theme=dark] .profile-section .card .h3,
+[data-bs-theme=dark] .profile-section .card h4,
+[data-bs-theme=dark] .profile-section .card .h4,
+[data-bs-theme=dark] .profile-section .card h5,
+[data-bs-theme=dark] .profile-section .card .h5,
+[data-bs-theme=dark] .profile-section .card h6,
+[data-bs-theme=dark] .profile-section .card .h6,
+[data-bs-theme=dark] .profile-section .card .fw-bold {
+  color: #edf2f4 !important;
+}
+[data-bs-theme=dark] .profile-section .subscription-info-pill i {
+  color: white !important;
+}
+[data-bs-theme=dark] .profile-section #stat-insignies-container .text-danger {
+  color: rgb(233.8436018957, 28.1563981043, 43.4360189573) !important;
+  opacity: 0.9;
+}
+[data-bs-theme=dark] .profile-section .text-primary {
+  color: #edf2f4 !important;
+}
 [data-bs-theme=dark] .profile-section .icon-box-red {
+  background-color: #2b2d42 !important;
+  color: white !important;
+  border: 1px solid rgba(237, 242, 244, 0.1);
+}
+[data-bs-theme=dark] .profile-section .card-selection-item {
+  width: 50% !important;
+  background-color: rgba(237, 242, 244, 0.03) !important;
+  border: 1px solid rgba(237, 242, 244, 0.1) !important;
+  transition: all 0.2s ease;
+}
+[data-bs-theme=dark] .profile-section .card-selection-item.bg-danger.bg-opacity-10 {
+  background-color: rgba(193, 18, 31, 0.1) !important;
+  border-color: rgba(193, 18, 31, 0.5) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
+[data-bs-theme=dark] .profile-section .card-selection-item .text-muted {
+  color: rgba(237, 242, 244, 0.6) !important;
+}
+[data-bs-theme=dark] .profile-section #saved-cards-plan .col-xl-6 {
+  width: 100% !important;
+}
+
+.profile-section .icon-box-red {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -20544,11 +20719,6 @@ textarea.form-control-lg {
   border-radius: 8px;
   background-color: rgba(193, 18, 31, 0.1);
   color: #c1121f;
-}
-[data-bs-theme=dark] [data-bs-theme=dark] .profile-section .icon-box-red {
-  background-color: rgba(193, 18, 31, 0.15) !important;
-  color: rgb(236.018957346, 51.481042654, 65.1895734597) !important;
-  border: 1px solid rgba(193, 18, 31, 0.2);
 }
 
 .profile-section .card {
@@ -21147,6 +21317,22 @@ textarea.form-control-lg {
   font-size: 1rem;
   padding: 0.5rem 1rem;
 }
+[data-bs-theme=dark] .page-detall-aparcament .text-primary {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] .page-detall-aparcament .text-muted {
+  color: rgba(248, 249, 250, 0.6) !important;
+}
+[data-bs-theme=dark] .page-detall-aparcament .feature-icon {
+  color: #df2c38 !important;
+}
+[data-bs-theme=dark] .page-detall-aparcament .card-custom {
+  background-color: rgba(248, 249, 250, 0.02);
+  border-color: rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] .page-detall-aparcament h1, [data-bs-theme=dark] .page-detall-aparcament .h1, [data-bs-theme=dark] .page-detall-aparcament h2, [data-bs-theme=dark] .page-detall-aparcament .h2, [data-bs-theme=dark] .page-detall-aparcament h3, [data-bs-theme=dark] .page-detall-aparcament .h3, [data-bs-theme=dark] .page-detall-aparcament h4, [data-bs-theme=dark] .page-detall-aparcament .h4, [data-bs-theme=dark] .page-detall-aparcament h5, [data-bs-theme=dark] .page-detall-aparcament .h5, [data-bs-theme=dark] .page-detall-aparcament h6, [data-bs-theme=dark] .page-detall-aparcament .h6 {
+  color: #f8f9fa;
+}
 
 .page-nova-valoracio .card-custom {
   border: none;
@@ -21193,6 +21379,30 @@ textarea.form-control-lg {
 .page-nova-valoracio .btn-parklive-action:hover {
   background-color: rgb(146.3507109005, 13.6492890995, 23.5071090047);
   color: white;
+}
+[data-bs-theme=dark] .page-nova-valoracio .bg-light {
+  background-color: rgba(248, 249, 250, 0.05) !important;
+  border-color: rgba(248, 249, 250, 0.1) !important;
+}
+[data-bs-theme=dark] .page-nova-valoracio .text-primary, [data-bs-theme=dark] .page-nova-valoracio #parking-name, [data-bs-theme=dark] .page-nova-valoracio .form-label {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] .page-nova-valoracio .upload-area {
+  background-color: rgba(248, 249, 250, 0.02);
+}
+[data-bs-theme=dark] .page-nova-valoracio .upload-area i.text-primary {
+  color: #df2c38 !important;
+}
+[data-bs-theme=dark] .page-nova-valoracio .rating-stars label {
+  color: rgba(248, 249, 250, 0.3);
+}
+[data-bs-theme=dark] .page-nova-valoracio .btn-light {
+  background-color: rgba(248, 249, 250, 0.1) !important;
+  color: #f8f9fa !important;
+  border: 1px solid rgba(248, 249, 250, 0.2) !important;
+}
+[data-bs-theme=dark] .page-nova-valoracio .btn-light:hover {
+  background-color: rgba(248, 249, 250, 0.2) !important;
 }
 
 .page-contacte .contact-info-card {
@@ -21270,6 +21480,26 @@ textarea.form-control-lg {
 }
 .page-contacte #contact-map {
   z-index: 1;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color);
+}
+[data-bs-theme=dark] .page-contacte .leaflet-popup-content-wrapper, [data-bs-theme=dark] .page-contacte .leaflet-popup-tip {
+  background-color: #2b2d42 !important;
+  color: #f8f9fa !important;
+  border: 1px solid rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] .page-contacte .leaflet-popup-content h1, [data-bs-theme=dark] .page-contacte .leaflet-popup-content .h1, [data-bs-theme=dark] .page-contacte .leaflet-popup-content h2, [data-bs-theme=dark] .page-contacte .leaflet-popup-content .h2, [data-bs-theme=dark] .page-contacte .leaflet-popup-content h3, [data-bs-theme=dark] .page-contacte .leaflet-popup-content .h3, [data-bs-theme=dark] .page-contacte .leaflet-popup-content h4, [data-bs-theme=dark] .page-contacte .leaflet-popup-content .h4, [data-bs-theme=dark] .page-contacte .leaflet-popup-content h5, [data-bs-theme=dark] .page-contacte .leaflet-popup-content .h5, [data-bs-theme=dark] .page-contacte .leaflet-popup-content h6, [data-bs-theme=dark] .page-contacte .leaflet-popup-content .h6, [data-bs-theme=dark] .page-contacte .leaflet-popup-content p, [data-bs-theme=dark] .page-contacte .leaflet-popup-content span, [data-bs-theme=dark] .page-contacte .leaflet-popup-content b, [data-bs-theme=dark] .page-contacte .leaflet-popup-content strong {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] .page-contacte .form-control, [data-bs-theme=dark] .page-contacte .form-select {
+  background-color: rgba(248, 249, 250, 0.02);
+  color: #f8f9fa;
+  border-color: rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] .page-contacte .form-control:focus, [data-bs-theme=dark] .page-contacte .form-select:focus {
+  background-color: rgba(248, 249, 250, 0.05);
+  color: #f8f9fa;
 }
 
 .page-legal .main-content {
@@ -21367,6 +21597,17 @@ textarea.form-control-lg {
 }
 .page-reserva-aparcament .summary-list span {
   display: block;
+}
+[data-bs-theme=dark] .page-reserva-aparcament .text-danger {
+  color: rgb(233.8436018957, 28.1563981043, 43.4360189573) !important;
+  opacity: 0.9;
+}
+[data-bs-theme=dark] .page-reserva-aparcament .list-unstyled .text-danger {
+  color: rgb(236.018957346, 51.481042654, 65.1895734597) !important;
+  opacity: 0.8;
+}
+[data-bs-theme=dark] .page-reserva-aparcament h1, [data-bs-theme=dark] .page-reserva-aparcament .h1, [data-bs-theme=dark] .page-reserva-aparcament h2, [data-bs-theme=dark] .page-reserva-aparcament .h2, [data-bs-theme=dark] .page-reserva-aparcament h3, [data-bs-theme=dark] .page-reserva-aparcament .h3, [data-bs-theme=dark] .page-reserva-aparcament h4, [data-bs-theme=dark] .page-reserva-aparcament .h4, [data-bs-theme=dark] .page-reserva-aparcament h5, [data-bs-theme=dark] .page-reserva-aparcament .h5, [data-bs-theme=dark] .page-reserva-aparcament h6, [data-bs-theme=dark] .page-reserva-aparcament .h6, [data-bs-theme=dark] .page-reserva-aparcament label {
+  color: #f8f9fa;
 }
 
 .page-reserves-actives .reservation-card {
@@ -21619,6 +21860,18 @@ body.page-tiquet {
   background-color: #fff;
   border-color: #444;
 }
+[data-bs-theme=dark] .ticket-body .text-danger {
+  color: rgb(236.018957346, 51.481042654, 65.1895734597) !important;
+}
+[data-bs-theme=dark] .ticket-body h3.text-body, [data-bs-theme=dark] .ticket-body .text-body.h3, [data-bs-theme=dark] .ticket-body .fw-bold, [data-bs-theme=dark] .ticket-body [data-tiquet] {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] .ticket-body .text-muted {
+  color: rgba(248, 249, 250, 0.6) !important;
+}
+[data-bs-theme=dark] .ticket-footer small, [data-bs-theme=dark] .ticket-footer .small {
+  color: rgba(248, 249, 250, 0.4) !important;
+}
 
 @media print {
   @page {
@@ -21832,18 +22085,79 @@ body.page-tiquet {
 }
 
 /* Admin Aparcaments CRUD Styles */
-[data-bs-theme=dark] #section-admin-parkings .form-control, [data-bs-theme=dark] #section-admin-parkings .form-select, [data-bs-theme=dark] #modal-parking .form-control, [data-bs-theme=dark] #modal-parking .form-select {
-  border-color: rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #edf2f4;
+[data-bs-theme=dark] #section-admin-parkings .table, [data-bs-theme=dark] #modal-parking .table {
+  color: #f8f9fa !important;
 }
-[data-bs-theme=dark] #section-admin-parkings .form-control option, [data-bs-theme=dark] #section-admin-parkings .form-select option, [data-bs-theme=dark] #modal-parking .form-control option, [data-bs-theme=dark] #modal-parking .form-select option {
-  background-color: #2b2d42;
-  color: #edf2f4;
+[data-bs-theme=dark] #section-admin-parkings .table thead, [data-bs-theme=dark] #modal-parking .table thead {
+  background-color: rgba(248, 249, 250, 0.03) !important;
 }
-[data-bs-theme=dark] #section-admin-parkings .form-control:focus, [data-bs-theme=dark] #section-admin-parkings .form-select:focus, [data-bs-theme=dark] #modal-parking .form-control:focus, [data-bs-theme=dark] #modal-parking .form-select:focus {
+[data-bs-theme=dark] #section-admin-parkings .table thead th, [data-bs-theme=dark] #modal-parking .table thead th {
+  color: rgba(248, 249, 250, 0.5) !important;
+  border-bottom: 1px solid rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] #section-admin-parkings .table tbody tr, [data-bs-theme=dark] #modal-parking .table tbody tr {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(248, 249, 250, 0.05);
+}
+[data-bs-theme=dark] #section-admin-parkings .table tbody tr:hover, [data-bs-theme=dark] #modal-parking .table tbody tr:hover {
+  background-color: rgba(248, 249, 250, 0.02) !important;
+}
+[data-bs-theme=dark] #section-admin-parkings .fw-bold, [data-bs-theme=dark] #section-admin-parkings h1, [data-bs-theme=dark] #section-admin-parkings .h1, [data-bs-theme=dark] #section-admin-parkings h2, [data-bs-theme=dark] #section-admin-parkings .h2, [data-bs-theme=dark] #section-admin-parkings h3, [data-bs-theme=dark] #section-admin-parkings .h3, [data-bs-theme=dark] #section-admin-parkings h4, [data-bs-theme=dark] #section-admin-parkings .h4, [data-bs-theme=dark] #section-admin-parkings h5, [data-bs-theme=dark] #section-admin-parkings .h5, [data-bs-theme=dark] #section-admin-parkings h6, [data-bs-theme=dark] #section-admin-parkings .h6, [data-bs-theme=dark] #modal-parking .fw-bold, [data-bs-theme=dark] #modal-parking h1, [data-bs-theme=dark] #modal-parking .h1, [data-bs-theme=dark] #modal-parking h2, [data-bs-theme=dark] #modal-parking .h2, [data-bs-theme=dark] #modal-parking h3, [data-bs-theme=dark] #modal-parking .h3, [data-bs-theme=dark] #modal-parking h4, [data-bs-theme=dark] #modal-parking .h4, [data-bs-theme=dark] #modal-parking h5, [data-bs-theme=dark] #modal-parking .h5, [data-bs-theme=dark] #modal-parking h6, [data-bs-theme=dark] #modal-parking .h6 {
+  color: #f8f9fa !important;
+}
+[data-bs-theme=dark] #section-admin-parkings .text-secondary, [data-bs-theme=dark] #section-admin-parkings .text-white-50, [data-bs-theme=dark] #section-admin-parkings .x-small, [data-bs-theme=dark] #section-admin-parkings .small, [data-bs-theme=dark] #modal-parking .text-secondary, [data-bs-theme=dark] #modal-parking .text-white-50, [data-bs-theme=dark] #modal-parking .x-small, [data-bs-theme=dark] #modal-parking .small {
+  color: rgba(248, 249, 250, 0.5) !important;
+}
+[data-bs-theme=dark] #section-admin-parkings .badge.bg-light, [data-bs-theme=dark] #modal-parking .badge.bg-light {
+  background-color: rgba(248, 249, 250, 0.1) !important;
+  color: #f8f9fa !important;
+  border: 1px solid rgba(248, 249, 250, 0.1) !important;
+}
+[data-bs-theme=dark] #section-admin-parkings .bg-body-tertiary, [data-bs-theme=dark] #modal-parking .bg-body-tertiary {
+  background-color: rgba(248, 249, 250, 0.02) !important;
+  border-bottom: 1px solid rgba(248, 249, 250, 0.05) !important;
+}
+[data-bs-theme=dark] #section-admin-parkings .form-control, [data-bs-theme=dark] #section-admin-parkings .form-select, [data-bs-theme=dark] #section-admin-parkings .input-group-text, [data-bs-theme=dark] #modal-parking .form-control, [data-bs-theme=dark] #modal-parking .form-select, [data-bs-theme=dark] #modal-parking .input-group-text {
+  border-color: rgba(248, 249, 250, 0.1);
+  background-color: rgba(248, 249, 250, 0.05);
+  color: #f8f9fa;
+}
+[data-bs-theme=dark] #section-admin-parkings .form-control:focus, [data-bs-theme=dark] #section-admin-parkings .form-select:focus, [data-bs-theme=dark] #section-admin-parkings .input-group-text:focus, [data-bs-theme=dark] #modal-parking .form-control:focus, [data-bs-theme=dark] #modal-parking .form-select:focus, [data-bs-theme=dark] #modal-parking .input-group-text:focus {
+  background-color: rgba(248, 249, 250, 0.08);
+  color: #f8f9fa;
   border-color: var(--bs-primary);
-  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+[data-bs-theme=dark] #section-admin-parkings .form-control option, [data-bs-theme=dark] #section-admin-parkings .form-select option, [data-bs-theme=dark] #section-admin-parkings .input-group-text option, [data-bs-theme=dark] #modal-parking .form-control option, [data-bs-theme=dark] #modal-parking .form-select option, [data-bs-theme=dark] #modal-parking .input-group-text option {
+  background-color: #2b2d42;
+  color: #f8f9fa;
+}
+[data-bs-theme=dark] #section-admin-parkings .page-link, [data-bs-theme=dark] #modal-parking .page-link {
+  background-color: rgba(248, 249, 250, 0.05);
+  border-color: rgba(248, 249, 250, 0.1);
+  color: #f8f9fa;
+}
+[data-bs-theme=dark] #section-admin-parkings .page-link:hover, [data-bs-theme=dark] #modal-parking .page-link:hover {
+  background-color: rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] #section-admin-parkings .page-item.active .page-link, [data-bs-theme=dark] #modal-parking .page-item.active .page-link {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+[data-bs-theme=dark] #section-admin-parkings .modal-content, [data-bs-theme=dark] #modal-parking .modal-content {
+  background-color: #2b2d42;
+  color: #f8f9fa;
+  border: 1px solid rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] #section-admin-parkings .modal-header, [data-bs-theme=dark] #section-admin-parkings .modal-footer, [data-bs-theme=dark] #modal-parking .modal-header, [data-bs-theme=dark] #modal-parking .modal-footer {
+  border-color: rgba(248, 249, 250, 0.1);
+}
+[data-bs-theme=dark] #section-admin-parkings .btn-close, [data-bs-theme=dark] #modal-parking .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+[data-bs-theme=dark] #section-admin-parkings .form-check.form-switch.bg-light, [data-bs-theme=dark] #modal-parking .form-check.form-switch.bg-light {
+  background-color: rgba(248, 249, 250, 0.03) !important;
+  border-color: rgba(248, 249, 250, 0.1) !important;
+  color: #f8f9fa;
 }
 
 .x-small {
