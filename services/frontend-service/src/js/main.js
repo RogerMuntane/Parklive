@@ -525,9 +525,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     initReserves();
 
-    // Només inicialitzar controladors d'admin si l'usuari és admin
+    // Només inicialitzar controladors d'admin si l'usuari és admin o operador
     if (hasRole('admin')) {
       initAdminUserCRUD();
+    }
+    if (hasRole('operador')) {
       initAdminParkingCRUD();
       initAdminBlog();
     }
@@ -658,19 +660,28 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         }
 
-        // Amagar botó de punts per a administradors (només per a usuaris)
+        // Amagar botó de punts per a administradors i operadors (només per a usuaris)
         const pointsBtn = document.querySelector('.sidebar-nav-item[data-section="points"]');
-        if (userData.tipus_usuari === 'admin' && pointsBtn) {
+        if ((userData.tipus_usuari === 'admin' || userData.tipus_usuari === 'operador') && pointsBtn) {
           pointsBtn.style.display = 'none';
         }
 
         // Mostrar opcions d'administrador i ocultar coses d'usuari
-        if (userData.tipus_usuari === 'admin') {
-          document.querySelectorAll('.admin-only').forEach(el => {
-            el.classList.remove('d-none');
-          });
+        if (userData.tipus_usuari === 'admin' || userData.tipus_usuari === 'operador') {
+          if (userData.tipus_usuari === 'admin') {
+            document.querySelectorAll('.admin-only').forEach(el => {
+              el.classList.remove('d-none');
+            });
+          }
 
-          // Ocultar seccions que l'admin no necessita (reserves, historial, pagaments, estadístiques, favorits, etc.)
+          if (userData.tipus_usuari === 'operador') {
+            const opParkings = document.querySelector('.sidebar-nav-item[data-section="admin-parkings"]');
+            const opBlog = document.querySelector('.sidebar-nav-item[data-section="admin-blog"]');
+            if (opParkings) opParkings.classList.remove('d-none');
+            if (opBlog) opBlog.classList.remove('d-none');
+          }
+
+          // Ocultar seccions que l'admin o operador no necessiten (reserves, historial, pagaments, estadístiques, favorits, etc.)
           const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics', 'favorites', 'points'];
           sectionsToHide.forEach(sec => {
             const btn = document.querySelector(`.sidebar-nav-item[data-section="${sec}"]`);
