@@ -142,7 +142,6 @@ function initRegister() {
       const result = await postToPhp('/api/signin', payload);
 
       if (result && result.success) {
-        showAlert('success', result.message || 'Registre completat correctament.');
         showBootstrapAlert('success', result.message || 'Benvingut/da a ParkLive! Registre completat.');
         redirectAfterDelay('login', REDIRECT_DELAY);
       }
@@ -207,7 +206,6 @@ function initRequestResetCode() {
         })
       );
 
-      showAlert('success', result.message || 'Codi enviat al teu correu.');
       showBootstrapAlert('info', result.message || 'Codi de verificació enviat al correu.');
 
       // Transició al pas 2: verificar codi
