@@ -246,6 +246,7 @@ function renderDetall(a) {
       const map = L.map('map-detail', {
         zoomControl: false,
         attributionControl: false,
+        worldCopyJump: true,
       }).setView([lat, lon], 16);
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);

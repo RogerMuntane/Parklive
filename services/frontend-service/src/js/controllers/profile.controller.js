@@ -1006,39 +1006,74 @@ export async function initProfilePointsSection() {
       rewardsGrid.appendChild(card);
     });
 
-    // Vincular esdeveniments de bescanvi
+    // Lògica del Modal de Bescanvi
+    const modalConfirmEl = document.getElementById('modal-confirm-redeem');
+    let modalConfirmRedeem = null;
+    if (modalConfirmEl) {
+      modalConfirmRedeem = bootstrap.Modal.getInstance(modalConfirmEl) || new bootstrap.Modal(modalConfirmEl);
+    }
+
+    const btnConfirmRedeem = document.getElementById('btn-confirm-redeem');
+    
+    // Netejar listeners antics del botó de confirmar
+    if (btnConfirmRedeem) {
+        const newBtnConfirm = btnConfirmRedeem.cloneNode(true);
+        btnConfirmRedeem.parentNode.replaceChild(newBtnConfirm, btnConfirmRedeem);
+        
+        newBtnConfirm.addEventListener('click', async () => {
+            const rewardId = document.getElementById('redeem-reward-id').value;
+            const targetBtn = document.querySelector(`.btn-redeem[data-reward-id="${rewardId}"]`);
+            
+            if (!targetBtn) return;
+            
+            if (modalConfirmRedeem) modalConfirmRedeem.hide();
+            
+            targetBtn.disabled = true;
+            const originalText = targetBtn.innerHTML;
+            targetBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+              const result = await pythonApi.post('/api/gamificacio/bescanvi', {
+                usuari_id: userId,
+                recompensa_id: rewardId
+              });
+
+              if (result.success) {
+                showBootstrapAlert('success', result.message || 'Recompensa bescanviada!', section);
+                await fetchPoints();
+                await loadRewards();
+              } else {
+                showBootstrapAlert('danger', result.error || 'Error en el bescanvi.', section);
+                targetBtn.disabled = false;
+                targetBtn.innerHTML = originalText;
+              }
+            } catch (error) {
+              const errorMsg = error.message || 'Error de xarxa al processar el bescanvi.';
+              showBootstrapAlert('danger', errorMsg, section);
+              targetBtn.disabled = false;
+              targetBtn.innerHTML = originalText;
+            }
+        });
+    }
+
+    // Vincular esdeveniments de bescanvi per obrir el modal
     rewardsGrid.querySelectorAll('.btn-redeem').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const rewardId = btn.dataset.rewardId;
         const rewardName = btn.dataset.rewardName;
-
-        if (!confirm(`Vols bescanviar la teva recompensa: "${rewardName}"?`)) return;
-
-        btn.disabled = true;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-        try {
-          const result = await pythonApi.post('/api/gamificacio/bescanvi', {
-            usuari_id: userId,
-            recompensa_id: rewardId
-          });
-
-          if (result.success) {
-            showBootstrapAlert('success', result.message || 'Recompensa bescanviada!', section);
-            // Recarregar punts i recompenses (per actualitzar estat de botons)
-            await fetchPoints();
-            await loadRewards();
-          } else {
-            showBootstrapAlert('danger', result.error || 'Error en el bescanvi.', section);
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-          }
-        } catch (error) {
-          const errorMsg = error.message || 'Error de xarxa al processar el bescanvi.';
-          showBootstrapAlert('danger', errorMsg, section);
-          btn.disabled = false;
-          btn.innerHTML = originalText;
+        
+        const inputId = document.getElementById('redeem-reward-id');
+        const confirmText = document.getElementById('redeem-confirm-text');
+        
+        if (inputId && confirmText && modalConfirmRedeem) {
+            inputId.value = rewardId;
+            confirmText.innerHTML = `Estàs segur que vols bescanviar els teus punts per la recompensa <strong>"${rewardName}"</strong>?`;
+            modalConfirmRedeem.show();
+        } else {
+            // Fallback si no existeix el modal
+            if (!confirm(`Vols bescanviar la teva recompensa: "${rewardName}"?`)) return;
+            // Aquest fallback no farà res més si no hem posat el codi antic aquí, 
+            // però com que el modal sempre hi serà, està bé.
         }
       });
     });

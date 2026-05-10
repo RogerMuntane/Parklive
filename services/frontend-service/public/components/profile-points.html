@@ -46,4 +46,24 @@
     </div>
   </div>
 </section>
+</section>
 
+<!-- Modal Confirmar Bescanvi Punts -->
+<div class="modal fade" id="modal-confirm-redeem" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 text-center">
+                <input type="hidden" id="redeem-reward-id">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-gift fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Bescanviar punts?</h5>
+                <p class="text-secondary small mb-4" id="redeem-confirm-text">Estàs segur que vols bescanviar els punts per aquesta recompensa?</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary rounded-pill py-2 fw-bold" id="btn-confirm-redeem">Sí, bescanviar</button>
+                    <button type="button" class="btn btn-light rounded-pill py-2" data-bs-dismiss="modal">Cancel·lar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

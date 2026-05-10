@@ -80,7 +80,15 @@ function getCurrentBrowserLocation() {
     // perquè una primera lectura dolenta (GPS fred) pot persistir i
     // mostrar ubicacions incorrectes en recàrregues posteriors.
     globalThis.navigator.geolocation.getCurrentPosition(
-      resolve,
+      (position) => {
+        // Descartem ubicacions amb molt mala precisió (sovint basades en IP quan falla el GPS)
+        const accuracy = position?.coords?.accuracy;
+        if (accuracy && accuracy > 5000) {
+          reject(new Error('La precisió de la ubicació és massa baixa. Comprova el GPS.'));
+          return;
+        }
+        resolve(position);
+      },
       reject,
       {
         enableHighAccuracy: true,
