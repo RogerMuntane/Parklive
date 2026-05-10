@@ -436,7 +436,7 @@ VALUES -- Centre de Barcelona
     ),
     (
         17,
-        'Parking Mataró Centre (Ple)',
+        'Parking Mataró Centre',
         'cobert',
         'La Riera, 100',
         'Mataró',
