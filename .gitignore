@@ -26,3 +26,6 @@ storage/*
 services/php-service/uploads/
 services/frontend-service/storage/
 services/python-service/storage/
+
+# Logs
+logs/
