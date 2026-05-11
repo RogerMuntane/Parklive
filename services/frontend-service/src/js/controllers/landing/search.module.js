@@ -953,7 +953,7 @@ function renderResults({
         <div class="parking-result-tags d-flex flex-wrap gap-1 mt-1" aria-label="Serveis del parking">
           ${spot.isVerified
             ? '<span class="badge rounded-pill text-bg-success border-0 fw-normal"><i class="bi bi-patch-check-fill me-1"></i>Oficial</span>'
-            : '<span class="badge rounded-pill text-bg-warning text-dark border-0 fw-normal"><i class="bi bi-person-fill me-1"></i>Contribució</span>'}
+            : ''}
           <span class="badge rounded-pill text-bg-light border fw-normal">Alt: ${escapeHtml(spot.maxHeightLabel)}</span>
           ${spot.hasEv
             ? '<span class="badge rounded-pill text-bg-light border fw-normal">Elèctric</span>'
