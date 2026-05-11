@@ -341,7 +341,7 @@ export function initLanding() {
       }
 
       await runSearch({
-        resetPage: true,
+        preservePage: true,
         forceIgnoreCityFilter: true,
         expandRadiusFromUserLocation: false,
         preserveViewport: true,

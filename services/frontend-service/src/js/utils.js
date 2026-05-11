@@ -320,3 +320,57 @@ export function redirectAfterDelay(url, delay = 1500) {
     window.location.href = url;
   }, delay);
 }
+
+/**
+ * Inicialitza un selector de coordenades en un mapa Leaflet.
+ * @param {string} containerId - L'ID del div contenidor.
+ * @param {HTMLInputElement} latInput - L'input on guardar la latitud.
+ * @param {HTMLInputElement} lngInput - L'input on guardar la longitud.
+ * @param {number} defaultLat - Latitud per defecte (ex. 41.3872).
+ * @param {number} defaultLng - Longitud per defecte (ex. 2.1703).
+ * @param {Object} mapInstance - Referència a l'objecte mapa previ per reutilitzar-lo.
+ * @returns {Object} { map, marker } - Referències per gestionar-ho externament (ex. invalidateSize).
+ */
+export function createMapPicker(containerId, latInput, lngInput, defaultLat = 41.3872, defaultLng = 2.1703, mapInstance, markerInstance) {
+    const L = globalThis.L;
+    if (!L) return { map: null, marker: null };
+
+    const initialLat = latInput.value && !isNaN(parseFloat(latInput.value)) ? parseFloat(latInput.value) : defaultLat;
+    const initialLng = lngInput.value && !isNaN(parseFloat(lngInput.value)) ? parseFloat(lngInput.value) : defaultLng;
+
+    latInput.value = initialLat;
+    lngInput.value = initialLng;
+
+    if (mapInstance) {
+        mapInstance.setView([initialLat, initialLng], 18);
+        if (markerInstance) {
+            markerInstance.setLatLng([initialLat, initialLng]);
+        }
+        return { map: mapInstance, marker: markerInstance };
+    }
+
+    const map = L.map(containerId, {
+        minZoom: 5,
+        maxZoom: 20
+    }).setView([initialLat, initialLng], 18);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap contributors, © CARTO'
+    }).addTo(map);
+
+    const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
+
+    marker.on('dragend', function() {
+        const pos = marker.getLatLng();
+        latInput.value = pos.lat;
+        lngInput.value = pos.lng;
+    });
+
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        latInput.value = e.latlng.lat;
+        lngInput.value = e.latlng.lng;
+    });
+
+    return { map, marker };
+}

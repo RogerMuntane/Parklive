@@ -9,6 +9,10 @@ from models.blog_model import (
 )
 from controllers.aparcament_controller import _get_authenticated_user_id
 from models.db_connection import get_new_connection
+import os
+import uuid
+from pathlib import Path
+from werkzeug.utils import secure_filename
 
 def _is_admin(user_id):
     """Verifica si l'usuari és administrador o operador."""
@@ -81,7 +85,24 @@ def create_article():
         except ValueError as e:
             return jsonify({"success": False, "error": str(e)}), 401
             
-        data = request.get_json()
+        is_multipart = request.content_type and request.content_type.startswith('multipart/form-data')
+        if is_multipart:
+            data = request.form.to_dict()
+            # Handle boolean conversion for form data
+            data['publicat'] = data.get('publicat') == 'true'
+            
+            file = request.files.get('imatge_destacada')
+            if file and file.filename:
+                base_storage = Path(__file__).parent.parent / "storage"
+                blog_dir = base_storage / "blog"
+                blog_dir.mkdir(parents=True, exist_ok=True)
+                ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                file.save(blog_dir / filename)
+                data['imatge_destacada'] = f"/api/storage/blog/{filename}"
+        else:
+            data = request.get_json()
+            
         if not data or not data.get('titol') or not data.get('slug'):
             return jsonify({"success": False, "error": "Títol i slug obligatoris"}), 400
             
@@ -106,7 +127,27 @@ def edit_article(article_id):
         except ValueError as e:
             return jsonify({"success": False, "error": str(e)}), 401
             
-        data = request.get_json()
+        is_multipart = request.content_type and request.content_type.startswith('multipart/form-data')
+        if is_multipart:
+            data = request.form.to_dict()
+            data['publicat'] = data.get('publicat') == 'true'
+            
+            file = request.files.get('imatge_destacada')
+            if file and file.filename:
+                base_storage = Path(__file__).parent.parent / "storage"
+                blog_dir = base_storage / "blog"
+                blog_dir.mkdir(parents=True, exist_ok=True)
+                ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                file.save(blog_dir / filename)
+                data['imatge_destacada'] = f"/api/storage/blog/{filename}"
+            else:
+                original = get_article_by_id(article_id)
+                if original:
+                    data['imatge_destacada'] = original.get('imatge_destacada')
+        else:
+            data = request.get_json()
+            
         if not data or not data.get('titol') or not data.get('slug'):
             return jsonify({"success": False, "error": "Títol i slug obligatoris"}), 400
             

@@ -1336,6 +1336,7 @@ export function initLandingSearch({
   const runSearch = async ({
     page = 1,
     resetPage = false,
+    preservePage = false,
     resolveSearchLocation = false,
     centerOnUserLocation = false,
     forceIgnoreCityFilter = false,
@@ -1363,7 +1364,7 @@ export function initLandingSearch({
       return;
     }
 
-    const targetPage = resetPage ? 1 : page;
+    const targetPage = resetPage ? 1 : (preservePage ? currentPage : page);
     const searchTerm = document.getElementById('mapSearchInput')?.value.trim() || '';
 
     let ignoreCityFilter = forceIgnoreCityFilter;

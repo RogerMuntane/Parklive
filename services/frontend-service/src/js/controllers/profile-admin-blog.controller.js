@@ -41,7 +41,11 @@ function renderBlogTable() {
       <td>${dateStr}</td>
       <td class="text-end">
         <div class="btn-group btn-group-sm">
+<<<<<<< Updated upstream
           <a href="/blog-detall?slug=${encodeURIComponent(article.slug)}" target="_blank" class="btn btn-outline-secondary" title="Veure publicació">
+=======
+          <a href="/blog-detall.html?slug=${encodeURIComponent(article.slug)}" class="btn btn-outline-secondary" title="Veure publicació">
+>>>>>>> Stashed changes
             <i class="bi bi-eye"></i>
           </a>
           <button class="btn btn-outline-primary btn-edit-article" data-id="${article.id}" title="Editar">
@@ -123,7 +127,20 @@ function openArticleModal(id = null) {
     document.getElementById('blog-slug').value = article.slug;
     document.getElementById('blog-categoria').value = article.categoria;
     document.getElementById('blog-publicat').checked = article.publicat;
-    document.getElementById('blog-imatge').value = article.imatge_destacada || '';
+    
+    document.getElementById('blog-imatge').value = '';
+    const imgLink = document.getElementById('blog-current-image');
+    if (article.imatge_destacada) {
+      let finalHref = article.imatge_destacada;
+      if (finalHref.startsWith('/api/')) {
+        finalHref = pythonApi.baseURL + finalHref;
+      }
+      imgLink.href = finalHref;
+      imgLink.classList.remove('d-none');
+    } else {
+      imgLink.classList.add('d-none');
+    }
+
     document.getElementById('blog-resum').value = article.resum || '';
     document.getElementById('blog-contingut').value = article.contingut || '';
   } else {
@@ -131,6 +148,8 @@ function openArticleModal(id = null) {
     modalLabel.textContent = 'Nou Article';
     document.getElementById('blog-article-id').value = '';
     document.getElementById('blog-publicat').checked = false;
+    document.getElementById('blog-imatge').value = '';
+    document.getElementById('blog-current-image').classList.add('d-none');
   }
 
   if (!modalInstance) {
@@ -143,18 +162,10 @@ async function saveArticle(e) {
   e.preventDefault();
 
   const id = document.getElementById('blog-article-id').value;
-  const titol = document.getElementById('blog-titol').value;
-  const slug = document.getElementById('blog-slug').value;
-  const categoria = document.getElementById('blog-categoria').value;
   const publicat = document.getElementById('blog-publicat').checked;
-  const imatge_destacada = document.getElementById('blog-imatge').value;
-  const resum = document.getElementById('blog-resum').value;
-  const contingut = document.getElementById('blog-contingut').value;
 
-  // Si passa a publicat ara mateix i no ho estava, posem data_publicacio ara
   let data_publicacio = null;
   if (publicat) {
-    // Si estem editant i ja tenia data_publicacio, mantenim. Si no, data actual.
     if (id) {
       const art = articlesData.find(a => a.id == id);
       if (art && art.data_publicacio) {
@@ -167,9 +178,21 @@ async function saveArticle(e) {
     }
   }
 
-  const payload = {
-    titol, slug, categoria, publicat, imatge_destacada, resum, contingut, data_publicacio
-  };
+  const formData = new FormData();
+  formData.append('titol', document.getElementById('blog-titol').value);
+  formData.append('slug', document.getElementById('blog-slug').value);
+  formData.append('categoria', document.getElementById('blog-categoria').value);
+  formData.append('publicat', publicat);
+  formData.append('resum', document.getElementById('blog-resum').value);
+  formData.append('contingut', document.getElementById('blog-contingut').value);
+  if (data_publicacio) {
+    formData.append('data_publicacio', data_publicacio);
+  }
+
+  const imatgeInput = document.getElementById('blog-imatge');
+  if (imatgeInput.files && imatgeInput.files[0]) {
+    formData.append('imatge_destacada', imatgeInput.files[0]);
+  }
 
   const btn = document.getElementById('btn-save-article');
   const originalText = btn.innerHTML;
@@ -178,10 +201,13 @@ async function saveArticle(e) {
 
   try {
     let response;
+    // La nostra API per defecte assumeix JSON si enviem `{}`. Per enviar FormData cal usar fetch directament
+    // o modificar el nostre client d'API si no suporta FormData automàticament.
+    // ParkLive pythonApi ja hauria d'acceptar FormData si ho detecta.
     if (id) {
-      response = await pythonApi.put(`/api/blog/${id}`, payload);
+      response = await pythonApi.put(`/api/blog/${id}`, formData);
     } else {
-      response = await pythonApi.post('/api/blog', payload);
+      response = await pythonApi.post('/api/blog', formData);
     }
 
     if (response && response.success) {

@@ -5,11 +5,29 @@
  */
 
 import { pythonApi } from '../api.js';
-import { showBootstrapAlert } from '../utils.js';
+import { showBootstrapAlert, createMapPicker } from '../utils.js';
 
 const MAX_PARKING_IMAGES = 10;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+let adminMap = null;
+let adminMarker = null;
+
+function initAdminMap(lat, lng) {
+    const latInput = document.getElementById('admin-aparcament-lat');
+    const lngInput = document.getElementById('admin-aparcament-lng');
+    const mapContainer = document.getElementById('admin-aparcament-map');
+
+    if (!latInput || !lngInput || !mapContainer) return;
+
+    if (lat) latInput.value = lat;
+    if (lng) lngInput.value = lng;
+
+    const result = createMapPicker('admin-aparcament-map', latInput, lngInput, 41.3872, 2.1703, adminMap, adminMarker);
+    adminMap = result.map;
+    adminMarker = result.marker;
+}
 
 export function initAdminParkingCRUD() {
     const section = document.getElementById('section-admin-parkings');
@@ -58,12 +76,24 @@ export function initAdminParkingCRUD() {
     }
 
     // Moure modals al body si no hi són per evitar problemes de z-index
-    ['modal-parking', 'modal-delete-parking'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el && el.parentElement !== document.body) {
-            document.body.appendChild(el);
-        }
-    });
+    const modalEl = document.getElementById('modal-parking');
+    const modalDelEl = document.getElementById('modal-delete-parking');
+    if (modalEl && modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
+    }
+    if (modalDelEl && modalDelEl.parentNode !== document.body) {
+        document.body.appendChild(modalDelEl);
+    }
+
+    if (modalEl) {
+        modalEl.addEventListener('shown.bs.modal', () => {
+            if (adminMap) {
+                setTimeout(() => {
+                    adminMap.invalidateSize();
+                }, 100);
+            }
+        });
+    }
 
     document.getElementById('btn-confirm-delete-parking')?.addEventListener('click', async () => {
         const id = document.getElementById('delete-parking-id').value;
@@ -339,6 +369,10 @@ function resetForm() {
     }
     const modalEl = document.getElementById('modal-parking');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    // Inicialitzar amb coordenades per defecte (Barcelona)
+    initAdminMap();
+
     modal.show();
 }
 
@@ -389,8 +423,10 @@ window.editParking = function (p) {
     form.querySelector('[name="adreca"]').value = p.adreca;
     form.querySelector('[name="ciutat"]').value = p.ciutat;
     form.querySelector('[name="codi_postal"]').value = p.codi_postal || '';
-    form.querySelector('[name="latitud"]').value = p.latitud;
-    form.querySelector('[name="longitud"]').value = p.longitud;
+
+    // Configurar mapa
+    initAdminMap(p.latitud, p.longitud);
+
     form.querySelector('[name="capacitat_total"]').value = p.capacitat_total;
     form.querySelector('[name="tarifa_hora"]').value = p.tarifa_hora || '';
     form.querySelector('[name="tarifa_dia"]').value = p.tarifa_dia || '';
