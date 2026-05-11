@@ -202,7 +202,6 @@ async function handleFormSubmit(e) {
     const isEdit = !!id;
     const action = isEdit ? 'update' : 'create';
     try {
-        console.log('[ParkLive] Enviant dades d\'usuari:', { action, id, data });
         const result = await phpApi.post(`/api/admin/users?action=${action}${isEdit ? '&id=' + id : ''}`, data);
 
         if (result.success) {

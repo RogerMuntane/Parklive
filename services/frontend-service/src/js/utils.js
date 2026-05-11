@@ -62,7 +62,6 @@ export function showBootstrapAlert(type, message, parent = document.body) {
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    console.log(`[ParkLive] Mostrant alerta: ${type} - ${message}`);
     parent.appendChild(alert);
     setTimeout(() => {
       if (alert && alert.parentNode) {

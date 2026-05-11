@@ -381,7 +381,6 @@ async function handleGoogleTokenResponse(tokenResponse) {
       // Si és Google OAuth, crea cookie per ocultar canvi contrasenya
       if (result.user && result.user.provider === 'google') {
         sessionStorage.setItem('parklive_oauth', 'google');
-        console.log('[ParkLive] OAuth guardat a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
       }
       showAlert('success', result.message || 'Sessió iniciada amb Google!');
 
@@ -477,7 +476,6 @@ export async function logoutUser(redirectUrl = 'login') {
   try {
     // Elimina l'estat OAuth
     sessionStorage.removeItem('parklive_oauth');
-    console.log('[ParkLive] Sessió OAuth eliminada en logout:', sessionStorage.getItem('parklive_oauth'));
     await phpApi.post('/api/logout');
   } catch {
     // Ignorar errors de logout – la sessió client ja s'ha netejat
