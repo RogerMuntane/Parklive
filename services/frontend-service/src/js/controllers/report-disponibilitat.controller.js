@@ -15,9 +15,6 @@ function setStatusButtons(statusButtons, nextStatus) {
 }
 
 function showToast(toastEl, message, type = 'success') {
-  const alertType = type === 'error' ? 'danger' : type;
-  showBootstrapAlert(alertType, message);
-  
   if (!toastEl) return;
   toastEl.textContent = message;
   toastEl.className = `report-toast is-visible is-${type}`;
@@ -108,7 +105,7 @@ export function initReportDisponibilitat() {
   let cooldownUntilMs = getCooldownUntil();
   let cooldownTimerId = null;
 
-  const MAX_RADIUS_M = 500; // Radi màxim permès en metres
+  const MAX_RADIUS_M = 150; // Radi màxim permès en metres
 
   // Fórmula Haversine: distància en metres entre dos punts lat/lon
   const haversineMeters = (a, b) => {
@@ -207,8 +204,25 @@ export function initReportDisponibilitat() {
     if (marker) {
       marker.setLatLng(latLng);
     } else {
-      marker = globalThis.L.marker(latLng, { draggable: true }).addTo(map);
-      marker.bindPopup('Arrossega per ajustar · Radi màxim 500 m').openPopup();
+      const reportIcon = globalThis.L.divIcon({
+        className: 'report-location-marker-wrapper',
+        html: `
+          <div class="report-location-marker">
+            <div class="report-location-marker__pulse"></div>
+            <div class="report-location-marker__icon rounded-circle bg-primary d-flex align-items-center justify-content-center text-white border border-2 border-white shadow">
+              <i class="bi bi-broadcast-pin"></i>
+            </div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      });
+
+      marker = globalThis.L.marker(latLng, { 
+        draggable: true,
+        icon: reportIcon
+      }).addTo(map);
+      marker.bindPopup('Arrossega per ajustar · Radi màxim 150 m').openPopup();
 
       marker.on('dragend', () => {
         const pos = marker.getLatLng();

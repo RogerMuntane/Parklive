@@ -11,8 +11,93 @@ from controllers.aparcament_controller import _get_authenticated_user_id
 from models.db_connection import get_new_connection
 import os
 import uuid
+import hashlib
+import cloudinary.uploader
+import requests as http_requests
+import logging
 from pathlib import Path
+from PIL import Image
 from werkzeug.utils import secure_filename
+
+# Configurar logger per a fallades de Cloudinary
+log_dir = Path(__file__).parent.parent / "logs"
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / "blog_images.log"
+
+logging.basicConfig(
+    filename=str(log_file),
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+def _process_blog_image(file_obj):
+    """
+    Optimitza una imatge del blog usant Cloudinary.
+    La puja, la descarrega optimitzada (webp, auto quality) i la guarda localment.
+    Si falla Cloudinary, usa Pillow localment com a fallback.
+    """
+    if not file_obj or not file_obj.filename:
+        return None
+
+    try:
+        base_storage = Path(__file__).parent.parent / "storage"
+        blog_dir = base_storage / "blog"
+        blog_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generar nom segur amb hash basat en el contingut aproximat (nom + tamany)
+        file_obj.seek(0, os.SEEK_END)
+        file_size = file_obj.tell()
+        file_obj.seek(0)
+        
+        random_hash = hashlib.md5(
+            f"{file_obj.filename}_{file_size}".encode()
+        ).hexdigest()[:8]
+        
+        safe_filename = f"blog_{random_hash}.webp"
+        target_path = blog_dir / safe_filename
+        
+        cloud_public_id = f"parklive_blog/blog_{random_hash}"
+
+        try:
+            # 1. Pujar a Cloudinary → transformació q_auto + f_webp
+            file_obj.seek(0)
+            upload_result = cloudinary.uploader.upload(
+                file_obj,
+                public_id=cloud_public_id,
+                overwrite=True,
+                resource_type='image',
+                format='webp',
+                transformation=[{'quality': 'auto', 'fetch_format': 'webp'}]
+            )
+            optimized_url = upload_result.get('secure_url')
+
+            # 2. Descarregar la versió optimitzada i desar localment
+            img_response = http_requests.get(optimized_url, timeout=30)
+            img_response.raise_for_status()
+            with open(target_path, 'wb') as out_file:
+                out_file.write(img_response.content)
+
+        except Exception as cloud_err:
+            # FALLBACK: Si falla Cloudinary, optimitzem localment amb Pillow
+            logger.error(f"Error Cloudinary (blog image): {str(cloud_err)}")
+            
+            file_obj.seek(0)
+            img = Image.open(file_obj)
+            
+            # Convertir a RGB/RGBA si cal per desar com a WebP
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGBA")
+            else:
+                img = img.convert("RGB")
+            
+            # Desar localment com a WebP optimitzat
+            img.save(target_path, "WEBP", quality=80)
+
+        return f"/api/storage/blog/{safe_filename}"
+    except Exception as e:
+        logger.error(f"Error crític processant imatge blog: {str(e)}")
+        return None
 
 def _is_admin(user_id):
     """Verifica si l'usuari és administrador o operador."""
@@ -93,13 +178,7 @@ def create_article():
             
             file = request.files.get('imatge_destacada')
             if file and file.filename:
-                base_storage = Path(__file__).parent.parent / "storage"
-                blog_dir = base_storage / "blog"
-                blog_dir.mkdir(parents=True, exist_ok=True)
-                ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
-                filename = f"{uuid.uuid4().hex}.{ext}"
-                file.save(blog_dir / filename)
-                data['imatge_destacada'] = f"/api/storage/blog/{filename}"
+                data['imatge_destacada'] = _process_blog_image(file)
         else:
             data = request.get_json()
             
@@ -134,13 +213,7 @@ def edit_article(article_id):
             
             file = request.files.get('imatge_destacada')
             if file and file.filename:
-                base_storage = Path(__file__).parent.parent / "storage"
-                blog_dir = base_storage / "blog"
-                blog_dir.mkdir(parents=True, exist_ok=True)
-                ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
-                filename = f"{uuid.uuid4().hex}.{ext}"
-                file.save(blog_dir / filename)
-                data['imatge_destacada'] = f"/api/storage/blog/{filename}"
+                data['imatge_destacada'] = _process_blog_image(file)
             else:
                 original = get_article_by_id(article_id)
                 if original:

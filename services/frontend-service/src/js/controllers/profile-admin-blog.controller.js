@@ -41,11 +41,7 @@ function renderBlogTable() {
       <td>${dateStr}</td>
       <td class="text-end">
         <div class="btn-group btn-group-sm">
-<<<<<<< Updated upstream
-          <a href="/blog-detall?slug=${encodeURIComponent(article.slug)}" target="_blank" class="btn btn-outline-secondary" title="Veure publicació">
-=======
           <a href="/blog-detall.html?slug=${encodeURIComponent(article.slug)}" class="btn btn-outline-secondary" title="Veure publicació">
->>>>>>> Stashed changes
             <i class="bi bi-eye"></i>
           </a>
           <button class="btn btn-outline-primary btn-edit-article" data-id="${article.id}" title="Editar">
@@ -127,7 +123,7 @@ function openArticleModal(id = null) {
     document.getElementById('blog-slug').value = article.slug;
     document.getElementById('blog-categoria').value = article.categoria;
     document.getElementById('blog-publicat').checked = article.publicat;
-    
+
     document.getElementById('blog-imatge').value = '';
     const imgLink = document.getElementById('blog-current-image');
     if (article.imatge_destacada) {
