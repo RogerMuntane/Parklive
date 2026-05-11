@@ -150,6 +150,55 @@
     padding: 0.18rem 0.42rem;
   }
 
+  // Custom Report Location Marker
+  .report-location-marker-wrapper {
+    background: transparent;
+    border: 0;
+  }
+  .report-location-marker {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &__pulse {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(var(--bs-primary-rgb), 0.4);
+      animation: report-pulse 2s infinite;
+    }
+
+    &__icon {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      background: var(--bs-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.4);
+      border: 2px solid white;
+    }
+  }
+
+  @keyframes report-pulse {
+    0% {
+      transform: scale(0.6);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+
   @media (max-width: 991px) {
     .report-map {
       min-height: 340px;

@@ -270,6 +270,8 @@ export function initLandingMap() {
     });
     parkingMarkers.clear();
 
+    console.log(`[ParkLive] Rendering ${spots.length} markers on map`);
+
     spots.forEach((spot) => {
       const marker = isOpenAirParking(spot)
         ? leaflet.circle(spot.coords, {
@@ -303,7 +305,6 @@ export function initLandingMap() {
         },
       );
 
-      marker.addTo(map);
       parkingMarkers.set(String(spot.id), marker);
     });
 

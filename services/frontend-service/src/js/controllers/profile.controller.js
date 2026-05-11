@@ -3,7 +3,7 @@
  * Controlador per funcionalitats del perfil d'usuari (canvi de contrasenya)
  */
 
-import { hideAllAlerts, setFormLoading, showBootstrapAlert, formatDate, formatCurrency, getUserId } from '../utils.js';
+import { hideAllAlerts, setFormLoading, showBootstrapAlert, formatDate, formatCurrency, getUserId, getUserSession, saveUserSession } from '../utils.js';
 import { obtenirReservesUsuari } from './reserves.controller.js';
 import { PHP_API_URL } from '../config.js';
 import { pythonApi, phpApi } from '../api.js';
@@ -989,8 +989,8 @@ export async function initProfilePointsSection() {
             </div>
             <h3 class="h6 fw-bold mb-2">${reward.nom}</h3>
             <p class="small text-body-secondary mb-4 flex-grow-1">${reward.descripcio}</p>
-            
-            <button 
+
+            <button
               class="btn ${isLocked ? 'btn-outline-secondary disabled' : 'btn-primary'} w-100 rounded-pill btn-redeem"
               data-reward-id="${reward.id}"
               data-reward-name="${reward.nom}"
@@ -1012,20 +1012,20 @@ export async function initProfilePointsSection() {
     }
 
     const btnConfirmRedeem = document.getElementById('btn-confirm-redeem');
-    
+
     // Netejar listeners antics del botó de confirmar
     if (btnConfirmRedeem) {
         const newBtnConfirm = btnConfirmRedeem.cloneNode(true);
         btnConfirmRedeem.parentNode.replaceChild(newBtnConfirm, btnConfirmRedeem);
-        
+
         newBtnConfirm.addEventListener('click', async () => {
             const rewardId = document.getElementById('redeem-reward-id').value;
             const targetBtn = document.querySelector(`.btn-redeem[data-reward-id="${rewardId}"]`);
-            
+
             if (!targetBtn) return;
-            
+
             if (modalConfirmRedeem) modalConfirmRedeem.hide();
-            
+
             targetBtn.disabled = true;
             const originalText = targetBtn.innerHTML;
             targetBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
@@ -1037,6 +1037,24 @@ export async function initProfilePointsSection() {
               });
 
               if (result.success) {
+                // Si retorna un nou token (ex. per canvi a l'estatus premium), actualitza la sessió
+                if (result.token) {
+                  const userData = getUserSession();
+                  if (userData) {
+                    userData.token = result.token;
+                    // Parsegem manualment el payload del token per obtenir les noves dades
+                    try {
+                      const payload = JSON.parse(atob(result.token.split('.')[1]));
+                      if (payload.data) {
+                        userData.tipus_usuari = payload.data.tipus_usuari || userData.tipus_usuari;
+                      }
+                    } catch (e) {
+                      console.warn('Error parsejant el nou token JWT', e);
+                    }
+                    saveUserSession(userData);
+                  }
+                }
+
                 showBootstrapAlert('success', result.message || 'Recompensa bescanviada!', section);
                 await fetchPoints();
                 await loadRewards();
@@ -1059,10 +1077,10 @@ export async function initProfilePointsSection() {
       btn.addEventListener('click', () => {
         const rewardId = btn.dataset.rewardId;
         const rewardName = btn.dataset.rewardName;
-        
+
         const inputId = document.getElementById('redeem-reward-id');
         const confirmText = document.getElementById('redeem-confirm-text');
-        
+
         if (inputId && confirmText && modalConfirmRedeem) {
             inputId.value = rewardId;
             confirmText.innerHTML = `Estàs segur que vols bescanviar els teus punts per la recompensa <strong>"${rewardName}"</strong>?`;
@@ -1070,7 +1088,7 @@ export async function initProfilePointsSection() {
         } else {
             // Fallback si no existeix el modal
             if (!confirm(`Vols bescanviar la teva recompensa: "${rewardName}"?`)) return;
-            // Aquest fallback no farà res més si no hem posat el codi antic aquí, 
+            // Aquest fallback no farà res més si no hem posat el codi antic aquí,
             // però com que el modal sempre hi serà, està bé.
         }
       });

@@ -28,3 +28,18 @@ def put_blog_article(article_id):
 @blog_routes.route("/api/blog/<int:article_id>", methods=["DELETE"])
 def delete_blog_article(article_id):
     return remove_article(article_id)
+
+@blog_routes.route("/api/storage/blog/<path:filename>", methods=["GET"])
+def serve_blog_photo(filename):
+    from flask import send_from_directory
+    from pathlib import Path
+    import os
+    
+    base_storage = Path(__file__).parent.parent / "storage"
+    blog_dir = base_storage / "blog"
+    
+    # Comprovar si el fitxer existeix, si no, retornar error 404
+    if not (blog_dir / filename).exists():
+        return {"success": False, "error": "Imatge no trobada"}, 404
+        
+    return send_from_directory(blog_dir, filename)
