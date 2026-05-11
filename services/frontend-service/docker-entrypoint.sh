@@ -13,6 +13,8 @@ cat > "$ENV_JS_PATH" <<EOF
  * NO editar manualment — es regenera cada cop que el contenidor s'inicia.
  */
 export const ENV = Object.freeze({
+  APP_ENV: '${APP_ENV:-development}',
+  API_HOST: '${API_HOST}',
   PHP_SERVICE_PORT: '${PHP_SERVICE_PORT:-8080}',
   PYTHON_SERVICE_PORT: '${PYTHON_SERVICE_PORT:-5000}',
   STRIPE_PUBLIC_KEY: '${STRIPE_PUBLIC_KEY}',

@@ -9,17 +9,22 @@ import { ENV } from './env.js';
 
 const { protocol, hostname } = window.location;
 
+// En producció, si hem definit un API_HOST al .env, el fem servir.
+// Si no, fem servir el hostname actual del navegador.
+const isProd = ENV.APP_ENV === 'production';
+const apiHost = (isProd && ENV.API_HOST) ? ENV.API_HOST : hostname;
+
 /**
  * URL base del servei Python (Flask).
  * El port es llegeix de ENV (originat al .env → docker-compose → env.js).
  */
-export const PYTHON_API_URL = `${protocol}//${hostname}:${ENV.PYTHON_SERVICE_PORT}`;
+export const PYTHON_API_URL = `${protocol}//${apiHost}:${ENV.PYTHON_SERVICE_PORT}`;
 
 /**
  * URL base del servei PHP (Apache).
  * El port es llegeix de ENV (originat al .env → docker-compose → env.js).
  */
-export const PHP_API_URL = `${protocol}//${hostname}:${ENV.PHP_SERVICE_PORT}`;
+export const PHP_API_URL = `${protocol}//${apiHost}:${ENV.PHP_SERVICE_PORT}`;
 
 /** Claus Públiques (Stripe/Google) */
 export const STRIPE_PUBLIC_KEY = ENV.STRIPE_PUBLIC_KEY;
