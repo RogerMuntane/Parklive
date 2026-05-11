@@ -428,6 +428,7 @@ function normalizeParking(raw, origin = null) {
     ratingSummary: formatRatingSummary(raw.valoracio_mitjana, raw.total_valoracions),
     isAccessible: Boolean(raw.accessibilitat),
     hasCctv: Boolean(raw.videovigilancia),
+    isVerified: Boolean(raw.verificat),
     imageUrl: (() => {
       let url = raw.foto_principal || raw.imatge_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=900&q=80';
       if (url && !url.startsWith('http') && !url.startsWith('data:')) {
@@ -524,7 +525,8 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null, 
   // Categoria d'aparcament
   const parkingCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
   if (parkingCategory === 'structure') {
-    params.tipus = 'cobert,aire_lliure,subterrani,parking_public,parking_privat';
+    // Si se selecciona la opción de parking, aparecen todos los resultados de la tabla aparcaments
+    // No filtramos por tipo para mostrar tanto oficiales como contribuciones que estén en la tabla.
   } else if (parkingCategory === 'street') {
     params.tipus = 'carrer';
   }
@@ -645,10 +647,6 @@ async function resolveFavoritesState(favoritesOnly) {
 }
 
 async function fetchRecordsByParams(params) {
-  const parkingCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
-  if (parkingCategory === 'street') {
-    return [];
-  }
   const response = await pythonApi.get('/api/aparcaments/cerca', params);
   return Array.isArray(response) ? response : response?.resultats || [];
 }
@@ -953,6 +951,9 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
         <div class="parking-result-tags d-flex flex-wrap gap-1 mt-1" aria-label="Serveis del parking">
+          ${spot.isVerified
+            ? '<span class="badge rounded-pill text-bg-success border-0 fw-normal"><i class="bi bi-patch-check-fill me-1"></i>Oficial</span>'
+            : '<span class="badge rounded-pill text-bg-warning text-dark border-0 fw-normal"><i class="bi bi-person-fill me-1"></i>Contribució</span>'}
           <span class="badge rounded-pill text-bg-light border fw-normal">Alt: ${escapeHtml(spot.maxHeightLabel)}</span>
           ${spot.hasEv
             ? '<span class="badge rounded-pill text-bg-light border fw-normal">Elèctric</span>'
