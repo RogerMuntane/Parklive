@@ -1034,7 +1034,6 @@ function renderResults({
 
 async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadius = false, viewportRadiusKm = null } = {}) {
   const forceSearchAnchor = Boolean(viewportRadiusKm);
-  console.log('[ParkLive] fetchSearchResults: viewportRadiusKm=%o, forceSearchAnchor=%o', viewportRadiusKm, forceSearchAnchor);
   const { searchTerm } = buildSearchParams({ ignoreCityFilter, radiusOverrideKm: viewportRadiusKm, forceSearchAnchor });
   const shouldExpandRadius = expandLocationRadius && Boolean(searchAnchorLocation || userLocation);
 

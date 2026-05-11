@@ -634,8 +634,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const passwordSection = document.getElementById('section-password');
     const passwordBtn = document.querySelector('.sidebar-nav-item[data-section="password"]');
     const isOAuth = sessionStorage.getItem('parklive_oauth') === 'google';
-    console.log('[ParkLive] OAuth a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
-    console.log('[ParkLive] isOAuth:', isOAuth);
     if ((passwordSection && passwordSection.style.display === 'none') || isOAuth) {
       if (passwordBtn) passwordBtn.style.display = 'none';
     }

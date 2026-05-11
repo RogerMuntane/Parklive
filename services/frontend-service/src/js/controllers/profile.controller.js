@@ -352,7 +352,6 @@ export async function initProfilePlanSection() {
   let currentPlanType = 'monthly';
 
   if (btnMonthly && btnAnnual && planSection) {
-    console.log('[ParkLive] Inicialitzant switcher de plans');
     const updateSwitcherUI = (type) => {
       currentPlanType = type;
       if (type === 'annual') {
@@ -364,7 +363,6 @@ export async function initProfilePlanSection() {
         btnAnnual.classList.remove('active');
         planSection.classList.remove('annual-plan-active');
       }
-      console.log('[ParkLive] Pla canviat a:', type);
     };
 
     btnMonthly.addEventListener('click', (e) => {
