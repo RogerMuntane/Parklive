@@ -409,3 +409,10 @@ VALUES
     (15, 7, DATE_SUB(NOW(), INTERVAL 2 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 2 MONTH), INTERVAL 3 HOUR), 'completada', 15.00, 0.00, 'HIST-U15-M2', 'Històric'),
     (15, 7, DATE_SUB(NOW(), INTERVAL 1 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 1 MONTH), INTERVAL 3 HOUR), 'completada', 15.00, 0.00, 'HIST-U15-M1', 'Històric');
 
+-- Batch 8 - Reserves per als nous aparcaments de Mataró (IDs 18, 19, 20)
+INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
+VALUES 
+    (5, 18, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 20 HOUR), 'completada', 8.00, 0.00, 'RES-MAT-P18-1', 'Test Mataró TecnoCampus'),
+    (6, 19, NOW() + INTERVAL 2 DAY, NOW() + INTERVAL 2 DAY + INTERVAL 5 HOUR, 'confirmada', 9.00, 0.00, 'RES-MAT-P19-1', 'Test Mataró Port'),
+    (7, 20, NOW() - INTERVAL 1 HOUR, DATE_ADD(NOW(), INTERVAL 3 HOUR), 'en_curs', 0.00, 0.00, 'RES-MAT-P20-1', 'Test Mataró Parc - Gratis');
+

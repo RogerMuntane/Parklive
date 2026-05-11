@@ -246,7 +246,7 @@ export function redirectToUpgradePlan() {
     '<i class="bi bi-lock-fill me-1"></i> Funció exclusiva <strong>Premium</strong>. Millora el teu pla per guardar aparcaments favorits.',
   );
   setTimeout(() => {
-    window.location.href = '/perfil.html?upgrade=1';
+    window.location.href = '/perfil?upgrade=1';
   }, 1800);
 }
 

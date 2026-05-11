@@ -241,6 +241,7 @@ export function initLanding() {
     focusUserLocation,
     setLocateMeAction,
     focusParkingById,
+    hideParkingMarkerById,
     updateOpenPopupsLayout,
     ensureValidViewport,
     defaultCenter,
@@ -265,6 +266,7 @@ export function initLanding() {
   const { runSearch, setUserLocation, setSearchAnchor } = initLandingSearch({
     setParkingSpots,
     focusParkingById,
+    hideParkingMarkerById,
     closeFilters: toggleFilters,
     setUserLocationMarker,
     onSearchLocationResolved: ({ lat, lon }) => {

@@ -541,7 +541,7 @@ export function renderProfileReserves(reserves, container) {
             ` : ''}
 
             <div class="d-flex gap-2">
-              <a href="/tiquet_Aparcament.html?id=${r.id}" class="btn-dark-modern text-decoration-none">
+              <a href="/tiquet_Aparcament?id=${r.id}" class="btn-dark-modern text-decoration-none">
                 <i class="bi bi-file-earmark-text"></i> Veure tiquet
               </a>
               ${potSerCancelada ? `

@@ -32,7 +32,8 @@ class GetProfileInfoController
             'cognom' => $user['cognoms'] ?? $user['cognom'] ?? '',
             'email' => $user['email'] ?? '',
             'telefon' => $user['telefon'] ?? $user['telefono'] ?? '',
-            'biografia' => $user['biografia'] ?? ''
+            'biografia' => $user['biografia'] ?? '',
+            'foto_perfil' => $user['foto_perfil'] ?? null
         ];
 
         $this->respond(['success' => true, 'data' => $profileData]);

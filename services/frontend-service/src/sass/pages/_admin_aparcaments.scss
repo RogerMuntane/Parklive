@@ -2,20 +2,105 @@
 
 #section-admin-parkings, #modal-parking {
     [data-bs-theme="dark"] & {
-        .form-control, .form-select {
-            border-color: rgba(255, 255, 255, 0.2);
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #edf2f4;
-
-            option {
-                background-color: #2b2d42;
-                color: #edf2f4;
+        // Taula i dades principals
+        .table {
+            color: #f8f9fa !important; // $off-white
+            
+            thead {
+                background-color: rgba(248, 249, 250, 0.03) !important;
+                
+                th {
+                    color: rgba(248, 249, 250, 0.5) !important;
+                    border-bottom: 1px solid rgba(248, 249, 250, 0.1);
+                }
             }
+            
+            tbody tr {
+                background-color: transparent !important;
+                border-bottom: 1px solid rgba(248, 249, 250, 0.05);
+                
+                &:hover {
+                    background-color: rgba(248, 249, 250, 0.02) !important;
+                }
+            }
+        }
+
+        // Títols d'aparcament i textos destacats
+        .fw-bold, h1, h2, h3, h4, h5, h6 {
+            color: #f8f9fa !important;
+        }
+
+        // Textos secundaris i mutats
+        .text-secondary, .text-white-50, .x-small, .small {
+            color: rgba(248, 249, 250, 0.5) !important;
+        }
+
+        // Corregir els badges de tipus (cobert, subterrani, etc.) que eren blancs
+        .badge.bg-light {
+            background-color: rgba(248, 249, 250, 0.1) !important;
+            color: #f8f9fa !important;
+            border: 1px solid rgba(248, 249, 250, 0.1) !important;
+        }
+
+        // Filtres, cercadors i seleccions
+        .bg-body-tertiary {
+            background-color: rgba(248, 249, 250, 0.02) !important;
+            border-bottom: 1px solid rgba(248, 249, 250, 0.05) !important;
+        }
+
+        .form-control, .form-select, .input-group-text {
+            border-color: rgba(248, 249, 250, 0.1);
+            background-color: rgba(248, 249, 250, 0.05);
+            color: #f8f9fa;
 
             &:focus {
+                background-color: rgba(248, 249, 250, 0.08);
+                color: #f8f9fa;
                 border-color: var(--bs-primary);
-                box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
             }
+            
+            option {
+                background-color: #2b2d42;
+                color: #f8f9fa;
+            }
+        }
+
+        // Paginació
+        .page-link {
+            background-color: rgba(248, 249, 250, 0.05);
+            border-color: rgba(248, 249, 250, 0.1);
+            color: #f8f9fa;
+            
+            &:hover {
+                background-color: rgba(248, 249, 250, 0.1);
+            }
+        }
+        
+        .page-item.active .page-link {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+        }
+
+        // Modal d'edició/creació
+        .modal-content {
+            background-color: #2b2d42; // $dark-navy
+            color: #f8f9fa;
+            border: 1px solid rgba(248, 249, 250, 0.1);
+        }
+        
+        .modal-header, .modal-footer {
+            border-color: rgba(248, 249, 250, 0.1);
+        }
+
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        
+        // Switches i opcions addicionals dins del modal
+        .form-check.form-switch.bg-light {
+            background-color: rgba(248, 249, 250, 0.03) !important;
+            border-color: rgba(248, 249, 250, 0.1) !important;
+            color: #f8f9fa;
         }
     }
 }

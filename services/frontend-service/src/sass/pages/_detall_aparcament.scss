@@ -79,4 +79,28 @@
     padding: 0.5rem 1rem;
   }
 
+  // ─── Mode Fosc ─────────────────────────────────────────
+  [data-bs-theme="dark"] & {
+    .text-primary {
+      color: #f8f9fa !important; // $off-white
+    }
+
+    .text-muted {
+      color: rgba(248, 249, 250, 0.6) !important;
+    }
+
+    .feature-icon {
+      color: #df2c38 !important; // Crimson suavitzat
+    }
+
+    .card-custom {
+      background-color: rgba(248, 249, 250, 0.02);
+      border-color: rgba(248, 249, 250, 0.1);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #f8f9fa;
+    }
+  }
+
 }

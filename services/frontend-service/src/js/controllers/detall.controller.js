@@ -227,7 +227,7 @@ function renderDetall(a) {
   const reservaBtn = document.querySelector('[data-detall="reserva-btn"]');
   if (reservaBtn) {
     reservaBtn.addEventListener('click', () => {
-      window.location.href = `/reserva_Aparcament.html?id=${a.id}`;
+      window.location.href = `/reserva_Aparcament?id=${a.id}`;
     });
   }
 
@@ -246,8 +246,21 @@ function renderDetall(a) {
       const map = L.map('map-detail', {
         zoomControl: false,
         attributionControl: false,
+        minZoom: 15,
+        maxZoom: 33,
+        scrollWheelZoom: false, // Evitem zoom accidental en fer scroll a la pàgina
         worldCopyJump: true,
       }).setView([lat, lon], 16);
+
+      // Limitem el moviment a un radi aproximat d'1km al voltant de l'aparcament
+      const offset = 0.05;
+      const corner1 = L.latLng(lat - offset, lon - offset);
+      const corner2 = L.latLng(lat + offset, lon + offset);
+      const bounds = L.latLngBounds(corner1, corner2);
+      map.setMaxBounds(bounds);
+      map.on('drag', () => {
+        map.panInsideBounds(bounds, { animate: false });
+      });
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -348,7 +361,7 @@ async function fetchAndUpdateDisponibilitat(aparcamentId) {
     );
 
     const lliures = res.places_lliures ?? 0;
-    const totals  = res.capacitat_total ?? 0;
+    const totals = res.capacitat_total ?? 0;
     const ocupats = totals > 0
       ? Math.round(((totals - lliures) / totals) * 100)
       : 0;
@@ -406,7 +419,7 @@ async function initDetallFavoriteButton(aparcamentId) {
       redirectToUpgradePlan();
       return;
     }
-    
+
     favoriteBtn.disabled = true;
     try {
       const nextIsFavorite = await toggleFavoriteParking(aparcamentId);
@@ -430,7 +443,7 @@ function renderValoracions(valoracions) {
   const container = document.querySelector('[data-detall-list="valoracions"]');
   const allReviewsModalContainer = document.getElementById('all-reviews-container');
   const btnVeureTotes = document.querySelector('button[data-bs-target="#allReviewsModal"]');
-  
+
   if (!container) return;
 
   if (!valoracions || valoracions.length === 0) {
@@ -447,7 +460,7 @@ function renderValoracions(valoracions) {
 
   container.innerHTML = ''; // Netejar
   if (allReviewsModalContainer) allReviewsModalContainer.innerHTML = '';
-  
+
   if (btnVeureTotes) {
     btnVeureTotes.style.display = valoracions.length > 3 ? 'inline-block' : 'none';
   }
@@ -472,7 +485,7 @@ function renderValoracions(valoracions) {
           });
           aspectesHtml += '</div>';
         }
-      } catch(e) {}
+      } catch (e) { }
     }
 
     let fotosHtml = '';
@@ -483,12 +496,12 @@ function renderValoracions(valoracions) {
           fotosHtml = '<div class="d-flex gap-2 mt-3 overflow-auto pb-2">';
           fotos.forEach(foto => {
             // Serve the photos using python api directly
-            const fotoUrl = `${PYTHON_API_URL}/api/storage/valoracions/${foto}`; 
+            const fotoUrl = `${PYTHON_API_URL}/api/storage/valoracions/${foto}`;
             fotosHtml += `<a href="${fotoUrl}" target="_blank"><img src="${fotoUrl}" class="rounded object-fit-cover shadow-sm border" style="width: 80px; height: 80px;" alt="Foto de ressenya" loading="lazy"></a>`;
           });
           fotosHtml += '</div>';
         }
-      } catch(e) {}
+      } catch (e) { }
     }
 
     const reviewHtml = `
@@ -505,12 +518,12 @@ function renderValoracions(valoracions) {
         ${fotosHtml}
       </div>
     `;
-    
+
     // Mostrem només les 3 primeres a la vista principal
     if (index < 3) {
       container.insertAdjacentHTML('beforeend', reviewHtml);
     }
-    
+
     // Mostrem totes al modal
     if (allReviewsModalContainer) {
       allReviewsModalContainer.insertAdjacentHTML('beforeend', reviewHtml);
@@ -523,7 +536,7 @@ function renderCarousel(fotos) {
   const container = document.querySelector('#parkingCarousel .carousel-inner');
   const prevBtn = document.querySelector('#parkingCarousel .carousel-control-prev');
   const nextBtn = document.querySelector('#parkingCarousel .carousel-control-next');
-  
+
   if (!container) return;
 
   const defaultImages = [
@@ -532,19 +545,19 @@ function renderCarousel(fotos) {
   ];
 
   let imagesToRender = defaultImages;
-  
+
   if (fotos && fotos.length > 0) {
     imagesToRender = fotos.map(f => {
       let url = f.url;
       if (url && !url.startsWith('http') && !url.startsWith('data:')) {
         if (url.startsWith('/')) {
-            url = PHP_API_URL + url;
+          url = PHP_API_URL + url;
         } else {
-            if (!url.includes('/')) {
-                url = PHP_API_URL + '/uploads/parkings/' + url;
-            } else {
-                url = PHP_API_URL + '/' + url;
-            }
+          if (!url.includes('/')) {
+            url = PHP_API_URL + '/uploads/parkings/' + url;
+          } else {
+            url = PHP_API_URL + '/' + url;
+          }
         }
       }
       return url || defaultImages[0];

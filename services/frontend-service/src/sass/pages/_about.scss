@@ -1,0 +1,50 @@
+// ─── Pàgina Sobre Nosaltres (About) ──────────────────────────────────
+@use '../abstracts/variables' as *;
+
+.page-about {
+
+  [data-bs-theme="dark"] & {
+    // Aclarir títols i dades importants
+    h2, h3, h5, .fw-bold, [data-tiquet] {
+      color: #f8f9fa !important;
+    }
+
+    .text-muted {
+      color: rgba(248, 249, 250, 0.6) !important;
+    }
+
+    // Forçar icones blanques en mode fosc
+    .text-primary, .text-success, .text-info, .bi-check2 {
+      color: #f8f9fa !important;
+    }
+
+    // Cercles dels desenvolupadors
+    .bg-body-secondary {
+      background-color: rgba(248, 249, 250, 0.05) !important;
+    }
+
+    // Ajustar els contenidors de color suau (Missió, Valors, Sostenibilitat)
+    .bg-primary.bg-opacity-10, 
+    .bg-success.bg-opacity-10, 
+    .bg-info.bg-opacity-10 {
+      background-color: rgba(248, 249, 250, 0.05) !important;
+      color: #f8f9fa !important;
+      border: 1px solid rgba(248, 249, 250, 0.1) !important;
+
+      i {
+        color: #f8f9fa !important;
+      }
+    }
+
+    // Targetes de l'equip
+    .card {
+      background-color: rgba(248, 249, 250, 0.02);
+      border-color: rgba(248, 249, 250, 0.1);
+    }
+
+    // Punts de la llista de valors
+    .list-unstyled li strong {
+      color: #f8f9fa;
+    }
+  }
+}
