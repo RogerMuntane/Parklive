@@ -28,7 +28,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_USikNLDGTeyFHm',
+        'cus_UUvjaCx5zvie8n',
         '2024-01-01 10:00:00',
         NOW()
     ),
@@ -43,7 +43,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_USiknNN1W6HtJy',
+        'cus_UUvjPscShijai0',
         '2024-01-15 10:00:00',
         NOW()
     ),
@@ -59,7 +59,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_USikyvM1Z2f0nV',
+        'cus_UUvjazN5enIp4X',
         '2024-02-01 10:00:00',
         NOW()
     ),
@@ -74,7 +74,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         0,
-        'cus_USiks2yd7Dghb2',
+        'cus_UUvjrBOPaetH6h',
         '2024-02-15 10:00:00',
         NOW()
     ),
@@ -90,7 +90,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         450,
-        'cus_USikNlp8kTPlJ5',
+        'cus_UUvjOFgE4roeci',
         '2024-06-01 10:00:00',
         NOW()
     ),
@@ -105,7 +105,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         780,
-        'cus_USikxUeRNyTDBy',
+        'cus_UUvj39LJ85qxLP',
         '2024-07-10 10:00:00',
         NOW()
     ),
@@ -120,7 +120,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         1200,
-        'cus_USik8XWv24hYBd',
+        'cus_UUvjQ7AZw4dzcG',
         '2024-05-20 10:00:00',
         NOW()
     ),
@@ -135,7 +135,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         320,
-        'cus_USik5d1OawNOmp',
+        'cus_UUvjzBMXQDkmCl',
         '2024-08-15 10:00:00',
         NOW()
     ),
@@ -151,7 +151,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         150,
-        'cus_USikuLtLVPhyE5',
+        'cus_UUvjREiJwAD6Ks',
         '2024-09-01 10:00:00',
         NOW()
     ),
@@ -166,7 +166,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         90,
-        'cus_USikODhYtkcNnF',
+        'cus_UUvjauNVFbux47',
         '2024-09-15 10:00:00',
         NOW()
     ),
@@ -181,7 +181,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         210,
-        'cus_USik2ybAGtGw5R',
+        'cus_UUvjVABakMQBSO',
         '2024-10-01 10:00:00',
         NOW()
     ),
@@ -196,7 +196,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         60,
-        'cus_USikbLsGrC0jGy',
+        'cus_UUvj6BXWNz2mh6',
         '2024-10-20 10:00:00',
         NOW()
     ),
@@ -211,7 +211,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         340,
-        'cus_USikKuJvgRfZJb',
+        'cus_UUvjXgREkvqPEn',
         '2024-08-05 10:00:00',
         NOW()
     ),
@@ -226,7 +226,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         180,
-        'cus_USikTLXgr0tinh',
+        'cus_UUvjzjVdo41v4Y',
         '2024-11-01 10:00:00',
         NOW()
     ),
@@ -241,7 +241,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         420,
-        'cus_USikC24rTa7B5T',
+        'cus_UUvjLfq62zYX63',
         '2024-07-25 10:00:00',
         NOW()
     ),
@@ -256,7 +256,7 @@ VALUES -- Administradors
         'actiu',
         FALSE,
         30,
-        'cus_USikz8iK5nv6b3',
+        'cus_UUvjz2RI1JazR4',
         '2025-01-10 10:00:00',
         NOW()
     ),
@@ -271,7 +271,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         110,
-        'cus_USikqAxez8agxA',
+        'cus_UUvjZbAcI4PJkY',
         '2024-12-01 10:00:00',
         NOW()
     ),
@@ -286,7 +286,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         270,
-        'cus_USik4fd7ZzgnDV',
+        'cus_UUvjMQnwuY5Elf',
         '2024-09-20 10:00:00',
         NOW()
     ),
@@ -301,7 +301,7 @@ VALUES -- Administradors
         'inactiu',
         TRUE,
         50,
-        'cus_USikMZ9pGQnH66',
+        'cus_UUvji8FsIIlQhP',
         '2024-06-15 10:00:00',
         '2024-12-01 10:00:00'
     ),
@@ -316,7 +316,7 @@ VALUES -- Administradors
         'actiu',
         TRUE,
         390,
-        'cus_USikvvD7RrsHwu',
+        'cus_UUvjtUaSa0E5Nj',
         '2024-08-28 10:00:00',
         NOW()
     );

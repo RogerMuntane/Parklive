@@ -26,12 +26,16 @@ if not users_block_match:
 
 users_values = users_block_match.group(1)
 
-# Split by individual user tuples
-# Pattern: (\s*\(\s*(\d+),\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',.*?,\s*'([^']*)',\s*'.*?'\s*\))
-# This is tricky because of the variable number of fields.
-# Let's try to match each user block precisely.
-
-user_pattern = re.compile(r'\(\s*(\d+),\s*\'([^\']*)\',\s*\'([^\']*)\',\s*\'([^\']*)\',.*?,\s*\'(cus_test_\d+)\',', re.DOTALL)
+# Pattern to match each user tuple in the VALUES block.
+# Structure: (id, 'nom', 'cognoms', 'email', 'hash', 'telefon', 'rol', 'estat', verificat, punts, 'cus_XXX', 'data', ...)
+user_pattern = re.compile(
+    r'\(\s*(\d+),\s*'             # id
+    r'\'([^\']*)\',\s*'           # nom
+    r'\'([^\']*)\',\s*'           # cognoms
+    r'\'([^\']*)\',.*?'           # email
+    r'\'(cus_[^\']*)\',',          # stripe_customer_id
+    re.DOTALL
+)
 
 matches = user_pattern.findall(users_values)
 
