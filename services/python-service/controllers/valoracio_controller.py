@@ -1,6 +1,95 @@
 from flask import jsonify, request, send_from_directory
 import os
+import uuid
+import hashlib
+import json
+import logging
+import requests as http_requests
+import cloudinary.uploader
 from pathlib import Path
+from PIL import Image
+from werkzeug.utils import secure_filename
+
+# Configurar logger per a fallades de Cloudinary (valoracions)
+log_dir = Path(__file__).parent.parent / "logs"
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / "valoracio_images.log"
+
+logging.basicConfig(
+    filename=str(log_file),
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+def _process_valoracio_image(file_obj):
+    """
+    Optimitza una imatge de valoració usant Cloudinary.
+    La puja, la descarrega optimitzada (webp, auto quality) i la guarda localment.
+    Si falla Cloudinary, usa Pillow localment com a fallback.
+    """
+    if not file_obj or not file_obj.filename:
+        return None
+
+    try:
+        base_storage = Path(__file__).parent.parent / "storage"
+        valoracions_dir = base_storage / "valoracions"
+        valoracions_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generar nom segur amb hash basat en el contingut aproximat (nom + tamany)
+        file_obj.seek(0, os.SEEK_END)
+        file_size = file_obj.tell()
+        file_obj.seek(0)
+        
+        random_hash = hashlib.md5(
+            f"{file_obj.filename}_{file_size}".encode()
+        ).hexdigest()[:8]
+        
+        # Guardem com a webp per defecte per optimitzar espai
+        safe_filename = f"val_{random_hash}_{uuid.uuid4().hex[:6]}.webp"
+        target_path = valoracions_dir / safe_filename
+        
+        cloud_public_id = f"parklive_valoracions/val_{random_hash}"
+
+        try:
+            # 1. Pujar a Cloudinary → transformació q_auto + f_webp
+            file_obj.seek(0)
+            upload_result = cloudinary.uploader.upload(
+                file_obj,
+                public_id=cloud_public_id,
+                overwrite=True,
+                resource_type='image',
+                format='webp',
+                transformation=[{'quality': 'auto', 'fetch_format': 'webp'}]
+            )
+            optimized_url = upload_result.get('secure_url')
+
+            # 2. Descarregar la versió optimitzada i desar localment
+            img_response = http_requests.get(optimized_url, timeout=30)
+            img_response.raise_for_status()
+            with open(target_path, 'wb') as out_file:
+                out_file.write(img_response.content)
+
+        except Exception as cloud_err:
+            # FALLBACK: Si falla Cloudinary, optimitzem localment amb Pillow
+            logger.error(f"Error Cloudinary (valoracio image): {str(cloud_err)}")
+            
+            file_obj.seek(0)
+            img = Image.open(file_obj)
+            
+            # Convertir a RGB/RGBA si cal per desar com a WebP
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGBA")
+            else:
+                img = img.convert("RGB")
+            
+            # Desar localment com a WebP optimitzat
+            img.save(target_path, "WEBP", quality=80)
+
+        return safe_filename
+    except Exception as e:
+        logger.error(f"Error crític processant imatge valoracio: {str(e)}")
+        return None
 
 def serve_valoracio_photo(filename):
     """
@@ -86,17 +175,10 @@ def create_valoracio(aparcament_id):
             files = request.files.getlist('fotos_url[]') if 'fotos_url[]' in request.files else request.files.getlist('fotos_url')
             
             if files:
-                base_storage = Path(__file__).parent.parent / "storage"
-                valoracions_dir = base_storage / "valoracions"
-                valoracions_dir.mkdir(parents=True, exist_ok=True)
-                
                 for file_obj in files[:3]:
-                    if file_obj and file_obj.filename:
-                        ext = file_obj.filename.rsplit('.', 1)[1].lower() if '.' in file_obj.filename else 'jpg'
-                        filename = f"{uuid.uuid4().hex}.{ext}"
-                        filepath = valoracions_dir / filename
-                        file_obj.save(filepath)
-                        fotos_url.append(filename)
+                    processed_filename = _process_valoracio_image(file_obj)
+                    if processed_filename:
+                        fotos_url.append(processed_filename)
         else:
             if not request.is_json:
                 return jsonify({"success": False, "error": "El format de la petició no és vàlid"}), 400
