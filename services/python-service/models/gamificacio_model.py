@@ -123,13 +123,34 @@ def redeem_reward(user_id, reward_id):
                     (user_id,)
                 )
 
-                # Crear registre a subscripcions
-                cursor.execute("""
-                    INSERT INTO subscripcions 
-                        (usuari_id, tipus, estat, data_inici, data_final, preu, metode_pagament, auto_renovacio)
-                    VALUES 
-                        (%s, 'mensual', 'activa', CURDATE(), DATE_ADD(CURDATE(), INTERVAL %s DAY), 0.00, 'altres', FALSE)
-                """, (user_id, dies))
+                # Comprovar si ja té una subscripció activa per estendre-la
+                cursor.execute(
+                    "SELECT id, data_final FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' ORDER BY id DESC LIMIT 1",
+                    (user_id,)
+                )
+                sub_activa = cursor.fetchone()
+
+                if sub_activa:
+                    # Estendre la subscripció existent
+                    sub_id = sub_activa['id']
+                    # Si la data_final és anterior a avui (rar si està activa però possible), comencem des d'avui
+                    # Si no, sumem a la data_final existent
+                    cursor.execute(
+                        """UPDATE subscripcions 
+                           SET data_final = DATE_ADD(GREATEST(data_final, CURDATE()), INTERVAL %s DAY)
+                           WHERE id = %s""",
+                        (dies, sub_id)
+                    )
+                    print(f"[GAMIFICACIO] Subscripció {sub_id} estesa {dies} dies per a usuari {user_id}")
+                else:
+                    # Crear nova subscripció
+                    cursor.execute("""
+                        INSERT INTO subscripcions 
+                            (usuari_id, tipus, estat, data_inici, data_final, preu, metode_pagament, auto_renovacio)
+                        VALUES 
+                            (%s, 'mensual', 'activa', CURDATE(), DATE_ADD(CURDATE(), INTERVAL %s DAY), 0.00, 'altres', FALSE)
+                    """, (user_id, dies))
+                    print(f"[GAMIFICACIO] Nova subscripció de {dies} dies creada per a usuari {user_id}")
 
                 conn.commit()
                 print(f"[GAMIFICACIO] Premium activat per {dies} dies a usuari {user_id}")

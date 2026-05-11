@@ -1,3 +1,5 @@
+import { isPremiumUser } from '../../utils.js';
+
 export function initFilterPanelControls() {
   const updateRangeValues = () => {
     const priceRange = document.getElementById('priceRange');
@@ -138,6 +140,12 @@ export function initFilterPanelControls() {
   setupVehicleOptions();
   setupFormReset();
   setupCustomToggles();
+
+  // Hide premium-only features if user is not premium
+  if (!isPremiumUser()) {
+    const premiumOnly = document.querySelectorAll('.premium-only');
+    premiumOnly.forEach(el => el.classList.add('d-none'));
+  }
 }
 
 export function setupSearchBar({ closeFilters }) {

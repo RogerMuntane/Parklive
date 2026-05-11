@@ -61,9 +61,15 @@ async function resolveCurrentPosition() {
       (position) => {
         const lat = Number(position?.coords?.latitude);
         const lon = Number(position?.coords?.longitude);
+        const accuracy = position?.coords?.accuracy;
 
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
           reject(new Error('No s\'ha pogut determinar la teva ubicació actual.'));
+          return;
+        }
+
+        if (accuracy && accuracy > 5000) {
+          reject(new Error('La precisió de la ubicació és massa baixa. Comprova el GPS.'));
           return;
         }
 
@@ -176,6 +182,7 @@ export function initReportDisponibilitat() {
     zoomControl: false,
     attributionControl: false,
     preferCanvas: true,
+    worldCopyJump: true,
   }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
   globalThis.L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
@@ -317,7 +324,7 @@ export function initReportDisponibilitat() {
 
       // Tornar al mapa després d'un breu retard
       setTimeout(() => {
-        window.location.href = '/index.html';
+        window.location.href = '/';
       }, 1500);
     } catch (error) {
       if (error?.status === 429) {

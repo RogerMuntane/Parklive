@@ -374,13 +374,16 @@
     &.active {
         display: block;
         animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        
+
         // Staggered entry per als fills directes (rows o cards)
         &.animate-stagger {
-            .row > div, > .card, > div:not(.row) {
+
+            .row>div,
+            >.card,
+            >div:not(.row) {
                 opacity: 0;
                 animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                
+
                 @for $i from 1 through 12 {
                     &:nth-child(#{$i}) {
                         animation-delay: #{$i * 0.08}s;
@@ -423,33 +426,122 @@
             }
         }
 
-        // Icones de capçalera de card
-        span.rounded-3.p-2.bg-danger.bg-opacity-10.text-danger {
-            background-color: rgba($crimson, 0.1) !important;
-            color: lighten($crimson, 15%) !important;
-            border: 1px solid rgba($crimson, 0.2);
+        // Unificar totes les caixes d'icones i badges (vermelles, grogues, verdes i grises)
+        .bg-danger.bg-opacity-10,
+        .bg-warning.bg-opacity-10,
+        .bg-success.bg-opacity-10,
+        .bg-secondary.bg-opacity-10 {
+            background-color: $dark-navy !important;
+            color: white !important;
+            border: 1px solid rgba($off-white, 0.1) !important;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+
+            i,
+            span,
+            strong {
+                color: white !important;
+            }
+        }
+
+        .icon-box-reservations {
+            background-color: $dark-navy !important;
+        }
+
+        // Corregir les targetes (plans, etc) perquè no siguin negres i siguin igual de llargues
+        .card {
+            background-color: rgba($off-white, 0.03) !important;
+            border: 1px solid rgba($off-white, 0.1) !important;
+            color: $off-white !important;
+
+            .card-header {
+                background-color: rgba($off-white, 0.05) !important;
+                border-bottom: 1px solid rgba($off-white, 0.1) !important;
+            }
+
+            // Assegurar que el text dins les targetes de plans sigui llegible
+            .text-muted,
+            .text-body-secondary {
+                color: rgba($off-white, 0.6) !important;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            .fw-bold {
+                color: $off-white !important;
+            }
+        }
+
+        .subscription-info-pill i {
+            color: white !important;
+        }
+
+        // Icones d'insígnies i assoliments (vermell menys intens)
+        #stat-insignies-container .text-danger {
+            color: lighten($crimson, 10%) !important;
+            opacity: 0.9;
+        }
+
+        // Corregir el color de text primari (que és massa fosc per al mode fosc)
+        .text-primary {
+            color: $off-white !important;
         }
 
         // Unificar fons per a qualsevol icona roja que demani el fons
         .icon-box-red {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background-color: rgba($crimson, 0.1);
-            color: $crimson;
+            background-color: $dark-navy !important;
+            color: white !important;
+            border: 1px solid rgba($off-white, 0.1);
+        }
 
-            [data-bs-theme="dark"] & {
-                background-color: rgba($crimson, 0.15) !important;
-                color: lighten($crimson, 15%) !important;
-                border: 1px solid rgba($crimson, 0.2);
+        // Forçar que les targetes de mètode de pagament siguin llargues (100% ample)
+        .card-selection-item {
+            width: 50% !important;
+            background-color: rgba($off-white, 0.03) !important;
+            border: 1px solid rgba($off-white, 0.1) !important;
+            transition: all 0.2s ease;
+
+            &.bg-danger.bg-opacity-10 {
+                background-color: rgba($crimson, 0.1) !important;
+                border-color: rgba($crimson, 0.5) !important;
+                
+                // Sobreescriure l'inline-flex i centrat que trenca l'estructura
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+            }
+
+            .text-muted {
+                color: rgba($off-white, 0.6) !important;
             }
         }
+
+        // Corregir el contenidor de mètodes de pagament per evitar columnes que tallin la targeta
+        #saved-cards-plan .col-xl-6 {
+            width: 100% !important;
+        }
+    }
+}
+
+
+
+// Estils base per a .icon-box-red (Light Mode)
+.profile-section {
+    .icon-box-red {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background-color: rgba($crimson, 0.1);
+        color: $crimson;
     }
 }
 
@@ -699,6 +791,7 @@
         opacity: 0;
         transform: translateY(15px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

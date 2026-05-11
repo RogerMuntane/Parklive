@@ -99,7 +99,7 @@ function renderUsers(users) {
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-light rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 38px; height: 38px;">
                         ${user.foto_perfil
-            ? `<img src="${PHP_API_URL}/uploads/profiles/${user.foto_perfil}" alt="Avatar" class="w-100 h-100 object-fit-cover">`
+            ? `<img src="${PHP_API_URL}/storage/profiles/${user.foto_perfil}" alt="Avatar" class="w-100 h-100 object-fit-cover">`
             : `<i class="bi bi-person text-secondary"></i>`
         }
                     </div>
@@ -202,7 +202,6 @@ async function handleFormSubmit(e) {
     const isEdit = !!id;
     const action = isEdit ? 'update' : 'create';
     try {
-        console.log('[ParkLive] Enviant dades d\'usuari:', { action, id, data });
         const result = await phpApi.post(`/api/admin/users?action=${action}${isEdit ? '&id=' + id : ''}`, data);
 
         if (result.success) {

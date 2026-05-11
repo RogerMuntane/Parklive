@@ -11,7 +11,7 @@ from controllers.aparcament_controller import _get_authenticated_user_id
 from models.db_connection import get_new_connection
 
 def _is_admin(user_id):
-    """Verifica si l'usuari és administrador."""
+    """Verifica si l'usuari és administrador o operador."""
     conn = get_new_connection()
     if not conn:
         return False
@@ -19,7 +19,7 @@ def _is_admin(user_id):
     try:
         cursor.execute("SELECT tipus_usuari FROM usuaris WHERE id = %s", (user_id,))
         user = cursor.fetchone()
-        return user and user['tipus_usuari'] == 'admin'
+        return user and user['tipus_usuari'] in ['admin', 'operador']
     finally:
         cursor.close()
         conn.close()

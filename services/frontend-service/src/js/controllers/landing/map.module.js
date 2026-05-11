@@ -54,6 +54,7 @@ export function initLandingMap() {
       zoomDelta: 0.25,
       wheelPxPerZoomLevel: 90,
       wheelDebounceTime: 30,
+      worldCopyJump: true,
     })
     .setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
@@ -169,11 +170,19 @@ export function initLandingMap() {
       let lon = Number(report?.longitud);
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
-      // Jitter para evitar solapamiento perfecto
+      // Jitter determinista per evitar solapament i que no es moguin en fer zoom
       const coordKey = `${lat.toFixed(5)},${lon.toFixed(5)}`;
       if (usedCoords.has(coordKey)) {
-        lat += (Math.random() - 0.5) * 0.00015;
-        lon += (Math.random() - 0.5) * 0.00015;
+        const getJitter = (id, seed) => {
+          let h = 0;
+          const str = String(id) + String(seed);
+          for (let i = 0; i < str.length; i++) {
+            h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+          }
+          return (Math.abs(h) % 1000) / 1000 - 0.5;
+        };
+        lat += getJitter(report?.id, 'lat') * 0.00015;
+        lon += getJitter(report?.id, 'lon') * 0.00015;
       }
       usedCoords.add(coordKey);
 
@@ -280,7 +289,7 @@ export function initLandingMap() {
             <p class="mb-2 small text-body-secondary">${escapeHtml(spot.priceLabel)} · ${escapeHtml(spot.distanceLabel)}</p>
             <span class="badge text-bg-success">${escapeHtml(spot.statusLabel || 'Disponible')}</span>
             <a
-              href="/detall_Aparcament.html?id=${encodeURIComponent(String(spot.id))}"
+              href="/detall_Aparcament?id=${encodeURIComponent(String(spot.id))}"
               class="btn btn-danger btn-sm w-100 mt-2"
               aria-label="Veure detall de l'aparcament ${escapeHtml(spot.name)}"
             >
@@ -306,6 +315,15 @@ export function initLandingMap() {
     const firstMarker = parkingMarkers.values().next().value;
     if (firstMarker && openFirstPopup) {
       firstMarker.openPopup();
+    }
+  };
+
+  const hideParkingMarkerById = (parkingId) => {
+    const marker = parkingMarkers.get(String(parkingId));
+    if (marker) {
+      map.removeLayer(marker);
+      markerGroup.removeLayer(marker);
+      parkingMarkers.delete(String(parkingId));
     }
   };
 
@@ -381,6 +399,7 @@ export function initLandingMap() {
     focusUserLocation,
     setLocateMeAction,
     focusParkingById,
+    hideParkingMarkerById,
     updateOpenPopupsLayout,
     fitToParkingSpots,
     ensureValidViewport,

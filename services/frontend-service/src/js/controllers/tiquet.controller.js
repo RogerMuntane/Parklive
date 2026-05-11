@@ -70,8 +70,7 @@ export async function initTiquetAparcament() {
   const btnValoracio = document.getElementById('btn-valoracio-link');
   const fastParkingId = getQueryParam('p_id');
   if (btnValoracio && fastParkingId) {
-    btnValoracio.href = `/nova_Valoracio.html?id=${fastParkingId}`;
-    console.log(`[ParkLive] Enllaç de valoració fixat via URL: ${fastParkingId}`);
+    btnValoracio.href = `/nova_Valoracio?id=${fastParkingId}`;
   }
 
   try {
@@ -99,8 +98,7 @@ export async function initTiquetAparcament() {
     const aparcamentId = reservaData.aparcament?.id || reservaData.aparcament_id || reservaData.aparcament?.aparcament_id;
     
     if (btnValoracio && aparcamentId) {
-      btnValoracio.href = `/nova_Valoracio.html?id=${aparcamentId}`;
-      console.log(`[ParkLive] Enllaç de valoració actualitzat per a l'aparcament: ${aparcamentId}`);
+      btnValoracio.href = `/nova_Valoracio?id=${aparcamentId}`;
     } else if (btnValoracio) {
       console.warn('[ParkLive] No s\'ha trobat l\'ID de l\'aparcament a les dades de la reserva:', reservaData);
       // Opcionalment podem amagar el botó si no tenim ID
@@ -246,7 +244,6 @@ async function generarIEnviarPDF(reservaId, codiReserva) {
   };
 
   try {
-    console.log('[ParkLive] Generant PDF del tiquet...');
     const pdfBlob = await html2pdf().set(opt).from(wrapper).output('blob');
 
     // Netejar el DOM
@@ -258,10 +255,7 @@ async function generarIEnviarPDF(reservaId, codiReserva) {
 
     // Intentar URL relativa primer (/api) i fallback a la variable d'entorn
     const endpoint = `/api/reserves/${reservaId}/tiquet/pujar`;
-    console.log('[ParkLive] Pujant PDF a:', endpoint);
-
     const data = await pythonApi.postForm(endpoint, formData);
-    console.log('[ParkLive] Tiquet pujat amb èxit:', data);
     return data;
   } catch (err) {
     // Netejar el DOM fins i tot si hi ha error

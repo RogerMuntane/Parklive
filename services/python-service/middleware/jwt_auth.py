@@ -120,15 +120,15 @@ def jwt_required(f):
 
 
 def admin_required(f):
-    """Decorador per requerir rol admin en una ruta"""
+    """Decorador per requerir rol admin o operador en una ruta"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
             user_data = get_jwt_full_data()
             user_role = user_data.get('tipus_usuari', '').lower()
 
-            # Acceptar 'admin' o 'administrador'
-            if user_role not in ['admin', 'administrador']:
+            # Acceptar 'admin', 'administrador' o 'operador'
+            if user_role not in ['admin', 'administrador', 'operador']:
                 return jsonify({
                     'success': False,
                     'error': 'No tens permisos per realitzar aquesta acció'

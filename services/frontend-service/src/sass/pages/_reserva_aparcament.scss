@@ -68,4 +68,24 @@
             display: block;
         }
     }
+
+    // ─── Mode Fosc ─────────────────────────────────────────
+    [data-bs-theme="dark"] & {
+        // Suavitzar qualsevol element amb text-danger (icones i totals)
+        .text-danger {
+            color: lighten($crimson, 10%) !important;
+            opacity: 0.9;
+        }
+
+        // Icones de la política de reserva (encara més integrades)
+        .list-unstyled .text-danger {
+            color: lighten($crimson, 15%) !important;
+            opacity: 0.8;
+        }
+
+        // Garantir que els títols i labels siguin llegibles
+        h1, h2, h3, h4, h5, h6, label {
+            color: #f8f9fa;
+        }
+    }
 }

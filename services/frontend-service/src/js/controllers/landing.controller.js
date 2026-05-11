@@ -80,7 +80,15 @@ function getCurrentBrowserLocation() {
     // perquè una primera lectura dolenta (GPS fred) pot persistir i
     // mostrar ubicacions incorrectes en recàrregues posteriors.
     globalThis.navigator.geolocation.getCurrentPosition(
-      resolve,
+      (position) => {
+        // Descartem ubicacions amb molt mala precisió (sovint basades en IP quan falla el GPS)
+        const accuracy = position?.coords?.accuracy;
+        if (accuracy && accuracy > 5000) {
+          reject(new Error('La precisió de la ubicació és massa baixa. Comprova el GPS.'));
+          return;
+        }
+        resolve(position);
+      },
       reject,
       {
         enableHighAccuracy: true,
@@ -103,7 +111,6 @@ async function resolveCurrentLocation({
   silent = false,
 } = {}) {
   try {
-    console.log('[ParkLive] Intentando obtener geolocalización...');
     const position = await getCurrentBrowserLocation();
     const lat = Number(position?.coords?.latitude);
     const lon = Number(position?.coords?.longitude);
@@ -112,7 +119,6 @@ async function resolveCurrentLocation({
       throw new TypeError('No s\'ha pogut determinar la teva ubicació actual.');
     }
 
-    console.log('[ParkLive] Geolocalización obtenida: lat=%o, lon=%o', lat, lon);
     setUserLocation({ lat, lon });
 
     if (typeof setSearchAnchor === 'function') {
@@ -120,13 +126,10 @@ async function resolveCurrentLocation({
     }
 
     if (map && typeof map.setView === 'function') {
-      console.log('[ParkLive] Map existe, intentando setView([%o, %o], %o)', lat, lon, GEOLOCATION_ZOOM);
       try {
         map.setView([lat, lon], GEOLOCATION_ZOOM);
-        console.log('[ParkLive] setView ejecutado correctamente');
         const center = map.getCenter();
         const zoom = map.getZoom();
-        console.log('[ParkLive] Mapa actual después de setView: center=[%o, %o], zoom=%o', center.lat, center.lng, zoom);
       } catch (err) {
         console.error('[ParkLive] Error en map.setView:', err);
       }
@@ -145,19 +148,16 @@ async function resolveCurrentLocation({
     // Volver a centrar el mapa en la ubicación del usuario INMEDIATAMENTE después de mostrar los aparcamientos
     if (map && typeof map.setView === 'function') {
       map.setView([lat, lon], GEOLOCATION_ZOOM);
-      console.log('[ParkLive] Recentrado en geolocalización después de runSearch: [%o, %o]', lat, lon);
     }
 
     return true;
   } catch (error) {
-    console.log('[ParkLive] Geolocalización falló: %o', error?.message);
     const fallbackCenterPoint = Array.isArray(fallbackCenter) && fallbackCenter.length >= 2
       ? fallbackCenter
       : null;
     const fallbackZoomLevel = Number.isFinite(fallbackZoom) ? fallbackZoom : 14;
 
     if (map && fallbackCenterPoint && typeof map.setView === 'function') {
-      console.log('[ParkLive] Usando ubicación por defecto: center=%o, zoom=%o', fallbackCenterPoint, fallbackZoomLevel);
       map.setView(fallbackCenterPoint, fallbackZoomLevel);
     }
 
@@ -175,7 +175,6 @@ async function resolveCurrentLocation({
       // Volver a centrar el mapa en la ubicación por defecto INMEDIATAMENTE después de mostrar aparcamientos
       if (map && fallbackCenterPoint && typeof map.setView === 'function') {
         map.setView(fallbackCenterPoint, fallbackZoomLevel);
-        console.log('[ParkLive] Recentrado en ubicación por defecto después de runSearch');
       }
     }
   }
@@ -187,7 +186,6 @@ function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLoca
   const initialViewport = getMapViewportContext(map);
   const initialViewportRadiusKm = initialViewport?.radiusKm || null;
 
-  console.log('[ParkLive] tryAutoLocateAndSearch iniciado');
   resolveCurrentLocation({
     map,
     setUserLocation,
@@ -199,7 +197,7 @@ function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLoca
     viewportRadiusKm: initialViewportRadiusKm,
     silent: true,
   }).catch(async () => {
-    console.log('[ParkLive] tryAutoLocateAndSearch fallback: sin geolocalización');
+  }).catch(async () => {
 
     // Si falla la geolocalización, fijar el punto de búsqueda al centro del mapa por defecto (Barcelona)
     const mapCenter = map?.getCenter();
@@ -233,6 +231,7 @@ export function initLanding() {
     focusUserLocation,
     setLocateMeAction,
     focusParkingById,
+    hideParkingMarkerById,
     updateOpenPopupsLayout,
     ensureValidViewport,
     defaultCenter,
@@ -257,6 +256,7 @@ export function initLanding() {
   const { runSearch, setUserLocation, setSearchAnchor } = initLandingSearch({
     setParkingSpots,
     focusParkingById,
+    hideParkingMarkerById,
     closeFilters: toggleFilters,
     setUserLocationMarker,
     onSearchLocationResolved: ({ lat, lon }) => {
@@ -293,7 +293,6 @@ export function initLanding() {
   // Permitir scheduleMapDynamicLoad después de 3 segundos (tiempo suficiente para la carga inicial)
   globalThis.setTimeout(() => {
     isInitializing = false;
-    console.log('[ParkLive] Inicialización completada, habilitando dynamic load');
   }, 3000);
 
   let mapDynamicLoadTimerId = null;
@@ -302,7 +301,6 @@ export function initLanding() {
   const scheduleMapDynamicLoad = () => {
     // No ejecutar durante la inicialización inicial
     if (isInitializing) {
-      console.log('[ParkLive] scheduleMapDynamicLoad ignorado (aún inicializando)');
       return;
     }
 

@@ -25,7 +25,20 @@ VALUES (5, 1, 5, 'Excel·lent aparcament al centre de Barcelona. Molt net i ben 
     (16, 7, 2, 'Molt difícil de maniobrar, zona molt congestionada.', '{"neteja": 3, "seguretat": 3, "facilitat_acces": 1, "relacio_qualitat_preu": 2}', TRUE, 1),
     (14, 5, 3, 'Aparcament correcte però cal millorar la sortida en hores punta.', '{"neteja": 3, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 3}', TRUE, 1),
     (16, 2, 4, 'Molt cèntric, ideal si trobes lloc, però sol estar ple.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 4}', TRUE, 3),
-    (17, 3, 3, 'Bé de preu per ser Mataró centre, però estava ple quan vaig arribar.', '{"neteja": 3, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 4}', TRUE, 1);
+    (17, 3, 3, 'Bé de preu per ser Mataró centre, però estava ple quan vaig arribar.', '{"neteja": 3, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 4}', TRUE, 1),
+    (10, 8, 4, 'Molt ampli i ben il·luminat. Ideal per a la Fira.', '{"neteja": 4, "seguretat": 5, "facilitat_acces": 4, "relacio_qualitat_preu": 3}', TRUE, 4),
+    (11, 9, 5, 'Excel·lent ubicació a la Plaça Espanya. Molt recomanable.', '{"neteja": 5, "seguretat": 5, "facilitat_acces": 5, "relacio_qualitat_preu": 4}', TRUE, 7),
+    (12, 10, 3, 'Una mica car, però molt a prop de l''Hospital Clínic.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 2}', TRUE, 2),
+    (13, 11, 4, 'Bona zona, fàcil d''aparcar si vas amb temps.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 4, "relacio_qualitat_preu": 3}', TRUE, 1),
+    (14, 12, 5, 'Molt tranquil i segur. Les places són molt grans.', '{"neteja": 5, "seguretat": 5, "facilitat_acces": 4, "relacio_qualitat_preu": 4}', TRUE, 5),
+    (15, 13, 4, 'Perfecte per anar a Sants. Entrada una mica complicada.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 3, "relacio_qualitat_preu": 4}', TRUE, 3),
+    (17, 14, 3, 'Massa gent els dies de partit, però és el que toca.', '{"neteja": 3, "seguretat": 3, "facilitat_acces": 2, "relacio_qualitat_preu": 3}', TRUE, 1),
+    (18, 15, 2, 'Una mica lluny del centre i poca vigilància.', '{"neteja": 2, "seguretat": 2, "facilitat_acces": 4, "relacio_qualitat_preu": 4}', TRUE, 0),
+    (20, 16, 1, 'Sempre està ple i és molt difícil maniobrar.', '{"neteja": 3, "seguretat": 2, "facilitat_acces": 1, "relacio_qualitat_preu": 2}', TRUE, 0),
+    (5, 17, 4, 'Bon aparcament a Mataró, places correctes.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 4, "relacio_qualitat_preu": 4}', TRUE, 2),
+    (6, 18, 5, 'Molt pràctic per anar al TecnoCampus.', '{"neteja": 5, "seguretat": 5, "facilitat_acces": 5, "relacio_qualitat_preu": 5}', TRUE, 3),
+    (7, 19, 4, 'A prop del port, ideal per a l''estiu.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 4, "relacio_qualitat_preu": 4}', TRUE, 1),
+    (8, 20, 5, 'Gratuït i molt gran. No es pot demanar més.', '{"neteja": 4, "seguretat": 4, "facilitat_acces": 5, "relacio_qualitat_preu": 5}', TRUE, 6);
 
 -- 2. RESPOSTES A VALORACIONS
 INSERT INTO respostes_valoracions (valoracio_id, usuari_id, text)

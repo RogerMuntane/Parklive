@@ -15,7 +15,7 @@ function formatDate(dateStr) {
 }
 
 /**
- * Renderitza la llista d'articles a blog.html
+ * Renderitza la llista d'articles a blog
  */
 function renderBlogList(articles) {
   const container = document.getElementById('blog-container');
@@ -41,7 +41,7 @@ function renderBlogList(articles) {
     
     col.innerHTML = `
       <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden text-decoration-none">
-        <a href="/blog-detall.html?slug=${encodeURIComponent(article.slug)}" class="text-decoration-none">
+        <a href="/blog-detall?slug=${encodeURIComponent(article.slug)}" class="text-decoration-none">
           <img src="${imgSrc}" class="card-img-top object-fit-cover" alt="${article.titol}" style="height: 200px;">
         </a>
         <div class="card-body p-4 d-flex flex-column">
@@ -49,7 +49,7 @@ function renderBlogList(articles) {
             <span class="badge bg-primary rounded-pill text-uppercase">${article.categoria}</span>
           </div>
           <h5 class="card-title fw-bold mb-3">
-            <a href="/blog-detall.html?slug=${encodeURIComponent(article.slug)}" class="text-body text-decoration-none text-hover-primary">
+            <a href="/blog-detall?slug=${encodeURIComponent(article.slug)}" class="text-body text-decoration-none text-hover-primary">
               ${article.titol}
             </a>
           </h5>
@@ -66,7 +66,7 @@ function renderBlogList(articles) {
 }
 
 /**
- * Renderitza un article concret a blog-detall.html
+ * Renderitza un article concret a blog-detall
  */
 function renderBlogArticle(article) {
   const container = document.getElementById('blog-detall-container');

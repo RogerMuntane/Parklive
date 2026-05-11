@@ -57,4 +57,42 @@
       color: white;
     }
   }
+
+  // ─── Mode Fosc ─────────────────────────────────────────
+  [data-bs-theme="dark"] & {
+    // Corregir el bloc blanc de l'aparcament
+    .bg-light {
+        background-color: rgba(248, 249, 250, 0.05) !important; // $off-white
+        border-color: rgba(248, 249, 250, 0.1) !important;
+    }
+
+    // Aclarir textos i icones que quedaven foscos
+    .text-primary, #parking-name, .form-label {
+        color: #f8f9fa !important;
+    }
+
+    // Ajustar l'àrea de pujada de fotos
+    .upload-area {
+        background-color: rgba(248, 249, 250, 0.02);
+        i.text-primary {
+            color: #df2c38 !important; // Crimson suavitzat
+        }
+    }
+    
+    // Estrelles inactives (bordes)
+    .rating-stars label {
+        color: rgba(248, 249, 250, 0.3);
+    }
+
+    // Corregir el botó de cancel·lar que era massa blanc
+    .btn-light {
+        background-color: rgba(248, 249, 250, 0.1) !important;
+        color: #f8f9fa !important;
+        border: 1px solid rgba(248, 249, 250, 0.2) !important;
+
+        &:hover {
+            background-color: rgba(248, 249, 250, 0.2) !important;
+        }
+    }
+  }
 }

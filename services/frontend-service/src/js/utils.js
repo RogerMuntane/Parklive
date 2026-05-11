@@ -62,7 +62,6 @@ export function showBootstrapAlert(type, message, parent = document.body) {
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    console.log(`[ParkLive] Mostrant alerta: ${type} - ${message}`);
     parent.appendChild(alert);
     setTimeout(() => {
       if (alert && alert.parentNode) {
@@ -246,7 +245,7 @@ export function redirectToUpgradePlan() {
     '<i class="bi bi-lock-fill me-1"></i> Funció exclusiva <strong>Premium</strong>. Millora el teu pla per guardar aparcaments favorits.',
   );
   setTimeout(() => {
-    window.location.href = '/perfil.html?upgrade=1';
+    window.location.href = '/perfil?upgrade=1';
   }, 1800);
 }
 
