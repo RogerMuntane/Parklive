@@ -143,7 +143,7 @@ function initRegister() {
 
       if (result && result.success) {
         showBootstrapAlert('success', result.message || 'Benvingut/da a ParkLive! Registre completat.');
-        redirectAfterDelay('/login.html', REDIRECT_DELAY);
+        redirectAfterDelay('/login', REDIRECT_DELAY);
       }
     } catch (err) {
       const msg = err.message || 'No s\'ha pogut completar el registre.';
@@ -471,7 +471,7 @@ async function postToPhp(endpoint, payload) {
 /**
  * Fa logout de l'usuari: neteja sessió, crida backend i redirigeix.
  */
-export async function logoutUser(redirectUrl = '/login.html') {
+export async function logoutUser(redirectUrl = '/login') {
   clearUserSession();
   try {
     // Elimina l'estat OAuth
@@ -492,7 +492,7 @@ function initLogout() {
   logoutBtns.forEach((btn) => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      await logoutUser('/login.html');
+      await logoutUser('/login');
     });
   });
 }

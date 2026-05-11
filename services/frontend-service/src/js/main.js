@@ -158,7 +158,7 @@ function initAuthToggle() {
     let profileItem = document.createElement('li');
     let profileLink = document.createElement('a');
     profileLink.classList.add('dropdown-item', 'text-primary');
-    profileLink.href = '/perfil.html';
+    profileLink.href = '/perfil';
     profileLink.textContent = 'Perfil d\'usuari';
     profileItem.appendChild(profileLink);
     dropdownMenu.appendChild(profileItem);
@@ -300,7 +300,7 @@ function applyAuthGuard() {
   // Usuari NO autenticat a pàgina protegida → bloquejar i redirigir
   // Ocultar tot el body per evitar el "flash" de contingut
   document.body.style.visibility = 'hidden';
-  const redirectTarget = `/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  const redirectTarget = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   console.warn(`[ParkLive] Auth Guard: accés denegat a "${window.location.pathname}". Redirigint a login...`);
   window.location.replace(redirectTarget);
   return true; // Bloquejar la resta de la inicialització
