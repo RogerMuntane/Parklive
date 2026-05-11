@@ -355,6 +355,17 @@ def get_active_subscription(user_id):
 
         try:
             subscription = stripe.Subscription.retrieve(row['stripe_subscription_id'])
+            
+            # Comprovar si a la BD local tenim una data final més llunyana (per extensions de gamificació)
+            cursor.execute("SELECT data_final FROM subscripcions WHERE id = %s", (row['id'],))
+            local_sub = cursor.fetchone()
+            if local_sub and local_sub['data_final']:
+                local_ts = int(datetime.combine(local_sub['data_final'], datetime.min.time()).timestamp())
+                # Si la data local és posterior a la de Stripe, la fem servir per a la UI
+                if local_ts > subscription.current_period_end:
+                    # Sobreescribim el timestamp per a la visualització al frontend
+                    subscription.current_period_end = local_ts
+            
             print(f"[Stripe] Subscripció recuperada: id={subscription.id}, status={subscription.status}")
             cursor.close()
             return subscription

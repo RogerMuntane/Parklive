@@ -228,6 +228,7 @@ def list_report_disponibilitat(limit=100):
                 c.longitud,
                 c.created_at
             FROM contribucions c
+            WHERE c.created_at >= NOW() - INTERVAL 30 MINUTE
             ORDER BY c.created_at DESC
             LIMIT %s OFFSET 0
             """,

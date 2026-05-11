@@ -249,6 +249,7 @@ function renderDetall(a) {
         minZoom: 15,
         maxZoom: 33,
         scrollWheelZoom: false, // Evitem zoom accidental en fer scroll a la pàgina
+        worldCopyJump: true,
       }).setView([lat, lon], 16);
 
       // Limitem el moviment a un radi aproximat d'1km al voltant de l'aparcament
