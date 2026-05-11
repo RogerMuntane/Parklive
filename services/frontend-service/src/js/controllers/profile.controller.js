@@ -1058,6 +1058,12 @@ export async function initProfilePointsSection() {
                 showBootstrapAlert('success', result.message || 'Recompensa bescanviada!', section);
                 await fetchPoints();
                 await loadRewards();
+
+                // Si hem rebut un nou token, vol dir que el perfil ha canviat (ex: de Bàsic a Premium)
+                // Recarreguem la pàgina per actualitzar tota la UI (sidebar, seccions premium, etc.)
+                if (result.token) {
+                  setTimeout(() => window.location.reload(), 1500);
+                }
               } else {
                 showBootstrapAlert('danger', result.error || 'Error en el bescanvi.', section);
                 targetBtn.disabled = false;
