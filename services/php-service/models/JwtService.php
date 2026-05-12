@@ -5,13 +5,18 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+/**
+ * Class JwtService
+ * 
+ * Proporciona funcionalitats per a la generació i validació de tokens JSON Web Token (JWT).
+ */
 class JwtService
 {
     /**
      * Genera un token JWT per a un usuari donat.
      * 
-     * @param array $user Dades de l'usuari (minim id, nom, email, tipus_usuari)
-     * @return string El token JWT generat
+     * @param array $user Dades de l'usuari (mínim id, nom, email, tipus_usuari).
+     * @return string El token JWT generat.
      */
     public static function generateToken($user)
     {
@@ -46,8 +51,8 @@ class JwtService
     /**
      * Valida un token JWT i retorna les dades si és vàlid.
      * 
-     * @param string $jwt El token JWT a validar
-     * @return object|null Les dades del token si és vàlid, null si no ho és
+     * @param string $jwt El token JWT a validar.
+     * @return object|null Les dades del token si és vàlid, null si no ho és (caducat o invàlid).
      */
     public static function validateToken($jwt)
     {
@@ -65,3 +70,4 @@ class JwtService
         }
     }
 }
+

@@ -3,14 +3,18 @@
 require_once __DIR__ . '/../models/JwtService.php';
 
 /**
- * Middleware per protegir rutes que requereixen autenticació
+ * Class AuthMiddleware
+ * 
+ * Middleware per protegir rutes que requereixen autenticació.
  * Aquest middleware és 100% stateless i funciona exclusivament amb JWT.
  */
 class AuthMiddleware
 {
     /**
-     * Verifica que l'usuari estigui autenticat
-     * Si no ho està, retorna 401 Unauthorized
+     * Verifica que l'usuari estigui autenticat.
+     * Si no ho està, retorna una resposta 401 Unauthorized i finalitza l'execució.
+     * 
+     * @return void
      */
     public static function verificarAutenticacio()
     {
@@ -23,7 +27,10 @@ class AuthMiddleware
     }
 
     /**
-     * Verifica que l'usuari NO estigui autenticat
+     * Verifica que l'usuari NO estigui autenticat.
+     * Si ja està autenticat, retorna una resposta d'èxit indicant que ja té sessió i finalitza.
+     * 
+     * @return void
      */
     public static function verificarNoAutenticat()
     {
@@ -36,10 +43,11 @@ class AuthMiddleware
     }
 
     /**
-     * Verifica que l'usuari autenticat sigui el propietari del recurs
-     * @param int $userId ID de l'usuari propietari del recurs
-     * @param string $errorMessage Missatge d'error personalitzat
-     * @return bool
+     * Verifica que l'usuari autenticat sigui el propietari del recurs.
+     * 
+     * @param int $userId ID de l'usuari propietari del recurs.
+     * @param string $errorMessage Missatge d'error personalitzat si no és el propietari.
+     * @return bool Retorna true si l'usuari és el propietari.
      */
     public static function verificarPropietari($userId, $errorMessage = 'No tens permís per accedir a aquest recurs')
     {
@@ -58,8 +66,9 @@ class AuthMiddleware
     }
 
     /**
-     * Obté l'usuari autenticat decodificant el JWT
-     * @return array|null Dades de l'usuari o null si no està autenticat
+     * Obté l'usuari autenticat decodificant el token JWT de la capçalera Authorization.
+     * 
+     * @return array|null Dades de l'usuari (id, nom, email, tipus_usuari) o null si no és vàlid.
      */
     public static function obtenirUsuariAutenticat()
     {
@@ -78,8 +87,9 @@ class AuthMiddleware
     }
 
     /**
-     * Obté l'ID de l'usuari autenticat actual
-     * @return int|null L'ID de l'usuari o null si no està autenticat
+     * Obté l'ID de l'usuari autenticat actual.
+     * 
+     * @return int|null L'ID de l'usuari o null si no està autenticat.
      */
     public static function obtenirIdUsuari()
     {
@@ -88,11 +98,13 @@ class AuthMiddleware
     }
 
     /**
-     * Comprova si l'usuari està autenticat validant el token JWT
-     * @return bool
+     * Comprova si l'usuari actual està autenticat.
+     * 
+     * @return bool Retorna true si el token és vàlid i l'usuari està autenticat.
      */
     public static function estaAutenticat()
     {
         return self::obtenirUsuariAutenticat() !== null;
     }
 }
+

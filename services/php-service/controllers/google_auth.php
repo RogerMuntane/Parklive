@@ -3,15 +3,32 @@
 require_once __DIR__ . "/../models/DatabaseConnection.php";
 require_once __DIR__ . "/../models/loginModel.php";
 
+/**
+ * Class GoogleAuth
+ * 
+ * Gestiona l'autenticació d'usuaris mitjançant Google OAuth2.
+ */
 class GoogleAuth
 {
+    /** @var LoginModel Instància del model de login */
     private $loginModel;
 
+    /**
+     * GoogleAuth constructor.
+     * Inicialitza el model de login.
+     */
     public function __construct()
     {
         $this->loginModel = new LoginModel();
     }
 
+    /**
+     * Envia una resposta JSON al client i finalitza l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $statusCode Codi d'estat HTTP (per defecte 200).
+     * @return void
+     */
     private function respondJson($data, $statusCode = 200)
     {
         http_response_code($statusCode);
@@ -20,6 +37,12 @@ class GoogleAuth
         exit();
     }
 
+    /**
+     * Processa l'inici de sessió amb Google.
+     * Verifica el token d'accés amb l'API de Google i sincronitza l'usuari amb la base de dades local.
+     * 
+     * @return void
+     */
     public function processLogin()
     {
         try {
@@ -86,3 +109,4 @@ class GoogleAuth
         }
     }
 }
+

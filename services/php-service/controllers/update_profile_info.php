@@ -3,14 +3,29 @@ require_once __DIR__ . "/../models/DatabaseConnection.php";
 require_once __DIR__ . "/../models/validarUsuari.php";
 require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
+/**
+ * Class UpdateProfileInfoController
+ * 
+ * Controlador per actualitzar la informació personal del perfil de l'usuari.
+ */
 class UpdateProfileInfoController
 {
+    /** @var mysqli|null La connexió a la base de dades */
     private $conexio;
 
+    /**
+     * UpdateProfileInfoController constructor.
+     */
     public function __construct()
     {
     }
 
+    /**
+     * Processa la petició d'actualització de la informació del perfil.
+     * Valida les dades d'entrada i les desa a la base de dades.
+     * 
+     * @return void
+     */
     public function processRequest()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
@@ -72,10 +87,19 @@ class UpdateProfileInfoController
         }
     }
 
+    /**
+     * Envia una resposta JSON al client i finalitza l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $status Codi d'estat HTTP (per defecte 200).
+     * @return void
+     */
     private function respond($data, $status = 200)
     {
         http_response_code($status);
+        header('Content-Type: application/json');
         echo json_encode($data);
         exit();
     }
 }
+

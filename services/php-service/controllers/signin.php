@@ -2,11 +2,23 @@
 require_once __DIR__ . "/../models/validarUsuari.php";
 require_once __DIR__ . "/../models/guardarUsuari.php";
 
+/**
+ * Class Signin
+ * 
+ * Controlador per gestionar el registre de nous usuaris.
+ */
 class Signin
 {
+    /** @var validarUsuari Instància del validador d'usuaris */
     private $validador;
+
+    /** @var guardarUsuari Instància del model per guardar usuaris */
     private $guardador;
 
+    /**
+     * Signin constructor.
+     * Inicialitza el validador i el guardador.
+     */
     public function __construct()
     {
         $this->validador = new validarUsuari();
@@ -15,6 +27,10 @@ class Signin
 
     /**
      * Retorna una resposta JSON i atura l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $statusCode Codi d'estat HTTP (per defecte 200).
+     * @return void
      */
     private function respondJson($data, $statusCode = 200)
     {
@@ -24,6 +40,12 @@ class Signin
         exit();
     }
 
+    /**
+     * Processa la petició de registre de nou usuari.
+     * Valida les dades rebudes i, si són correctes, desa l'usuari a la base de dades.
+     * 
+     * @return void
+     */
     public function processSignin()
     {
         // Obtenir dades del formulari o de JSON
@@ -63,3 +85,4 @@ class Signin
         }
     }
 }
+

@@ -3,16 +3,33 @@
 require_once __DIR__ . '/DatabaseConnection.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
+/**
+ * Class guardarUsuari
+ * 
+ * Gestiona el registre de nous usuaris i la seva integració amb Stripe.
+ */
 class guardarUsuari
 {
+    /** @var mysqli|null La connexió a la base de dades */
     private $conexio;
+
+    /** @var array Llista d'errors produïts durant les operacions */
     private $errors = array();
 
+    /**
+     * guardarUsuari constructor.
+     * Inicialitza la connexió a la base de dades.
+     */
     public function __construct()
     {
         $this->conectarBaseDades();
     }
 
+    /**
+     * Estableix la connexió amb la base de dades utilitzant la classe DatabaseConnection.
+     * 
+     * @return void
+     */
     private function conectarBaseDades()
     {
         try {
@@ -25,6 +42,12 @@ class guardarUsuari
 
     /**
      * Crea un client a Stripe i actualitza el seu stripe_customer_id a la base de dades.
+     * 
+     * @param int $userId ID de l'usuari a la base de dades local.
+     * @param string $email Email de l'usuari.
+     * @param string $nom Nom de l'usuari.
+     * @param string $cognom Cognom de l'usuari.
+     * @return string|bool Retorna l'ID del client de Stripe si s'ha creat correctament, false en cas contrari.
      */
     public function crearUsuariStripe($userId, $email, $nom, $cognom)
     {
@@ -68,6 +91,16 @@ class guardarUsuari
         return false;
     }
 
+    /**
+     * Desa un nou usuari a la base de dades i crea el seu compte a Stripe.
+     * 
+     * @param string $nom Nom de l'usuari.
+     * @param string $cognom Cognom de l'usuari.
+     * @param string $email Email de l'usuari.
+     * @param string $contrasenya Contrasenya de l'usuari (sense encriptar).
+     * @param string $telefono Telèfon de l'usuari.
+     * @return bool Retorna true si l'usuari s'ha guardat correctament, false en cas contrari.
+     */
     public function guardarUsuari($nom, $cognom, $email, $contrasenya, $telefono)
     {
         try {
@@ -129,6 +162,12 @@ class guardarUsuari
         }
     }
 
+    /**
+     * Comprova si un email ja existeix a la base de dades.
+     * 
+     * @param string $email Email a comprovar.
+     * @return bool Retorna true si l'email existeix, false si no.
+     */
     private function emailExisteix($email)
     {
         try {
@@ -161,11 +200,20 @@ class guardarUsuari
         }
     }
 
+    /**
+     * Obté la llista d'errors acumulats.
+     * 
+     * @return array Llista d'errors.
+     */
     public function getErrors()
     {
         return $this->errors;
     }
 
+    /**
+     * guardarUsuari destructor.
+     * Tanca la connexió a la base de dades si està oberta.
+     */
     public function __destruct()
     {
         if ($this->conexio) {

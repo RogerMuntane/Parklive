@@ -3,8 +3,14 @@
 /**
  * Llistat de rutes de l'API de PHP.
  * Aquest fitxer conté la configuració dels endpoints, mètodes permesos i el seu controlador corresponent.
+ * 
+ * Cada entrada de l'array defineix:
+ * - La ruta de l'endpoint (clau).
+ * - Els mètodes HTTP suportats (GET, POST, PUT, etc.).
+ * - El fitxer, classe i acció (mètode) que gestionarà la petició.
+ * 
+ * @return array Configuració de rutes.
  */
-
 return [
     'api/login' => [
         'POST' => [

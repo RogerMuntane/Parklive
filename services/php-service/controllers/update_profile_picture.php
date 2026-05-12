@@ -12,11 +12,26 @@
  */
 require_once __DIR__ . "/../models/DatabaseConnection.php";
 
+/**
+ * Class UpdateProfilePictureController
+ * 
+ * Gestiona el procés de pujada i optimització de la imatge de perfil.
+ */
 class UpdateProfilePictureController
 {
+    /** @var string Ruta del directori de pujades */
     private $uploadDir;
+
+    /** @var string|null Missatge d'error si hi ha problemes de configuració */
     private $uploadError = null;
 
+    /** @var mysqli|null La connexió a la base de dades */
+    private $conexio;
+
+    /**
+     * UpdateProfilePictureController constructor.
+     * Configura el directori de destinació i comprova les variables d'entorn.
+     */
     public function __construct()
     {
         try {
@@ -36,6 +51,12 @@ class UpdateProfilePictureController
         }
     }
 
+    /**
+     * Processa la petició de pujada de la imatge de perfil.
+     * Realitza validacions, puja a Cloudinary per optimitzar, descarrega localment i actualitza la BDD.
+     * 
+     * @return void
+     */
     public function processRequest()
     {
         if ($this->uploadError) {
@@ -87,43 +108,43 @@ class UpdateProfilePictureController
             }
 
             // Nom de destinació: sempre .webp (Cloudinary fa la conversió)
-            $fileName  = 'profile_' . $userId . '_' . time() . '.webp';
+            $fileName = 'profile_' . $userId . '_' . time() . '.webp';
             $targetPath = $this->uploadDir . $fileName;
 
-            // ── Cloudinary: pujar → descarregar optimitzada → esborrar del núvol ──
+            // ── Cloudinary: pujar → descarregar optimitzada ──
             $cloudName = getenv('cloud_name');
-            $apiKey    = trim(getenv('Cloudinary_API_KEY'));
+            $apiKey = trim(getenv('Cloudinary_API_KEY'));
             $apiSecret = trim(getenv('Cloudinary_API_Secret'));
 
             if (!$cloudName || !$apiKey || !$apiSecret) {
                 $this->respond(['success' => false, 'error' => 'Credencials de Cloudinary no configurades.'], 500);
             }
 
-            $publicId  = 'parklive_tmp/profile_' . $userId . '_' . time();
+            $publicId = 'parklive_tmp/profile_' . $userId . '_' . time();
             $timestamp = time();
 
             // Signature per a signed upload
             $signatureStr = "format=webp&public_id={$publicId}&timestamp={$timestamp}&transformation=q_auto" . $apiSecret;
-            $signature    = sha1($signatureStr);
+            $signature = sha1($signatureStr);
 
             $uploadUrl = "https://api.cloudinary.com/v1_1/{$cloudName}/image/upload";
 
             // 1. Pujar a Cloudinary via cURL amb transformació q_auto + f_webp
             $ch = curl_init();
             curl_setopt_array($ch, [
-                CURLOPT_URL            => $uploadUrl,
+                CURLOPT_URL => $uploadUrl,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => [
-                    'file'           => new CURLFile($file['tmp_name'], $mimeType, $file['name']),
-                    'api_key'        => $apiKey,
-                    'timestamp'      => $timestamp,
-                    'public_id'      => $publicId,
-                    'signature'      => $signature,
-                    'format'         => 'webp',
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => [
+                    'file' => new CURLFile($file['tmp_name'], $mimeType, $file['name']),
+                    'api_key' => $apiKey,
+                    'timestamp' => $timestamp,
+                    'public_id' => $publicId,
+                    'signature' => $signature,
+                    'format' => 'webp',
                     'transformation' => 'q_auto',
                 ],
-                CURLOPT_TIMEOUT        => 30,
+                CURLOPT_TIMEOUT => 30,
             ]);
             $uploadResponse = curl_exec($ch);
             $uploadHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -157,16 +178,16 @@ class UpdateProfilePictureController
 
             $chDel = curl_init();
             curl_setopt_array($chDel, [
-                CURLOPT_URL            => $destroyUrl,
+                CURLOPT_URL => $destroyUrl,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => http_build_query([
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => http_build_query([
                     'public_id' => $publicId,
-                    'api_key'   => $apiKey,
+                    'api_key' => $apiKey,
                     'timestamp' => $destroyTimestamp,
                     'signature' => $destroySignature,
                 ]),
-                CURLOPT_TIMEOUT        => 10,
+                CURLOPT_TIMEOUT => 10,
             ]);
             curl_exec($chDel);
             curl_close($chDel);
@@ -190,20 +211,27 @@ class UpdateProfilePictureController
             }
 
             $this->respond([
-                'success'     => true,
-                'message'     => 'Imatge de perfil actualitzada correctament.',
+                'success' => true,
+                'message' => 'Imatge de perfil actualitzada correctament.',
                 'foto_perfil' => $fileName
             ]);
 
         } catch (Throwable $e) {
             $this->respond([
                 'success' => false,
-                'error'   => 'Error intern del servidor: ' . $e->getMessage(),
-                'type'    => get_class($e)
+                'error' => 'Error intern del servidor: ' . $e->getMessage(),
+                'type' => get_class($e)
             ], 500);
         }
     }
 
+    /**
+     * Obté el tipus MIME d'un fitxer.
+     * 
+     * @param string $tmpName Ruta temporal del fitxer.
+     * @param string $fallbackType Tipus de reserva si no es pot determinar.
+     * @return string Tipus MIME detectat.
+     */
     private function getMimeType($tmpName, $fallbackType)
     {
         if (class_exists('finfo')) {
@@ -216,6 +244,12 @@ class UpdateProfilePictureController
         return $fallbackType;
     }
 
+    /**
+     * Retorna un missatge d'error descriptiu basat en el codi d'error de pujada de PHP.
+     * 
+     * @param int $errorCode Codi d'error de $_FILES.
+     * @return string Missatge d'error descriptiu.
+     */
     private function getUploadErrorMessage($errorCode)
     {
         switch ($errorCode) {
@@ -238,6 +272,14 @@ class UpdateProfilePictureController
         }
     }
 
+    /**
+     * Envia una resposta JSON al client i finalitza l'execució.
+     * Neteja qualsevol output previ per evitar errors de format JSON.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $status Codi d'estat HTTP (per defecte 200).
+     * @return void
+     */
     private function respond($data, $status = 200)
     {
         // Netejar qualsevol warning o output que hagi pogut sortir
@@ -245,7 +287,9 @@ class UpdateProfilePictureController
             ob_clean();
 
         http_response_code($status);
+        header('Content-Type: application/json');
         echo json_encode($data);
         exit();
     }
 }
+

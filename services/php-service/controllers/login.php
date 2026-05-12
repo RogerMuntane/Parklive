@@ -3,10 +3,20 @@
 require_once __DIR__ . "/../models/loginModel.php";
 require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
+/**
+ * Class Login
+ * 
+ * Controlador per gestionar l'inici de sessió d'usuaris.
+ */
 class Login
 {
+    /** @var LoginModel Instància del model de login */
     private $model;
 
+    /**
+     * Login constructor.
+     * Verifica que l'usuari no estigui ja autenticat i inicialitza el model.
+     */
     public function __construct()
     {
         // Verificar que l'usuari NO estigui ja autenticat
@@ -17,6 +27,10 @@ class Login
 
     /**
      * Retorna una resposta JSON i atura l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $statusCode Codi d'estat HTTP (per defecte 200).
+     * @return void
      */
     private function respondJson($data, $statusCode = 200)
     {
@@ -26,6 +40,12 @@ class Login
         exit();
     }
 
+    /**
+     * Processa la petició d'inici de sessió.
+     * Autentica l'usuari mitjançant el model i genera un token JWT en cas d'èxit.
+     * 
+     * @return void
+     */
     public function processLogin()
     {
         // Permetre tant POST tradicional (formulari) com dades en format JSON (fetch)
@@ -58,3 +78,4 @@ class Login
         ]);
     }
 }
+

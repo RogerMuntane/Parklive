@@ -2,11 +2,23 @@
 
 require_once __DIR__ . '/DatabaseConnection.php';
 
+/**
+ * Class AdminUserModel
+ * 
+ * Gestiona les operacions d'administració d'usuaris a la base de dades.
+ */
 class AdminUserModel
 {
+    /** @var mysqli|null La connexió a la base de dades */
     private $conexio;
+
+    /** @var array Llista d'errors produïts durant les operacions */
     private $errors = array();
 
+    /**
+     * AdminUserModel constructor.
+     * Inicialitza la connexió a la base de dades.
+     */
     public function __construct()
     {
         try {
@@ -18,7 +30,9 @@ class AdminUserModel
     }
 
     /**
-     * Verifica si el model està llest per operar
+     * Verifica si el model està llest per operar.
+     * 
+     * @return bool Retorna true si la connexió és vàlida i no hi ha errors de connexió.
      */
     public function isReady(): bool
     {
@@ -26,7 +40,13 @@ class AdminUserModel
     }
 
     /**
-     * Obté els usuaris amb opció de cerca, filtre per rol i paginació
+     * Obté els usuaris amb opció de cerca, filtre per rol i paginació.
+     * 
+     * @param string $search Terme de cerca per nom, cognoms o email.
+     * @param string $role Filtre per tipus d'usuari.
+     * @param int $limit Nombre màxim d'usuaris a retornar.
+     * @param int $offset Desplaçament per a la paginació.
+     * @return array Llista d'usuaris trobats.
      */
     public function getAllUsers($search = '', $role = '', $limit = 10, $offset = 0)
     {
@@ -81,7 +101,11 @@ class AdminUserModel
     }
 
     /**
-     * Compta el nombre total d'usuaris per a una cerca i rol específics
+     * Compta el nombre total d'usuaris per a una cerca i rol específics.
+     * 
+     * @param string $search Terme de cerca per filtrar el recompte.
+     * @param string $role Rol per filtrar el recompte.
+     * @return int Nombre total d'usuaris.
      */
     public function getTotalUsersCount($search = '', $role = '')
     {
@@ -128,7 +152,10 @@ class AdminUserModel
     }
 
     /**
-     * Crea un usuari (Admin)
+     * Crea un usuari (Admin).
+     * 
+     * @param array $data Dades de l'usuari (nom, cognoms, email, contrasenya, telefon, rol).
+     * @return int|bool Retorna l'ID del nou usuari o false en cas d'error.
      */
     public function createUser($data)
     {
@@ -162,7 +189,11 @@ class AdminUserModel
     }
 
     /**
-     * Actualitza un usuari
+     * Actualitza un usuari.
+     * 
+     * @param int $id ID de l'usuari a actualitzar.
+     * @param array $data Noves dades de l'usuari.
+     * @return bool Retorna true si s'ha actualitzat correctament, false si no.
      */
     public function updateUser($id, $data)
     {
@@ -189,7 +220,10 @@ class AdminUserModel
     }
 
     /**
-     * Elimina un usuari (soft delete)
+     * Elimina un usuari (soft delete).
+     * 
+     * @param int $id ID de l'usuari a eliminar.
+     * @return bool Retorna true si s'ha eliminat correctament, false si no.
      */
     public function deleteUser($id)
     {
@@ -217,11 +251,20 @@ class AdminUserModel
         }
     }
 
+    /**
+     * Obté la llista d'errors acumulats.
+     * 
+     * @return array Llista d'errors.
+     */
     public function getErrors()
     {
         return $this->errors;
     }
 
+    /**
+     * AdminUserModel destructor.
+     * Tanca la connexió a la base de dades si està oberta.
+     */
     public function __destruct()
     {
         if ($this->conexio) {
@@ -229,3 +272,4 @@ class AdminUserModel
         }
     }
 }
+

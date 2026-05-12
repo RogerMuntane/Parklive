@@ -1,9 +1,21 @@
 <?php
 
+/**
+ * Class DatabaseConnection
+ * 
+ * Gestiona la connexió a la base de dades MySQL utilitzant variables d'entorn.
+ */
 class DatabaseConnection
 {
+    /** @var array|null Caché de les variables d'entorn carregades des del fitxer .env */
     private static ?array $envCache = null;
 
+    /**
+     * Crea i retorna una nova connexió mysqli.
+     * 
+     * @return mysqli Objecte de connexió a la base de dades.
+     * @throws Exception Si hi ha un error en la connexió.
+     */
     public static function create(): mysqli
     {
         $config = self::getConfig();
@@ -18,6 +30,12 @@ class DatabaseConnection
         return $connection;
     }
 
+    /**
+     * Obté la configuració de la base de dades des de les variables d'entorn.
+     * 
+     * @return array Configuració amb host, db, user i password.
+     * @throws Exception Si falten variables d'entorn obligatòries.
+     */
     private static function getConfig(): array
     {
         $env = self::loadEnv();
@@ -39,6 +57,14 @@ class DatabaseConnection
         ];
     }
 
+    /**
+     * Recupera el valor d'una variable d'entorn provant diverses claus.
+     * 
+     * @param array $keys Llista de claus a provar.
+     * @param array $env Array amb les variables carregades des del fitxer .env.
+     * @param string|null $default Valor per defecte si no es troba cap clau.
+     * @return string|null Valor de la variable d'entorn o null.
+     */
     private static function envValue(array $keys, array $env, ?string $default = null): ?string
     {
         foreach ($keys as $key) {
@@ -55,6 +81,11 @@ class DatabaseConnection
         return $default;
     }
 
+    /**
+     * Carrega les variables d'entorn des del fitxer .env situat a l'arrel del projecte.
+     * 
+     * @return array Array associatiu amb les variables d'entorn.
+     */
     private static function loadEnv(): array
     {
         if (self::$envCache !== null) {
@@ -67,3 +98,4 @@ class DatabaseConnection
         return self::$envCache;
     }
 }
+

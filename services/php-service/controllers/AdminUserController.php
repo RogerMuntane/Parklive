@@ -3,14 +3,28 @@
 require_once __DIR__ . "/../models/AdminUserModel.php";
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
+/**
+ * Class AdminUserController
+ * 
+ * Controlador per gestionar les peticions d'administració d'usuaris.
+ */
 class AdminUserController
 {
+    /** @var AdminUserModel|null Instància del model d'usuaris per a administradors */
     private $model;
 
+    /**
+     * AdminUserController constructor.
+     */
     public function __construct()
     {
     }
 
+    /**
+     * Comprova si l'usuari actualment autenticat té privilegis d'administrador.
+     * 
+     * @return bool Retorna true si l'usuari és administrador, false en cas contrari.
+     */
     private static function isAdmin()
     {
         $usuari = AuthMiddleware::obtenirUsuariAutenticat();
@@ -20,6 +34,11 @@ class AdminUserController
         return $rol === 'administrador' || $rol === 'admin';
     }
 
+    /**
+     * Processa la petició HTTP rebuda, gestionant l'autenticació i delegant l'acció segons el mètode.
+     * 
+     * @return void
+     */
     public function processRequest()
     {
         AuthMiddleware::verificarAutenticacio();
@@ -88,6 +107,12 @@ class AdminUserController
         }
     }
 
+    /**
+     * Gestiona la creació d'un nou usuari.
+     * 
+     * @param array $data Dades de l'usuari a crear.
+     * @return void
+     */
     private function handleCreate($data)
     {
         $errors = [];
@@ -114,6 +139,13 @@ class AdminUserController
         }
     }
 
+    /**
+     * Gestiona l'actualització d'un usuari existent.
+     * 
+     * @param int|null $id ID de l'usuari a actualitzar.
+     * @param array $data Noves dades de l'usuari.
+     * @return void
+     */
     private function handleUpdate($id, $data)
     {
         if (!$id) {
@@ -132,6 +164,12 @@ class AdminUserController
         }
     }
 
+    /**
+     * Gestiona l'eliminació d'un usuari.
+     * 
+     * @param int|null $id ID de l'usuari a eliminar.
+     * @return void
+     */
     private function handleDelete($id)
     {
         if (!$id) {
@@ -146,6 +184,13 @@ class AdminUserController
         }
     }
 
+    /**
+     * Envia una resposta JSON al client i finalitza l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $status Codi d'estat HTTP (per defecte 200).
+     * @return void
+     */
     private function respond($data, $status = 200)
     {
         http_response_code($status);
@@ -154,3 +199,4 @@ class AdminUserController
         exit();
     }
 }
+

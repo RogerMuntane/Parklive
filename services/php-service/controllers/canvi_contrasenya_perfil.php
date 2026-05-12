@@ -3,17 +3,35 @@ require_once __DIR__ . "/../models/loginModel.php";
 require_once __DIR__ . "/../models/validarUsuari.php";
 require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
+/**
+ * Class CanviContrasenyaPerfilController
+ * 
+ * Controlador per gestionar el canvi de contrasenya des del perfil de l'usuari.
+ */
 class CanviContrasenyaPerfilController
 {
+    /** @var LoginModel Instància del model de login per gestionar credencials */
     private $loginModel;
+
+    /** @var ValidarUsuari Instància del validador per comprovar la seguretat de la nova contrasenya */
     private $validador;
 
+    /**
+     * CanviContrasenyaPerfilController constructor.
+     * Inicialitza els models i validadors necessaris.
+     */
     public function __construct()
     {
         $this->loginModel = new LoginModel();
         $this->validador = new ValidarUsuari();
     }
 
+    /**
+     * Processa la petició de canvi de contrasenya.
+     * Verifica l'autenticació, la contrasenya actual i valida la nova contrasenya.
+     * 
+     * @return void
+     */
     public function processRequest()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
@@ -73,6 +91,13 @@ class CanviContrasenyaPerfilController
         }
     }
 
+    /**
+     * Envia una resposta JSON al client i finalitza l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $status Codi d'estat HTTP (per defecte 200).
+     * @return void
+     */
     private function respond($data, $status = 200)
     {
         http_response_code($status);
@@ -81,3 +106,4 @@ class CanviContrasenyaPerfilController
         exit();
     }
 }
+
