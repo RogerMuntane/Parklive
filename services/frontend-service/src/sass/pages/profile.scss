@@ -1136,6 +1136,158 @@
     }
 }
 
+// ── Responsive mòbil: CRUDs admin i Historial ────────────────────────────────
+//
+// Problema: A resolucions <768px el contingut de les seccions (capçaleres amb
+// botons, filtres en fila, taules) desbordat queda tallat perquè el contenidor
+// no tenia scroll horitzontal. La solució afegeix overflow-x: auto al card-body
+// i assegura que els controls de cerca/filtres puguin fer wrap a mòbil.
+//
+@media (max-width: 767.98px) {
+
+    // ── Àrea principal del perfil ──────────────────────────────────────────────
+    // Garanteix que el <main> no talli el contingut ample
+    #main-content {
+        overflow-x: hidden; // Evita scroll lateral a nivell de pàgina
+        padding: 1rem !important;
+    }
+
+    // ── CRUD Usuaris ───────────────────────────────────────────────────────────
+    #section-admin-users {
+        .card-header {
+            // La capçalera amb títol + botó "Afegir Usuari" pot fer wrap
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.75rem;
+            }
+            #btn-add-user {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        .card-body {
+            overflow-x: auto; // Scroll horitzontal si la taula no cap
+            padding: 1rem !important;
+        }
+        // Filtres: cerca i selector en columna
+        .row.g-3.mb-4 {
+            .col-md-6,
+            .col-md-3 {
+                width: 100%;
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    }
+
+    // ── CRUD Aparcaments ───────────────────────────────────────────────────────
+    #section-admin-parkings {
+        .card-header,
+        .card-header > div {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+        #btn-add-parking {
+            width: 100%;
+            justify-content: center;
+        }
+        // Filtres: cols en columna
+        .p-3.bg-body-tertiary .row.g-2 {
+            .col-md-5,
+            .col-md-3,
+            .col-md-1 {
+                width: 100%;
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+        // Scroll horitzontal a la taula
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    // ── CRUD Blog ──────────────────────────────────────────────────────────────
+    #section-admin-blog {
+        .card-body {
+            overflow-x: auto;
+            padding: 1rem !important;
+        }
+        // Capçalera: títol + botó "Nou Article"
+        .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+            #btn-add-article {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        // Scroll horitzontal a la taula
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    // ── Historial (Reserves i Tiquets) ─────────────────────────────────────────
+    #section-history {
+        .card-body {
+            overflow-x: auto;
+            padding: 1rem !important;
+        }
+        // Controls de cerca: passen a columna
+        .history-search-controls,
+        .d-flex.align-items-center.gap-2.flex-wrap {
+            flex-direction: column;
+            align-items: stretch !important;
+            width: 100%;
+        }
+        .history-search-input,
+        .history-status-select {
+            width: 100% !important;
+            flex-shrink: unset;
+        }
+        .history-search-btn {
+            width: 100%;
+        }
+        // Capçalera: títol + controls en columna
+        .d-flex.align-items-center.justify-content-between.mb-4,
+        .d-flex.align-items-center.justify-content-between.mb-3 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+        // Pills informatius del pla: scroll horitzontal si no caben
+        #tickets-info-pills {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        // Scroll horitzontal a les taules
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        // Paginació centrada a mòbil
+        #history-pagination-container,
+        #tickets-pagination-container {
+            justify-content: center;
+            width: 100%;
+        }
+        // Resum + paginació en columna
+        .d-flex.align-items-center.justify-content-between.mt-4 {
+            flex-direction: column;
+            align-items: center !important;
+            gap: 0.5rem;
+        }
+    }
+}
+
 // Paginació de tiquets — hereta el mateix estil que la de reserves
 #tickets-pagination-container {
     .pagination {

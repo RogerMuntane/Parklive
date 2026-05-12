@@ -21203,6 +21203,113 @@ textarea.form-control-lg {
   font-size: 0.7rem;
 }
 
+@media (max-width: 767.98px) {
+  #main-content {
+    overflow-x: hidden;
+    padding: 1rem !important;
+  }
+  #section-admin-users .card-header .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+  #section-admin-users .card-header #btn-add-user {
+    width: 100%;
+    justify-content: center;
+  }
+  #section-admin-users .card-body {
+    overflow-x: auto;
+    padding: 1rem !important;
+  }
+  #section-admin-users .row.g-3.mb-4 .col-md-6,
+  #section-admin-users .row.g-3.mb-4 .col-md-3 {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  #section-admin-parkings .card-header,
+  #section-admin-parkings .card-header > div {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+  #section-admin-parkings #btn-add-parking {
+    width: 100%;
+    justify-content: center;
+  }
+  #section-admin-parkings .p-3.bg-body-tertiary .row.g-2 .col-md-5,
+  #section-admin-parkings .p-3.bg-body-tertiary .row.g-2 .col-md-3,
+  #section-admin-parkings .p-3.bg-body-tertiary .row.g-2 .col-md-1 {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  #section-admin-parkings .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #section-admin-blog .card-body {
+    overflow-x: auto;
+    padding: 1rem !important;
+  }
+  #section-admin-blog .d-flex.justify-content-between.align-items-center.mb-4 {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+  #section-admin-blog .d-flex.justify-content-between.align-items-center.mb-4 #btn-add-article {
+    width: 100%;
+    justify-content: center;
+  }
+  #section-admin-blog .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #section-history .card-body {
+    overflow-x: auto;
+    padding: 1rem !important;
+  }
+  #section-history .history-search-controls,
+  #section-history .d-flex.align-items-center.gap-2.flex-wrap {
+    flex-direction: column;
+    align-items: stretch !important;
+    width: 100%;
+  }
+  #section-history .history-search-input,
+  #section-history .history-status-select {
+    width: 100% !important;
+    flex-shrink: unset;
+  }
+  #section-history .history-search-btn {
+    width: 100%;
+  }
+  #section-history .d-flex.align-items-center.justify-content-between.mb-4,
+  #section-history .d-flex.align-items-center.justify-content-between.mb-3 {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+  #section-history #tickets-info-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  #section-history .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #section-history #history-pagination-container,
+  #section-history #tickets-pagination-container {
+    justify-content: center;
+    width: 100%;
+  }
+  #section-history .d-flex.align-items-center.justify-content-between.mt-4 {
+    flex-direction: column;
+    align-items: center !important;
+    gap: 0.5rem;
+  }
+}
 #tickets-pagination-container .pagination {
   gap: 0.2rem;
 }
