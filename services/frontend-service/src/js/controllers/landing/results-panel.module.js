@@ -9,7 +9,7 @@ export function initResultsPanelToggle({ map, updateOpenPopupsLayout, compactBre
     toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
     toggleBtn.setAttribute(
       'aria-label',
-      isCollapsed ? 'Expandir panel de resultados' : 'Encoger panel de resultados',
+      isCollapsed ? 'Expandir panell de resultats' : 'Encongir panell de resultats',
     );
     toggleBtn.innerHTML = isCollapsed
       ? '<i class="bi bi-layout-sidebar"></i>'

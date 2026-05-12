@@ -1,0 +1,127 @@
+<!-- Gestió del Blog -->
+<section id="section-admin-blog" class="profile-section fade-section">
+  <div class="card shadow-sm border-0 rounded-4 mb-3">
+    <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h5 fw-bold mb-0">Gestió del Blog</h2>
+        <button class="btn btn-primary" id="btn-add-article">
+          <i class="bi bi-plus-lg me-2"></i>Nou Article
+        </button>
+      </div>
+
+      <div id="admin-blog-loading" class="text-center py-5 d-none">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregant articles...</span>
+        </div>
+      </div>
+
+      <div id="admin-blog-error" class="alert alert-danger d-none" role="alert"></div>
+
+  <div class="table-responsive">
+    <table class="table table-hover table-striped align-middle" id="admin-blog-table">
+      <thead class="table-dark">
+        <tr>
+          <th scope="col">Títol</th>
+          <th scope="col">Categoria</th>
+          <th scope="col">Estat</th>
+          <th scope="col">Data</th>
+          <th scope="col" class="text-end">Accions</th>
+        </tr>
+      </thead>
+      <tbody id="admin-blog-tbody">
+        <!-- Articles rendered via JS -->
+      </tbody>
+    </table>
+  </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal d'Edició/Creació d'Articles -->
+<div class="modal fade" id="blogArticleModal" tabindex="-1" aria-labelledby="blogArticleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-body-tertiary">
+      <div class="modal-header border-bottom-0">
+        <h5 class="modal-title fw-bold" id="blogArticleModalLabel">Nou Article</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tancar"></button>
+      </div>
+      <form id="blog-article-form">
+        <div class="modal-body">
+          <input type="hidden" id="blog-article-id">
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-8">
+              <label for="blog-titol" class="form-label">Títol <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="blog-titol" required>
+            </div>
+            <div class="col-md-4">
+              <label for="blog-slug" class="form-label">Slug <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="blog-slug" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="blog-categoria" class="form-label">Categoria</label>
+              <select class="form-select" id="blog-categoria">
+                <option value="mobilitat">Mobilitat</option>
+                <option value="sostenibilitat">Sostenibilitat</option>
+                <option value="novetats">Novetats</option>
+                <option value="consells">Consells</option>
+                <option value="altres">Altres</option>
+              </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="blog-publicat">
+                <label class="form-check-label" for="blog-publicat">Publicat</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="blog-imatge" class="form-label">Imatge Destacada</label>
+            <input type="file" class="form-control" id="blog-imatge" accept="image/*">
+            <div class="form-text">Deixa-ho en blanc per mantenir la imatge actual. <a href="#" id="blog-current-image" target="_blank" class="d-none">Veure actual</a></div>
+          </div>
+
+          <div class="mb-3">
+            <label for="blog-resum" class="form-label">Resum</label>
+            <textarea class="form-control" id="blog-resum" rows="2" maxlength="500"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="blog-contingut" class="form-label">Contingut <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="blog-contingut" rows="10" required></textarea>
+            <div class="form-text">Pots utilitzar HTML bàsic com &lt;br&gt;, &lt;strong&gt;, etc.</div>
+          </div>
+
+        </div>
+        <div class="modal-footer border-top-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel·lar</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-article">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Eliminació Blog -->
+<div class="modal fade" id="modal-delete-blog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 text-center">
+                <input type="hidden" id="delete-blog-id">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-trash fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Eliminar Article?</h5>
+                <p class="text-secondary small mb-4">Aquesta acció no es pot desfer. L'article serà eliminat de forma permanent.</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger rounded-pill py-2 fw-bold" id="btn-confirm-delete-blog">Sí, eliminar</button>
+                    <button type="button" class="btn btn-light rounded-pill py-2" data-bs-dismiss="modal">Cancel·lar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

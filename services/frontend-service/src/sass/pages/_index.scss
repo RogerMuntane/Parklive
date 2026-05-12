@@ -1,4 +1,12 @@
-@forward 'about';
-@forward 'home';
-@forward 'profile';
-@forward 'detall_aparcament';
+@import "about";
+@import "home";
+@import "profile";
+@import "detall_aparcament";
+@import "nova_valoracio";
+@import "contacte";
+@import "legal";
+@import "reserva_aparcament";
+@import "reserves_actives";
+@import "tiquet";
+@import "report_disponibilitat";
+@import "admin_aparcaments";

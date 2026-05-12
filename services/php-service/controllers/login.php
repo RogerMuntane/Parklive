@@ -1,32 +1,36 @@
 <?php
 
 require_once __DIR__ . "/../models/loginModel.php";
-require_once __DIR__ . "/../models/sessionModel.php";
 require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
+/**
+ * Class Login
+ * 
+ * Controlador per gestionar l'inici de sessió d'usuaris.
+ */
 class Login
 {
+    /** @var LoginModel Instància del model de login */
     private $model;
-    private $wantsJson = false;
 
+    /**
+     * Login constructor.
+     * Verifica que l'usuari no estigui ja autenticat i inicialitza el model.
+     */
     public function __construct()
     {
         // Verificar que l'usuari NO estigui ja autenticat
         AuthMiddleware::verificarNoAutenticat();
 
         $this->model = new LoginModel();
-
-        // Detectar si la petició ve del frontend (AJAX) i vol JSON
-        $this->wantsJson = isset($_SERVER['HTTP_ACCEPT'])
-            && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->processarFormulari();
-        }
     }
 
     /**
      * Retorna una resposta JSON i atura l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $statusCode Codi d'estat HTTP (per defecte 200).
+     * @return void
      */
     private function respondJson($data, $statusCode = 200)
     {
@@ -36,56 +40,42 @@ class Login
         exit();
     }
 
-    private function processarFormulari()
+    /**
+     * Processa la petició d'inici de sessió.
+     * Autentica l'usuari mitjançant el model i genera un token JWT en cas d'èxit.
+     * 
+     * @return void
+     */
+    public function processLogin()
     {
-        $email = isset($_POST['mail']) ? trim($_POST['mail']) : '';
-        $contrasenya = isset($_POST['contrasenya']) ? $_POST['contrasenya'] : '';
+        // Permetre tant POST tradicional (formulari) com dades en format JSON (fetch)
+        $inputJSON = file_get_contents('php://input');
+        $input = json_decode($inputJSON, TRUE);
+
+        $email = !empty($_POST['mail']) ? trim($_POST['mail']) : (!empty($input['mail']) ? trim($input['mail']) : '');
+        $contrasenya = !empty($_POST['contrasenya']) ? $_POST['contrasenya'] : (!empty($input['contrasenya']) ? $input['contrasenya'] : '');
 
         $usuari = $this->model->autenticar($email, $contrasenya);
 
         if (!$usuari) {
-            if ($this->wantsJson) {
-                $errors = $this->model->getErrors();
-                $this->respondJson([
-                    'success' => false,
-                    'error' => implode(', ', $errors),
-                    'errors' => $errors
-                ], 401);
-            }
-
-            SessionModel::iniciarSessio();
-            $_SESSION['errors'] = $this->model->getErrors();
-            header('Location: ../views/login.php');
-            exit();
-        }
-
-        // Guardar l'usuari a la sessió utilitzant el SessionModel
-        SessionModel::guardarUsuari($usuari);
-        SessionModel::setFlashMessage('success', 'Sessió iniciada correctament');
-
-        if ($this->wantsJson) {
+            $errors = $this->model->getErrors();
             $this->respondJson([
-                'success' => true,
-                'message' => 'Sessió iniciada correctament.',
-                'user' => $usuari
-            ]);
+                'success' => false,
+                'error' => implode(', ', $errors),
+                'errors' => $errors
+            ], 401);
         }
 
-        // Comprovar si hi ha una URL de redirecció guardada
-        SessionModel::iniciarSessio();
-        $redirectUrl = isset($_SESSION['redirect_after_login'])
-            ? $_SESSION['redirect_after_login']
-            : '../views/protected_example.php';
+        // Generar JWT Token
+        require_once __DIR__ . '/../models/JwtService.php';
+        $token = JwtService::generateToken($usuari);
 
-        // Eliminar la URL de redirecció
-        unset($_SESSION['redirect_after_login']);
-
-        // Redirigir
-        header('Location: ' . $redirectUrl);
-        exit();
+        $this->respondJson([
+            'success' => true,
+            'message' => 'Sessió iniciada correctament.',
+            'user' => $usuari,
+            'token' => $token
+        ]);
     }
 }
 
-if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
-    new Login();
-}

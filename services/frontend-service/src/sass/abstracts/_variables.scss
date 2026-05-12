@@ -1,79 +1,87 @@
 // ─── Paleta ParkLive ───────────────────────────────────────────
-$dark-navy:   #2b2d42;
-$slate-gray:  #8d99ae;
-$off-white:   #edf2f4;
-$crimson:     #c1121f;
-$deep-red:    #780000;
-$dark-theme:  #434667;
+$dark-navy: #2b2d42;
+$slate-gray: #8d99ae;
+$off-white: #edf2f4;
+$crimson: #c1121f;
+$deep-red: #780000;
+$dark-theme: #434667;
+
+// ─── Status Colors ──────────────────────────────────────────────
+$status-confirmed-bg: #d1fae5;
+$status-confirmed-text: #065f46;
+$status-imminent-bg: #fef3c7;
+$status-imminent-text: #92400e;
+$status-in-progress-bg: rgba($dark-navy, 0.1);
+$status-in-progress-text: $dark-navy;
 
 // ─── Overrides de Bootstrap: Tema claro ───────────────────────
-$primary:     $dark-navy;
-$secondary:   $slate-gray;
-$danger:      $crimson;
-$light:       $off-white;
-$dark:        $dark-theme;
+$primary: $dark-navy;
+$secondary: $slate-gray;
+$danger: $crimson;
+$light: $off-white;
+$dark: $dark-theme;
 
 // Fondo y texto base (tema claro)
-$body-bg:           $off-white;
-$body-color:        $dark-navy;
-$body-secondary-bg: darken($off-white, 4%);  // #dde4e8 aprox.
-$body-tertiary-bg:  darken($off-white, 8%);
+$body-bg: $off-white;
+$body-color: $dark-navy;
+$body-secondary-bg: darken($off-white, 4%); // #dde4e8 aprox.
+$body-tertiary-bg: darken($off-white, 8%);
 
 // Links
-$link-color:              $crimson;
-$link-hover-color:        $deep-red;
+$link-color: $crimson;
+$link-hover-color: $deep-red;
 
 // Borders global (s'adapta via --bs-border-color en dark mode)
 $border-color: $slate-gray;
 
 // Inputs (bg, color i placeholder hereten de --bs-body-bg/color, s'adapten sols)
-$input-focus-border-color:  $crimson;
-$input-focus-box-shadow:    0 0 0 .25rem rgba($crimson, .2);
+$input-focus-border-color: $crimson;
+$input-focus-box-shadow: 0 0 0 .25rem rgba($crimson, .2);
 
 // Navbar
-$navbar-dark-color:               rgba($off-white, .85);
-$navbar-dark-hover-color:         $off-white;
-$navbar-dark-active-color:        $off-white;
-$navbar-dark-brand-color:         $off-white;
+$navbar-dark-color: rgba($off-white, .85);
+$navbar-dark-hover-color: $off-white;
+$navbar-dark-active-color: $off-white;
+$navbar-dark-brand-color: $off-white;
 $navbar-dark-toggler-border-color: rgba($off-white, .2);
 
 // Cards (bg, color i cap hereten de --bs-body-bg/color, s'adapten sols)
 
 // Botones: ajuste para que btn-secondary sea visible sobre fondo oscuro
-$btn-secondary-color:         $off-white;
-$btn-secondary-bg:            $slate-gray;
-$btn-secondary-border-color:  $slate-gray;
+$btn-secondary-color: $off-white;
+$btn-secondary-bg: $slate-gray;
+$btn-secondary-border-color: $slate-gray;
 
 // Offcanvas (menú móvil)
-$offcanvas-bg-color:    $dark-navy;
-$offcanvas-color:       $off-white;
+$offcanvas-bg-color: $dark-navy;
+$offcanvas-color: $off-white;
 $offcanvas-border-color: rgba($off-white, .15);
 
 // Alerts
-$alert-bg-scale:        -80%;
-$alert-border-scale:    -70%;
-$alert-color-scale:     40%;
+$alert-bg-scale: -80%;
+$alert-border-scale: -70%;
+$alert-color-scale: 40%;
 
 // ─── Overrides de Bootstrap: Tema oscuro ──────────────────────
-$body-bg-dark:            $dark-theme;
-$body-color-dark:         $off-white;
-$body-secondary-bg-dark:  lighten($dark-navy, 6%);   // #3c3f5a aprox.
-$body-tertiary-bg-dark:   lighten($dark-navy, 10%);
+$body-bg-dark: $dark-theme;
+$body-color-dark: $off-white;
+$body-secondary-bg-dark: lighten($dark-navy, 6%);
+$body-tertiary-bg-dark: lighten($dark-navy, 10%);
 
-$border-color-dark:       lighten($dark-navy, 15%);
+$border-color-dark: lighten($dark-navy, 15%);
 
-$link-color-dark:         lighten($crimson, 20%);
-$link-hover-color-dark:   $crimson;
+$link-color-dark: lighten($crimson, 20%);
+$link-hover-color-dark: $crimson;
 
 // ─── Theme-colors: ampliar con deep-red y mantener defaults ───
 $theme-colors: (
-  "primary":    $primary,
-  "secondary":  $secondary,
-  "success":    #198754,
-  "info":       #0dcaf0,
-  "warning":    #ffc107,
-  "danger":     $danger,
-  "light":      $light,
-  "dark":       $dark,
-  "deep-red":   $deep-red
+  "primary": $primary,
+  "secondary": $secondary,
+  "success": #198754,
+  "info": #0dcaf0,
+  "warning": #ffc107,
+  "danger": $danger,
+  "light": $light,
+  "dark": $dark,
+  "deep-red": $deep-red
 );

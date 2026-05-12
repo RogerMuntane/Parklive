@@ -20,6 +20,7 @@
     background-color: var(--bs-primary);
     color: white;
     border: none;
+
     &:hover {
       background-color: var(--bs-primary-border-subtle);
       color: white;
@@ -31,8 +32,9 @@
     color: white;
     border: none;
     font-weight: 600;
+
     &:hover {
-      background-color: darken(#c1121f, 10%); // Usant el valor de $crimson aproximat si no tenim variables-dark a mà
+      background-color: darken(#c1121f, 10%);
       color: white;
     }
   }
@@ -48,11 +50,57 @@
     width: 100%;
     border-radius: 12px;
     margin-top: 1rem;
-    z-index: 1; // Evitar que superposi a dropdowns si n'hi hagués
+    z-index: 1;
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 0.85rem;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.24);
+      text-align: center;
+      padding: 0;
+    }
+
+    .leaflet-popup-content {
+      margin: 14px 18px;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .leaflet-popup-tip {
+      box-shadow: none;
+    }
   }
+
 
   .parking-status-badge {
     font-size: 1rem;
     padding: 0.5rem 1rem;
   }
+
+  // ─── Mode Fosc ─────────────────────────────────────────
+  [data-bs-theme="dark"] & {
+    .text-primary {
+      color: #f8f9fa !important; // $off-white
+    }
+
+    .text-muted {
+      color: rgba(248, 249, 250, 0.6) !important;
+    }
+
+    .feature-icon {
+      color: #df2c38 !important; // Crimson suavitzat
+    }
+
+    .card-custom {
+      background-color: rgba(248, 249, 250, 0.02);
+      border-color: rgba(248, 249, 250, 0.1);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #f8f9fa;
+    }
+  }
+
 }

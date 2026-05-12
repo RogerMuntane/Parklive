@@ -1,3 +1,5 @@
+import { isPremiumUser } from '../../utils.js';
+
 export function initFilterPanelControls() {
   const updateRangeValues = () => {
     const priceRange = document.getElementById('priceRange');
@@ -6,11 +8,11 @@ export function initFilterPanelControls() {
     const distanceRangeValue = document.getElementById('distanceRangeValue');
 
     if (priceRange && priceRangeValue) {
-      priceRangeValue.textContent = `Hasta ${priceRange.value} €`;
+      priceRangeValue.textContent = `Fins a ${priceRange.value} €/dia`;
     }
 
     if (distanceRange && distanceRangeValue) {
-      distanceRangeValue.textContent = `Hasta ${distanceRange.value} km`;
+      distanceRangeValue.textContent = `Fins a ${distanceRange.value} km`;
     }
   };
 
@@ -32,8 +34,19 @@ export function initFilterPanelControls() {
     const vehicleOptions = document.querySelectorAll('.vehicle-option[data-vehicle]');
     vehicleOptions.forEach((option) => {
       option.addEventListener('click', () => {
-        const isActive = option.classList.toggle('active');
-        option.setAttribute('aria-pressed', String(isActive));
+        const wasActive = option.classList.contains('active');
+
+        // Remove active from all
+        vehicleOptions.forEach(opt => {
+          opt.classList.remove('active');
+          opt.setAttribute('aria-pressed', 'false');
+        });
+
+        // Toggle current
+        if (!wasActive) {
+          option.classList.add('active');
+          option.setAttribute('aria-pressed', 'true');
+        }
       });
     });
   };
@@ -49,6 +62,27 @@ export function initFilterPanelControls() {
           option.classList.remove('active');
           option.setAttribute('aria-pressed', 'false');
         });
+
+        const toggles = [
+          { cardId: 'electric-toggle', switchId: 'electric-switch', inputId: 'electricCharging' },
+          { cardId: 'accessibility-toggle', switchId: 'accessibility-switch', inputId: 'accessibility' },
+          { cardId: 'videovigilancia-toggle', switchId: 'videovigilancia-switch', inputId: 'videovigilancia' },
+          { cardId: 'favorites-toggle', switchId: 'favoritesOnly-switch', inputId: 'favoritesOnly' }
+        ];
+        toggles.forEach(({ cardId, switchId, inputId }) => {
+          const card = document.getElementById(cardId);
+          const sw = document.getElementById(switchId);
+          const input = document.getElementById(inputId);
+          if (card && sw && input) {
+            card.classList.remove('active');
+            sw.classList.remove('on');
+          }
+        });
+        
+        // Reset parking category
+        const typeAll = document.getElementById('typeAll');
+        if (typeAll) typeAll.checked = true;
+
         updateRangeValues();
       }, 0);
     });
@@ -65,10 +99,53 @@ export function initFilterPanelControls() {
     distanceRange.addEventListener('input', updateRangeValues);
   }
 
+  const setupCustomToggles = () => {
+    const toggles = [
+      { cardId: 'electric-toggle', switchId: 'electric-switch', inputId: 'electricCharging' },
+      { cardId: 'accessibility-toggle', switchId: 'accessibility-switch', inputId: 'accessibility' },
+      { cardId: 'videovigilancia-toggle', switchId: 'videovigilancia-switch', inputId: 'videovigilancia' },
+      { cardId: 'favorites-toggle', switchId: 'favoritesOnly-switch', inputId: 'favoritesOnly' }
+    ];
+
+    toggles.forEach(({ cardId, switchId, inputId }) => {
+      const card = document.getElementById(cardId);
+      const sw = document.getElementById(switchId);
+      const input = document.getElementById(inputId);
+
+      if (!card || !sw || !input) return;
+
+      const updateUI = () => {
+        if (input.checked) {
+          card.classList.add('active');
+          sw.classList.add('on');
+        } else {
+          card.classList.remove('active');
+          sw.classList.remove('on');
+        }
+      };
+
+      card.addEventListener('click', () => {
+        input.checked = !input.checked;
+        updateUI();
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+
+      // Initial state
+      updateUI();
+    });
+  };
+
   updateRangeValues();
   setupQuickChoices();
   setupVehicleOptions();
   setupFormReset();
+  setupCustomToggles();
+
+  // Hide premium-only features if user is not premium
+  if (!isPremiumUser()) {
+    const premiumOnly = document.querySelectorAll('.premium-only');
+    premiumOnly.forEach(el => el.classList.add('d-none'));
+  }
 }
 
 export function setupSearchBar({ closeFilters }) {

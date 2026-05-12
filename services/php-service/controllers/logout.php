@@ -1,23 +1,20 @@
 <?php
 
-require_once __DIR__ . '/../models/sessionModel.php';
-
 /**
- * Controlador per tancar la sessió de l'usuari
+ * Class Logout
+ * 
+ * Controlador per gestionar el tancament de sessió.
  */
 class Logout
 {
-    public function __construct()
+    /**
+     * Processa el tancament de sessió retornant una resposta JSON d'èxit.
+     * Atès que s'utilitza JWT, el tancament de sessió es gestiona principalment al client.
+     * 
+     * @return void
+     */
+    public function processLogout()
     {
-        $this->tancarSessio();
-    }
-
-    private function tancarSessio()
-    {
-        // Iniciar sessió per poder-la destruir
-        SessionModel::iniciarSessio();
-        // Tancar la sessió i eliminar la cookie
-        SessionModel::tancarSessio();
         // Retornar resposta JSON d'èxit
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'message' => 'Sessió tancada correctament']);
@@ -25,7 +22,3 @@ class Logout
     }
 }
 
-// Executar el controlador si s'accedeix directament
-if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
-    new Logout();
-}

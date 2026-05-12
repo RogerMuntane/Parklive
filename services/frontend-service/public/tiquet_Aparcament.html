@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+  <link rel="icon" type="image/png" href="./assets/images/parklive_logo_grande.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Font Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- html2pdf.js per generació de PDF amb alta fidelitat -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <title>ParkLive | Tiquet de Reserva</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Inline styles specific for the ticket -->
+</head>
+
+<body class="page page-tiquet">
+    <!-- Navbar (Amagat en impressió) -->
+    <div class="template-slot no-print" data-template="./components/header.html" aria-label="Header"></div>
+
+    <main class="flex-grow-1 py-5 d-flex align-items-center">
+
+        <!-- Skeleton per quan està carregant -->
+        <div class="container text-center" data-tiquet-state="loading">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+            <p class="text-muted">Generant tiquet de reserva...</p>
+        </div>
+
+        <!-- Contingut del Tiquet -->
+        <div class="container ticket-wrapper" data-tiquet-state="content" style="display: none;">
+
+            <div class="d-flex justify-content-between mb-3 no-print d-print-none">
+                <a href="/" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-house me-1"></i> Tornar a l'Inici
+                </a>
+                <div class="d-flex gap-2">
+                    <a href="#" id="btn-valoracio-link" class="btn btn-warning btn-sm text-dark" title="Preparant enllaç de valoració...">
+                        <i class="bi bi-star-fill me-1"></i> Deixar Valoració
+                    </a>
+                    <button class="btn btn-primary btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Descarregar PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="ticket-card">
+
+                <!-- Capçalera del Tiquet -->
+                <div class="ticket-header">
+                    <div class="success-checkmark"><i class="bi bi-check-lg"></i></div>
+                    <h4 class="fw-bold mb-1">Reserva Confirmada!</h4>
+                    <p class="mb-0 text-white-50 small">Pagament realitzat amb èxit a través de Stripe</p>
+                </div>
+
+                <!-- Detalls principals -->
+                <div class="ticket-body text-center bg-body" style="margin-top: -20px; border-radius: 12px 12px 0 0;">
+                    <div class="mb-4">
+                        <small class="text-muted text-uppercase fw-bold letter-spacing-1">Aparcament</small>
+                        <h3 class="fw-bold mb-0 text-body" data-tiquet="nom">Nom Aparcament</h3>
+                        <p class="text-muted small mb-0" data-tiquet="adreca">Adreça Aparcament</p>
+                    </div>
+
+                    <div class="row text-start g-3 mb-4">
+                        <div class="col-6 border-end">
+                            <small class="text-muted d-block text-uppercase">Entrada</small>
+                            <div class="fw-bold fs-5" data-tiquet="entrada-hora">--:--</div>
+                            <div class="small" data-tiquet="entrada-data">DD/MM/YYYY</div>
+                        </div>
+                        <div class="col-6 ps-4">
+                            <small class="text-muted d-block text-uppercase">Sortida</small>
+                            <div class="fw-bold fs-5" data-tiquet="sortida-hora">--:--</div>
+                            <div class="small" data-tiquet="sortida-data">DD/MM/YYYY</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-body-tertiary rounded p-3 text-start mb-2">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Codi de Reserva:</span>
+                            <span class="fw-bold font-monospace" data-tiquet="codi">#---</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Matrícula:</span>
+                            <span class="fw-bold text-uppercase" data-tiquet="matricula">---</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Total Pagat:</span>
+                            <span class="fw-bold text-danger fs-5" data-tiquet="total">--,-- €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Línia de tall -->
+                <div class="ticket-separator"></div>
+
+                <!-- Peu del Tiquet i QR -->
+                <div class="ticket-footer">
+                    <p class="small text-muted mb-3">Mostra aquest codi a l'entrada de l'aparcament.</p>
+
+                    <div class="qr-placeholder mb-2">
+                        <img id="tiquet-qr" src="" alt="Codi QR de la reserva" class="d-none">
+                        <!-- Spinner de càrrega del QR -->
+                        <div id="tiquet-qr-spinner" class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Carregant QR...</span>
+                        </div>
+                    </div>
+
+                    <small class="text-black-50" style="font-size: 0.70rem;">ParkLive Web App © 2026</small>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer (Amagat en impressió) -->
+    <div class="template-slot no-print" data-template="./components/footer.html" aria-label="Footer"></div>
+
+    <script src="assets/vendor/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>

@@ -32,20 +32,21 @@ export function setupMobileMapViewToggle({
 
   const syncButtonUi = () => {
     const mapVisible = document.body.classList.contains('mobile-map-view');
-    toggleBtn.textContent = mapVisible ? 'Ver resultados' : 'Ver mapa';
+    toggleBtn.textContent = mapVisible ? 'Veure resultats' : 'Veure mapa';
     toggleBtn.setAttribute('aria-pressed', String(mapVisible));
   };
 
   const restoreViewportIfNeeded = () => {
-    if (typeof ensureValidViewport === 'function') {
-      ensureValidViewport();
-      return;
-    }
-
     if (typeof map.getZoom !== 'function') return;
 
-    // If the map has been rendered while hidden, Leaflet can fallback to world zoom.
+    // Només forcem l'enquadrament si el mapa té un zoom invàlid (zoom de món).
+    // Si ja té un zoom vàlid (per exemple, per geolocalització), no fem res.
     if (map.getZoom() <= map.getMinZoom() + 0.01) {
+      if (typeof ensureValidViewport === 'function') {
+        ensureValidViewport();
+        return;
+      }
+
       if (markerGroup && markerGroup.getLayers().length > 0) {
         map.fitBounds(markerGroup.getBounds().pad(0.22));
       } else {

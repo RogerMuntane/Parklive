@@ -1,47 +1,48 @@
 <?php
-session_start();
-require_once "../models/DatabaseConnection.php";
-require_once "../models/sessionModel.php";
-require_once "../models/validarUsuari.php";
-require_once "../models/loginModel.php";
+require_once __DIR__ . "/../models/DatabaseConnection.php";
+require_once __DIR__ . "/../models/validarUsuari.php";
+require_once __DIR__ . "/../middleware/AuthMiddleware.php";
 
+/**
+ * Class UpdateProfileInfoController
+ * 
+ * Controlador per actualitzar la informació personal del perfil de l'usuari.
+ */
 class UpdateProfileInfoController
 {
+    /** @var mysqli|null La connexió a la base de dades */
     private $conexio;
 
+    /**
+     * UpdateProfileInfoController constructor.
+     */
     public function __construct()
     {
-        header('Content-Type: application/json');
-        $this->processRequest();
     }
 
-    private function processRequest()
+    /**
+     * Processa la petició d'actualització de la informació del perfil.
+     * Valida les dades d'entrada i les desa a la base de dades.
+     * 
+     * @return void
+     */
+    public function processRequest()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
             $this->respond(['success' => false, 'error' => 'Mètode no permès'], 405);
         }
 
-        // Intentar autenticació via sessió PHP
-        SessionModel::iniciarSessio();
-        $userId = null;
+        // Permetre lectura de dades via JSON també
+        $inputJSON = file_get_contents('php://input');
+        $input = json_decode($inputJSON, TRUE);
 
-        if (SessionModel::estaAutenticat()) {
-            $userId = SessionModel::obtenirIdUsuari();
-        }
+        AuthMiddleware::verificarAutenticacio();
+        $userId = AuthMiddleware::obtenirIdUsuari();
 
-        // Si no hi ha sessió PHP, intentar via user_id del cos de la petició
-        // (per a usuaris OAuth que no tenen sessió PHP)
-        if (!$userId) {
-            $userId = intval($_POST['user_id'] ?? 0);
-            if (!$userId) {
-                $this->respond(['success' => false, 'error' => 'No autenticat'], 401);
-            }
-        }
-
-        $nom    = trim($_POST['nom'] ?? '');
-        $cognom = trim($_POST['cognom'] ?? '');
-        $email  = trim($_POST['email'] ?? '');
-        $telefon = trim($_POST['telefon'] ?? '');
+        $nom    = trim($_POST['nom'] ?? ($input['nom'] ?? ''));
+        $cognom = trim($_POST['cognom'] ?? ($input['cognom'] ?? ''));
+        $email  = trim($_POST['email'] ?? ($input['email'] ?? ''));
+        $telefon = trim($_POST['telefon'] ?? ($input['telefon'] ?? ''));
 
         // Validació bàsica
         $errors = [];
@@ -76,13 +77,6 @@ class UpdateProfileInfoController
                 $this->respond(['success' => false, 'error' => 'No s\'ha pogut actualitzar el perfil.'], 500);
             }
 
-            // Actualitzar la sessió PHP si existeix
-            if (SessionModel::estaAutenticat()) {
-                $_SESSION['user']['nom']   = $nom;
-                $_SESSION['user']['cognom'] = $cognom;
-                $_SESSION['user']['email'] = $email;
-            }
-
             $this->respond([
                 'success' => true,
                 'message' => 'Perfil actualitzat correctament.',
@@ -93,14 +87,19 @@ class UpdateProfileInfoController
         }
     }
 
+    /**
+     * Envia una resposta JSON al client i finalitza l'execució.
+     * 
+     * @param array $data Dades a enviar en format JSON.
+     * @param int $status Codi d'estat HTTP (per defecte 200).
+     * @return void
+     */
     private function respond($data, $status = 200)
     {
         http_response_code($status);
+        header('Content-Type: application/json');
         echo json_encode($data);
         exit();
     }
 }
 
-if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
-    new UpdateProfileInfoController();
-}

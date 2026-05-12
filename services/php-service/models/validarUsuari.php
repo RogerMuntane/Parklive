@@ -1,11 +1,26 @@
 <?php
 
+/**
+ * Class validarUsuari
+ * 
+ * Proporciona mètodes per validar les dades d'entrada dels usuaris (nom, email, contrasenya, etc.).
+ */
 class validarUsuari
 {
+    /** @var array Llista d'errors de validació acumulats */
     private $errors = array();
 
+    /**
+     * validarUsuari constructor.
+     */
     public function __construct() {}
 
+    /**
+     * Valida el nom de l'usuari.
+     * 
+     * @param string $nom El nom a validar.
+     * @return bool Retorna true si el nom és vàlid, false en cas contrari.
+     */
     public function validarNom($nom)
     {
         if (empty($nom)) {
@@ -31,6 +46,12 @@ class validarUsuari
         return true;
     }
 
+    /**
+     * Valida el cognom de l'usuari.
+     * 
+     * @param string $cognom El cognom a validar.
+     * @return bool Retorna true si el cognom és vàlid, false en cas contrari.
+     */
     public function validarCognom($cognom)
     {
         if (empty($cognom)) {
@@ -56,6 +77,12 @@ class validarUsuari
         return true;
     }
 
+    /**
+     * Valida l'email de l'usuari.
+     * 
+     * @param string $email L'email a validar.
+     * @return bool Retorna true si l'email és vàlid, false en cas contrari.
+     */
     public function validarEmail($email)
     {
         if (empty($email)) {
@@ -76,6 +103,13 @@ class validarUsuari
         return true;
     }
 
+    /**
+     * Valida la contrasenya de l'usuari i la seva confirmació.
+     * 
+     * @param string $contrasenya1 La contrasenya principal.
+     * @param string $contrasenya2 La confirmació de la contrasenya.
+     * @return bool Retorna true si la contrasenya és vàlida i coincideixen, false en cas contrari.
+     */
     public function validarContrasenya($contrasenya1, $contrasenya2)
     {
         if (empty($contrasenya1)) {
@@ -121,6 +155,12 @@ class validarUsuari
         return true;
     }
 
+    /**
+     * Valida el format de la contrasenya per al login.
+     * 
+     * @param string $contrasenya La contrasenya a validar.
+     * @return bool Retorna true si la contrasenya té un format vàlid per al login.
+     */
     public function validarContrasenyaLogin($contrasenya)
     {
         if (empty($contrasenya)) {
@@ -141,6 +181,12 @@ class validarUsuari
         return true;
     }
 
+    /**
+     * Valida el número de telèfon.
+     * 
+     * @param string $telefono El número de telèfon a validar.
+     * @return bool Retorna true si el telèfon és vàlid o està buit, false en cas contrari.
+     */
     public function validarTelefono($telefono)
     {
         // El telèfon és opcional; si s'omple, ha de tenir exactament 9 dígits
@@ -156,6 +202,17 @@ class validarUsuari
         return true;
     }
 
+    /**
+     * Valida totes les dades d'un formulari de registre.
+     * 
+     * @param string $nom Nom de l'usuari.
+     * @param string $cognom Cognom de l'usuari.
+     * @param string $email Email de l'usuari.
+     * @param string $contrasenya1 Contrasenya principal.
+     * @param string $contrasenya2 Confirmació de la contrasenya.
+     * @param string $telefono Telèfon de l'usuari.
+     * @return bool Retorna true si totes les dades són vàlides, false si n'hi ha alguna d'incorrecta.
+     */
     public function validarTots($nom, $cognom, $email, $contrasenya1, $contrasenya2, $telefono)
     {
         $esValid = true;
@@ -183,13 +240,24 @@ class validarUsuari
         return $esValid;
     }
 
+    /**
+     * Obté la llista d'errors de validació acumulats.
+     * 
+     * @return array Llista d'errors.
+     */
     public function getErrors()
     {
         return $this->errors;
     }
 
+    /**
+     * Neteja la llista d'errors acumulats.
+     * 
+     * @return void
+     */
     public function clearErrors()
     {
         $this->errors = array();
     }
 }
+

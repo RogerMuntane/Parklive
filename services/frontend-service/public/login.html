@@ -2,6 +2,7 @@
 <html lang="es">
 
 <head>
+  <link rel="icon" type="image/png" href="./assets/images/parklive_logo_grande.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Acceso a ParkLive para gestionar el parking.">
@@ -45,7 +46,7 @@
                 <p class="text-muted text-center small mb-4">Accedeix al teu panell de gestió ParkLive.</p>
 
                 <!-- Formulari -->
-                <form class="form form-auth" action="/api/auth/login" method="post" novalidate>
+                <form class="form form-auth" action="/api/login" method="post" novalidate>
                     <!-- Email -->
                     <div class="input-group mb-3 input-group-focus">
                         <span class="input-group-text bg-body border-end-0">
@@ -70,7 +71,7 @@
 
                     <!-- Forgot password -->
                     <div class="text-end mb-4">
-                        <a class="text-decoration-none small text-muted" href="reset-password.html">Has oblidat la
+                        <a class="text-decoration-none small text-muted" href="reset-password">Has oblidat la
                             contrasenya?</a>
                     </div>
 
@@ -93,15 +94,11 @@
                         data-action="google-login" aria-label="Iniciar sessió amb Google">
                         <i class="bi bi-google"></i>
                     </button>
-                    <button class="btn btn-outline-secondary btn-lg rounded-pill px-4" type="button"
-                        aria-label="Iniciar sessió amb Apple">
-                        <i class="bi bi-apple"></i>
-                    </button>
                 </div>
 
                 <!-- Link a registre -->
                 <p class="text-center text-muted small mb-0 mt-3">
-                    No tens compte? <a class="fw-semibold text-decoration-none" href="register.html">Crea'n un</a>
+                    No tens compte? <a class="fw-semibold text-decoration-none" href="register">Crea'n un</a>
                 </p>
             </div>
         </div>

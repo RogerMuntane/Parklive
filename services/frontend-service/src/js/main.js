@@ -20,7 +20,7 @@ async function loadTemplates() {
     const url = slot.getAttribute('data-template');
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(`${url}?v=${Date.now()}`);
 
       if (!response.ok) {
         console.error(`[ParkLive] Error carregant plantilla "${url}": ${response.status}`);
@@ -85,9 +85,10 @@ function initThemeToggle() {
 
 /*  3. BOTÓ AUTH DEL HEADER (SESSIÓ)                                   */
 
-import { isAuthenticated, clearUserSession } from './utils.js';
+import { isAuthenticated, clearUserSession, getUserId, isPremiumUser } from './utils.js';
 import { phpApi } from './api.js';
 import { logoutUser } from './controllers/auth.controller.js';
+import { PHP_API_URL } from './config.js';
 
 /**
  * Comprova si l'usuari té la sessió iniciada.
@@ -129,8 +130,8 @@ function initAuthToggle() {
     newBtn.setAttribute('data-bs-toggle', 'dropdown');
     newBtn.setAttribute('aria-expanded', 'false');
 
-    // // L'usuari autenticat per email ha d'anar a perfil.html, l'OAuth també
-    // newBtn.setAttribute('href', '/perfil.html');
+    // // L'usuari autenticat per email ha d'anar a perfil, l'OAuth també
+    // newBtn.setAttribute('href', '/perfil');
 
     // Afegir fletxa animada
     let arrowIcon = newBtn.querySelector('.user-dropdown-arrow');
@@ -157,7 +158,7 @@ function initAuthToggle() {
     let profileItem = document.createElement('li');
     let profileLink = document.createElement('a');
     profileLink.classList.add('dropdown-item', 'text-primary');
-    profileLink.href = '/perfil.html';
+    profileLink.href = '/perfil';
     profileLink.textContent = 'Perfil d\'usuari';
     profileItem.appendChild(profileLink);
     dropdownMenu.appendChild(profileItem);
@@ -171,7 +172,7 @@ function initAuthToggle() {
     logoutLink.addEventListener('click', async (e) => {
       e.preventDefault();
       // Utilitza la funció centralitzada de logout
-      await logoutUser('/index.html');
+      await logoutUser('/');
     });
     logoutItem.appendChild(logoutLink);
     dropdownMenu.appendChild(logoutItem);
@@ -201,7 +202,140 @@ function initAuthToggle() {
   }
 }
 
-/*  4. CÀRREGA DINÀMICA DE CONTROLADORS                                */
+/**
+ * Actualitza el nom i el pla de l'usuari al sidebar si existeix.
+ */
+function initSidebarData() {
+  const nameEl = document.getElementById('sidebar-user-name');
+  const planEl = document.getElementById('sidebar-user-plan');
+  if (!nameEl || !planEl) return;
+
+  try {
+    const raw = sessionStorage.getItem('parklive_user_data');
+    if (!raw) return;
+
+    const user = JSON.parse(raw);
+
+    // El nom pot venir en diferents formats segons si és OAuth o normal
+    const firstName = user.nom || user.given_name || (user.name ? user.name.split(' ')[0] : '');
+    const lastName = user.cognom || user.cognoms || user.family_name || (user.name ? user.name.split(' ').slice(1).join(' ') : '');
+
+    nameEl.textContent = `${firstName} ${lastName}`.trim() || 'Usuari';
+
+    // Mapeig de noms de plans per a la interfície
+    const plans = {
+      'basic': 'Bàsic',
+      'premium': 'Premium',
+      'operador': 'Operador',
+      'admin': 'Admin'
+    };
+
+    const rawPlan = (user.tipus_usuari || 'basic').toLowerCase();
+    planEl.textContent = plans[rawPlan] || rawPlan.charAt(0).toUpperCase() + rawPlan.slice(1);
+
+    // Actualitzar estils del badge segons el pla
+    const badge = document.getElementById('sidebar-user-plan-badge');
+    const badgeIcon = badge?.querySelector('i');
+
+    if (rawPlan === 'premium') {
+      badge?.classList.remove('text-danger');
+      badge?.classList.add('text-warning');
+      badge.style.background = 'rgba(255, 193, 7, 0.15)'; // Or similar gold color
+      if (badgeIcon) badgeIcon.className = 'bi bi-star-fill';
+    } else if (rawPlan === 'admin' || rawPlan === 'operador') {
+      badge?.classList.remove('text-danger');
+      badge?.classList.add('text-info');
+      badge.style.background = 'rgba(13, 202, 240, 0.15)';
+      if (badgeIcon) badgeIcon.className = 'bi bi-shield-check';
+    } else {
+      // Bàsic / per defecte
+      badge?.classList.add('text-danger');
+      badge.style.background = 'rgba(193, 18, 31, 0.15)';
+      if (badgeIcon) badgeIcon.className = 'bi bi-person-badge';
+    }
+
+    // Actualitzar avatar si existeix
+    if (user.foto_perfil) {
+      const avatarContainer = document.getElementById('sidebar-avatar-container');
+      if (avatarContainer) {
+        const imageUrl = `${PHP_API_URL}/storage/profiles/${user.foto_perfil}`;
+        avatarContainer.innerHTML = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
+      }
+    }
+
+  } catch (err) {
+    console.warn('[ParkLive] Error al carregar dades del sidebar:', err);
+  }
+}
+
+/*  4. AUTH GUARD – Protecció de pàgines privades                     */
+
+/**
+ * Llista de classes `body` que requereixen que l'usuari estigui autenticat.
+ * Si la pàgina actual conté alguna d'aquestes classes i l'usuari no té sessió,
+ * se'l redirigeix immediatament a login sense carregar cap controlador.
+ */
+const PROTECTED_PAGES = [
+  'page-dashboard',
+  'page-profile',
+  'page-reserva-aparcament',
+  'page-tiquet',
+  'page-nova-valoracio',
+  'page-report-disponibilitat',
+];
+
+/**
+ * Comprova si la pàgina actual és protegida i, si l'usuari no té sessió,
+ * oculta el contingut i redirigeix a login.
+ * Retorna `true` si cal bloquejar l'execució (no autenticat a pàgina protegida).
+ */
+function applyAuthGuard() {
+  const bodyClass = document.body.className;
+  const isProtected = PROTECTED_PAGES.some((cls) => bodyClass.includes(cls));
+
+  if (!isProtected) return false; // Pàgina pública, no cal fer res
+
+  if (isAuthenticated()) return false; // Usuari autenticat, accés permès
+
+  // Usuari NO autenticat a pàgina protegida → bloquejar i redirigir
+  // Ocultar tot el body per evitar el "flash" de contingut
+  document.body.style.visibility = 'hidden';
+  const redirectTarget = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  console.warn(`[ParkLive] Auth Guard: accés denegat a "${window.location.pathname}". Redirigint a login...`);
+  window.location.replace(redirectTarget);
+  return true; // Bloquejar la resta de la inicialització
+}
+
+/*  4b. ROLE GUARD – Protecció de seccions privades per rol            */
+
+/**
+ * Obté el rol de l'usuari de la sessió actual.
+ * @returns {'admin'|'operador'|'premium'|'basic'|null}
+ */
+function getUserRole() {
+  try {
+    const raw = sessionStorage.getItem('parklive_user_data');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return (user.tipus_usuari || 'basic').toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Comprova si l'usuari té el rol requerit.
+ * @param {string} requiredRole - Rol mínim requerit ('admin', 'operador', etc.)
+ * @returns {boolean}
+ */
+function hasRole(requiredRole) {
+  const role = getUserRole();
+  if (requiredRole === 'admin') return role === 'admin';
+  if (requiredRole === 'operador') return role === 'admin' || role === 'operador';
+  return role !== null; // Qualsevol usuari autenticat
+}
+
+/*  5. CÀRREGA DINÀMICA DE CONTROLADORS                                */
 
 /**
  * Toggle de visibilitat de contrasenyes.
@@ -239,32 +373,81 @@ async function initControllers() {
   try {
     // ── Pàgines d'autenticació (login, registre, reset) ────────
     if (bodyClass.includes('page-auth')) {
-      const { initAuth } = await import('./controllers/auth.controller.js');
+      const { initAuth } = await import(new URL('./controllers/auth.controller.js', import.meta.url).href);
       initAuth();
     }
 
-    // ── Dashboard (aparcaments, reserves, contribucions) ────────
+    // ── Dashboard (aparcaments, reserves) ────────
     if (bodyClass.includes('page-dashboard')) {
-      // Carregar els tres controladors en paral·lel
+      // Carregar els dos controladors en paral·lel
       const [
         { initAparcaments },
         { initReserves },
-        { initContribucions },
       ] = await Promise.all([
-        import('./controllers/aparcament.controller.js'),
-        import('./controllers/reserves.controller.js'),
-        import('./controllers/contribucions.controller.js'),
+        import(new URL('./controllers/aparcament.controller.js', import.meta.url).href),
+        import(new URL('./controllers/reserves.controller.js', import.meta.url).href),
       ]);
 
       initAparcaments();
       initReserves();
-      initContribucions();
     }
 
     // ── Pàgina Landing (mapa, filtres, responsive map view) ─────
     if (bodyClass.includes('page-landing')) {
-      const { initLanding } = await import('./controllers/landing.controller.js');
+      const { initLanding } = await import(new URL(`./controllers/landing.controller.js?v=${Date.now()}`, import.meta.url).href);
       initLanding();
+    }
+
+    // ── Detall d'aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-detall-aparcament')) {
+      const { initDetallAparcament } = await import(new URL(`./controllers/detall.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initDetallAparcament();
+    }
+
+    // ── Reseva d'aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-reserva-aparcament')) {
+      const { initReservaAparcament } = await import(new URL(`./controllers/reserva_aparcament.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initReservaAparcament();
+    }
+
+    // ── Tiquet d'Aparcament ───────────────────────────────────
+    if (bodyClass.includes('page-tiquet')) {
+      const { initTiquetAparcament } = await import(new URL(`./controllers/tiquet.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initTiquetAparcament();
+    }
+
+    // ── Report de plaça en carrer ───────────────────────────────
+    if (bodyClass.includes('page-report-disponibilitat')) {
+      const { initReportDisponibilitat } = await import(new URL('./controllers/report-disponibilitat.controller.js', import.meta.url).href);
+      initReportDisponibilitat();
+    }
+
+    // ── Contacte ────────────────────────────────────────────────
+    if (bodyClass.includes('page-contacte')) {
+      const { initContacte } = await import(new URL(`./controllers/contacte.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initContacte();
+    }
+
+    // ── FAQ ────────────────────────────────────────────────
+    if (bodyClass.includes('page-faq')) {
+      const { initFaq } = await import(new URL(`./controllers/faq.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initFaq();
+    }
+
+    // ── Blog ───────────────────────────────────────────────
+    if (bodyClass.includes('page-blog')) {
+      const { initBlogList } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initBlogList();
+    }
+    if (bodyClass.includes('page-blog-detall')) {
+      const { initBlogDetail } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initBlogDetail();
+    }
+    
+    // ── Nova Valoració ───────────────────────────────────────────────
+    if (bodyClass.includes('page-nova-valoracio')) {
+      const { initNovaValoracio } = await import(new URL(`./controllers/nova_valoracio.controller.js?v=${Date.now()}`, import.meta.url).href);
+      initNovaValoracio();
     }
 
   } catch (err) {
@@ -275,7 +458,14 @@ async function initControllers() {
 /*  Carreguem els elements                                                          */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // ── Auth Guard: primer de tot, abans de carregar res ──────────────
+  // Aplica el tema immediatament per evitar flash blanc/negre
+  applyTheme(getPreferredTheme());
+
+  if (applyAuthGuard()) return; // Redirigeix i para l'execució
+
   await loadTemplates();
+  initSidebarData();
 
   // Crida initAuthToggle després de carregar templates (header)
   initAuthToggle();
@@ -286,11 +476,86 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initControllers();
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
-  if (document.body.classList.contains('page-profile')) {
-    const { initProfilePasswordForm, initProfileInfoForm, initProfileInfoSaveForm } = await import('./controllers/profile.controller.js');
+    if (document.body.classList.contains('page-profile')) {
+    const {
+      initProfilePasswordForm,
+      initProfileInfoForm,
+      initProfileInfoSaveForm,
+      initProfilePlanSection,
+      initProfileHistorySection,
+      initProfileTicketsSection,
+      initProfileFavoritesSection,
+      initProfileImageUpload,
+      initProfilePointsSection
+    } = await import(new URL('./controllers/profile.controller.js', import.meta.url).href);
+    const { initReserves } = await import(new URL('./controllers/reserves.controller.js', import.meta.url).href);
+    const { initAdminUserCRUD } = await import(new URL('./controllers/profile-admin.controller.js', import.meta.url).href);
+    const { initAdminParkingCRUD } = await import(new URL('./controllers/profile-admin-aparcaments.controller.js', import.meta.url).href);
+    const { initAdminBlog } = await import(new URL('./controllers/profile-admin-blog.controller.js', import.meta.url).href);
+
     initProfilePasswordForm();
     initProfileInfoForm();
+    initProfileImageUpload();
     initProfileInfoSaveForm();
+    initProfilePlanSection();
+    initProfileHistorySection();
+    initProfileTicketsSection();
+    // Favorits: només es carrega el component complet per a usuaris premium
+    if (isPremiumUser()) {
+      initProfileFavoritesSection();
+    } else {
+      // Per a usuaris bàsics, mostrar un CTA dins la secció de favorits
+      const favListEl = document.getElementById('favorites-list');
+      if (favListEl) {
+        favListEl.innerHTML = `
+          <div class="text-center py-5">
+            <i class="bi bi-lock-fill fs-2 text-muted d-block mb-3"></i>
+            <h5 class="fw-bold mb-2">Funció exclusiva Premium</h5>
+            <p class="text-body-secondary small mb-4">Guarda els teus aparcaments preferits i accedeix-hi ràpidament en qualsevol moment.</p>
+            <button class="btn btn-danger rounded-pill px-4" id="btn-upgrade-from-favorites">
+              <i class="bi bi-rocket-takeoff me-2"></i>Millorar a Premium
+            </button>
+          </div>
+        `;
+        document.getElementById('btn-upgrade-from-favorites')?.addEventListener('click', () => {
+          const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
+          if (planBtn) planBtn.click();
+        });
+      }
+    }
+    initReserves();
+
+    // Només inicialitzar controladors d'admin si l'usuari és admin o operador
+    if (hasRole('admin')) {
+      initAdminUserCRUD();
+    }
+    if (hasRole('operador')) {
+      initAdminParkingCRUD();
+      initAdminBlog();
+    }
+
+    // Estadístiques: es carreguen de manera LAZY quan l'usuari accedeix a la secció.
+    // No es pre-carreguen en inicialitzar la pàgina per evitar peticions innecessàries.
+
+    // Punts i recompenses només per a usuaris (no admin)
+    if (getUserRole() !== 'admin') {
+      initProfilePointsSection();
+    }
+
+    // Integració Stripe
+    const userId = getUserId();  // sessionStorage → 'parklive_user_id'
+    if (userId) {
+      import(new URL('./controllers/stripe.controller.js', import.meta.url).href).then(async (module) => {
+        // Inicialitzar instància de Stripe
+        await module.initStripe(userId);
+        // Carregar targetes existents
+        const methods = await module.loadPaymentMethods(userId);
+        // Vincular botó "Afegir nova targeta"
+        module.initStripeButton(userId);
+        // Actualitzar resum del pla passant les targetes ja carregades
+        await module.updatePlanSummary(userId, methods);
+      }).catch(err => console.error('[ParkLive] Error carregant stripe-integration:', err));
+    }
   }
 
   // Wait for sidebar to be loaded
@@ -301,35 +566,131 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sectionTitles = {
       info: 'Informació personal',
       password: 'Canviar contrasenya',
+      reservations: 'Les Teves Reserves Actives',
       history: 'Historial',
+      favorites: 'Aparcaments favorits',
       payment: 'Mètode de pagament',
       plan: 'Millorar el pla',
-      notifications: 'Notificacions',
+      manage: 'Gestionar subscripció',
+      // notifications: 'Notificacions',
+      'admin-users': 'Admin: Gestió d\'Usuaris',
+      'admin-parkings': 'Admin: Gestió d\'Aparcaments',
+      'admin-blog': 'Admin: Gestió del Blog',
+      stadistics: 'Les teves estadístiques',
+      points: 'Canviar punts per recompenses'
     };
     sidebarBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const sec = btn.dataset.section;
         if (sec === 'logout') {
-          if (confirm('Tancar sessió?')) window.location.href = '/index.html';
+          logoutUser('/');
           return;
         }
         sidebarBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         sections.forEach(s => s.classList.remove('active'));
+        
         const target = document.getElementById('section-' + sec);
-        if (target) target.classList.add('active');
+        if (target) {
+          // Reset animació per permetre que es torni a reproduir
+          target.style.animation = 'none';
+          void target.offsetWidth; // Force reflow
+          target.style.animation = null;
+          
+          target.classList.add('active');
+
+          // Si entrem a estadístiques:
+          // - Primera vegada: inicialitzem (fetch + render + skeleton)
+          // - Visites posteriors: re-animem les gràfiques existents
+          if (sec === 'stadistics' && getUserRole() === 'premium') {
+            const estadistiquesModule = await import(new URL('./controllers/estadistiques.controller.js', import.meta.url).href);
+            const container = document.getElementById('chart-despesa-mensual');
+            const jaInicialitzat = container && container.querySelector('.apexcharts-canvas');
+            if (jaInicialitzat) {
+              estadistiquesModule.refreshEstadistiques();
+            } else {
+              estadistiquesModule.initEstadistiques();
+            }
+          }
+        }
         if (sectionTitle) sectionTitle.textContent = sectionTitles[sec] || '';
       });
     });
+    
+    // Suport per a enllaços directes a seccions via URL (?section=XXX o ?upgrade=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const sectionParam = urlParams.get('section');
+    const isUpgrade = urlParams.get('upgrade') === '1';
+    
+    if (isUpgrade) {
+      const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
+      if (planBtn) planBtn.click();
+    } else if (sectionParam) {
+      const targetBtn = document.querySelector(`.sidebar-nav-item[data-section="${sectionParam}"]`);
+      if (targetBtn) targetBtn.click();
+    }
 
     // Oculta el botó de sidebar si la secció de contrasenya està oculta o si l'usuari és OAuth
     const passwordSection = document.getElementById('section-password');
     const passwordBtn = document.querySelector('.sidebar-nav-item[data-section="password"]');
     const isOAuth = sessionStorage.getItem('parklive_oauth') === 'google';
-    console.log('[ParkLive] OAuth a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
-    console.log('[ParkLive] isOAuth:', isOAuth);
     if ((passwordSection && passwordSection.style.display === 'none') || isOAuth) {
       if (passwordBtn) passwordBtn.style.display = 'none';
+    }
+
+    // Oculta la pestanya "Millorar el pla" o "Gestionar subscripció" depenent si s'és premium
+    const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
+    const manageBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
+    const stadisticsBtn = document.querySelector('.sidebar-nav-item[data-section="stadistics"]');
+
+    try {
+      const storedUserData = sessionStorage.getItem('parklive_user_data');
+      if (storedUserData) {
+        const userData = JSON.parse(storedUserData);
+        if (userData.tipus_usuari === 'premium') {
+          if (planBtn) planBtn.style.display = 'none';
+        } else {
+          if (manageBtn) manageBtn.style.display = 'none';
+          if (stadisticsBtn) stadisticsBtn.style.display = 'none';
+          // Ocultar elements premium per a usuaris no premium (sidebar, filtres, etc.)
+          document.querySelectorAll('.premium-only').forEach(el => {
+            el.style.display = 'none';
+          });
+        }
+
+        // Amagar botó de punts per a administradors i operadors (només per a usuaris)
+        const pointsBtn = document.querySelector('.sidebar-nav-item[data-section="points"]');
+        if ((userData.tipus_usuari === 'admin' || userData.tipus_usuari === 'operador') && pointsBtn) {
+          pointsBtn.style.display = 'none';
+        }
+
+        // Mostrar opcions d'administrador i ocultar coses d'usuari
+        if (userData.tipus_usuari === 'admin' || userData.tipus_usuari === 'operador') {
+          if (userData.tipus_usuari === 'admin') {
+            document.querySelectorAll('.admin-only').forEach(el => {
+              el.classList.remove('d-none');
+            });
+          }
+
+          if (userData.tipus_usuari === 'operador') {
+            const opParkings = document.querySelector('.sidebar-nav-item[data-section="admin-parkings"]');
+            const opBlog = document.querySelector('.sidebar-nav-item[data-section="admin-blog"]');
+            if (opParkings) opParkings.classList.remove('d-none');
+            if (opBlog) opBlog.classList.remove('d-none');
+          }
+
+          // Ocultar seccions que l'admin o operador no necessiten (reserves, historial, pagaments, estadístiques, favorits, etc.)
+          const sectionsToHide = ['reservations', 'history', 'payment', 'plan', 'manage', 'notifications', 'stadistics', 'favorites', 'points'];
+          sectionsToHide.forEach(sec => {
+            const btn = document.querySelector(`.sidebar-nav-item[data-section="${sec}"]`);
+            if (btn) btn.style.display = 'none';
+          });
+        }
+      } else {
+        if (manageBtn) manageBtn.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('[ParkLive] Error parsejant dades usuari per ocultar pla:', e);
     }
   }, 100);
 });

@@ -6,6 +6,31 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 
+def _repair_mojibake_text(value):
+    """Intenta reparar textos UTF-8 mal interpretados como latin1/cp1252."""
+    if not isinstance(value, str):
+        return value
+
+    # Heurística: patrones típicos de mojibake en catalán/español.
+    suspicious_markers = ('Ã', 'Â', 'â€', 'ðŸ')
+    if not any(marker in value for marker in suspicious_markers):
+        return value
+
+    # Intento principal: bytes latin1 que realmente eran UTF-8.
+    try:
+        repaired = value.encode('latin-1').decode('utf-8')
+        return repaired
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        pass
+
+    # Fallback cp1252 -> utf8 para algunos dumps exportados en Windows.
+    try:
+        repaired = value.encode('cp1252').decode('utf-8')
+        return repaired
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return value
+
+
 def serialize_value(value):
     """
     Converteix un valor a un format serialitzable per JSON
@@ -29,6 +54,8 @@ def serialize_value(value):
         return float(value)
     elif isinstance(value, bytes):
         return value.decode('utf-8')
+    elif isinstance(value, str):
+        return _repair_mojibake_text(value)
     elif value is None:
         return None
     return value

@@ -3,19 +3,38 @@
 require_once __DIR__ . '/DatabaseConnection.php';
 require_once "validarUsuari.php";
 
+/**
+ * Class LoginModel
+ * 
+ * Gestiona les operacions d'autenticació i gestió de credencials d'usuaris.
+ */
 class LoginModel
 {
-
-
+    /** @var validarUsuari Objecte validador per comprovar dades d'entrada */
     private $validador;
+
+    /** @var array Llista d'errors produïts durant les operacions */
     private $errors = array();
+
+    /** @var mysqli|null La connexió a la base de dades */
     private $conexio;
 
+    /**
+     * LoginModel constructor.
+     * Inicialitza el validador d'usuaris.
+     */
     public function __construct()
     {
         $this->validador = new validarUsuari();
     }
 
+    /**
+     * Autentica un usuari comprovant el seu email i contrasenya.
+     * 
+     * @param string $email Email de l'usuari.
+     * @param string $contrasenya Contrasenya en text pla.
+     * @return array|null Retorna les dades de l'usuari si l'autenticació és correcta, null en cas contrari.
+     */
     public function autenticar($email, $contrasenya)
     {
         $this->errors = array();
@@ -48,6 +67,11 @@ class LoginModel
         return $usuari;
     }
 
+    /**
+     * Estableix la connexió amb la base de dades.
+     * 
+     * @return bool Retorna true si s'ha connectat correctament, false en cas contrari.
+     */
     private function conectarBaseDades()
     {
         try {
@@ -59,6 +83,12 @@ class LoginModel
         }
     }
 
+    /**
+     * Obté les dades d'un usuari mitjançant el seu email.
+     * 
+     * @param string $email Email de l'usuari.
+     * @return array|null Retorna les dades de l'usuari o null si no es troba.
+     */
     private function obtenirUsuariPerEmail($email)
     {
         $stmt = $this->conexio->prepare("CALL sp_obtenir_usuari_per_email(?)");
@@ -78,7 +108,10 @@ class LoginModel
     }
 
     /**
-     * Obté l'usuari per ID
+     * Obté l'usuari pel seu ID.
+     * 
+     * @param int $id ID de l'usuari.
+     * @return array|null Dades de l'usuari o null.
      */
     public function getUserById($id)
     {
@@ -96,7 +129,11 @@ class LoginModel
     }
 
     /**
-     * Actualitza la contrasenya per ID d'usuari
+     * Actualitza la contrasenya d'un usuari per ID.
+     * 
+     * @param int $id ID de l'usuari.
+     * @param string $hashNova Nou hash de la contrasenya.
+     * @return bool Retorna true si s'ha actualitzat correctament, false si no.
      */
     public function updatePassword($id, $hashNova)
     {
@@ -125,11 +162,20 @@ class LoginModel
         return $ok;
     }
 
+    /**
+     * Obté la llista d'errors acumulats.
+     * 
+     * @return array Llista d'errors.
+     */
     public function getErrors()
     {
         return $this->errors;
     }
 
+    /**
+     * LoginModel destructor.
+     * Tanca la connexió a la base de dades si està oberta.
+     */
     public function __destruct()
     {
         if ($this->conexio) {
@@ -137,3 +183,4 @@ class LoginModel
         }
     }
 }
+

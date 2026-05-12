@@ -1,33 +1,39 @@
 const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
 const MIN_ZOOM = 4;
+const OPEN_AIR_BASE_RADIUS_METERS = 45;
+const REPORT_DISPONIBILITAT_MARKER_RADIUS = 7;
 
-const PARKING_SPOTS = [
-  {
-    id: 'parklive-centro',
-    name: 'ParkLive Centro',
-    coords: [41.3874, 2.1692],
-    price: '2,80 €/h',
-    distance: '650 m',
-    status: 'Disponible',
-  },
-  {
-    id: 'parklive-rambla',
-    name: 'ParkLive Rambla',
-    coords: [41.3818, 2.173],
-    price: '3,10 €/h',
-    distance: '1,1 km',
-    status: 'Pocas plazas',
-  },
-  {
-    id: 'parklive-sagrada',
-    name: 'ParkLive Sagrada',
-    coords: [41.4035, 2.1742],
-    price: '2,40 €/h',
-    distance: '2,0 km',
-    status: 'Disponible',
-  },
-];
+function escapeHtml(value) {
+  if (!value) return '';
+  const div = document.createElement('div');
+  div.textContent = value;
+  return div.innerHTML;
+}
+
+function isOpenAirParking(spot) {
+  return spot?.raw?.tipus === 'aire_lliure';
+}
+
+function computeOpenAirRadius(spot) {
+  const totalCapacity = Number(spot?.raw?.capacitat_total);
+  if (!Number.isFinite(totalCapacity) || totalCapacity <= 0) {
+    return OPEN_AIR_BASE_RADIUS_METERS;
+  }
+
+  return Math.max(35, Math.min(95, Math.round(Math.sqrt(totalCapacity) * 3.2)));
+}
+
+function normalizeLatLng(leaflet, location) {
+  const lat = Number(location?.lat);
+  const lon = Number(location?.lon);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null;
+  }
+
+  return leaflet.latLng(lat, lon);
+}
 
 export function initLandingMap() {
   const mapElement = document.getElementById('map');
@@ -48,13 +54,41 @@ export function initLandingMap() {
       zoomDelta: 0.25,
       wheelPxPerZoomLevel: 90,
       wheelDebounceTime: 30,
+      worldCopyJump: true,
     })
     .setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
   globalThis.map = map;
 
-  leaflet.control.zoom({ position: 'bottomright' }).addTo(map);
+  // Afegim els controls en l'ordre que quedi l'escala a sota de tot
   leaflet.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+  leaflet.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  let locateMeHandler = null;
+  let userLocationMarker = null;
+
+  const locateControl = leaflet.control({ position: 'bottomright' });
+  locateControl.onAdd = () => {
+    const container = leaflet.DomUtil.create('div', 'leaflet-bar map-locate-control');
+    const button = leaflet.DomUtil.create('button', 'map-locate-control__button', container);
+
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Anar a la meva ubicació');
+    button.setAttribute('title', 'Anar a la meva ubicació');
+    button.innerHTML = '<i class="bi bi-crosshair"></i>';
+
+    leaflet.DomEvent.disableClickPropagation(container);
+    leaflet.DomEvent.disableScrollPropagation(container);
+
+    button.addEventListener('click', () => {
+      if (typeof locateMeHandler === 'function') {
+        locateMeHandler();
+      }
+    });
+
+    return container;
+  };
+  locateControl.addTo(map);
 
   leaflet.control
     .attribution({ position: 'bottomleft', prefix: false })
@@ -63,7 +97,7 @@ export function initLandingMap() {
 
   leaflet
     .tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       {
         subdomains: 'abcd',
         minZoom: MIN_ZOOM,
@@ -83,33 +117,226 @@ export function initLandingMap() {
     popupAnchor: [0, -14],
   });
 
-  const parkingMarkers = new Map();
-
-  PARKING_SPOTS.forEach((parking) => {
-    const marker = leaflet.marker(parking.coords, { icon: parkingIcon });
-
-    marker.bindPopup(
-      `
-        <div class="parking-popup">
-          <strong class="d-block mb-1 small fw-semibold">${parking.name}</strong>
-          <p class="mb-2 small text-body-secondary">${parking.price} · ${parking.distance}</p>
-          <span class="badge text-bg-success">${parking.status}</span>
-        </div>
-      `,
-      {
-        closeButton: false,
-        autoPanPadding: [30, 30],
-      },
-    );
-
-    marker.addTo(map);
-    parkingMarkers.set(parking.id, marker);
+  const userLocationIcon = leaflet.divIcon({
+    className: 'user-location-marker-wrapper',
+    html: `
+      <span class="user-location-marker" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="user-location-marker__icon" role="img" focusable="false">
+          <path d="M12 2.5c-3.58 0-6.5 2.92-6.5 6.5 0 4.64 6.5 12.5 6.5 12.5s6.5-7.86 6.5-12.5c0-3.58-2.92-6.5-6.5-6.5Zm0 9.2a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Z" />
+        </svg>
+      </span>
+    `,
+    iconSize: [28, 36],
+    iconAnchor: [14, 34],
+    popupAnchor: [0, -30],
   });
 
-  const markerGroup = leaflet.featureGroup(Array.from(parkingMarkers.values()));
+  const parkingMarkers = new Map();
+  const markerGroup = leaflet.featureGroup().addTo(map);
+  const reportDisponibilitatLayer = leaflet.layerGroup().addTo(map);
+  const userLocationLayer = leaflet.layerGroup().addTo(map);
+
+  const updateMarkerGroup = () => {
+    markerGroup.clearLayers();
+    parkingMarkers.forEach((marker) => {
+      markerGroup.addLayer(marker);
+    });
+  };
+
+  const renderStreetReportPopup = (report) => {
+    const statusLabel = report.status === 'occupied' ? 'Ocupada' : 'Disponible';
+    const createdAtDate = Date.parse(report.created_at);
+    const createdAtLabel = Number.isFinite(createdAtDate)
+      ? new Date(createdAtDate).toLocaleString('ca-ES')
+      : 'Ara mateix';
+    const comment = String(report.comment || '').trim();
+
+    return `
+      <div class="parking-popup">
+        <strong class="d-block mb-1 small fw-semibold">Contribució ciutadana</strong>
+        <p class="mb-1 small text-body-secondary">Estat reportat: ${escapeHtml(statusLabel)}</p>
+        ${comment ? `<p class="mb-1 small text-body">${escapeHtml(comment)}</p>` : ''}
+        <span class="small text-body-secondary">${escapeHtml(createdAtLabel)}</span>
+      </div>
+    `;
+  };
+
+  const setStreetReports = (reports = []) => {
+    reportDisponibilitatLayer.clearLayers();
+    const usedCoords = new Set();
+
+    reports.forEach((report) => {
+      let lat = Number(report?.latitud);
+      let lon = Number(report?.longitud);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+      // Jitter determinista per evitar solapament i que no es moguin en fer zoom
+      const coordKey = `${lat.toFixed(5)},${lon.toFixed(5)}`;
+      if (usedCoords.has(coordKey)) {
+        const getJitter = (id, seed) => {
+          let h = 0;
+          const str = String(id) + String(seed);
+          for (let i = 0; i < str.length; i++) {
+            h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+          }
+          return (Math.abs(h) % 1000) / 1000 - 0.5;
+        };
+        lat += getJitter(report?.id, 'lat') * 0.00015;
+        lon += getJitter(report?.id, 'lon') * 0.00015;
+      }
+      usedCoords.add(coordKey);
+
+      const isOccupied = String(report?.status || '').toLowerCase() === 'occupied';
+      const marker = leaflet.circleMarker([lat, lon], {
+        radius: REPORT_DISPONIBILITAT_MARKER_RADIUS,
+        color: isOccupied ? '#b42318' : '#15803d',
+        weight: 2,
+        fillColor: isOccupied ? '#ef4444' : '#22c55e',
+        fillOpacity: 0.85,
+      });
+
+      marker.bindPopup(renderStreetReportPopup(report), {
+        closeButton: false,
+        autoPanPadding: [30, 30],
+      });
+
+      reportDisponibilitatLayer.addLayer(marker);
+    });
+  };
+
+  const clearUserLocationMarker = () => {
+    userLocationLayer.clearLayers();
+    userLocationMarker = null;
+  };
+
+  const setUserLocationMarker = (location) => {
+    const latLng = normalizeLatLng(leaflet, location);
+    if (!latLng) {
+      clearUserLocationMarker();
+      return null;
+    }
+
+    clearUserLocationMarker();
+
+    userLocationMarker = leaflet.marker(latLng, {
+      icon: userLocationIcon,
+      zIndexOffset: 1500,
+    });
+
+    userLocationMarker.bindPopup('La teva ubicació', {
+      closeButton: false,
+      autoPanPadding: [30, 30],
+    });
+
+    userLocationMarker.addTo(userLocationLayer);
+    return userLocationMarker;
+  };
+
+  const focusUserLocation = ({ zoom = 16, openPopup = false } = {}) => {
+    if (!userLocationMarker) return false;
+
+    const latlng = userLocationMarker.getLatLng();
+    const lat = Number(latlng?.lat);
+    const lng = Number(latlng?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      // Coordenades invàlides: netegem el marcador i evitem fer flyTo amb NaN
+      clearUserLocationMarker();
+      return false;
+    }
+
+    map.flyTo(userLocationMarker.getLatLng(), zoom, { duration: 0.8 });
+    if (openPopup && typeof userLocationMarker.openPopup === 'function') {
+      userLocationMarker.openPopup();
+    }
+
+    return true;
+  };
+
+  const setLocateMeAction = (handler) => {
+    locateMeHandler = typeof handler === 'function' ? handler : null;
+    const button = mapElement.querySelector('.map-locate-control__button');
+    if (button) {
+      button.disabled = !locateMeHandler;
+    }
+  };
+
+  const setParkingSpots = (spots = [], { fitBounds = true, openFirstPopup = true } = {}) => {
+    // Cerrar cualquier popup abierto antes de limpiar marcadores
+    parkingMarkers.forEach((marker) => {
+      if (typeof marker.closePopup === 'function') {
+        marker.closePopup();
+      }
+      map.removeLayer(marker);
+    });
+    parkingMarkers.clear();
+
+    console.log(`[ParkLive] Rendering ${spots.length} markers on map`);
+
+    spots.forEach((spot) => {
+      const marker = isOpenAirParking(spot)
+        ? leaflet.circle(spot.coords, {
+            radius: computeOpenAirRadius(spot),
+            color: '#b3261e',
+            weight: 2,
+            fillColor: '#dc3545',
+            fillOpacity: 0.24,
+            className: 'parking-open-air-area',
+          })
+        : leaflet.marker(spot.coords, { icon: parkingIcon });
+
+      marker.bindPopup(
+        `
+          <div class="parking-popup">
+            <strong class="d-block mb-1 small fw-semibold">${escapeHtml(spot.name)}</strong>
+            <p class="mb-2 small text-body-secondary">${escapeHtml(spot.priceLabel)} · ${escapeHtml(spot.distanceLabel)}</p>
+            <span class="badge text-bg-success">${escapeHtml(spot.statusLabel || 'Disponible')}</span>
+            <a
+              href="/detall_Aparcament?id=${encodeURIComponent(String(spot.id))}"
+              class="btn btn-danger btn-sm w-100 mt-2"
+              aria-label="Veure detall de l'aparcament ${escapeHtml(spot.name)}"
+            >
+              Veure detall
+            </a>
+          </div>
+        `,
+        {
+          closeButton: false,
+          autoPanPadding: [30, 30],
+        },
+      );
+
+      parkingMarkers.set(String(spot.id), marker);
+    });
+
+    updateMarkerGroup();
+    if (fitBounds) {
+      fitToParkingSpots();
+    }
+
+    const firstMarker = parkingMarkers.values().next().value;
+    if (firstMarker && openFirstPopup) {
+      firstMarker.openPopup();
+    }
+  };
+
+  const hideParkingMarkerById = (parkingId) => {
+    const marker = parkingMarkers.get(String(parkingId));
+    if (marker) {
+      map.removeLayer(marker);
+      markerGroup.removeLayer(marker);
+      parkingMarkers.delete(String(parkingId));
+    }
+  };
+
+  const focusParkingById = (parkingId) => {
+    const marker = parkingMarkers.get(String(parkingId));
+    if (!marker) return;
+
+    map.flyTo(marker.getLatLng(), 16, { duration: 0.8 });
+    marker.openPopup();
+  };
   const fitToParkingSpots = () => {
     if (markerGroup.getLayers().length === 0) {
-      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
       return;
     }
 
@@ -132,8 +359,6 @@ export function initLandingMap() {
     }
   };
 
-  fitToParkingSpots();
-
   const updateOpenPopupsLayout = () => {
     parkingMarkers.forEach((marker) => {
       if (typeof marker.isPopupOpen !== 'function' || !marker.isPopupOpen()) {
@@ -147,16 +372,13 @@ export function initLandingMap() {
     });
   };
 
-  const defaultMarker = parkingMarkers.get('parklive-centro');
-  if (defaultMarker) {
-    defaultMarker.openPopup();
-  }
-
   const openExampleParkingBtn = document.getElementById('openExampleParkingBtn');
-  if (openExampleParkingBtn && defaultMarker) {
+  if (openExampleParkingBtn) {
     openExampleParkingBtn.addEventListener('click', () => {
-      map.flyTo(defaultMarker.getLatLng(), 16, { duration: 0.8 });
-      defaultMarker.openPopup();
+      const firstMarker = parkingMarkers.values().next().value;
+      if (!firstMarker) return;
+      map.flyTo(firstMarker.getLatLng(), 16, { duration: 0.8 });
+      firstMarker.openPopup();
     });
   }
 
@@ -166,13 +388,19 @@ export function initLandingMap() {
       if (typeof map.invalidateSize === 'function') {
         map.invalidateSize({ pan: false, debounceMoveend: true });
       }
-      ensureValidViewport();
     });
   });
 
   return {
     map,
     markerGroup,
+    setParkingSpots,
+    setStreetReports,
+    setUserLocationMarker,
+    focusUserLocation,
+    setLocateMeAction,
+    focusParkingById,
+    hideParkingMarkerById,
     updateOpenPopupsLayout,
     fitToParkingSpots,
     ensureValidViewport,

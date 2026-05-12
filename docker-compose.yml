@@ -10,6 +10,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Europe/Madrid
     ports:
       - "${MYSQL_HOST_PORT}:3306"
     volumes:
@@ -18,7 +19,7 @@ services:
       - ./database:/docker-init:ro
       - ./database/init-db-container.sh:/docker-entrypoint-initdb.d/00-init-db.sh:ro
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD"]
       timeout: 20s
       retries: 10
     networks:
@@ -36,6 +37,7 @@ services:
     volumes:
       - ./services/php-service:/var/www/html
       - ./shared:/var/www/shared
+      - ./storage:/var/www/html/storage
     depends_on:
       - mysql
       - python-service
@@ -45,6 +47,20 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
       PYTHON_SERVICE_URL: http://python-service:${FLASK_PORT}
+      STRIPE_APIPrivada: ${STRIPE_APIPrivada}
+      STRIPE_APIPublica: ${STRIPE_APIPublica}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_ENV: ${APP_ENV}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      cloud_name: ${cloud_name}
+      Cloudinary_API_KEY: ${Cloudinary_API_KEY}
+      Cloudinary_API_Secret: ${Cloudinary_API_Secret}
+      TZ: Europe/Madrid
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     networks:
       - parklive_network
 
@@ -67,6 +83,7 @@ services:
     volumes:
       - ./services/python-service:/app
       - ./shared:/app/shared
+      - ./storage:/app/storage
     depends_on:
       mysql:
         condition: service_healthy
@@ -86,6 +103,50 @@ services:
       FRONTEND_PORT: ${FRONTEND_PORT}
       FLASK_ENV: development
       PYTHONUNBUFFERED: 1
+      STRIPE_APIPrivada: ${STRIPE_APIPrivada}
+      STRIPE_APIPublica: ${STRIPE_APIPublica}
+      STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID}
+      STRIPE_Anual_PREMIUM_PRICE_ID: ${STRIPE_Anual_PREMIUM_PRICE_ID}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_ENV: ${APP_ENV}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      TICKET_STORAGE_PATH: ${TICKET_STORAGE_PATH}
+      cloud_name: ${cloud_name}
+      Cloudinary_API_KEY: ${Cloudinary_API_KEY}
+      Cloudinary_API_Secret: ${Cloudinary_API_Secret}
+      TZ: Europe/Madrid
+    networks:
+      - parklive_network
+
+  # Servei Cron (Automatització de actualitzacio de subscripcions a la BDD)
+  cron-service:
+    build:
+      context: ./services/python-service
+      dockerfile: Dockerfile
+      network: host
+    container_name: parklive_cron
+    restart: always
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./services/python-service:/app
+      - ./shared:/app/shared
+      - ./storage:/app/storage
+    environment:
+      PYTHONPATH: /app
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      STRIPE_APIPrivada: ${STRIPE_APIPrivada}
+      STRIPE_APIPublica: ${STRIPE_APIPublica}
+      TICKET_STORAGE_PATH: ${TICKET_STORAGE_PATH}
+      TZ: Europe/Madrid
+    entrypoint: [ "/bin/sh", "/app/scripts/cron_scheduler.sh" ]
     networks:
       - parklive_network
 
@@ -101,6 +162,13 @@ services:
     environment:
       PHP_SERVICE_PORT: ${PHP_SERVICE_PORT}
       PYTHON_SERVICE_PORT: ${PYTHON_SERVICE_PORT}
+      APP_ENV: ${APP_ENV}
+      API_HOST: ${API_HOST}
+      STRIPE_PUBLIC_KEY: ${STRIPE_APIPublica}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      IVA_PERCENTAGE: ${IVA_PERCENTAGE}
+      PREMIUM_DISCOUNT: ${PREMIUM_DISCOUNT}
+      TZ: Europe/Madrid
     volumes:
       - ./services/frontend-service/src:/usr/share/nginx/html/src
       - ./services/frontend-service/public:/usr/share/nginx/html
@@ -122,6 +190,7 @@ services:
       UPLOAD_LIMIT: 300M
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
+      TZ: Europe/Madrid
     depends_on:
       - mysql
     networks:

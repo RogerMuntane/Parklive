@@ -2,65 +2,150 @@
 <section class="profile-section" id="section-plan">
     <div class="card shadow-sm border-0 rounded-4 mb-3">
         <div class="card-body p-4">
-            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+            <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
                 <span class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger fs-5">
                     <i class="bi bi-rocket-takeoff"></i>
                 </span>
                 <div>
-                    <h2 class="card-title h6 fw-bold mb-0">Millorar el teu pla</h2>
-                    <p class="card-subtitle text-muted small mb-0">
-                        Ara mateix estàs al pla
-                        <span class="badge rounded-pill text-danger ms-1"
-                            style="background:rgba(193,18,31,.12);font-size:.7rem">
-                            <i class="bi bi-star-fill" style="font-size:.6rem"></i> Bàsic
-                        </span>
+                    <h2 class="card-title h6 fw-bold mb-0">Gestió del teu pla</h2>
+                    <p class="card-subtitle text-body-secondary small mb-0">
+                        Sempre pots millorar la teva experiència a ParkLive.
                     </p>
                 </div>
             </div>
-            <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <div class="plan-item selected" onclick="selectPlan(this)">
-                        <div class="fw-bold mb-1">Bàsic</div>
-                        <div class="fs-4 fw-bold text-danger">Gratis <span class="fs-6 text-muted fw-normal">/
-                                mes</span></div>
-                        <ul class="list-unstyled mt-2 mb-0 small text-secondary">
-                            <li><i class="bi bi-check text-danger me-1"></i>5 reserves / mes</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Mapa bàsic</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Historial 30 dies</li>
+
+            <div class="row g-4">
+                <!-- Pla Switcher -->
+                <div class="col-12">
+                    <div class="plan-switcher-container">
+                        <div class="plan-switcher">
+                            <button class="btn active" id="btn-monthly-plan">
+                                <i class="bi bi-calendar-event me-2"></i>Mensual
+                            </button>
+                            <button class="btn" id="btn-annual-plan">
+                                <i class="bi bi-calendar-check me-2"></i>Anual
+                                <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.65rem;">Estalvia 2
+                                    mesos</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pla Gratuït -->
+                <div class="col-12 col-lg-6">
+                    <div class="plan-item plan-free selected h-100 p-4 border rounded-4 position-relative overflow-hidden"
+                        onclick="selectPlan(this)">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="h5 fw-bold mb-0">Pla Gratuït</h3>
+                            <span
+                                class="badge bg-secondary bg-opacity-10 text-body-secondary border border-secondary border-opacity-25 px-3 py-2 rounded-pill small">Freemium</span>
+                        </div>
+                        <div class="display-6 fw-bold mb-1">0 € <span
+                                class="fs-6 text-body-secondary fw-normal">/mes</span></div>
+                        <p class="small text-body-secondary mb-3">Accés bàsic per a tothom.</p>
+
+                        <ul class="list-unstyled mb-0 small text-body-secondary d-grid gap-2">
+                            <li><i class="bi bi-check2-circle text-success me-2"></i>Cerca d'aparcaments al mapa</li>
+                            <li><i class="bi bi-check2-circle text-success me-2"></i>Disponibilitat en temps real</li>
+                            <li><i class="bi bi-check2-circle text-success me-2"></i>Reportar disponibilitat (punts)
+                            </li>
+                            <li><i class="bi bi-check2-circle text-success me-2"></i>Valoracions i ressenyes</li>
+                            <li><i class="bi bi-check2-circle text-success me-2"></i>Visualització de tarifes i horaris
+                            </li>
+                            <li><i class="bi bi-check2-circle text-success me-2"></i>Historial detallat de reserves i tiquets</li>
+                            <li><i class="bi bi-info-circle text-body-secondary me-2"></i>Publicitat contextual</li>
                         </ul>
                     </div>
                 </div>
-                <div class="col-12 col-md-4">
-                    <div class="plan-item" onclick="selectPlan(this)">
-                        <div class="fw-bold mb-1">Pro</div>
-                        <div class="fs-4 fw-bold text-danger">4,99 € <span class="fs-6 text-muted fw-normal">/
-                                mes</span></div>
-                        <ul class="list-unstyled mt-2 mb-0 small text-secondary">
-                            <li><i class="bi bi-check text-danger me-1"></i>Reserves il·limitades</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Mapa avançat + alertes</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Historial complet</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Suport prioritari</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-12 col-md-4">
-                    <div class="plan-item" onclick="selectPlan(this)">
-                        <div class="fw-bold mb-1">Business</div>
-                        <div class="fs-4 fw-bold text-danger">14,99 € <span class="fs-6 text-muted fw-normal">/
-                                mes</span></div>
-                        <ul class="list-unstyled mt-2 mb-0 small text-secondary">
-                            <li><i class="bi bi-check text-danger me-1"></i>Tot del Pro</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Multi-vehicle</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Facturació empresa</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>API accés</li>
-                            <li><i class="bi bi-check text-danger me-1"></i>Account manager</li>
+
+                <!-- Pla Premium -->
+                <div class="col-12 col-lg-6">
+                    <div class="plan-item plan-premium h-100 p-4 border rounded-4 position-relative overflow-hidden"
+                        onclick="selectPlan(this)">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="h5 fw-bold mb-0 tipus-plan">Pla Premium</h3>
+                            <!-- Badge Mensual -->
+                            <span
+                                class="badge bg-danger text-white px-3 py-2 rounded-pill small shadow-sm monthly-content"
+                                id="premium-badge-monthly">El més popular</span>
+                            <!-- Badge Anual -->
+                            <span
+                                class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill small shadow-sm annual-content"
+                                id="premium-badge-annual">Millor preu</span>
+                        </div>
+
+                        <!-- Preu Mensual -->
+                        <div class="monthly-content">
+                            <div class="display-6 fw-bold preu-plan mb-1">4,99 € <span
+                                    class="fs-6 fw-normal opacity-75">/mes</span></div>
+                            <p class="small text-body opacity-75 mb-3">Tot el gratuït més avantatges exclusius.</p>
+                        </div>
+
+                        <!-- Preu Anual -->
+                        <div class="annual-content">
+                            <div class="display-6 fw-bold preu-plan mb-1 text-danger">49,99 € <span
+                                    class="fs-6 fw-normal opacity-75 text-body">/any</span></div>
+                            <p class="small fw-bold text-success-custom mb-3">Equivalent a 4,17 € / mes</p>
+                        </div>
+
+                        <ul class="list-unstyled mb-0 small text-body-secondary d-grid gap-2">
+                            <li><i class="bi bi-star-fill text-danger me-2"></i>Reserves anticipades il·limitades</li>
+                            <li><i class="bi bi-star-fill text-danger me-2"></i>Atenció prioritària 24/7</li>
+                            <li><i class="bi bi-star-fill text-danger me-2"></i>Zero publicitat</li>
+                            <li><i class="bi bi-star-fill text-danger me-2"></i>Tarifes preferents i descomptes
+                                exclusius</li>
+                            <li><i class="bi bi-star-fill text-danger me-2"></i>Estadístiques personals avançades</li>
+                            <li><i class="bi bi-star-fill text-danger me-2"></i>Llista personalitzada d'aparcaments
+                                preferits</li>
+                            <li><i class="bi bi-star-fill text-danger me-2"></i>Avantatges en sistema de punts</li>
+                            <li class="annual-content fw-bold text-success-custom"><i
+                                    class="bi bi-patch-check-fill me-2"></i>Estalvia 2 mesos respecte al mensual</li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-end mt-3">
-                <button class="btn btn-danger" onclick="showToast('Pla actualitzat!')">
-                    <i class="bi bi-arrow-up-circle me-1"></i> Canviar pla
+
+            <!-- Selecció de targeta per al pla -->
+            <div id="plan-payment-container" class="mt-5 d-none">
+                <h3 class="h6 fw-bold mb-3"><i class="bi bi-credit-card me-2"></i>Selecciona un mètode de pagament</h3>
+                <div id="saved-cards-plan" class="row g-3">
+                    <!-- Targetes carregades dinàmicament -->
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" id="btn-add-card-plan">
+                        <i class="bi bi-plus-circle me-1"></i> Utilitzar una altra targeta
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-5 mb-2 d-flex justify-content-center">
+                <div class="subscription-toggle-card active mb-2" id="autorenovacio-toggle"
+                    style="max-width: 550px; width: 100%;">
+                    <div class="toggle-icon-box">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <h4 class="small fw-bold mb-0 text-uppercase tracking-wider">
+                                Renovar automàticament cada <span class="monthly-content">mes</span><span
+                                    class="annual-content">any</span>
+                            </h4>
+                            <span class="toggle-badge" id="autorenovacio-badge">Actiu</span>
+                        </div>
+                        <p class="small text-body-secondary mb-0 toggle-desc" id="autorenovacio-desc">
+                            S'utilitzarà la targeta seleccionada per als cobraments futurs.
+                        </p>
+                    </div>
+
+                    <div class="custom-switch on" id="autorenovacio-switch"></div>
+                    <!-- Mantenim el checkbox ocult per compatibilitat amb la lògica existent -->
+                    <input type="checkbox" id="autorenovacio" checked class="d-none">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center mt-4 pt-3 border-top">
+                <button class="btn btn-danger btn-lg px-5 rounded-pill fw-bold shadow-sm" id="btn-update-plan">
+                    <i class="bi bi-arrow-up-circle me-1"></i> Actualitzar pla ara
                 </button>
             </div>
         </div>

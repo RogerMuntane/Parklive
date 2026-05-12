@@ -1,12 +1,38 @@
+"""
+Servei d'enviament de correus electrònics transaccionals.
+
+Proporciona la classe `EmailSender` per enviar missatges SMTP amb suport
+per a contingut HTML i text pla. Utilitzat principalment per a l'enviament
+de codis de recuperació de contrasenya.
+
+Les credencials i configuració del servidor SMTP es llegeixen exclusivament
+de les variables d'entorn (SMTP_HOST, SMTP_PORT, smtp_mail, smtp_pasword).
+"""
+
 import os
 import smtplib
 from email.message import EmailMessage
 
 
 class EmailSender:
-    """Envia emails utilitzant credencials SMTP de l'entorn."""
+    """
+    Client SMTP per a l'enviament de correus electrònics des del servei Python.
+
+    Llegeix la configuració del servidor i les credencials des de les variables
+    d'entorn. Llança un RuntimeError en cas que les credencials no estiguin definides.
+
+    Raises:
+        RuntimeError: Si smtp_mail o smtp_pasword no estan configurats.
+    """
 
     def __init__(self, host: str | None = None, port: int | None = None):
+        """
+        Inicialitza el client SMTP amb la configuració de l'entorn.
+
+        Args:
+            host (str|None): Servidor SMTP. Per defecte 'smtp.gmail.com'.
+            port (int|None): Port SMTP. Per defecte 587 (STARTTLS).
+        """
         self.host = host or os.getenv("SMTP_HOST", "smtp.gmail.com")
         self.port = port or int(os.getenv("SMTP_PORT", 587))
         self.smtp_user = os.getenv("smtp_mail")
@@ -17,7 +43,20 @@ class EmailSender:
                 "Falten credencials SMTP (smtp_mail / smtp_pasword)")
 
     def send_reset_code(self, to_email: str, code: str, ttl_minutes: int) -> None:
-        """Envia el codi de reset de contrasenya per email (format HTML)"""
+        """
+        Envia un correu HTML amb el codi de recuperació de contrasenya.
+
+        El missatge inclou un cos HTML amb estils visuals i un text pla alternatiu
+        per a clients que no suporten HTML (RFC 2046 multipart/alternative).
+
+        Args:
+            to_email (str): Adreça de destí del correu.
+            code (str): Codi de verificació numèric a enviar.
+            ttl_minutes (int): Minuts de validesa del codi.
+
+        Raises:
+            smtplib.SMTPException: Si hi ha un error en la connexió o l'autenticació SMTP.
+        """
         message = EmailMessage()
         message["Subject"] = "Codi de reset de contrasenya - Parklive"
         message["From"] = self.smtp_user

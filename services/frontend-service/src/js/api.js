@@ -73,29 +73,26 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
 
     const headers = {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
       ...options.headers,
     };
 
-    // Injectar ID d'usuari si existeix a la sessió
-    const userId = sessionStorage.getItem(STORAGE_KEYS.USER_ID);
-    if (userId) {
-      headers['X-User-ID'] = userId;
+    // Només afegir Content-Type si no és un GET o DELETE i el body és JSON
+    if (options.method && !['GET', 'DELETE', 'OPTIONS', 'HEAD'].includes(options.method.toUpperCase())) {
+      if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
     }
 
-    // Injectar token d'autenticació si existeix
+    // Injectar token d'autenticació si existeix (JWT)
     const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Sempre incloure cookies per a backend PHP
-    const config = { ...options, headers };
-    // Si la baseURL és PHP_API_URL, afegir credentials: 'include'
-    if (this.baseURL === PHP_API_URL.replace(/\/+$/, '')) {
-      config.credentials = 'include';
-    }
+    // Sempre passar les capçaleres amb el JWT
+    // Nota: Mantenim credentials: 'include' perquè el backend està configurat amb supports_credentials=True
+    const config = { ...options, headers, credentials: 'include' };
 
     try {
       const response = await fetch(url, config);
@@ -111,8 +108,20 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        const errorMsg =
-          (typeof data === 'object' && data?.error) || `Error ${response.status}`;
+        let errorMsg = `Error ${response.status}`;
+        if (typeof data === 'object' && data !== null) {
+          if (data.error) {
+            errorMsg = data.error;
+          } else if (data.errors) {
+            if (Array.isArray(data.errors)) {
+              errorMsg = data.errors.join(' | ');
+            } else if (typeof data.errors === 'object') {
+              errorMsg = Object.values(data.errors).flat().join(' | ');
+            } else {
+              errorMsg = String(data.errors);
+            }
+          }
+        }
         throw new ApiError(errorMsg, response.status, data);
       }
 
@@ -145,20 +154,20 @@ class ApiClient {
   post(endpoint, body = {}) {
     return this.request(endpoint, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   }
 
   /**
-   * PUT amb cos JSON.
+   * PUT amb cos JSON o FormData.
    * @param {string} endpoint
-   * @param {Object} [body]
+   * @param {Object|FormData} [body]
    * @returns {Promise<any>}
    */
   put(endpoint, body = {}) {
     return this.request(endpoint, {
       method: 'PUT',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   }
 

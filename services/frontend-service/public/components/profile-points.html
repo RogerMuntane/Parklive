@@ -1,0 +1,69 @@
+<!-- Section: Redimir Puntos -->
+<section id="section-points" class="profile-section">
+  <div class="row g-4">
+    <!-- Points Card Summary -->
+    <div class="col-12">
+      <div class="card border-0 shadow-sm overflow-hidden" style="background: linear-gradient(135deg, #c1121f 0%, #780116 100%);">
+        <div class="card-body p-4 p-lg-5 text-white position-relative">
+          <div class="position-relative z-1">
+            <h2 class="h5 text-white text-opacity-75 mb-1 fw-medium">El teu saldo de punts</h2>
+            <div class="d-flex align-items-baseline gap-2 mb-3">
+              <span class="display-4 fw-bold" id="user-total-points">0</span>
+              <span class="h4 mb-0 opacity-75">punts</span>
+            </div>
+            <p class="mb-0 text-white text-opacity-75">
+              <i class="bi bi-info-circle me-1"></i> Guanya més punts reportant la disponibilitat d'aparcaments al mapa!
+            </p>
+          </div>
+          <!-- Decorative icon -->
+          <i class="bi bi-gift position-absolute top-50 end-0 translate-middle-y me-4 display-1 text-white opacity-10 d-none d-md-block"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rewards Grid Title -->
+    <div class="col-12 mt-5">
+      <div class="d-flex align-items-center gap-2 mb-4">
+        <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary">
+          <i class="bi bi-award fs-4"></i>
+        </div>
+        <h2 class="h4 mb-0 fw-bold">Recompenses disponibles</h2>
+      </div>
+      
+      <div id="rewards-loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Carregant recompenses...</p>
+      </div>
+
+      <div id="rewards-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 d-none">
+        <!-- Recompenses es carreguen aquí -->
+      </div>
+      
+      <div id="rewards-empty" class="text-center py-5 d-none">
+        <i class="bi bi-search display-1 text-muted opacity-25"></i>
+        <p class="mt-3 text-muted">No hi ha recompenses disponibles en aquest moment.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</section>
+
+<!-- Modal Confirmar Bescanvi Punts -->
+<div class="modal fade" id="modal-confirm-redeem" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 text-center">
+                <input type="hidden" id="redeem-reward-id">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-gift fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Bescanviar punts?</h5>
+                <p class="text-secondary small mb-4" id="redeem-confirm-text">Estàs segur que vols bescanviar els punts per aquesta recompensa?</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary rounded-pill py-2 fw-bold" id="btn-confirm-redeem">Sí, bescanviar</button>
+                    <button type="button" class="btn btn-light rounded-pill py-2" data-bs-dismiss="modal">Cancel·lar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

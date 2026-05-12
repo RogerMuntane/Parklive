@@ -1,11 +1,28 @@
-from models.db_connection import get_db_connection
+"""
+Model per a la gestió de contribucions dels usuaris.
+
+Aquest mòdul gestiona el registre d'informació sobre la disponibilitat de l'aparcament
+al carrer (lliure/ocupat) reportada pels usuaris. Aquest sistema forma part de la
+gamificació de Parklive, atorgant punts als usuaris que ajuden a mantenir les
+dades actualitzades.
+"""
+
+from models.db_connection import get_new_connection
 from datetime import datetime
 from decimal import Decimal
 import json
 
 
 def serialize_value(value):
-    """Converteix tipus no serialitzables a formats JSON"""
+    """
+    Converteix tipus de dades no serialitzables de MySQL a formats compatibles amb JSON.
+    
+    Args:
+        value (Any): El valor a serialitzar (datetime, Decimal, etc.).
+        
+    Returns:
+        Any: El valor convertit o l'original si ja és compatible.
+    """
     if isinstance(value, (datetime)):
         return value.isoformat()
     elif isinstance(value, Decimal):
@@ -13,37 +30,69 @@ def serialize_value(value):
     return value
 
 
+def _extract_callproc_out_params(result_args):
+    """
+    Extreu de forma segura els paràmetres de sortida (OUT) d'una crida a un procediment emmagatzemat.
+    
+    Aquesta funció és tolerant a les diferències de format entre diferents versions 
+    dels connectors MySQL per a Python.
+    
+    Args:
+        result_args (list|tuple|dict): Els arguments retornats per cursor.callproc.
+        
+    Returns:
+        tuple: (contribucio_id, error_msg) extrets dels paràmetres.
+    """
+    if isinstance(result_args, (list, tuple)) and len(result_args) >= 2:
+        return result_args[-2], result_args[-1]
+
+    if isinstance(result_args, dict):
+        contribucio_id = result_args.get('p_contribucio_id')
+        error_msg = result_args.get('p_error_msg')
+        return contribucio_id, error_msg
+
+    return None, 'No s\'han pogut recuperar els OUT params de la procedure'
+
+
 def crear_contribucio(data):
     """
-    Crea una nova contribució d'usuari
+    Crea una nova contribució d'usuari reportant disponibilitat en una ubicació.
+    
+    El procés inclou:
+    1. Validació de camps obligatoris i formats.
+    2. Verificació de l'existència de l'usuari.
+    3. Processament de dades JSON addicionals si n'hi ha.
+    4. Execució del procediment 'sp_crear_contribucio' per garantir la consistència 
+       i l'atorgament de punts de gamificació.
+    5. Recuperació i serialització de la contribució creada.
 
-    Paràmetres esperats en data:
-    - usuari_id: ID de l'usuari (requerit)
-    - aparcament_id: ID de l'aparcament (requerit)
-    - tipus: 'disponibilitat', 'foto', 'informacio', 'correccio' (requerit)
-    - estat_reportat: 'lliure', 'ocupat', 'parcial' (opcional, només per tipus 'disponibilitat')
-    - dades: diccionari amb dades addicionals (opcional)
-    - latitud: latitud de la ubicació (opcional)
-    - longitud: longitud de la ubicació (opcional)
-
-    Retorna:
-    - Dades de la contribució creada
+    Args:
+        data (dict): Dades del report: 'usuari_id', 'estat_reportat' (lliure/ocupat), 
+                     'latitud', 'longitud' i opcionalment 'dades' (JSON).
+        
+    Returns:
+        dict: Detalls de la contribució creada, incloent l'ID i els punts guanyats.
+        
+    Raises:
+        RuntimeError: Si hi ha problemes de connexió amb la base de dades.
+        ValueError: Si hi ha errors de validació en les dades d'entrada.
     """
-    conn = get_db_connection()
+    conn = get_new_connection()
+    if not conn:
+        raise RuntimeError("Base de dades no disponible")
     cursor = conn.cursor(dictionary=True)
 
     try:
         # Validar camps obligatoris
-        required_fields = ['usuari_id', 'aparcament_id', 'tipus']
+        required_fields = ['usuari_id', 'estat_reportat']
         for field in required_fields:
             if field not in data or data[field] is None:
                 raise ValueError(f"El camp '{field}' és obligatori")
 
-        # Validar tipus
-        tipus_valids = ['disponibilitat', 'foto', 'informacio', 'correccio']
-        if data['tipus'] not in tipus_valids:
+        estats_valids = ['lliure', 'ocupat']
+        if data['estat_reportat'] not in estats_valids:
             raise ValueError(
-                f"Tipus invàlid. Tipus vàlids: {', '.join(tipus_valids)}")
+                f"Estat reportat invàlid. Estats vàlids: {', '.join(estats_valids)}")
 
         # Validar que l'usuari existeix
         cursor.execute(
@@ -53,60 +102,31 @@ def crear_contribucio(data):
             raise ValueError(
                 f"L'usuari amb ID {data['usuari_id']} no existeix")
 
-        # Validar que l'aparcament existeix
-        cursor.execute(
-            "SELECT id, nom, latitud, longitud FROM aparcaments WHERE id = %s", (data['aparcament_id'],))
-        aparcament = cursor.fetchone()
-        if not aparcament:
-            raise ValueError(
-                f"L'aparcament amb ID {data['aparcament_id']} no existeix")
-
-        # Validar estat_reportat només per tipus 'disponibilitat'
-        estat_reportat = None
-        if data['tipus'] == 'disponibilitat':
-            if 'estat_reportat' not in data or not data['estat_reportat']:
-                raise ValueError(
-                    "El camp 'estat_reportat' és obligatori per tipus 'disponibilitat'")
-
-            estats_valids = ['lliure', 'ocupat', 'parcial']
-            if data['estat_reportat'] not in estats_valids:
-                raise ValueError(
-                    f"Estat reportat invàlid. Estats vàlids: {', '.join(estats_valids)}")
-
-            estat_reportat = data['estat_reportat']
-
         # Preparar dades JSON
         dades_json = None
         if 'dades' in data and data['dades']:
             if isinstance(data['dades'], dict):
                 dades_json = json.dumps(data['dades'])
             elif isinstance(data['dades'], str):
-                # Validar que és JSON vàlid
                 try:
                     json.loads(data['dades'])
                     dades_json = data['dades']
                 except json.JSONDecodeError:
                     raise ValueError("El camp 'dades' ha de ser JSON vàlid")
 
-        # Determinar punts guanyats segons el tipus
-        punts_map = {
-            'disponibilitat': 5,
-            'foto': 10,
-            'informacio': 15,
-            'correccio': 20
-        }
-        punts_guanyats = punts_map.get(data['tipus'], 5)
+        # Punts atorgats per cada contribució de disponibilitat
+        punts_guanyats = 5
 
-        # Usar coordenadas del aparcamiento si no se proporcionan
-        latitud = data.get('latitud') or aparcament['latitud']
-        longitud = data.get('longitud') or aparcament['longitud']
+        # Coordenades geogràfiques
+        latitud = data.get('latitud')
+        longitud = data.get('longitud')
+        if latitud is None or longitud is None:
+            raise ValueError("Cal informar 'latitud' i 'longitud'")
 
-        # Procedure equivalent: sp_crear_contribucio(..., OUT contribucio_id, OUT error_msg)
+        # Crida al procediment emmagatzemat
         proc_args = [
             data['usuari_id'],
-            data['aparcament_id'],
-            data['tipus'],
-            estat_reportat,
+            data['estat_reportat'],
             dades_json,
             punts_guanyats,
             latitud,
@@ -117,8 +137,13 @@ def crear_contribucio(data):
         result_args = cursor.callproc('sp_crear_contribucio', proc_args)
         conn.commit()
 
-        contribucio_id = result_args[8]
-        error_msg = result_args[9]
+        contribucio_id, error_msg = _extract_callproc_out_params(result_args)
+
+        # Fallback per a connectors que no retornen els OUT params correctament
+        if (contribucio_id is None or str(contribucio_id).strip() in ('', '0')) and not error_msg:
+            cursor.execute("SELECT LAST_INSERT_ID() AS contribucio_id")
+            last_id_row = cursor.fetchone() or {}
+            contribucio_id = last_id_row.get('contribucio_id')
 
         if error_msg:
             raise ValueError(error_msg)
@@ -126,50 +151,37 @@ def crear_contribucio(data):
         if not contribucio_id:
             raise ValueError("No s'ha pogut crear la contribució")
 
-        # Obtenir la contribució creada
+        # Recuperar el registre complet per confirmar la inserció
         cursor.execute("""
             SELECT
                 c.id,
                 c.usuari_id,
                 u.nom as usuari_nom,
-                c.aparcament_id,
-                a.nom as aparcament_nom,
-                c.tipus,
                 c.estat_reportat,
                 c.dades,
-                c.validada,
                 c.punts_guanyats,
                 c.latitud,
                 c.longitud,
                 c.created_at
             FROM contribucions c
             JOIN usuaris u ON c.usuari_id = u.id
-            JOIN aparcaments a ON c.aparcament_id = a.id
             WHERE c.id = %s
         """, (contribucio_id,))
 
         contribucio = cursor.fetchone()
         cursor.close()
-        conn.close()
 
         if not contribucio:
-            raise Exception("Error en recuperar la contribució creada")
+            raise RuntimeError("Error en recuperar la contribució creada")
 
-        # Serialitzar resposta
         return {
             'id': contribucio['id'],
             'usuari': {
                 'id': contribucio['usuari_id'],
                 'nom': contribucio['usuari_nom']
             },
-            'aparcament': {
-                'id': contribucio['aparcament_id'],
-                'nom': contribucio['aparcament_nom']
-            },
-            'tipus': contribucio['tipus'],
             'estat_reportat': contribucio['estat_reportat'],
             'dades': json.loads(contribucio['dades']) if contribucio['dades'] else None,
-            'validada': bool(contribucio['validada']),
             'punts_guanyats': contribucio['punts_guanyats'],
             'coordenades': {
                 'latitud': serialize_value(contribucio['latitud']),
@@ -179,61 +191,51 @@ def crear_contribucio(data):
         }
 
     except Exception as e:
-        conn.rollback()
-        cursor.close()
-        conn.close()
+        if conn:
+            conn.rollback()
         raise e
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 def get_contribucions_usuari(usuari_id, filters=None):
     """
-    Obté totes les contribucions d'un usuari
+    Obté l'historial de contribucions realitzades per un usuari.
 
-    Filtres opcionals:
-    - tipus: tipus de contribució
-    - validada: només contribucions validades
-    - limit: límit de resultats
-    - offset: offset per paginació
+    Args:
+        usuari_id (int): ID de l'usuari.
+        filters (dict, optional): Diccionari amb 'limit' i 'offset' per a paginació.
+        
+    Returns:
+        list: Llista de contribucions amb ID, estat, punts i data.
     """
     if filters is None:
         filters = {}
 
-    conn = get_db_connection()
+    conn = get_new_connection()
+    if not conn:
+        return []
     cursor = conn.cursor(dictionary=True)
 
     query = """
         SELECT
             c.id,
-            c.tipus,
             c.estat_reportat,
-            c.validada,
             c.punts_guanyats,
-            c.created_at,
-            a.nom as aparcament_nom,
-            a.ciutat
+            c.created_at
         FROM contribucions c
-        JOIN aparcaments a ON c.aparcament_id = a.id
         WHERE c.usuari_id = %s
     """
 
     params = [usuari_id]
-
-    # Filtre per tipus
-    if filters.get('tipus'):
-        query += " AND c.tipus = %s"
-        params.append(filters['tipus'])
-
-    # Filtre per validada
-    if filters.get('validada') is not None:
-        query += " AND c.validada = %s"
-        params.append(filters['validada'])
-
     query += " ORDER BY c.created_at DESC"
 
     # Paginació
     limit = filters.get('limit', 20)
     offset = filters.get('offset', 0)
-
     query += " LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
@@ -242,18 +244,14 @@ def get_contribucions_usuari(usuari_id, filters=None):
     cursor.close()
     conn.close()
 
-    # Serialitzar
     result = []
     for c in contribucions:
         result.append({
             'id': c['id'],
-            'tipus': c['tipus'],
             'estat_reportat': c['estat_reportat'],
-            'validada': bool(c['validada']),
             'punts_guanyats': c['punts_guanyats'],
-            'aparcament_nom': c['aparcament_nom'],
-            'ciutat': c['ciutat'],
             'created_at': serialize_value(c['created_at'])
         })
 
     return result
+

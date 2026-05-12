@@ -140,16 +140,31 @@
     &.status-ok {
         background: rgba($success, .12);
         color: $success;
+
+        [data-bs-theme="dark"] & {
+            background: rgba($success, .2);
+            color: lighten($success, 10%);
+        }
     }
 
     &.status-pend {
         background: rgba($warning, .2);
         color: darken($warning, 25%);
+
+        [data-bs-theme="dark"] & {
+            background: rgba($warning, .15);
+            color: $warning;
+        }
     }
 
     &.status-err {
         background: rgba($crimson, .12);
         color: $crimson;
+
+        [data-bs-theme="dark"] & {
+            background: rgba($crimson, .2);
+            color: lighten($crimson, 15%);
+        }
     }
 }
 
@@ -158,7 +173,8 @@
     border-radius: .75rem;
     padding: 1.25rem;
     cursor: pointer;
-    transition: border-color .2s ease, transform .2s ease;
+    transition: border-color .2s ease, transform .2s ease, background .2s ease;
+    background: var(--bs-body-bg);
 
     &:hover {
         border-color: $crimson;
@@ -177,6 +193,38 @@
             right: .75rem;
             color: $crimson;
             font-size: 1.1rem;
+        }
+    }
+
+    // Variants
+    &.plan-premium {
+        border-color: rgba($crimson, 0.3);
+        background: linear-gradient(135deg, rgba($crimson, 0.03) 0%, rgba($crimson, 0.08) 100%);
+
+        .tipus-plan,
+        .preu-plan {
+            color: $crimson;
+        }
+
+        [data-bs-theme="dark"] & {
+            border-color: rgba($crimson, 0.5);
+            background: linear-gradient(135deg, rgba($crimson, 0.1) 0%, rgba($crimson, 0.15) 100%);
+
+            .tipus-plan,
+            .preu-plan {
+                color: lighten($crimson, 15%);
+            }
+        }
+
+        &.selected {
+            border-color: $crimson;
+            background: rgba($crimson, 0.1);
+        }
+    }
+
+    &.plan-free {
+        [data-bs-theme="dark"] & {
+            background: rgba($off-white, 0.02);
         }
     }
 }
@@ -198,23 +246,1108 @@
     }
 }
 
+.btn-delete-card {
+    transition: all 0.2s ease;
+
+    &:hover {
+        opacity: 1 !important;
+        transform: scale(1.1);
+        color: #ff4757 !important;
+    }
+}
+
+// Estil de targeta Premium (Mockup)
+.payment-card-visual {
+    background: linear-gradient(135deg, darken($dark-navy, 5%) 0%, lighten($dark-navy, 5%) 100%);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        right: -20px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba($crimson, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    &.active-card {
+        border: 2px solid $crimson;
+        box-shadow: 0 0 15px rgba($crimson, 0.3);
+    }
+
+    .card-chip {
+        width: 45px;
+        height: 35px;
+        background: linear-gradient(135deg, #d4af37 0%, #f9e29c 50%, #d4af37 100%);
+        border-radius: 6px;
+        margin-bottom: 25px;
+        position: relative;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    .card-number {
+        font-size: 1.25rem;
+        letter-spacing: 0.15em;
+        margin-bottom: 30px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    .card-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        opacity: 0.6;
+        margin-bottom: 2px;
+    }
+
+    .card-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .card-brand-logo {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.8;
+    }
+}
+
+// Botó afegir targeta amb estil "dashed"
+.btn-add-card-dashed {
+    background: transparent;
+    border: 2px dashed rgba($crimson, 0.3);
+    color: $crimson;
+    transition: all 0.3s ease;
+
+    [data-bs-theme="dark"] & {
+        border-color: rgba(lighten($crimson, 15%), 0.2);
+        color: lighten($crimson, 15%);
+    }
+
+    &:hover {
+        border-color: $crimson;
+        background-color: rgba($crimson, 0.05);
+        transform: translateY(-2px);
+    }
+}
+
+.security-card {
+    background-color: rgba($success, 0.03);
+    border-left: 4px solid $success !important;
+
+    [data-bs-theme="dark"] & {
+        background-color: rgba($success, 0.05);
+    }
+}
+
 .profile-section {
     display: none;
+    opacity: 0;
 
     &.active {
         display: block;
-        animation: fadeUp .3s ease both;
+        animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+        // Staggered entry per als fills directes (rows o cards)
+        &.animate-stagger {
+
+            .row>div,
+            >.card,
+            >div:not(.row) {
+                opacity: 0;
+                animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+                @for $i from 1 through 12 {
+                    &:nth-child(#{$i}) {
+                        animation-delay: #{$i * 0.08}s;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.btn-outline-danger {
+    [data-bs-theme="dark"] & {
+        color: lighten($crimson, 15%);
+        border-color: rgba(lighten($crimson, 15%), 0.5);
+
+        &:hover {
+            background-color: lighten($crimson, 15%);
+            border-color: lighten($crimson, 15%);
+            color: $dark-navy;
+        }
+    }
+}
+
+// Suavitza la intensitat dels icones en mode fosc
+[data-bs-theme="dark"] {
+    .bi-check2-circle.text-success {
+        color: rgba($success, 0.75) !important;
+    }
+
+    .bi-star-fill.text-danger {
+        color: rgba($crimson, 0.8) !important;
+    }
+
+    .profile-section {
+        .bg-danger.bg-opacity-10 {
+            background-color: rgba($crimson, 0.15) !important;
+
+            &.text-danger {
+                color: rgba(lighten($crimson, 20%), 0.9) !important;
+            }
+        }
+
+        // Unificar totes les caixes d'icones i badges (vermelles, grogues, verdes i grises)
+        .bg-danger.bg-opacity-10,
+        .bg-warning.bg-opacity-10,
+        .bg-success.bg-opacity-10,
+        .bg-secondary.bg-opacity-10 {
+            background-color: $dark-navy !important;
+            color: white !important;
+            border: 1px solid rgba($off-white, 0.1) !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            i,
+            span,
+            strong {
+                color: white !important;
+            }
+        }
+
+        .icon-box-reservations {
+            background-color: $dark-navy !important;
+        }
+
+        // Corregir les targetes (plans, etc) perquè no siguin negres i siguin igual de llargues
+        .card {
+            background-color: rgba($off-white, 0.03) !important;
+            border: 1px solid rgba($off-white, 0.1) !important;
+            color: $off-white !important;
+
+            .card-header {
+                background-color: rgba($off-white, 0.05) !important;
+                border-bottom: 1px solid rgba($off-white, 0.1) !important;
+            }
+
+            // Assegurar que el text dins les targetes de plans sigui llegible
+            .text-muted,
+            .text-body-secondary {
+                color: rgba($off-white, 0.6) !important;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            .fw-bold {
+                color: $off-white !important;
+            }
+        }
+
+        .subscription-info-pill i {
+            color: white !important;
+        }
+
+        // Icones d'insígnies i assoliments (vermell menys intens)
+        #stat-insignies-container .text-danger {
+            color: lighten($crimson, 10%) !important;
+            opacity: 0.9;
+        }
+
+        // Corregir el color de text primari (que és massa fosc per al mode fosc)
+        .text-primary {
+            color: $off-white !important;
+        }
+
+        // Unificar fons per a qualsevol icona roja que demani el fons
+        .icon-box-red {
+            background-color: $dark-navy !important;
+            color: white !important;
+            border: 1px solid rgba($off-white, 0.1);
+        }
+
+        // Forçar que les targetes de mètode de pagament siguin llargues (100% ample)
+        .card-selection-item {
+            width: 50% !important;
+            background-color: rgba($off-white, 0.03) !important;
+            border: 1px solid rgba($off-white, 0.1) !important;
+            transition: all 0.2s ease;
+
+            &.bg-danger.bg-opacity-10 {
+                background-color: rgba($crimson, 0.1) !important;
+                border-color: rgba($crimson, 0.5) !important;
+                
+                // Sobreescriure l'inline-flex i centrat que trenca l'estructura
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+            }
+
+            .text-muted {
+                color: rgba($off-white, 0.6) !important;
+            }
+        }
+
+        // Corregir el contenidor de mètodes de pagament per evitar columnes que tallin la targeta
+        #saved-cards-plan .col-xl-6 {
+            width: 100% !important;
+        }
+    }
+}
+
+
+
+// Estils base per a .icon-box-red (Light Mode)
+.profile-section {
+    .icon-box-red {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background-color: rgba($crimson, 0.1);
+        color: $crimson;
+    }
+}
+
+// Intensificar ombres globals de les cards del perfil
+.profile-section .card {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+    transition: box-shadow 0.3s ease;
+
+    [data-bs-theme="dark"] & {
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    &:hover {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12) !important;
+
+        [data-bs-theme="dark"] & {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35) !important;
+        }
+    }
+}
+
+// Password Strength Segments
+.strength-segments {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+
+    .strength-segment {
+        flex: 1;
+        height: 4px;
+        background-color: var(--bs-border-color);
+        border-radius: 2px;
+        transition: background-color 0.3s ease;
+
+        &.active {
+            &.weak {
+                background-color: $danger;
+            }
+
+            &.medium {
+                background-color: $warning;
+            }
+
+            &.strong {
+                background-color: #f1c40f;
+            }
+
+            // Yellow
+            &.expert {
+                background-color: $success;
+            }
+        }
+
+        [data-bs-theme="dark"] & {
+            background-color: rgba($off-white, 0.1);
+        }
+    }
+}
+
+.password-requirements {
+    background-color: rgba($off-white, 0.03);
+    border-radius: 12px;
+    padding: 16px;
+
+    [data-bs-theme="dark"] & {
+        background-color: rgba($off-white, 0.05);
+    }
+
+    .requirement-item {
+        font-size: 0.75rem;
+        color: var(--bs-secondary-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: color 0.3s ease;
+
+        i {
+            font-size: 0.85rem;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        &.met {
+            color: var(--bs-body-color);
+
+            i {
+                color: $success;
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+    }
+}
+
+.security-sidebar-card {
+    &.dark-card {
+        background-color: $dark-navy;
+        color: rgba($off-white, 0.8);
+
+        .card-title {
+            color: $off-white;
+        }
+
+        .small {
+            color: rgba($off-white, 0.6);
+        }
+
+        [data-bs-theme="dark"] & {
+            background-color: rgba(darken($dark-navy, 5%), 0.5);
+        }
+    }
+}
+
+// Subscription Toggle Card (Premium)
+.subscription-toggle-card {
+    background-color: var(--bs-body-bg);
+    border: 1.5px solid var(--bs-border-color);
+    border-radius: 18px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
+    &.active {
+        border-color: rgba($crimson, 0.5);
+        background-color: rgba($crimson, 0.02);
+
+        [data-bs-theme="dark"] & {
+            border-color: rgba($crimson, 0.4);
+            background-color: rgba($crimson, 0.05);
+        }
+
+        .toggle-icon-box {
+            background-color: rgba($crimson, 0.1);
+            color: $crimson;
+            border: 1px solid rgba($crimson, 0.2);
+        }
+
+        .toggle-badge {
+            background-color: rgba($crimson, 0.1);
+            color: $crimson;
+        }
+
+        .custom-switch {
+            background-color: $crimson;
+            border-color: $crimson;
+
+            &::after {
+                transform: translateX(22px);
+                background-color: white;
+            }
+        }
+    }
+
+    &:not(.active) {
+        .toggle-icon-box {
+            background-color: rgba(var(--bs-secondary-rgb), 0.1);
+            color: var(--bs-secondary-color);
+            border: 1px solid var(--bs-border-color);
+        }
+
+        .toggle-badge {
+            background-color: rgba(var(--bs-secondary-rgb), 0.1);
+            color: var(--bs-secondary-color);
+        }
+
+        .custom-switch {
+            // Lògica delegada a la classe .custom-switch base
+        }
+
+        .toggle-desc {
+            opacity: 0.6;
+        }
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.toggle-icon-box {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.toggle-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+}
+
+.custom-switch {
+    width: 48px;
+    height: 26px;
+    border-radius: 30px;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+    // Fons gris quan està apagat
+    background-color: rgba(var(--bs-secondary-rgb), 0.2);
+    border: 1px solid var(--bs-border-color);
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    // Estat activat (on)
+    &.on {
+        background-color: $crimson;
+        border-color: $crimson;
+
+        &::after {
+            transform: translateX(22px);
+            background-color: white;
+        }
     }
 }
 
 @keyframes fadeUp {
     from {
         opacity: 0;
-        transform: translateY(12px);
+        transform: translateY(15px);
     }
 
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+// Plan Switcher
+.plan-switcher-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.plan-switcher {
+    background: rgba(128, 128, 128, 0.05);
+    border: 1px solid var(--bs-border-color);
+    padding: 4px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+    [data-bs-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn {
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 8px 24px;
+        color: var(--bs-secondary-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px;
+
+        &:hover {
+            color: var(--bs-body-color);
+        }
+
+        &.active {
+            background-color: $crimson !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba($crimson, 0.3);
+        }
+    }
+}
+
+// Utility to show/hide content based on monthly/annual
+#section-plan {
+    .annual-content {
+        display: none !important;
+    }
+
+    &.annual-plan-active {
+        .annual-content {
+            display: block !important;
+        }
+
+        .monthly-content {
+            display: none !important;
+        }
+    }
+}
+
+.text-success-custom {
+    color: #27ae60;
+
+    [data-bs-theme="dark"] & {
+        color: #2ecc71;
+    }
+}
+
+
+// Input de cerca
+.history-search-input {
+    width: 170px;
+    flex-shrink: 0;
+    border-color: var(--bs-border-color);
+    border-radius: 0.5rem !important;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    font-size: 0.85rem;
+
+    &::placeholder {
+        color: $slate-gray;
+    }
+
+    &:focus {
+        border-color: $crimson;
+        box-shadow: 0 0 0 0.2rem rgba($crimson, 0.15);
+        background-color: var(--bs-body-bg);
+    }
+}
+
+// Select d'estats
+.history-status-select {
+    width: 150px;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    border-color: var(--bs-border-color);
+    border-radius: 0.5rem;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+
+    &:focus {
+        border-color: $crimson;
+        box-shadow: 0 0 0 0.2rem rgba($crimson, 0.15);
+    }
+}
+
+// Botó de cerca
+.history-search-btn {
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba($dark-navy, 0.25);
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+}
+
+// Reward Points Section Styles
+.reward-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    &.locked {
+        opacity: 0.8;
+
+        .reward-points-badge {
+            background: rgba($off-white, 0.05);
+            color: $slate-gray;
+        }
+    }
+}
+
+.reward-icon-container {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba($crimson, 0.08);
+    color: $crimson;
+
+    [data-bs-theme="dark"] & {
+        background: rgba($crimson, 0.15);
+        color: lighten($crimson, 15%);
+    }
+}
+
+.reward-points-badge {
+    background: rgba($crimson, 0.05);
+    border: 1px solid rgba($crimson, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: $crimson;
+
+    [data-bs-theme="dark"] & {
+        background: rgba($crimson, 0.1);
+        color: lighten($crimson, 10%);
+    }
+}
+
+// Sidebar Badges
+.badge-icon-sm {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($white, 0.1);
+    color: $white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    cursor: help;
+    transition: transform 0.2s ease, background 0.2s ease;
+
+    &:hover {
+        transform: scale(1.2);
+        background: rgba($white, 0.2);
+    }
+}
+
+// Capçalera de la taula d'historial
+#section-history table thead tr {
+    background-color: var(--bs-body-bg);
+
+    th {
+        padding: 0.75rem;
+        color: var(--bs-secondary-color);
+        font-size: 0.7rem;
+    }
+}
+
+// ── Paginació Bootstrap sobreescrita amb colors del projecte ─────────────────
+#history-pagination-container {
+    .pagination {
+        gap: 0.2rem;
+
+        .page-item {
+
+            .page-link {
+                border-radius: 0.45rem !important;
+                border-color: var(--bs-border-color);
+                background-color: transparent;
+                color: $dark-navy;
+                font-size: 0.85rem;
+                padding: 0.35rem 0.65rem;
+                transition: all 0.18s ease;
+                line-height: 1.4;
+
+                &:hover {
+                    background-color: rgba($dark-navy, 0.06);
+                    border-color: rgba($dark-navy, 0.4);
+                    color: $dark-navy;
+                    transform: translateY(-1px);
+                }
+
+                // Dark mode
+                [data-bs-theme="dark"] & {
+                    color: $off-white;
+                    border-color: rgba($off-white, 0.15);
+                    background-color: transparent;
+
+                    &:hover {
+                        background-color: rgba($off-white, 0.08);
+                        border-color: rgba($off-white, 0.3);
+                        color: $off-white;
+                    }
+                }
+            }
+
+            // Pàgina activa
+            &.active .page-link {
+                background-color: $dark-navy;
+                border-color: $dark-navy;
+                color: $off-white;
+                font-weight: 600;
+                box-shadow: 0 2px 8px rgba($dark-navy, 0.3);
+                transform: none;
+
+                [data-bs-theme="dark"] & {
+                    background-color: $crimson;
+                    border-color: $crimson;
+                    box-shadow: 0 2px 8px rgba($crimson, 0.4);
+                }
+            }
+
+            // Deshabilitades (Previous/Next quan no disponible)
+            &.disabled .page-link {
+                opacity: 0.35;
+                pointer-events: none;
+
+                [data-bs-theme="dark"] & {
+                    color: rgba($off-white, 0.35);
+                    border-color: rgba($off-white, 0.1);
+                }
+            }
+        }
+    }
+}
+
+// ── Historial de Tiquets de Subscripció ──────────────────────────────────────
+
+// Pills informatius (pla, membre, renovació, mètode)
+.subscription-info-pill {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 2rem;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.8rem;
+    color: var(--bs-body-color);
+    transition: background 0.2s ease, border-color 0.2s ease;
+
+    strong {
+        font-weight: 700;
+    }
+
+    [data-bs-theme="dark"] & {
+        background-color: rgba($off-white, 0.04);
+        border-color: rgba($off-white, 0.12);
+        color: rgba($off-white, 0.85);
+    }
+}
+
+// Badge de cicle (Mensual / Anual) dins la taula
+.ticket-cycle-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.73rem;
+    font-weight: 600;
+
+    &.ticket-cycle-mensual {
+        background-color: rgba($dark-navy, 0.08);
+        color: $dark-navy;
+
+        [data-bs-theme="dark"] & {
+            background-color: rgba($off-white, 0.08);
+            color: $off-white;
+        }
+    }
+
+    &.ticket-cycle-anual {
+        background-color: rgba($crimson, 0.1);
+        color: $crimson;
+
+        [data-bs-theme="dark"] & {
+            background-color: rgba($crimson, 0.18);
+            color: lighten($crimson, 15%);
+        }
+    }
+}
+
+// Taula de tiquets: capçalera
+#tickets-card table thead tr {
+    background-color: var(--bs-body-bg);
+
+    th {
+        padding: 0.75rem;
+        color: var(--bs-secondary-color);
+        font-size: 0.7rem;
+    }
+}
+
+// ── Responsive mòbil: CRUDs admin i Historial ────────────────────────────────
+//
+// Problema: A resolucions <768px el contingut de les seccions (capçaleres amb
+// botons, filtres en fila, taules) desbordat queda tallat perquè el contenidor
+// no tenia scroll horitzontal. La solució afegeix overflow-x: auto al card-body
+// i assegura que els controls de cerca/filtres puguin fer wrap a mòbil.
+//
+@media (max-width: 767.98px) {
+
+    // ── Àrea principal del perfil ──────────────────────────────────────────────
+    // Garanteix que el <main> no talli el contingut ample
+    #main-content {
+        overflow-x: hidden; // Evita scroll lateral a nivell de pàgina
+        padding: 1rem !important;
+    }
+
+    // ── CRUD Usuaris ───────────────────────────────────────────────────────────
+    #section-admin-users {
+        .card-header {
+            // La capçalera amb títol + botó "Afegir Usuari" pot fer wrap
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.75rem;
+            }
+            #btn-add-user {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        .card-body {
+            overflow-x: auto; // Scroll horitzontal si la taula no cap
+            padding: 1rem !important;
+        }
+        // Filtres: cerca i selector en columna
+        .row.g-3.mb-4 {
+            .col-md-6,
+            .col-md-3 {
+                width: 100%;
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    }
+
+    // ── CRUD Aparcaments ───────────────────────────────────────────────────────
+    #section-admin-parkings {
+        .card-header,
+        .card-header > div {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+        #btn-add-parking {
+            width: 100%;
+            justify-content: center;
+        }
+        // Filtres: cols en columna
+        .p-3.bg-body-tertiary .row.g-2 {
+            .col-md-5,
+            .col-md-3,
+            .col-md-1 {
+                width: 100%;
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+        // Scroll horitzontal a la taula
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    // ── CRUD Blog ──────────────────────────────────────────────────────────────
+    #section-admin-blog {
+        .card-body {
+            overflow-x: auto;
+            padding: 1rem !important;
+        }
+        // Capçalera: títol + botó "Nou Article"
+        .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+            #btn-add-article {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        // Scroll horitzontal a la taula
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    // ── Historial (Reserves i Tiquets) ─────────────────────────────────────────
+    #section-history {
+        .card-body {
+            overflow-x: auto;
+            padding: 1rem !important;
+        }
+        // Controls de cerca: passen a columna
+        .history-search-controls,
+        .d-flex.align-items-center.gap-2.flex-wrap {
+            flex-direction: column;
+            align-items: stretch !important;
+            width: 100%;
+        }
+        .history-search-input,
+        .history-status-select {
+            width: 100% !important;
+            flex-shrink: unset;
+        }
+        .history-search-btn {
+            width: 100%;
+        }
+        // Capçalera: títol + controls en columna
+        .d-flex.align-items-center.justify-content-between.mb-4,
+        .d-flex.align-items-center.justify-content-between.mb-3 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+        // Pills informatius del pla: scroll horitzontal si no caben
+        #tickets-info-pills {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        // Scroll horitzontal a les taules
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        // Paginació centrada a mòbil
+        #history-pagination-container,
+        #tickets-pagination-container {
+            justify-content: center;
+            width: 100%;
+        }
+        // Resum + paginació en columna
+        .d-flex.align-items-center.justify-content-between.mt-4 {
+            flex-direction: column;
+            align-items: center !important;
+            gap: 0.5rem;
+        }
+    }
+}
+
+// Paginació de tiquets — hereta el mateix estil que la de reserves
+#tickets-pagination-container {
+    .pagination {
+        gap: 0.2rem;
+
+        .page-item {
+            .page-link {
+                border-radius: 0.45rem !important;
+                border-color: var(--bs-border-color);
+                background-color: transparent;
+                color: $dark-navy;
+                font-size: 0.85rem;
+                padding: 0.35rem 0.65rem;
+                transition: all 0.18s ease;
+                line-height: 1.4;
+
+                &:hover {
+                    background-color: rgba($dark-navy, 0.06);
+                    border-color: rgba($dark-navy, 0.4);
+                    color: $dark-navy;
+                    transform: translateY(-1px);
+                }
+
+                [data-bs-theme="dark"] & {
+                    color: $off-white;
+                    border-color: rgba($off-white, 0.15);
+                    background-color: transparent;
+
+                    &:hover {
+                        background-color: rgba($off-white, 0.08);
+                        border-color: rgba($off-white, 0.3);
+                        color: $off-white;
+                    }
+                }
+            }
+
+            &.active .page-link {
+                background-color: $dark-navy;
+                border-color: $dark-navy;
+                color: $off-white;
+                font-weight: 600;
+                box-shadow: 0 2px 8px rgba($dark-navy, 0.3);
+                transform: none;
+
+                [data-bs-theme="dark"] & {
+                    background-color: $crimson;
+                    border-color: $crimson;
+                    box-shadow: 0 2px 8px rgba($crimson, 0.4);
+                }
+            }
+
+            &.disabled .page-link {
+                opacity: 0.35;
+                pointer-events: none;
+
+                [data-bs-theme="dark"] & {
+                    color: rgba($off-white, 0.35);
+                    border-color: rgba($off-white, 0.1);
+                }
+            }
+        }
     }
 }

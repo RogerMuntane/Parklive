@@ -25,8 +25,17 @@
     --bs-btn-hover-border-color: var(--bs-border-color);
   }
 
-  // Botó tornar enrere (btn-light): adaptar a dark mode
-  .page-auth .btn-light {
+  // Botons outline-primary: adaptar border i text per millorar la visibilitat en mode fosc
+  .btn-outline-primary {
+    --bs-btn-color: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-border-color: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-hover-bg: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-hover-border-color: var(--bs-primary-bg-subtle, #9ec5fe);
+    --bs-btn-hover-color: var(--bs-dark);
+  }
+
+  // Botons btn-light: adaptar a dark mode de forma global
+  .btn-light {
     --bs-btn-bg: var(--bs-tertiary-bg);
     --bs-btn-border-color: var(--bs-border-color);
     --bs-btn-color: var(--bs-body-color);
@@ -44,11 +53,6 @@
   .page-landing .date-mini-sheet {
     background: #1f2937;
     border-top-color: rgba(var(--bs-light-rgb), 0.2);
-  }
-
-  .page-landing .map-btn-dates {
-    background: rgba(var(--bs-light-rgb), 0.16);
-    color: var(--bs-light);
   }
 
   .page-landing .date-sheet-row label {
@@ -89,8 +93,51 @@
   }
 
   .page-landing .map-btn-filter {
-    background: rgba(var(--bs-light-rgb), 0.18);
-    color: var(--bs-light);
+    --bs-btn-color: var(--bs-light);
+    --bs-btn-bg: rgba(var(--bs-light-rgb), 0.16);
+    --bs-btn-border-color: rgba(var(--bs-light-rgb), 0.34);
+    --bs-btn-hover-color: #111827;
+    --bs-btn-hover-bg: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-hover-border-color: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-active-color: #111827;
+    --bs-btn-active-bg: rgba(var(--bs-light-rgb), 0.78);
+    --bs-btn-active-border-color: rgba(var(--bs-light-rgb), 0.78);
+  }
+
+  .page-landing .map-btn-dates {
+    --bs-btn-color: var(--bs-light);
+    --bs-btn-bg: rgba(var(--bs-light-rgb), 0.16);
+    --bs-btn-border-color: rgba(var(--bs-light-rgb), 0.34);
+    --bs-btn-hover-color: #111827;
+    --bs-btn-hover-bg: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-hover-border-color: rgba(var(--bs-light-rgb), 0.92);
+    --bs-btn-active-color: #111827;
+    --bs-btn-active-bg: rgba(var(--bs-light-rgb), 0.78);
+    --bs-btn-active-border-color: rgba(var(--bs-light-rgb), 0.78);
+  }
+
+  .page-landing .map-btn-report {
+    --bs-btn-color: var(--bs-light);
+    --bs-btn-bg: rgba(var(--bs-success-rgb), 0.34);
+    --bs-btn-border-color: rgba(var(--bs-success-rgb), 0.58);
+    --bs-btn-hover-color: var(--bs-white);
+    --bs-btn-hover-bg: rgba(var(--bs-success-rgb), 0.52);
+    --bs-btn-hover-border-color: rgba(var(--bs-success-rgb), 0.75);
+    --bs-btn-active-color: var(--bs-white);
+    --bs-btn-active-bg: rgba(var(--bs-success-rgb), 0.62);
+    --bs-btn-active-border-color: rgba(var(--bs-success-rgb), 0.82);
+  }
+
+  .page-landing .map-btn-search {
+    --bs-btn-color: var(--bs-white);
+    --bs-btn-bg: rgba(var(--bs-danger-rgb), 0.88);
+    --bs-btn-border-color: rgba(var(--bs-danger-rgb), 0.95);
+    --bs-btn-hover-color: var(--bs-white);
+    --bs-btn-hover-bg: rgba(var(--bs-danger-rgb), 1);
+    --bs-btn-hover-border-color: rgba(var(--bs-danger-rgb), 1);
+    --bs-btn-active-color: var(--bs-white);
+    --bs-btn-active-bg: rgba(var(--bs-danger-rgb), 0.8);
+    --bs-btn-active-border-color: rgba(var(--bs-danger-rgb), 0.8);
   }
 
   .page-landing .filters-close {
@@ -122,5 +169,52 @@
   .page-landing .status-dot {
     border-color: rgba(var(--bs-light-rgb), 0.58);
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
+  }
+
+  .page-landing .parking-result-card {
+    border-color: rgba(var(--bs-light-rgb), 0.14) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(31, 41, 55, 0.94),
+      rgba(17, 24, 39, 0.9)
+    );
+  }
+
+  .page-landing .parking-result-card:hover {
+    border-color: rgba(255, 159, 159, 0.55) !important;
+    box-shadow: 0 0.7rem 1.3rem rgba(0, 0, 0, 0.34) !important;
+  }
+
+  .page-landing .parking-result-meta i {
+    color: rgba(255, 159, 159, 0.95);
+  }
+
+  .page-landing .parking-result-tags .badge {
+    color: rgba(var(--bs-light-rgb), 0.96) !important;
+    background: rgba(var(--bs-light-rgb), 0.16) !important;
+    border-color: rgba(var(--bs-light-rgb), 0.34) !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+  }
+
+  .page-landing .parking-favorite-btn {
+    border-color: rgba(255, 140, 140, 0.88);
+    background: rgba(128, 24, 24, 0.62);
+    color: #ffd9d9;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 140, 140, 0.22),
+      0 0.25rem 0.55rem rgba(145, 26, 26, 0.32);
+  }
+
+  .page-landing .parking-favorite-btn:hover,
+  .page-landing .parking-favorite-btn:focus-visible {
+    border-color: rgba(255, 178, 178, 0.98);
+    background: rgba(160, 30, 30, 0.72);
+    color: #ffe8e8;
+  }
+
+  .page-landing .parking-favorite-btn.is-active {
+    border-color: rgba(255, 159, 159, 1);
+    background: rgba(255, 123, 123, 0.95);
+    color: #2b0c0c;
   }
 }

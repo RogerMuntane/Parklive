@@ -1,0 +1,249 @@
+<!-- Profile Statistics Component -->
+<section class="profile-section animate-stagger" id="section-stadistics">
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Reserves totals -->
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-uppercase text-secondary mb-1 fw-medium" style="font-size:.65rem;letter-spacing:.09em;">Reserves totals</p>
+                            <h3 class="fw-bold mb-1 h2" id="stat-total-reserves">—</h3>
+                            <small class="fw-medium" id="stat-reserves-trend">
+                                <i class="bi bi-arrow-up-short"></i> — vs. mes anterior
+                            </small>
+                        </div>
+                        <div class="rounded-2 d-flex align-items-center justify-content-center bg-success bg-opacity-10" style="width:38px;height:38px;">
+                            <i class="bi bi-calendar-check text-success"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-success rounded-bottom" style="height:3px;"></div>
+            </div>
+        </div>
+
+        <!-- Despesa total -->
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-uppercase text-secondary mb-1 fw-medium" style="font-size:.65rem;letter-spacing:.09em;">Despesa total</p>
+                            <h3 class="fw-bold mb-1 h2" id="stat-total-despesa">—</h3>
+                            <small class="fw-medium" id="stat-despesa-trend">
+                                <i class="bi bi-arrow-down-short"></i> — vs. mes anterior
+                            </small>
+                        </div>
+                        <div class="rounded-2 d-flex align-items-center justify-content-center bg-danger bg-opacity-10" style="width:38px;height:38px;">
+                            <i class="bi bi-currency-euro text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-danger rounded-bottom" style="height:3px;"></div>
+            </div>
+        </div>
+
+        <!-- Temps aparcat -->
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-uppercase text-secondary mb-1 fw-medium" style="font-size:.65rem;letter-spacing:.09em;">Temps aparcat</p>
+                            <h3 class="fw-bold mb-1 h2" id="stat-temps-aparcat">—</h3>
+                            <small class="text-success fw-medium" id="stat-temps-trend">
+                                <i class="bi bi-arrow-up-short"></i> hores acumulades
+                            </small>
+                        </div>
+                        <div class="rounded-2 d-flex align-items-center justify-content-center bg-warning bg-opacity-10" style="width:38px;height:38px;">
+                            <i class="bi bi-clock text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-warning rounded-bottom" style="height:3px;"></div>
+            </div>
+        </div>
+
+        <!-- Punts de gamificació -->
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-uppercase text-secondary mb-1 fw-medium" style="font-size:.65rem;letter-spacing:.09em;">Punts de gamificació</p>
+                            <h3 class="fw-bold mb-1 h2" id="stat-punts">—</h3>
+                            <small class="text-success fw-medium" id="stat-punts-trend">
+                                <i class="bi bi-star-fill"></i> punts acumulats
+                            </small>
+                        </div>
+                        <div class="rounded-2 d-flex align-items-center justify-content-center bg-primary bg-opacity-10" style="width:38px;height:38px;">
+                            <i class="bi bi-star text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-primary rounded-bottom" style="height:3px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts row 1 -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <h6 class="fw-bold mb-0">Despesa mensual (€)</h6>
+                            <small class="text-secondary opacity-75 font-monospace" style="font-size:.73rem;">Dades mensuals de reserves finalitzades</small>
+                        </div>
+                        <span class="badge rounded-pill px-3 py-2 bg-success bg-opacity-10 text-success fw-medium" style="font-size:.7rem;">Completats</span>
+                    </div>
+                    <!-- ApexCharts renditza SVG dins de <div>, no <canvas> -->
+                    <div id="chart-despesa-mensual" style="min-height:200px;height:200px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <h6 class="fw-bold mb-0">Tipus d'aparcament</h6>
+                        <small class="text-secondary opacity-75 font-monospace" style="font-size:.73rem;">Distribució segons tipologia</small>
+                    </div>
+                    <div class="d-flex justify-content-center" style="min-height:175px;height:175px;">
+                        <div id="chart-tipus-aparcament" style="width:100%;"></div>
+                    </div>
+                    <!-- Llegenda dinàmica generada pel controlador -->
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mt-2" id="legend-tipus-aparcament"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts row 2 -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-0">Reserves per estat</h6>
+                    <small class="text-secondary opacity-75 font-monospace" style="font-size:.73rem;">Dades globals per cada reserva</small>
+                    <div id="chart-reserves-estat" style="min-height:190px;height:190px;margin-top:12px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-0">Contribucions per tipus</h6>
+                    <small class="text-secondary opacity-75 font-monospace" style="font-size:.73rem;">Resum total de col·laboracions</small>
+                    <div id="chart-contribucions-tipus" style="min-height:190px;height:190px;margin-top:12px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Gamificació + Top aparcaments + Dades de detall -->
+    <div class="row g-3">
+        <!-- Gamificació -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-0">Gamificació</h6>
+                    <small class="text-secondary opacity-75 font-monospace" style="font-size:.73rem;">Els teus assoliments</small>
+
+                    <div class="text-center my-3">
+                        <div class="fw-bold text-primary display-5" style="line-height:1;" id="stat-gamificacio-punts">—</div>
+                        <div class="text-secondary small">punts acumulats</div>
+                    </div>
+
+                    <!-- Progress cap a la propera recompensa -->
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1 text-secondary" style="font-size:.72rem;">
+                            <span>0 pts</span>
+                            <span>Propera recompensa: <strong id="stat-propera-recompensa">—</strong></span>
+                        </div>
+                        <div class="progress" style="height:6px;">
+                            <div class="progress-bar bg-primary" id="stat-progres-bar" role="progressbar"
+                                 style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <!-- Banner informació -->
+                    <div class="rounded-3 px-3 py-2 mb-3 d-flex align-items-center gap-2 bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                        <i class="bi bi-stars text-primary"></i>
+                        <span class="small">Falten <strong id="stat-punts-restants">—</strong> punts per a
+                            <strong class="text-primary" id="stat-propera-recompensa-banner">la propera recompensa</strong></span>
+                    </div>
+
+                    <p class="text-uppercase text-secondary mb-2 fw-medium" style="font-size:.65rem;letter-spacing:.09em;">Insígnies obtingudes</p>
+                    <div class="row g-2" id="stat-insignies-container">
+                        <!-- Spinner inicial; el controlador omple el contingut -->
+                        <div class="col-12 text-center py-2">
+                            <span class="spinner-border spinner-border-sm text-secondary opacity-50" role="status"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top aparcaments -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-0">Aparcaments més usats</h6>
+                    <small class="text-secondary opacity-75 font-monospace" style="font-size:.73rem;">Relació de aparcaments on has reservat</small>
+
+                    <div class="mt-3 d-flex flex-column gap-2" id="stat-top-aparcaments">
+                        <!-- Spinner inicial; el controlador omple el contingut -->
+                        <div class="text-center py-3">
+                            <span class="spinner-border spinner-border-sm text-secondary opacity-50" role="status"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-3 border-secondary opacity-10">
+
+                    <p class="text-uppercase text-secondary mb-2 fw-medium" style="font-size:.65rem;letter-spacing:.09em;">Distribució per dia</p>
+                    <div id="chart-dies-setmana" style="min-height:90px;height:90px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dades de detall -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-0">Dades de detall</h6>
+                    <small class="text-secondary">Resum de l'activitat</small>
+
+                    <div class="mt-3 d-flex flex-column gap-1">
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light-subtle">
+                            <span class="d-flex align-items-center gap-2 text-secondary small"><i class="bi bi-currency-euro"></i>Despesa mitjana</span>
+                            <span class="fw-bold text-primary small" id="stat-despesa-mitja">—</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light-subtle">
+                            <span class="d-flex align-items-center gap-2 text-secondary small"><i class="bi bi-clock"></i>Durada mitjana</span>
+                            <span class="fw-bold text-primary small" id="stat-durada-mitja">—</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light-subtle">
+                            <span class="d-flex align-items-center gap-2 text-secondary small"><i class="bi bi-check2-circle"></i>Contribucions totals</span>
+                            <span class="fw-bold text-primary small" id="stat-contribucions-totals">—</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light-subtle">
+                            <span class="d-flex align-items-center gap-2 text-secondary small"><i class="bi bi-star"></i>Valoració mitjana</span>
+                            <span class="fw-bold text-primary small" id="stat-valoracio-mitja">—</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-3 border-secondary opacity-10">
+
+                    <p class="text-uppercase text-secondary mb-2 fw-medium" style="font-size:.65rem;letter-spacing:.09em;">Top tipus aparcament</p>
+                    <!-- Progress bars generades pel controlador -->
+                    <div class="d-flex flex-column gap-2" id="stat-tipus-preferits"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>

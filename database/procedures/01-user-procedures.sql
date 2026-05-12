@@ -7,6 +7,8 @@ DROP PROCEDURE IF EXISTS sp_actualitzar_contrasenya;
 DROP PROCEDURE IF EXISTS sp_obtenir_usuari_per_email;
 DROP PROCEDURE IF EXISTS sp_obtenir_usuari_per_id;
 DROP PROCEDURE IF EXISTS sp_actualitzar_ultima_connexio;
+DROP PROCEDURE IF EXISTS sp_actualitzar_stripe_customer_id;
+DROP PROCEDURE IF EXISTS sp_bescanviar_recompensa;
 -- 1. COMPROVAR SI EXISTEIX EL EMAIL
 -- Retorna 1 si l'email existeix, 0 si no existeix
 -- Exemple: CALL sp_comprovar_email_existeix('joan@example.com', @existeix);
@@ -160,6 +162,7 @@ SELECT id,
     nom,
     cognoms,
     email,
+    foto_perfil,
     contrasenya_hash,
     telefon,
     data_registre,
@@ -169,6 +172,7 @@ SELECT id,
     email_verificat,
     punts_gamificacio,
     preferencies,
+    stripe_customer_id,
     created_at,
     updated_at
 FROM usuaris
@@ -189,6 +193,7 @@ SELECT id,
     nom,
     cognoms,
     email,
+    foto_perfil,
     contrasenya_hash,
     telefon,
     data_registre,
@@ -198,6 +203,7 @@ SELECT id,
     email_verificat,
     punts_gamificacio,
     preferencies,
+    stripe_customer_id,
     created_at,
     updated_at
 FROM usuaris
@@ -221,13 +227,124 @@ WHERE email = TRIM(LOWER(p_email))
 END//
 
 DELIMITER ;
+
+-- 7. ACTUALITZAR STRIPE CUSTOMER ID
+DELIMITER //
+CREATE PROCEDURE sp_actualitzar_stripe_customer_id(IN p_usuari_id INT, IN p_stripe_id VARCHAR(255))
+BEGIN
+UPDATE usuaris SET stripe_customer_id = p_stripe_id, updated_at = NOW() WHERE id = p_usuari_id;
+END//
+DELIMITER ;
+
+-- 8. BESCANVIAR RECOMPENSA PER PUNTS
+-- Descompta punts i registra el bescanvi de forma transaccional.
+-- Exemple: CALL sp_bescanviar_recompensa(1, 2, @bescanvi_id, @error_msg);
+DELIMITER //
+CREATE PROCEDURE sp_bescanviar_recompensa(
+    IN p_usuari_id INT,
+    IN p_recompensa_id INT,
+    OUT p_bescanvi_id BIGINT,
+    OUT p_error_msg VARCHAR(500)
+)
+BEGIN
+    DECLARE v_requisit_punts INT;
+    DECLARE v_activa BOOLEAN;
+    DECLARE v_punts_actuals INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_bescanvi_id = NULL;
+        SET p_error_msg = 'Error al bescanviar recompensa: Excepció SQL';
+    END;
+
+    START TRANSACTION;
+    SET p_error_msg = NULL;
+
+    SELECT requisit_punts, activa
+    INTO v_requisit_punts, v_activa
+    FROM recompenses
+    WHERE id = p_recompensa_id
+    FOR UPDATE;
+
+    IF v_requisit_punts IS NULL THEN
+        SET p_error_msg = 'Recompensa no trobada';
+        ROLLBACK;
+    END IF;
+
+    IF p_error_msg IS NULL AND v_activa = FALSE THEN
+        SET p_error_msg = 'La recompensa no està activa';
+        ROLLBACK;
+    END IF;
+
+    IF p_error_msg IS NULL THEN
+        SELECT punts_gamificacio
+        INTO v_punts_actuals
+        FROM usuaris
+        WHERE id = p_usuari_id
+        FOR UPDATE;
+
+        IF v_punts_actuals IS NULL THEN
+            SET p_error_msg = 'Usuari no trobat';
+            ROLLBACK;
+        END IF;
+    END IF;
+
+    IF p_error_msg IS NULL AND v_punts_actuals < v_requisit_punts THEN
+        SET p_error_msg = 'No tens prou punts per bescanviar aquesta recompensa';
+        ROLLBACK;
+    END IF;
+
+    IF p_error_msg IS NULL THEN
+        INSERT INTO bescanvis_recompenses (
+            usuari_id,
+            recompensa_id,
+            punts_cost,
+            estat
+        ) VALUES (
+            p_usuari_id,
+            p_recompensa_id,
+            v_requisit_punts,
+            'pendent'
+        );
+
+        SET p_bescanvi_id = LAST_INSERT_ID();
+
+        UPDATE usuaris
+        SET punts_gamificacio = punts_gamificacio - v_requisit_punts
+        WHERE id = p_usuari_id;
+
+        INSERT INTO punts_moviments (
+            usuari_id,
+            tipus_moviment,
+            punts,
+            origen_tipus,
+            origen_id,
+            descripcio,
+            idempotency_key
+        ) VALUES (
+            p_usuari_id,
+            'bescanvi',
+            -v_requisit_punts,
+            'recompensa',
+            p_recompensa_id,
+            CONCAT('Bescanvi recompensa #', p_recompensa_id),
+            CONCAT('bescanvi-', p_bescanvi_id)
+        );
+
+        SET p_error_msg = NULL;
+        COMMIT;
+    END IF;
+END//
+DELIMITER ;
+
 -- EXEMPLES D'ÚS
 /*
- 
+
  -- 1. COMPROVAR SI EMAIL EXISTEIX
  CALL sp_comprovar_email_existeix('joan@example.com', @existeix);
  SELECT @existeix as email_existeix;
- 
+
  -- 2. INSERTAR NOU USUARI
  CALL sp_insertar_usuari(
  'Maria',                              -- nom
@@ -240,7 +357,7 @@ DELIMITER ;
  @error                               -- OUT: missatge d'error si n'hi ha
  );
  SELECT @nou_id as usuari_id, @error as error_message;
- 
+
  -- 3. ACTUALITZAR CONTRASENYA
  CALL sp_actualitzar_contrasenya(
  'maria.lopez@example.com',           -- email
@@ -249,16 +366,16 @@ DELIMITER ;
  @error                               -- OUT: missatge d'error
  );
  SELECT @actualitzat as contrasenya_actualitzada, @error as error_message;
- 
+
  -- 4. OBTENIR USUARI PER EMAIL
  CALL sp_obtenir_usuari_per_email('maria.lopez@example.com');
- 
+
  -- 5. OBTENIR USUARI PER ID
  CALL sp_obtenir_usuari_per_id(1);
- 
+
  -- 6. ACTUALITZAR ÚLTIMA CONNEXIÓ
  CALL sp_actualitzar_ultima_connexio('maria.lopez@example.com');
- 
+
  */
 -- VERIFICACIÓ: Mostrar tots els procedures creats
 SELECT ROUTINE_NAME as 'Procedure',

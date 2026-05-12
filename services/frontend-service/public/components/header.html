@@ -1,92 +1,50 @@
-<!-- Componente reutilizable: Header / Navbar -->
+<!-- Component reutilitzable: Capçalera / Navbar -->
 <header class="site-header" role="banner">
-  <nav
-    class="navbar navbar-expand-lg navbar-dark bg-primary"
-    aria-label="Navegación principal"
-  >
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary" aria-label="Navegació principal">
     <div class="container">
-      <a
-        class="navbar-brand text-white fw-semibold"
-        href="/index.html"
-        aria-label="Ir a inicio de ParkLive"
-        ><img
-          src="../assets/images/parklive_logo_grande.png"
-          alt="Parklive logo"
-          class="img-fluid"
-          style="max-height: 100px; width: auto"
-      /></a>
+      <a class="navbar-brand text-white fw-semibold" href="/" aria-label="Ves a l'inici de ParkLive"><img
+          src="/assets/images/parklive_logo_grande.png" alt="Parklive logo" class="img-fluid"
+          style="max-height: 100px; width: auto" /></a>
 
-      <button
-        class="navbar-toggler border-0"
-        type="button"
-        data-bs-toggle="offcanvas"
-        data-bs-target="#mainNavbar"
-        aria-controls="mainNavbar"
-        aria-label="Abrir menú de navegación"
-      >
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNavbar"
+        aria-controls="mainNavbar" aria-label="Obrir menú de navegació">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div
-        class="offcanvas offcanvas-end"
-        tabindex="-1"
-        id="mainNavbar"
-        aria-labelledby="mainNavbarLabel"
-      >
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="mainNavbar" aria-labelledby="mainNavbarLabel">
         <div class="offcanvas-header bg-primary">
           <h5 class="offcanvas-title text-white fs-2" id="mainNavbarLabel">
             Menú
           </h5>
-          <button
-            type="button"
-            class="btn-close btn-close-white"
-            data-bs-dismiss="offcanvas"
-            aria-label="Cerrar menú"
-          ></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+            aria-label="Tancar menú"></button>
         </div>
-        <div
-          class="offcanvas-body bg-primary d-flex flex-column flex-lg-row align-items-lg-center"
-        >
+        <div class="offcanvas-body bg-primary d-flex flex-column flex-lg-row align-items-lg-center">
           <div
-            class="d-flex align-items-center justify-content-between justify-content-lg-center gap-4 gap-lg-3 mb-0 mb-lg-0 order-first order-lg-last ms-lg-3"
-          >
-            <button
-              class="btn btn-secondary btn-lg"
-              type="button"
-              aria-label="Activar tema oscuro"
-              data-theme-toggle="dark"
-            >
+            class="d-flex align-items-center justify-content-between justify-content-lg-center gap-4 gap-lg-3 mb-0 mb-lg-0 order-first order-lg-last ms-lg-3">
+            <button class="btn btn-secondary btn-lg" type="button" aria-label="Activar tema oscuro"
+              data-theme-toggle="dark">
               <i class="bi bi-moon"></i>
             </button>
-            <button
-              class="btn btn-secondary btn-lg"
-              type="button"
-              aria-label="Activar tema claro"
-              data-theme-toggle="light"
-            >
+            <button class="btn btn-secondary btn-lg" type="button" aria-label="Activar tema claro"
+              data-theme-toggle="light">
               <i class="bi bi-sun"></i>
             </button>
-            <a
-              class="btn btn-secondary btn-lg"
-              href="../login.html"
-              aria-label="Acceder al perfil de usuario"
-              data-role="auth-toggle"
-            >
+            <a class="btn btn-secondary btn-lg" href="/login" aria-label="Accedir al perfil d'usuari"
+              data-role="auth-toggle">
               <i class="bi bi-person"></i>
             </a>
           </div>
 
           <ul class="navbar-nav me-auto mb-2 mb-lg-0 order-2 order-lg-first">
             <li class="nav-item">
-              <a class="nav-link text-white fs-4" href="/index.html"
-                >Sobre Parklive</a
-              >
+              <a class="nav-link text-white fs-4" href="/sobre-parklive">Sobre Parklive</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-white fs-4" href="#">Blog</a>
+              <a class="nav-link text-white fs-4" href="/blog">Blog</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-white fs-4" href="#">Contact Us</a>
+              <a class="nav-link text-white fs-4" href="/contacte">Contacte</a>
             </li>
           </ul>
         </div>

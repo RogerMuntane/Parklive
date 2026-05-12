@@ -52,14 +52,14 @@ run_sql_dir() {
     fi
 
     echo "[init-db]  -> $base_name"
-    mysql -u root -p"$DB_ROOT_PASS" "$DB_NAME" < "$f"
+    mysql -u root -p"$DB_ROOT_PASS" --default-character-set=utf8mb4 "$DB_NAME" < "$f"
   done
 }
 
 # Assegurar que la base de dades existeix
 if [ -n "$DB_NAME" ]; then
   echo "[init-db] Assegurant que existeix la base de dades '$DB_NAME'..."
-  mysql -u root -p"$DB_ROOT_PASS" -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
+  mysql -u root -p"$DB_ROOT_PASS" --default-character-set=utf8mb4 -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
 fi
 
 # Ordre: schemas -> migrations -> procedures -> seeds

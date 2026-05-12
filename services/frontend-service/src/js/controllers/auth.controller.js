@@ -6,7 +6,7 @@
  */
 
 import { phpApi, pythonApi } from '../api.js';
-import { REDIRECT_DELAY } from '../config.js';
+import { REDIRECT_DELAY, GOOGLE_CLIENT_ID, STORAGE_KEYS } from '../config.js';
 import {
   showAlert,
   hideAllAlerts,
@@ -16,6 +16,7 @@ import {
   saveUserSession,
   clearUserSession,
   redirectAfterDelay,
+  showBootstrapAlert,
 } from '../utils.js';
 
 /*  GOOGLE CLIENT ID (carregat dinàmicament del backend)                */
@@ -23,11 +24,16 @@ import {
 let _googleClientId = null;
 
 /**
- * Obté el Google Client ID des del backend Python.
- * El valor es guarda en cache per no fer més d'una petició.
+ * Obté el Google Client ID des de la configuració o el backend Python.
  */
 async function getGoogleClientId() {
   if (_googleClientId) return _googleClientId;
+
+  // Intentar usar el valor injectat des de l'entorn primer
+  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID !== '') {
+    _googleClientId = GOOGLE_CLIENT_ID;
+    return _googleClientId;
+  }
 
   try {
     const result = await pythonApi.get('/api/config/google-client-id');
@@ -68,18 +74,24 @@ function initLogin() {
     setFormLoading(form, true);
 
     try {
-      const result = await postToPhp('/controllers/login.php', payload);
+      const result = await postToPhp('/api/login', payload);
 
       if (result && result.success) {
         if (result.user) {
+          if (result.token) result.user.token = result.token;
           saveUserSession(result.user);
           if (typeof window.initAuthToggle === 'function') window.initAuthToggle();
         }
         // Neteja explícita de la sessió OAuth si NO és Google
         sessionStorage.removeItem('parklive_oauth');
-        
-        showAlert('success', result.message || 'Sessió iniciada correctament.');
-        redirectAfterDelay('index.html', REDIRECT_DELAY);
+
+        // showAlert('success', result.message || 'Sessió iniciada correctament.');
+        showBootstrapAlert('success', result.message || 'Sessió iniciada correctament!');
+
+        // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        const target = redirectParam ? decodeURIComponent(redirectParam) : '/';
+        redirectAfterDelay(target, REDIRECT_DELAY);
       }
     } catch (err) {
       const msg = err.message || 'Error en iniciar sessió. Revisa les credencials.';
@@ -127,11 +139,11 @@ function initRegister() {
     setFormLoading(form, true);
 
     try {
-      const result = await postToPhp('/controllers/signin.php', payload);
+      const result = await postToPhp('/api/signin', payload);
 
       if (result && result.success) {
-        showAlert('success', result.message || 'Registre completat correctament.');
-        redirectAfterDelay('login.html', REDIRECT_DELAY);
+        showBootstrapAlert('success', result.message || 'Benvingut/da a ParkLive! Registre completat.');
+        redirectAfterDelay('/login', REDIRECT_DELAY);
       }
     } catch (err) {
       const msg = err.message || 'No s\'ha pogut completar el registre.';
@@ -194,7 +206,7 @@ function initRequestResetCode() {
         })
       );
 
-      showAlert('success', result.message || 'Codi enviat al teu correu.');
+      showBootstrapAlert('info', result.message || 'Codi de verificació enviat al correu.');
 
       // Transició al pas 2: verificar codi
       showResetStep('step-verify');
@@ -353,14 +365,29 @@ async function handleGoogleTokenResponse(tokenResponse) {
     });
 
     if (result && result.success) {
+      // 2. Sincronitzar sessió amb PHP (Crea PHPSESSID i el token CSRF)
+      try {
+        const phpResult = await phpApi.post('/api/auth/google', { access_token: tokenResponse.access_token });
+        if (result.user) {
+          result.user.token = result.token || phpResult.token;
+        }
+      } catch (err) {
+        console.error('Error sincronitzant sessió amb PHP:', err);
+        showAlert('error', 'Error en completar la sessió.');
+        return;
+      }
+
       saveUserSession(result.user);
       // Si és Google OAuth, crea cookie per ocultar canvi contrasenya
       if (result.user && result.user.provider === 'google') {
         sessionStorage.setItem('parklive_oauth', 'google');
-        console.log('[ParkLive] OAuth guardat a sessionStorage:', sessionStorage.getItem('parklive_oauth'));
       }
       showAlert('success', result.message || 'Sessió iniciada amb Google!');
-      redirectAfterDelay('index.html', REDIRECT_DELAY);
+
+      // Si l'Auth Guard va redirigir des d'una pàgina protegida, hi tornem
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      const target = redirectParam ? decodeURIComponent(redirectParam) : '/';
+      redirectAfterDelay(target, REDIRECT_DELAY);
     }
   } catch (err) {
     const msg = err.message || 'Error en l\'autenticació amb Google.';
@@ -430,51 +457,12 @@ async function initGoogleSignIn() {
  * @returns {Promise<{success: boolean, message?: string}>}
  */
 async function postToPhp(endpoint, payload) {
-  const { PHP_API_URL } = await import('../config.js');
-  const url = `${PHP_API_URL}${endpoint}`;
-
-  const formData = new FormData();
-  for (const [key, value] of Object.entries(payload)) {
-    formData.append(key, value);
+  try {
+    return await phpApi.post(endpoint, payload);
+  } catch (err) {
+    console.error('[postToPhp] Error:', err);
+    throw err;
   }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'Accept': 'application/json',
-    },
-    credentials: 'include',   // Enviar cookies de sessió PHP
-  });
-
-  console.log('[postToPhp]', endpoint, '→ status:', response.status, 'type:', response.type);
-
-  // Si retorna JSON (controlador modernitzat amb suport AJAX)
-  const contentType = response.headers.get('Content-Type') || '';
-  if (contentType.includes('application/json')) {
-    const data = await response.json();
-    console.log('[postToPhp] JSON response:', data);
-    if (!response.ok || data.success === false) {
-      throw new Error(data.error || data.message || `Error ${response.status}`);
-    }
-    return data;
-  }
-
-  // Resposta no-JSON: loguejar per debug
-  const body = await response.text();
-  console.warn('[postToPhp] Resposta no-JSON:', response.status, body.substring(0, 500));
-
-  // Fallback: PHP redirigeix (302) quan no detecta Accept JSON
-  if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
-    return { success: true };
-  }
-
-  // Si retorna 200 amb HTML (redirect seguit), considerar èxit
-  if (response.ok) {
-    return { success: true };
-  }
-
-  throw new Error(`Error ${response.status}`);
 }
 
 /*  LOGOUT                                                              */
@@ -483,13 +471,12 @@ async function postToPhp(endpoint, payload) {
 /**
  * Fa logout de l'usuari: neteja sessió, crida backend i redirigeix.
  */
-export async function logoutUser(redirectUrl = 'login.html') {
+export async function logoutUser(redirectUrl = '/login') {
   clearUserSession();
   try {
     // Elimina l'estat OAuth
     sessionStorage.removeItem('parklive_oauth');
-    console.log('[ParkLive] Sessió OAuth eliminada en logout:', sessionStorage.getItem('parklive_oauth'));
-    await phpApi.get('/controllers/logout.php');
+    await phpApi.post('/api/logout');
   } catch {
     // Ignorar errors de logout – la sessió client ja s'ha netejat
   }
@@ -505,7 +492,7 @@ function initLogout() {
   logoutBtns.forEach((btn) => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      await logoutUser('login.html');
+      await logoutUser('/login');
     });
   });
 }

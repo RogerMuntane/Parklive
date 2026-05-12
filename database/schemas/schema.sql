@@ -18,12 +18,14 @@ CREATE TABLE usuaris (
     estat ENUM('actiu', 'inactiu', 'suspès', 'eliminat') DEFAULT 'actiu',
     email_verificat BOOLEAN DEFAULT FALSE,
     punts_gamificacio INT UNSIGNED DEFAULT 0,
+    stripe_customer_id VARCHAR(255) UNIQUE,
     preferencies JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email),
     INDEX idx_tipus_usuari (tipus_usuari),
-    INDEX idx_estat (estat)
+    INDEX idx_estat (estat),
+    INDEX idx_stripe_customer (stripe_customer_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de sessions
 CREATE TABLE sessions (
@@ -56,13 +58,14 @@ CREATE TABLE codis_reset_contrasenya (
 CREATE TABLE subscripcions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
-    tipus ENUM('mensual', 'trimestral', 'anual') NOT NULL,
-    estat ENUM('activa', 'cancel·lada', 'caducada') DEFAULT 'activa',
+    tipus ENUM('mensual', 'anual') NOT NULL,
+    estat ENUM('activa', 'cancelada', 'caducada') DEFAULT 'activa',
     data_inici DATE NOT NULL,
     data_final DATE NOT NULL,
     preu DECIMAL(10, 2) NOT NULL,
     metode_pagament ENUM('targeta', 'paypal', 'altres') NOT NULL,
     auto_renovacio BOOLEAN DEFAULT TRUE,
+    stripe_subscription_id VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
@@ -111,6 +114,21 @@ CREATE TABLE aparcaments (
     FOREIGN KEY (operador_id) REFERENCES usuaris(id) ON DELETE
     SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- Taula de favorits d'usuaris (aparcaments preferits)
+CREATE TABLE usuaris_favorits_aparcaments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuari_id INT UNSIGNED NOT NULL,
+    aparcament_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
+    FOREIGN KEY (aparcament_id) REFERENCES aparcaments(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_usuari_aparcament_favorit (usuari_id, aparcament_id),
+    INDEX idx_favorits_usuari (usuari_id),
+    INDEX idx_favorits_aparcament (aparcament_id),
+    INDEX idx_favorits_created_at (created_at)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 -- Taula d'històric de disponibilitat
 CREATE TABLE historic_disponibilitat (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -149,13 +167,14 @@ CREATE TABLE reserves (
         'pendent',
         'confirmada',
         'en_curs',
-        'finalitzada',
-        'cancel·lada'
+        'completada',
+        'cancelada'
     ) DEFAULT 'pendent',
     preu_total DECIMAL(10, 2) NOT NULL,
     descompte_aplicat DECIMAL(10, 2) DEFAULT 0.00,
     codi_reserva VARCHAR(20) UNIQUE NOT NULL,
     notes TEXT,
+    tiquet_path VARCHAR(500) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
@@ -168,7 +187,7 @@ CREATE TABLE reserves (
 -- Taula de pagaments
 CREATE TABLE pagaments (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    reserva_id INT UNSIGNED NOT NULL,
+    reserva_id INT UNSIGNED,
     usuari_id INT UNSIGNED NOT NULL,
     import DECIMAL(10, 2) NOT NULL,
     metode ENUM(
@@ -180,6 +199,7 @@ CREATE TABLE pagaments (
     ) NOT NULL,
     estat ENUM(
         'pendent',
+        'autoritzat',
         'processat',
         'completat',
         'fallit',
@@ -222,6 +242,7 @@ CREATE TABLE valoracions (
     ),
     comentari TEXT,
     aspectes_valorats JSON,
+    fotos_url JSON,
     verificada BOOLEAN DEFAULT FALSE,
     util_count INT UNSIGNED DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -245,29 +266,42 @@ CREATE TABLE respostes_valoracions (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE COL·LABORACIÓ I GAMIFICACIÓ
 -- Taula de contribucions d'usuaris
+-- Les contribucions són independents de la taula aparcaments.
 CREATE TABLE contribucions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
-    aparcament_id INT UNSIGNED NOT NULL,
-    tipus ENUM(
-        'disponibilitat',
-        'foto',
-        'informacio',
-        'correccio'
-    ) NOT NULL,
-    estat_reportat ENUM('lliure', 'ocupat', 'parcial') NULL,
+    estat_reportat ENUM('lliure', 'ocupat') NOT NULL,
     dades JSON,
-    validada BOOLEAN DEFAULT FALSE,
     punts_guanyats INT UNSIGNED DEFAULT 0,
     latitud DECIMAL(10, 8),
     longitud DECIMAL(11, 8),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
-    FOREIGN KEY (aparcament_id) REFERENCES aparcaments(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
-    INDEX idx_aparcament (aparcament_id),
-    INDEX idx_tipus (tipus)
+    INDEX idx_estat_reportat (estat_reportat),
+    INDEX idx_created_at (created_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+-- Moviments de punts (ledger auditable)
+CREATE TABLE punts_moviments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuari_id INT UNSIGNED NOT NULL,
+    tipus_moviment ENUM('guany', 'bescanvi', 'ajust') NOT NULL,
+    punts INT NOT NULL,
+    origen_tipus ENUM('contribucio', 'recompensa', 'subscripcio', 'manual', 'reserva', 'valoracio') NOT NULL,
+    origen_id BIGINT UNSIGNED NULL,
+    descripcio VARCHAR(255) NULL,
+    idempotency_key VARCHAR(120) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_idempotency_key (idempotency_key),
+    INDEX idx_moviments_usuari (usuari_id),
+    INDEX idx_moviments_tipus (tipus_moviment),
+    INDEX idx_moviments_origen (origen_tipus, origen_id),
+    INDEX idx_moviments_created_at (created_at)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 -- Taula de recompenses i insignies
 CREATE TABLE recompenses (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -297,6 +331,25 @@ CREATE TABLE usuaris_recompenses (
     FOREIGN KEY (recompensa_id) REFERENCES recompenses(id) ON DELETE CASCADE,
     INDEX idx_usuari (usuari_id),
     UNIQUE KEY unique_user_reward (usuari_id, recompensa_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- Bescanvis de recompenses
+CREATE TABLE bescanvis_recompenses (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuari_id INT UNSIGNED NOT NULL,
+    recompensa_id INT UNSIGNED NOT NULL,
+    punts_cost INT UNSIGNED NOT NULL,
+    estat ENUM('pendent', 'aplicat', 'cancel.lat') DEFAULT 'pendent',
+    codi VARCHAR(64) NULL,
+    metadata JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    applied_at TIMESTAMP NULL,
+    FOREIGN KEY (usuari_id) REFERENCES usuaris(id) ON DELETE CASCADE,
+    FOREIGN KEY (recompensa_id) REFERENCES recompenses(id) ON DELETE CASCADE,
+    INDEX idx_bescanvis_usuari (usuari_id),
+    INDEX idx_bescanvis_recompensa (recompensa_id),
+    INDEX idx_bescanvis_estat (estat),
+    INDEX idx_bescanvis_created_at (created_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE CONTINGUT I BLOG
 -- Taula d'articles del blog
@@ -417,8 +470,24 @@ SELECT a.id,
     a.accessibilitat,
     a.carrega_electrica,
     a.videovigilancia,
-    a.valoracio_mitjana,
-    a.total_valoracions,
+    a.altura_maxima,
+    a.horari_obertura,
+    a.horari_tancament,
+    COALESCE((
+        SELECT ROUND(AVG(v.puntuacio), 2)
+        FROM valoracions v
+        WHERE v.aparcament_id = a.id
+    ), 0) as valoracio_mitjana,
+    COALESCE((
+        SELECT COUNT(*)
+        FROM valoracions v
+        WHERE v.aparcament_id = a.id
+    ), 0) as total_valoracions,
+    COALESCE((
+        SELECT COUNT(*)
+        FROM usuaris_favorits_aparcaments ufa
+        WHERE ufa.aparcament_id = a.id
+    ), 0) as total_favorits,
     a.estat,
     u.nom as operador_nom,
     COUNT(DISTINCT f.id) as total_fotos
@@ -447,42 +516,74 @@ WHERE r.estat IN ('confirmada', 'en_curs');
 
 
 -- TRIGGERS ÚTILS
--- Trigger per actualitzar valoració mitjana de l'aparcament
--- TRIGGERS ÚTILS
--- Trigger per actualitzar valoració mitjana de l'aparcament
-DELIMITER //
-
-CREATE TRIGGER after_valoracio_insert
-AFTER INSERT ON valoracions
-FOR EACH ROW
-BEGIN
-    UPDATE aparcaments
-    SET valoracio_mitjana = (
-        SELECT AVG(puntuacio)
-        FROM valoracions
-        WHERE aparcament_id = NEW.aparcament_id
-    ),
-    total_valoracions = (
-        SELECT COUNT(*)
-        FROM valoracions
-        WHERE aparcament_id = NEW.aparcament_id
-    )
-    WHERE id = NEW.aparcament_id;
-END//
-
-DELIMITER ;
+-- Les valoracions agregades es calculen dinàmicament a consultes/vistes;
+-- no cal trigger per persistir valoracio_mitjana ni total_valoracions.
 
 -- Trigger per afegir punts quan es fa una contribució
 DELIMITER //
 
+
+-- Trigger per afegir punts immediatament quan es crea una contribució
+DROP TRIGGER IF EXISTS after_contribucio_insert//
 CREATE TRIGGER after_contribucio_insert
 AFTER INSERT ON contribucions
 FOR EACH ROW
 BEGIN
-    IF NEW.validada = TRUE THEN
+    -- Si la contribució té punts assignats, els atorguem a l'usuari immediatament
+    IF NEW.punts_guanyats IS NOT NULL AND NEW.punts_guanyats > 0 THEN
         UPDATE usuaris
         SET punts_gamificacio = punts_gamificacio + NEW.punts_guanyats
         WHERE id = NEW.usuari_id;
+
+        INSERT INTO punts_moviments (
+            usuari_id,
+            tipus_moviment,
+            punts,
+            origen_tipus,
+            origen_id,
+            descripcio,
+            idempotency_key
+        ) VALUES (
+            NEW.usuari_id,
+            'guany',
+            NEW.punts_guanyats,
+            'contribucio',
+            NEW.id,
+            'Punts per contribució (creada)',
+            CONCAT('contribucio-creada-', NEW.id)
+        );
+    END IF;
+END//
+
+-- Trigger per afegir punts quan es completa una reserva
+DROP TRIGGER IF EXISTS after_reserva_update//
+CREATE TRIGGER after_reserva_update
+AFTER UPDATE ON reserves
+FOR EACH ROW
+BEGIN
+    -- Si l'estat canvia a 'completada' i abans no ho era
+    IF NEW.estat = 'completada' AND OLD.estat != 'completada' THEN
+        -- Afegir punts a l'usuari (10 punts per reserva)
+        UPDATE usuaris 
+        SET punts_gamificacio = punts_gamificacio + 10 
+        WHERE id = NEW.usuari_id;
+        
+        -- Registrar el moviment
+        INSERT INTO punts_moviments (
+            usuari_id, 
+            tipus_moviment, 
+            punts, 
+            origen_tipus, 
+            origen_id, 
+            descripcio
+        ) VALUES (
+            NEW.usuari_id, 
+            'guany', 
+            10, 
+            'reserva', 
+            NEW.id, 
+            CONCAT('Reserva completada: ', NEW.codi_reserva)
+        );
     END IF;
 END//
 
@@ -494,3 +595,17 @@ CREATE INDEX idx_geo_aparcaments ON aparcaments(latitud, longitud);
 CREATE INDEX idx_reserves_usuari_dates ON reserves(usuari_id, data_entrada, data_sortida);
 -- Índex per històric de disponibilitat per aparcament i data
 CREATE INDEX idx_historic_aparcament_date ON historic_disponibilitat(aparcament_id, timestamp DESC);
+
+-- Índex per subscripcions i data de caducitat (cron)
+CREATE INDEX idx_subscripcions_caducitat ON subscripcions(estat, data_final);
+-- Índex per ordre cronològic d'articles publicats al blog
+CREATE INDEX idx_blog_publicacio ON articles_blog(publicat, data_publicacio DESC);
+-- Índex per a la llista de recompenses actives
+CREATE INDEX idx_recompenses_activa_punts ON recompenses(activa, requisit_punts);
+-- Índex per al filtratge de recompenses utilitzades per usuari
+CREATE INDEX idx_usuari_recompensa_utilitzada ON usuaris_recompenses(usuari_id, utilitzada);
+
+-- SISTEMA DE NETEJA AUTOMÀTICA
+-- Nota: La neteja física s'ha desactivat per conservar l'historial d'usuari.
+-- El filtratge temporal es fa a nivell de consulta (API/Procediments).
+SET GLOBAL event_scheduler = ON;

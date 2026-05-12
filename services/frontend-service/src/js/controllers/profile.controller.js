@@ -3,27 +3,11 @@
  * Controlador per funcionalitats del perfil d'usuari (canvi de contrasenya)
  */
 
-import { hideAllAlerts, setFormLoading } from '../utils.js';
+import { hideAllAlerts, setFormLoading, showBootstrapAlert, formatDate, formatCurrency, getUserId, getUserSession, saveUserSession } from '../utils.js';
+import { obtenirReservesUsuari } from './reserves.controller.js';
 import { PHP_API_URL } from '../config.js';
+import { pythonApi, phpApi } from '../api.js';
 
-// Bootstrap-styled alert helper
-function showBootstrapAlert(type, message, parent = document.body) {
-  hideAllAlerts();
-  const alert = document.createElement('div');
-  alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-  alert.style.zIndex = 9999;
-  alert.role = 'alert';
-  alert.innerHTML = `
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  parent.appendChild(alert);
-  setTimeout(() => {
-    alert.classList.remove('show');
-    alert.classList.add('hide');
-    setTimeout(() => alert.remove(), 500);
-  }, 3500);
-}
 
 /**
  * Inicialitza el formulari de canvi de contrasenya del perfil
@@ -36,52 +20,84 @@ export function initProfilePasswordForm() {
   const confirm = document.getElementById('pass-confirm');
   const btn = document.getElementById('btn-update-password');
   const section = document.getElementById('section-password');
-  const strengthFill = document.getElementById('strength-fill');
   const strengthLabel = document.getElementById('strength-label');
 
   if (!actual || !nova || !confirm || !btn || !section) return;
 
-  // Lògica del mesurador de força de la contrasenya
-  if (strengthFill && strengthLabel) {
+  // Lògica del mesurador de força (Segments i Requisits)
+  if (nova) {
     nova.addEventListener('input', (e) => {
-      const value = e.target.value;
-      if (!value) {
-        strengthFill.style.width = '0%';
-        strengthFill.className = 'strength-fill';
-        strengthLabel.textContent = 'Introdueix una contrasenya';
-        strengthLabel.className = 'text-secondary mt-1 d-block';
+      const val = e.target.value;
+      const segments = document.querySelectorAll('#strength-segments .strength-segment');
+      const reqLength = document.getElementById('req-length');
+      const reqUpper = document.getElementById('req-upper');
+      const reqNumber = document.getElementById('req-number');
+      const reqSymbol = document.getElementById('req-symbol');
+
+      if (!val) {
+        segments.forEach(s => s.className = 'strength-segment');
+        if (strengthLabel) {
+          strengthLabel.textContent = '--';
+          strengthLabel.className = 'small fw-bold text-secondary';
+        }
+        [reqLength, reqUpper, reqNumber, reqSymbol].forEach(req => {
+          if (req) {
+            req.classList.remove('met');
+            req.querySelector('i').className = 'bi bi-circle';
+          }
+        });
         return;
       }
 
-      let score = 0;
-      if (value.length > 7) score++;
-      if (value.length > 11) score++;
-      if (/[A-Z]/.test(value)) score++;
-      if (/[0-9]/.test(value)) score++;
-      if (/[^A-Za-z0-9]/.test(value)) score++;
+      // 1. Verificar requisits individuals
+      const isLength = val.length >= 8;
+      const isUpper = /[A-Z]/.test(val);
+      const isNumber = /[0-9]/.test(val);
+      const isSymbol = /[^A-Za-z0-9]/.test(val);
 
-      let width = '0%';
+      const updateReq = (el, met) => {
+        if (!el) return;
+        if (met) {
+          el.classList.add('met');
+          el.querySelector('i').className = 'bi bi-check-circle-fill';
+        } else {
+          el.classList.remove('met');
+          el.querySelector('i').className = 'bi bi-circle';
+        }
+      };
+
+      updateReq(reqLength, isLength);
+      updateReq(reqUpper, isUpper);
+      updateReq(reqNumber, isNumber);
+      updateReq(reqSymbol, isSymbol);
+
+      // 2. Calcular puntuació (0-4)
+      let score = 0;
+      if (isLength) score++;
+      if (isUpper) score++;
+      if (isNumber) score++;
+      if (isSymbol) score++;
+
+      // 3. Actualitzar segments i label
       let colorClass = '';
       let text = '';
+      if (score === 1) { colorClass = 'weak'; text = 'Feble'; }
+      else if (score === 2) { colorClass = 'medium'; text = 'Mitjana'; }
+      else if (score === 3) { colorClass = 'strong'; text = 'Forta'; }
+      else if (score === 4) { colorClass = 'expert'; text = 'Excel·lent'; }
 
-      if (score <= 2) {
-        width = '30%';
-        colorClass = 'bg-danger';
-        text = 'Feble';
-      } else if (score === 3 || score === 4) {
-        width = '50%';
-        colorClass = 'bg-warning';
-        text = 'Mitjana';
-      } else {
-        width = '100%';
-        colorClass = 'bg-success';
-        text = 'Forta';
+      segments.forEach((s, idx) => {
+        s.className = 'strength-segment';
+        if (idx < score) {
+          s.classList.add('active', colorClass);
+        }
+      });
+
+      if (strengthLabel) {
+        strengthLabel.textContent = text;
+        strengthLabel.className = `small fw-bold text-${(colorClass === 'strong') ? 'warning' : (colorClass === 'expert' ? 'success' : 'danger')}`;
+        if (colorClass === 'medium') strengthLabel.classList.replace('text-danger', 'text-warning');
       }
-
-      strengthFill.style.width = width;
-      strengthFill.className = `strength-fill ${colorClass}`;
-      strengthLabel.textContent = text;
-      strengthLabel.className = `mt-1 d-block text-${colorClass.replace('bg-', '')}`;
     });
   }
 
@@ -104,17 +120,11 @@ export function initProfilePasswordForm() {
     }
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/canvi_contrasenya_perfil.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          contrasenya_actual,
-          contrasenya_nova,
-          contrasenya_confirmar
-        }),
-        credentials: 'include' // Envia cookies de sessió PHP
+      const data = await phpApi.post('/api/profile/password', {
+        contrasenya_actual,
+        contrasenya_nova,
+        contrasenya_confirmar
       });
-      const data = await res.json();
       if (data.success) {
         showBootstrapAlert('success', data.message || 'Contrasenya actualitzada correctament.', section);
         actual.value = nova.value = confirm.value = '';
@@ -126,12 +136,27 @@ export function initProfilePasswordForm() {
         }
       }
     } catch (err) {
-      showBootstrapAlert('danger', 'Error de xarxa o servidor.', section);
+      console.error('[ParkLive] Error canvi contrasenya:', err);
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per canviar la contrasenya.', document.body);
+      } else {
+        showBootstrapAlert('danger', 'Error de xarxa o servidor al canviar la contrasenya.', section);
+      }
     } finally {
       btn.disabled = false;
       setFormLoading(btn, false);
     }
   });
+
+  // Botó Cancel·lar
+  const btnCancel = document.getElementById('btn-cancel-password');
+  if (btnCancel) {
+    btnCancel.addEventListener('click', () => {
+      actual.value = nova.value = confirm.value = '';
+      // Reset targets/requisits
+      nova.dispatchEvent(new Event('input'));
+    });
+  }
 }
 
 export async function initProfileInfoForm() {
@@ -155,6 +180,15 @@ export async function initProfileInfoForm() {
     cognomsInput.value = sessionData.cognom || sessionData.cognoms || sessionData.family_name || sessionData.name?.split(' ').slice(1).join(' ') || '';
     emailInput.value = sessionData.email || '';
     telInput.value = sessionData.telefon || sessionData.telefono || '';
+
+    // Mostrar imatge de perfil si existeix
+    if (sessionData.foto_perfil) {
+      const avatarContainer = document.getElementById('profile-avatar-container');
+      if (avatarContainer) {
+        const imageUrl = `${PHP_API_URL}/storage/profiles/${sessionData.foto_perfil}`;
+        avatarContainer.innerHTML = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
+      }
+    }
     return; // Ja tenim les dades, no cal cridar PHP
   }
 }
@@ -217,20 +251,19 @@ export function initProfileInfoSaveForm() {
     try {
       const raw = sessionStorage.getItem('parklive_user_data');
       if (raw) userId = JSON.parse(raw)?.id;
-    } catch (_) {}
+    } catch (_) { }
 
     const body = new URLSearchParams({ nom, cognom, email, telefon });
     if (userId) body.append('user_id', userId);
 
     try {
-      const res = await fetch(`${PHP_API_URL}/controllers/update_profile_info.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-        credentials: 'include',
+      const data = await phpApi.post('/api/profile', {
+        nom,
+        cognom,
+        email,
+        telefon,
+        user_id: userId
       });
-
-      const data = await res.json();
 
       if (data.success) {
         // Actualitzar sessionStorage amb les noves dades
@@ -243,10 +276,10 @@ export function initProfileInfoSaveForm() {
           userData.email = email;
           userData.telefon = telefon;
           sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
-          
+
           // Actualitzar originals
           originalValues = { nom, cognom, email, telefon };
-        } catch (_) {}
+        } catch (_) { }
 
         showBootstrapAlert('success', data.message || 'Canvis desats correctament.', section);
       } else {
@@ -254,7 +287,12 @@ export function initProfileInfoSaveForm() {
         showBootstrapAlert('danger', errMsg, section);
       }
     } catch (err) {
-      showBootstrapAlert('danger', 'Error de xarxa o servidor.', section);
+      console.error('[ParkLive] Error desant dades personals:', err);
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per desar els canvis.', document.body);
+      } else {
+        showBootstrapAlert('danger', 'Error de xarxa o servidor al desar les dades.', section);
+      }
     } finally {
       btnSave.disabled = false;
       btnSave.innerHTML = originalText;
@@ -262,3 +300,1117 @@ export function initProfileInfoSaveForm() {
   });
 }
 
+/**
+ * Inicialitza la secció de Mètodes de Pagament
+ */
+export async function initProfilePaymentSection() {
+  const section = document.getElementById('section-payment');
+  if (!section) return;
+
+  let user = null;
+  try {
+    const raw = sessionStorage.getItem('parklive_user_data');
+    if (raw) user = JSON.parse(raw);
+  } catch (_) { }
+
+  if (!user || !user.id) return;
+
+  const { initProfilePaymentSection: initStripePayment } = await import('./stripe.controller.js');
+  initStripePayment(user.id);
+}
+
+/**
+ * Inicialitza la secció de Gestió del Pla
+ */
+export async function initProfilePlanSection() {
+  const btnUpdate = document.getElementById('btn-update-plan');
+  const btnAddCardPlan = document.getElementById('btn-add-card-plan');
+  const planSection = document.getElementById('section-plan');
+
+  if (!btnUpdate || !planSection) return;
+
+  // Obtenir user_id
+  let user = null;
+  try {
+    const raw = sessionStorage.getItem('parklive_user_data');
+    if (raw) user = JSON.parse(raw);
+  } catch (_) { }
+
+  if (!user || !user.id) return;
+
+  // 1. Carregar les targetes guardades per al pla
+  const { loadCardsForPlan, createSubscription, initStripeButton, updateSubscriptionAutorenewal } = await import('./stripe.controller.js');
+  try {
+    await loadCardsForPlan(user.id);
+  } catch (err) {
+    console.warn('[ParkLive] No s\'han pogut carregar les targetes:', err);
+  }
+
+  // 1.0 Lògica del Switcher Mensual/Anual
+  const btnMonthly = document.getElementById('btn-monthly-plan');
+  const btnAnnual = document.getElementById('btn-annual-plan');
+  let currentPlanType = 'monthly';
+
+  if (btnMonthly && btnAnnual && planSection) {
+    const updateSwitcherUI = (type) => {
+      currentPlanType = type;
+      if (type === 'annual') {
+        btnAnnual.classList.add('active');
+        btnMonthly.classList.remove('active');
+        planSection.classList.add('annual-plan-active');
+      } else {
+        btnMonthly.classList.add('active');
+        btnAnnual.classList.remove('active');
+        planSection.classList.remove('annual-plan-active');
+      }
+    };
+
+    btnMonthly.addEventListener('click', (e) => {
+      e.preventDefault();
+      updateSwitcherUI('monthly');
+    });
+    btnAnnual.addEventListener('click', (e) => {
+      e.preventDefault();
+      updateSwitcherUI('annual');
+    });
+
+    // Forçar estat inicial per si de cas
+    updateSwitcherUI('monthly');
+  } else {
+    console.warn('[ParkLive] No s\'han trobat els elements del switcher:', { btnMonthly: !!btnMonthly, btnAnnual: !!btnAnnual, planSection: !!planSection });
+  }
+
+  // 1.1 Lògica del nou Toggle de Renovació Automàtica
+  const toggleCard = document.getElementById('autorenovacio-toggle');
+  const toggleSwitch = document.getElementById('autorenovacio-switch');
+  const toggleCheckbox = document.getElementById('autorenovacio');
+  const toggleBadge = document.getElementById('autorenovacio-badge');
+  const toggleDesc = document.getElementById('autorenovacio-desc');
+
+  if (toggleCard && toggleSwitch && toggleCheckbox) {
+    // Inicialitzar estat segons checkbox (per si ve marcat per defecte o per la BD)
+    const updateToggleUI = (isActive) => {
+      if (isActive) {
+        toggleCard.classList.add('active');
+        toggleSwitch.classList.add('on');
+        toggleBadge.textContent = 'Actiu';
+        toggleBadge.className = 'toggle-badge';
+        toggleDesc.textContent = "S'utilitzarà la targeta seleccionada per als cobraments futurs.";
+      } else {
+        toggleCard.classList.remove('active');
+        toggleSwitch.classList.remove('on');
+        toggleBadge.textContent = 'Desactivat';
+        toggleBadge.className = 'toggle-badge bg-secondary bg-opacity-10 text-secondary';
+        toggleDesc.textContent = "La subscripció es cancel·larà al final del període actual.";
+      }
+    };
+
+    toggleCard.addEventListener('click', async () => {
+      const newState = !toggleCheckbox.checked;
+      toggleCheckbox.checked = newState;
+      updateToggleUI(newState);
+
+      // Si l'usuari ja és premium, sincronitzem en temps real amb Stripe
+      if (user.tipus_usuari === 'premium') {
+        toggleCard.style.pointerEvents = 'none';
+        toggleCard.style.opacity = '0.7';
+
+        const result = await updateSubscriptionAutorenewal(user.id, newState);
+
+        toggleCard.style.pointerEvents = 'auto';
+        toggleCard.style.opacity = '1';
+
+        if (!result.success) {
+          // Revertir si falla
+          toggleCheckbox.checked = !newState;
+          updateToggleUI(!newState);
+          showBootstrapAlert('danger', 'No s\'ha pogut actualitzar la renovació a Stripe.', planSection);
+        } else {
+          showBootstrapAlert('success', newState ? 'Renovació automàtica activada correctament.' : 'Renovació automàtica desactivada correctament.', planSection);
+        }
+      }
+    });
+  }
+
+  // 2. Vincular botó d'afegir targeta (obre el modal existent)
+  if (btnAddCardPlan) {
+    btnAddCardPlan.addEventListener('click', () => {
+      // Re-utilitzem el botó amagat o directament el modal de profile-payment si està carregat
+      const realBtnAdd = document.getElementById('btn-add-card');
+      if (realBtnAdd) {
+        realBtnAdd.click();
+      } else {
+        // Si no està el botó, inicialitzem el modal i el mostrem.
+        // Nota: addCardModal s'ha de carregar si s'inclou profile-payment.html
+        initStripeButton(user.id);
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addCardModal'));
+        modal.show();
+      }
+    });
+
+    // Escoltarem quan es tanqui el modal per recarregar les targetes del pla
+    const modalEl = document.getElementById('addCardModal');
+    if (modalEl) {
+      modalEl.addEventListener('hidden.bs.modal', () => {
+        loadCardsForPlan(user.id);
+      });
+    }
+  }
+
+  // 3. Lògica d'actualització del pla
+  btnUpdate.addEventListener('click', async () => {
+    const selectedCard = document.querySelector('input[name="plan-card"]:checked');
+
+    // Si no hi ha targeta seleccionada, demanem afegir-ne una
+    if (!selectedCard) {
+      if (btnAddCardPlan) {
+        btnAddCardPlan.click();
+      } else {
+        showBootstrapAlert('warning', 'Si us plau, afegeix un mètode de pagament primer.', planSection);
+      }
+      return;
+    }
+
+    btnUpdate.disabled = true;
+    const originalText = btnUpdate.innerHTML;
+    btnUpdate.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processant...';
+
+    const autorenovacio = document.getElementById('autorenovacio')?.checked ?? true;
+    const result = await createSubscription(user.id, selectedCard.value, autorenovacio, currentPlanType);
+
+    if (result.success) {
+      // Actualitzar sessionStorage
+      try {
+        const raw = sessionStorage.getItem('parklive_user_data');
+        if (raw) {
+          const userData = JSON.parse(raw);
+          userData.tipus_usuari = 'premium';
+          sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
+        }
+      } catch (_) { }
+
+      showBootstrapAlert('success', 'Pla actualitzat a Premium! Gaudeix dels avantatges.', planSection);
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showBootstrapAlert('danger', 'Error en processar la subscripció: ' + result.error, planSection);
+    }
+
+    btnUpdate.disabled = false;
+    btnUpdate.innerHTML = originalText;
+  });
+}
+
+
+/**
+ * Inicialitza l'historial de reserves del perfil
+ */
+export function initProfileHistorySection() {
+  const tableBody = document.getElementById('history-table-body');
+  const searchInput = document.getElementById('input-search-history');
+  const statusSelect = document.getElementById('select-status-history');
+  const searchBtn = document.getElementById('btn-search-history-submit');
+  const paginationContainer = document.getElementById('history-pagination-container');
+
+  if (!tableBody) return;
+
+  let currentPage = 1;
+  let currentSearch = '';
+  const limit = 5;
+
+  const renderPagination = (paginacio) => {
+    if (!paginationContainer) return;
+    if (!paginacio || paginacio.total_pagines <= 1) {
+      paginationContainer.innerHTML = '';
+      return;
+    }
+
+    const isPrevDisabled = paginacio.pagina_actual === 1;
+    const isNextDisabled = paginacio.pagina_actual === paginacio.total_pagines;
+
+    // Generar ítems de pàgina numerats
+    let pagesHtml = '';
+    for (let i = 1; i <= paginacio.total_pagines; i++) {
+      const isActive = i === paginacio.pagina_actual;
+      pagesHtml += `
+                <li class="page-item ${isActive ? 'active' : ''}">
+                    <button class="page-link" data-page="${i}" ${isActive ? 'aria-current="page"' : ''}>
+                        ${i}
+                    </button>
+                </li>`;
+    }
+
+    // Estructura Bootstrap <ul class="pagination">
+    paginationContainer.innerHTML = `
+            <nav aria-label="Navegació historial de reserves">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item ${isPrevDisabled ? 'disabled' : ''}">
+                        <button class="page-link" data-page="${paginacio.pagina_actual - 1}"
+                            ${isPrevDisabled ? 'disabled aria-disabled="true"' : ''}
+                            aria-label="Pàgina anterior">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+                    ${pagesHtml}
+                    <li class="page-item ${isNextDisabled ? 'disabled' : ''}">
+                        <button class="page-link" data-page="${paginacio.pagina_actual + 1}"
+                            ${isNextDisabled ? 'disabled aria-disabled="true"' : ''}
+                            aria-label="Pàgina següent">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        `;
+
+    // Afegir esdeveniments (només als botons no deshabitats)
+    paginationContainer.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const newPage = parseInt(btn.dataset.page);
+        if (newPage && newPage !== currentPage && newPage > 0 && newPage <= paginacio.total_pagines) {
+          currentPage = newPage;
+          fetchHistory();
+        }
+      });
+    });
+  };
+
+  const fetchHistory = async () => {
+    tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    Carregant historial...
+                </td>
+            </tr>`;
+
+    try {
+      const userId = getUserId();
+      if (!userId) return;
+
+      const offset = (currentPage - 1) * limit;
+
+      // Agafem l'estat del select o per defecte els d'historial
+      const estatFiltre = statusSelect ? statusSelect.value : 'completada,cancelada';
+
+      const params = {
+        estat: estatFiltre,
+        limit: limit,
+        offset: offset,
+        returnFullData: true
+      };
+
+      if (currentSearch.trim() !== '') {
+        params.search = currentSearch.trim();
+      }
+
+      const data = await obtenirReservesUsuari(params);
+      const reserves = data.reserves || [];
+
+      renderPagination(data.paginacio);
+
+      if (reserves.length === 0) {
+        tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-info-circle me-1"></i> No s'han trobat reserves a l'historial.
+                        </td>
+                    </tr>`;
+        return;
+      }
+
+      // Renderitzar files
+      tableBody.innerHTML = reserves.map(r => {
+        const dataFmt = formatDate(r.data_entrada);
+        const desc = `Aparcament – ${r.aparcament?.nom || 'Pàrquing'}`;
+        const preu = formatCurrency(r.preu_total);
+
+        const estat = (r.estat || '').toLowerCase();
+        let badgeClass = 'bg-secondary';
+        let labelText = 'Desconegut';
+        let icon = 'bi-question-circle';
+        let potVeureTiquet = false;
+
+        if (estat === 'completada') {
+          badgeClass = 'status-ok';
+          labelText = 'Completat';
+          icon = 'bi-check-circle-fill';
+          potVeureTiquet = true;
+        } else if (estat === 'cancelada') {
+          badgeClass = 'status-err';
+          labelText = 'Cancel·lat';
+          icon = 'bi-x-circle-fill';
+          potVeureTiquet = false;
+        }
+
+        return `
+                    <tr>
+                        <td class="text-body-secondary small">${dataFmt}</td>
+                        <td class="fw-medium">${desc}</td>
+                        <td><span class="badge bg-body-secondary text-body-emphasis border border-secondary border-opacity-25 px-2 py-1">${preu}</span></td>
+                        <td>
+                            <span class="status-badge ${badgeClass}">
+                                <i class="bi ${icon}"></i> ${labelText}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            ${potVeureTiquet ?
+            `<a href="/tiquet_Aparcament?id=${r.id}&p_id=${r.aparcament?.id || ''}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Veure tiquet PDF">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                 </a>` :
+            `<button class="btn btn-outline-secondary btn-sm rounded-pill px-3 opacity-25" disabled title="Tiquet no disponible">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                 </button>`
+          }
+                        </td>
+                    </tr>`;
+      }).join('');
+
+    } catch (err) {
+      console.error('[ParkLive] Error carregant historial:', err);
+
+      // Error personalitzat per sessió caducada (més amigable per l'usuari)
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per veure el teu historial.', document.body);
+        tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-warning">
+                        <i class="bi bi-clock-history me-1"></i> La sessió ha caducat. Torna a iniciar sessió.
+                    </td>
+                </tr>`;
+      } else {
+        tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Error al carregar les dades.
+                    </td>
+                </tr>`;
+      }
+      if (paginationContainer) paginationContainer.innerHTML = '';
+    }
+  };
+
+  // Events de cerca
+  const performSearch = () => {
+    if (searchInput) currentSearch = searchInput.value;
+    currentPage = 1;
+    fetchHistory();
+  };
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', performSearch);
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') performSearch();
+    });
+  }
+
+  // Càrrega inicial
+  fetchHistory();
+}
+
+/**
+ * Inicialitza la secció de favorits del perfil
+ */
+export async function initProfileFavoritesSection() {
+  const listEl = document.getElementById('favorites-list');
+  if (!listEl) return;
+
+  const userId = getUserId();
+  if (!userId) {
+    listEl.innerHTML = `
+      <div class="text-center py-4 text-muted">
+        <i class="bi bi-person-lock fs-4 d-block mb-2"></i>
+        Inicia sessió per veure els teus favorits.
+      </div>
+    `;
+    return;
+  }
+
+  const renderEmpty = () => {
+    listEl.innerHTML = `
+      <div class="text-center py-4 text-muted border rounded-3">
+        <i class="bi bi-heart fs-4 d-block mb-2"></i>
+        Encara no tens aparcaments favorits.
+      </div>
+    `;
+  };
+
+  const renderItems = (items) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      renderEmpty();
+      return;
+    }
+
+    listEl.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    items.forEach((item) => {
+      const parkingId = String(item.id || '');
+      const article = document.createElement('article');
+      article.className = 'border rounded-3 p-3 bg-body';
+
+      const nom = item.nom || 'Aparcament';
+      const adreca = [item.adreca, item.ciutat].filter(Boolean).join(', ') || 'Adreça no disponible';
+      const tarifaHora = (item.tarifa_hora === null || item.tarifa_hora === undefined)
+        ? 'Tarifa no disponible'
+        : `${Number(item.tarifa_hora).toFixed(2).replace('.', ',')} €/h`;
+
+      article.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div class="min-w-0">
+            <h3 class="h6 fw-bold mb-1 text-truncate">${nom}</h3>
+            <p class="small text-body-secondary mb-1">${adreca}</p>
+            <p class="small mb-0">${tarifaHora}</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-outline-secondary btn-sm" href="/detall_Aparcament?id=${encodeURIComponent(parkingId)}">
+              Veure
+            </a>
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm"
+              data-action="remove-favorite"
+              data-parking-id="${parkingId}"
+              aria-label="Eliminar de favorits"
+            >
+              <i class="bi bi-heartbreak"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      fragment.appendChild(article);
+    });
+
+    listEl.appendChild(fragment);
+
+    listEl.querySelectorAll('[data-action="remove-favorite"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const parkingId = btn.dataset.parkingId;
+        if (!parkingId) return;
+
+        btn.disabled = true;
+        try {
+          await pythonApi.delete(`/api/usuari/favorits/${encodeURIComponent(parkingId)}?usuari_id=${encodeURIComponent(String(userId))}`);
+          await loadFavorites();
+          showBootstrapAlert('success', 'Aparcament eliminat de favorits.');
+        } catch (error) {
+          showBootstrapAlert('danger', error?.message || 'No s\'ha pogut eliminar el favorit.');
+          btn.disabled = false;
+        }
+      });
+    });
+  };
+
+  const loadFavorites = async () => {
+    try {
+      const response = await pythonApi.get('/api/usuari/favorits', {
+        usuari_id: userId,
+        limit: 200,
+        offset: 0,
+      });
+      renderItems(response?.favorits || []);
+    } catch (error) {
+      console.error('[ParkLive] Error carregant favorits del perfil:', error);
+
+      if (error.message && error.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per veure els teus favorits.', document.body);
+        listEl.innerHTML = `
+          <div class="alert alert-warning mb-0" role="alert">
+            <i class="bi bi-clock-history me-1"></i> La sessió ha caducat. Torna a iniciar sessió.
+          </div>
+        `;
+      } else {
+        listEl.innerHTML = `
+          <div class="alert alert-danger mb-0" role="alert">
+            No s'han pogut carregar els favorits.
+          </div>
+        `;
+      }
+    }
+  };
+
+  await loadFavorites();
+}
+
+/**
+ * Inicialitza la càrrega d'imatge de perfil
+ */
+export function initProfileImageUpload() {
+  const uploadInput = document.getElementById('profile-upload-input');
+  const uploadBtn = document.getElementById('btn-upload-avatar');
+  const avatarContainer = document.getElementById('profile-avatar-container');
+  const sidebarAvatarContainer = document.getElementById('sidebar-avatar-container');
+
+  if (!uploadInput || !uploadBtn || !avatarContainer) return;
+
+  uploadBtn.addEventListener('click', () => uploadInput.click());
+
+  uploadInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validació client
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showBootstrapAlert('danger', 'Tipus de fitxer no permès. Només JPG, PNG i WebP.', avatarContainer.closest('.card-body'));
+      return;
+    }
+    if (file['size'] > 2 * 1024 * 1024) {
+      showBootstrapAlert('danger', 'La imatge és massa gran. Màxim 2MB.', avatarContainer.closest('.card-body'));
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profile_image', file);
+
+    // Obtenir user_id del sessionStorage (necessari per OAuth)
+    let userId = null;
+    try {
+      const raw = sessionStorage.getItem('parklive_user_data');
+      if (raw) userId = JSON.parse(raw)?.id;
+    } catch (_) { }
+    if (userId) formData.append('user_id', userId);
+
+    uploadBtn.disabled = true;
+    const originalContent = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Pujant…';
+
+    try {
+      const data = await phpApi.postForm('/api/profile/picture', formData);
+
+      if (data.success) {
+        const imageUrl = `${PHP_API_URL}/storage/profiles/${data.foto_perfil}`;
+
+        // Actualitzar imatges a la UI
+        const imgHtml = `<img src="${imageUrl}" alt="Avatar" class="w-100 h-100 object-fit-cover">`;
+        avatarContainer.innerHTML = imgHtml;
+        if (sidebarAvatarContainer) sidebarAvatarContainer.innerHTML = imgHtml;
+
+        // Actualitzar sessionStorage
+        try {
+          const raw = sessionStorage.getItem('parklive_user_data');
+          const userData = raw ? JSON.parse(raw) : {};
+          userData.foto_perfil = data.foto_perfil;
+          sessionStorage.setItem('parklive_user_data', JSON.stringify(userData));
+        } catch (_) { }
+
+        showBootstrapAlert('success', 'Imatge de perfil actualitzada.', avatarContainer.closest('.card-body'));
+      } else {
+        showBootstrapAlert('danger', data.error || 'Error al pujar la imatge.', avatarContainer.closest('.card-body'));
+      }
+    } catch (err) {
+      console.error('[ParkLive] Error al pujar imatge:', err);
+      if (err.message && err.message.includes('token d\'autenticació ha caducat')) {
+        showBootstrapAlert('warning', '<strong>Sessió caducada</strong><br>La teva sessió ha finalitzat per seguretat. Torna a iniciar sessió per pujar la imatge.', document.body);
+      } else {
+        showBootstrapAlert('danger', 'Error de xarxa al pujar la imatge.', avatarContainer.closest('.card-body'));
+      }
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = originalContent;
+      uploadInput.value = '';
+    }
+  });
+}
+
+/**
+ * Inicialitza la secció de Punts i Recompenses
+ */
+export async function initProfilePointsSection() {
+  const pointsText = document.getElementById('user-total-points');
+  const rewardsGrid = document.getElementById('rewards-grid');
+  const loading = document.getElementById('rewards-loading');
+  const empty = document.getElementById('rewards-empty');
+  const section = document.getElementById('section-points');
+
+  if (!pointsText || !rewardsGrid || !section) return;
+
+  const userId = getUserId();
+  if (!userId) return;
+
+  let userPoints = 0;
+
+  const fetchPoints = async () => {
+    try {
+      const data = await pythonApi.get(`/api/gamificacio/punts/${userId}`);
+      if (data.success) {
+        userPoints = data.punts;
+        pointsText.textContent = userPoints;
+      }
+    } catch (error) {
+      console.error('[ParkLive] Error carregant punts:', error);
+    }
+  };
+
+  const loadRewards = async () => {
+    loading.classList.remove('d-none');
+    rewardsGrid.classList.add('d-none');
+    empty.classList.add('d-none');
+
+    try {
+      const data = await pythonApi.get('/api/gamificacio/recompenses');
+      loading.classList.add('d-none');
+
+      if (data.success && data.recompenses.length > 0) {
+        renderRewards(data.recompenses);
+        rewardsGrid.classList.remove('d-none');
+      } else {
+        empty.classList.remove('d-none');
+      }
+    } catch (error) {
+      loading.classList.add('d-none');
+      empty.classList.remove('d-none');
+      console.error('[ParkLive] Error carregant recompenses:', error);
+    }
+  };
+
+  const renderRewards = (recompenses) => {
+    rewardsGrid.innerHTML = '';
+
+    recompenses.forEach(reward => {
+      const isLocked = userPoints < reward.requisit_punts;
+      const card = document.createElement('div');
+      card.className = 'col';
+
+      card.innerHTML = `
+        <div class="card h-100 reward-card shadow-sm border-0 ${isLocked ? 'locked' : ''}">
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="reward-icon-container">
+                <i class="bi ${reward.icona_url || 'bi-gift'} fs-4"></i>
+              </div>
+              <div class="reward-points-badge">
+                ${reward.requisit_punts} punts
+              </div>
+            </div>
+            <h3 class="h6 fw-bold mb-2">${reward.nom}</h3>
+            <p class="small text-body-secondary mb-4 flex-grow-1">${reward.descripcio}</p>
+
+            <button
+              class="btn ${isLocked ? 'btn-outline-secondary disabled' : 'btn-primary'} w-100 rounded-pill btn-redeem"
+              data-reward-id="${reward.id}"
+              data-reward-name="${reward.nom}"
+              ${isLocked ? 'disabled' : ''}
+            >
+              ${isLocked ? 'Falten punts' : 'Bescanviar'}
+            </button>
+          </div>
+        </div>
+      `;
+      rewardsGrid.appendChild(card);
+    });
+
+    // Lògica del Modal de Bescanvi
+    const modalConfirmEl = document.getElementById('modal-confirm-redeem');
+    let modalConfirmRedeem = null;
+    if (modalConfirmEl) {
+      modalConfirmRedeem = bootstrap.Modal.getInstance(modalConfirmEl) || new bootstrap.Modal(modalConfirmEl);
+    }
+
+    const btnConfirmRedeem = document.getElementById('btn-confirm-redeem');
+
+    // Netejar listeners antics del botó de confirmar
+    if (btnConfirmRedeem) {
+        const newBtnConfirm = btnConfirmRedeem.cloneNode(true);
+        btnConfirmRedeem.parentNode.replaceChild(newBtnConfirm, btnConfirmRedeem);
+
+        newBtnConfirm.addEventListener('click', async () => {
+            const rewardId = document.getElementById('redeem-reward-id').value;
+            const targetBtn = document.querySelector(`.btn-redeem[data-reward-id="${rewardId}"]`);
+
+            if (!targetBtn) return;
+
+            if (modalConfirmRedeem) modalConfirmRedeem.hide();
+
+            targetBtn.disabled = true;
+            const originalText = targetBtn.innerHTML;
+            targetBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+              const result = await pythonApi.post('/api/gamificacio/bescanvi', {
+                usuari_id: userId,
+                recompensa_id: rewardId
+              });
+
+              if (result.success) {
+                // Si retorna un nou token (ex. per canvi a l'estatus premium), actualitza la sessió
+                if (result.token) {
+                  const userData = getUserSession();
+                  if (userData) {
+                    userData.token = result.token;
+                    // Parsegem manualment el payload del token per obtenir les noves dades
+                    try {
+                      const payload = JSON.parse(atob(result.token.split('.')[1]));
+                      if (payload.data) {
+                        userData.tipus_usuari = payload.data.tipus_usuari || userData.tipus_usuari;
+                      }
+                    } catch (e) {
+                      console.warn('Error parsejant el nou token JWT', e);
+                    }
+                    saveUserSession(userData);
+                  }
+                }
+
+                showBootstrapAlert('success', result.message || 'Recompensa bescanviada!', section);
+                await fetchPoints();
+                await loadRewards();
+
+                // Si hem rebut un nou token, vol dir que el perfil ha canviat (ex: de Bàsic a Premium)
+                // Recarreguem la pàgina per actualitzar tota la UI (sidebar, seccions premium, etc.)
+                if (result.token) {
+                  setTimeout(() => window.location.reload(), 1500);
+                }
+              } else {
+                showBootstrapAlert('danger', result.error || 'Error en el bescanvi.', section);
+                targetBtn.disabled = false;
+                targetBtn.innerHTML = originalText;
+              }
+            } catch (error) {
+              const errorMsg = error.message || 'Error de xarxa al processar el bescanvi.';
+              showBootstrapAlert('danger', errorMsg, section);
+              targetBtn.disabled = false;
+              targetBtn.innerHTML = originalText;
+            }
+        });
+    }
+
+    // Vincular esdeveniments de bescanvi per obrir el modal
+    rewardsGrid.querySelectorAll('.btn-redeem').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rewardId = btn.dataset.rewardId;
+        const rewardName = btn.dataset.rewardName;
+
+        const inputId = document.getElementById('redeem-reward-id');
+        const confirmText = document.getElementById('redeem-confirm-text');
+
+        if (inputId && confirmText && modalConfirmRedeem) {
+            inputId.value = rewardId;
+            confirmText.innerHTML = `Estàs segur que vols bescanviar els teus punts per la recompensa <strong>"${rewardName}"</strong>?`;
+            modalConfirmRedeem.show();
+        } else {
+            // Fallback si no existeix el modal
+            if (!confirm(`Vols bescanviar la teva recompensa: "${rewardName}"?`)) return;
+            // Aquest fallback no farà res més si no hem posat el codi antic aquí,
+            // però com que el modal sempre hi serà, està bé.
+        }
+      });
+    });
+  };
+
+
+  await fetchPoints();
+  await loadRewards();
+  await loadSidebarBadges();
+}
+
+/**
+ * Carrega les insignies de l'usuari i les mostra al sidebar
+ */
+export async function loadSidebarBadges() {
+  const userId = getUserId();
+  const container = document.getElementById('sidebar-badges-container');
+  if (!userId || !container) return;
+
+  try {
+    const data = await pythonApi.get(`/api/gamificacio/usuari/${userId}/recompenses`);
+    if (data.success && data.recompenses) {
+      const insignies = data.recompenses.filter(r => r.tipus === 'insignia');
+
+      if (insignies.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = insignies.map(ins => `
+                <div class="badge-icon-sm" title="${ins.nom}" data-bs-toggle="tooltip">
+                    <i class="${ins.icona_url || 'bi bi-award'}"></i>
+                </div>
+            `).join('');
+
+      // Inicialitzar tooltips de Bootstrap si n'hi ha
+      if (window.bootstrap && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[ParkLive] Error carregant insignies del sidebar:', err);
+  }
+}
+
+/**
+ * Inicialitza la secció d'historial de tiquets de subscripció.
+ * Completament independent de l'historial de reserves.
+ */
+export function initProfileTicketsSection() {
+  const tableBody = document.getElementById('tickets-table-body');
+  const searchInput = document.getElementById('input-search-tickets');
+  const statusSelect = document.getElementById('select-status-tickets');
+  const searchBtn = document.getElementById('btn-search-tickets-submit');
+  const paginationContainer = document.getElementById('tickets-pagination-container');
+  const countLabel = document.getElementById('tickets-count-label');
+
+  if (!tableBody) return;
+
+  // Enllaçar el botó "Gestionar pla" de l'alert cap a la secció de gestió
+  const manageLink = document.getElementById('tickets-manage-link');
+  if (manageLink) {
+    manageLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sidebarBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
+      if (sidebarBtn) sidebarBtn.click();
+    });
+  }
+
+  let currentPage = 1;
+  let currentSearch = '';
+  let currentCicle = '';  // '' | 'mensual' | 'anual'
+  const limit = 6;
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  const formatCurrency = (val) =>
+    Number(val).toLocaleString('ca-ES', { style: 'currency', currency: 'EUR' });
+
+  const fillPill = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '—';
+  };
+
+  // ── Resum del pla (pills + alert) ────────────────────────────────────────
+  const renderResum = (resum) => {
+    if (!resum || !resum.pla_actual) return;
+
+    fillPill('pill-pla-actual', resum.pla_actual);
+    fillPill('pill-membre-des-de', resum.membre_des_de);
+    fillPill('pill-renovacio', resum.renovacio);
+
+    // Mètode: enmascarar les últimes 4 xifres
+    const metodePill = document.getElementById('pill-metode');
+    if (metodePill) {
+      if (resum.metode_pagament === 'targeta') {
+        metodePill.textContent = '•••• ••••';
+      } else {
+        metodePill.textContent = resum.metode_pagament;
+      }
+    }
+
+    // Alert informatiu de renovació
+    const alertEl = document.getElementById('tickets-renewal-alert');
+    const alertText = document.getElementById('tickets-renewal-alert-text');
+    if (alertEl && alertText && resum.auto_renovacio && resum.preu && resum.renovacio) {
+      const planNom = resum.pla_actual || 'Premium';
+      alertText.innerHTML =
+        `La teva subscripció <strong>${planNom}</strong> es renovarà automàticament el ` +
+        `<strong>${resum.renovacio}</strong> per <strong>${formatCurrency(resum.preu)}</strong>.`;
+      alertEl.classList.remove('d-none');
+    }
+  };
+
+  // ── Paginació ─────────────────────────────────────────────────────────────
+  const renderPagination = (paginacio) => {
+    if (!paginationContainer) return;
+    if (!paginacio || paginacio.total_pagines <= 1) {
+      paginationContainer.innerHTML = '';
+      return;
+    }
+
+    const isPrevDisabled = paginacio.pagina_actual === 1;
+    const isNextDisabled = paginacio.pagina_actual === paginacio.total_pagines;
+
+    let pagesHtml = '';
+    for (let i = 1; i <= paginacio.total_pagines; i++) {
+      const isActive = i === paginacio.pagina_actual;
+      pagesHtml += `
+        <li class="page-item ${isActive ? 'active' : ''}">
+          <button class="page-link" data-page="${i}" ${isActive ? 'aria-current="page"' : ''}>${i}</button>
+        </li>`;
+    }
+
+    paginationContainer.innerHTML = `
+      <nav aria-label="Navegació historial de tiquets">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item ${isPrevDisabled ? 'disabled' : ''}">
+            <button class="page-link" data-page="${paginacio.pagina_actual - 1}"
+              ${isPrevDisabled ? 'disabled aria-disabled="true"' : ''} aria-label="Pàgina anterior">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          ${pagesHtml}
+          <li class="page-item ${isNextDisabled ? 'disabled' : ''}">
+            <button class="page-link" data-page="${paginacio.pagina_actual + 1}"
+              ${isNextDisabled ? 'disabled aria-disabled="true"' : ''} aria-label="Pàgina següent">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>`;
+
+    paginationContainer.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const newPage = parseInt(btn.dataset.page);
+        if (newPage && newPage !== currentPage && newPage > 0 && newPage <= paginacio.total_pagines) {
+          currentPage = newPage;
+          fetchTickets();
+        }
+      });
+    });
+  };
+
+  // ── Fetch + render ────────────────────────────────────────────────────────
+  const fetchTickets = async () => {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-5 text-muted">
+          <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+          Carregant tiquets...
+        </td>
+      </tr>`;
+
+    try {
+      const offset = (currentPage - 1) * limit;
+      const params = { limit, offset };
+      if (currentCicle) params.cicle = currentCicle;
+      if (statusSelect?.value) params.estat = statusSelect.value;
+      if (currentSearch.trim()) params.search = currentSearch.trim();
+
+      const data = await pythonApi.get('/api/stripe/subscription-history', params);
+
+      // Pills i alert (única vegada, quan tenim el resum)
+      if (data.resum && Object.keys(data.resum).length) renderResum(data.resum);
+
+      renderPagination(data.paginacio);
+
+      // Etiqueta de resultats
+      if (countLabel && data.paginacio) {
+        const fi = Math.min(offset + limit, data.paginacio.total);
+        countLabel.textContent =
+          data.paginacio.total > 0
+            ? `Mostrant ${offset + 1}–${fi} de ${data.paginacio.total} tiquets`
+            : '';
+      }
+
+      const tiquets = data.tiquets || [];
+
+      if (tiquets.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="bi bi-receipt me-1"></i> No s'han trobat tiquets de subscripció.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = tiquets.map(t => {
+        // Estat badge
+        let badgeClass = 'bg-secondary text-white';
+        let badgeIcon = 'bi-dash-circle';
+        let badgeLabel = t.estat || 'Desconegut';
+
+        const estat = (t.estat || '').toLowerCase();
+        if (estat === 'activa') { badgeClass = 'status-ok'; badgeIcon = 'bi-check-circle-fill'; badgeLabel = 'Actiu'; }
+        else if (estat === 'cancelada') { badgeClass = 'status-err'; badgeIcon = 'bi-x-circle-fill'; badgeLabel = 'Cancel·lat'; }
+        else if (estat === 'pendent') { badgeClass = 'status-pend'; badgeIcon = 'bi-clock-fill'; badgeLabel = 'Pendent'; }
+        else if (estat === 'caducada') { badgeClass = 'bg-secondary text-white'; badgeIcon = 'bi-dash-circle'; badgeLabel = 'Caducat'; }
+
+        // Cicle badge
+        const isAnual = (t.cicle || '').toLowerCase() === 'anual';
+        const cicleBadge = isAnual
+          ? `<span class="ticket-cycle-badge ticket-cycle-anual">Anual</span>`
+          : `<span class="ticket-cycle-badge ticket-cycle-mensual">Mensual</span>`;
+
+        // Botó PDF — receipt_url del Charge de Stripe (rebut de pagament)
+        const pdfHref = t.pdf_url || t.stripe_invoice_url || null;
+        const pdfBtn = pdfHref
+          ? `<a href="${pdfHref}" target="_blank" rel="noopener noreferrer"
+               class="d-flex align-items-center gap-1 badge bg-danger bg-opacity-10 text-danger rounded-pill px-2 py-1 text-decoration-none"
+               title="${t.pdf_url ? 'Veure rebut de pagament' : 'Veure factura a Stripe'}"
+               style="font-size:.75rem;">
+               <i class="bi bi-file-earmark-pdf"></i> PDF
+             </a>`
+          : `<span class="d-flex align-items-center gap-1 badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1 opacity-40"
+               style="cursor:default;font-size:.75rem;" title="Rebut no disponible">
+               <i class="bi bi-file-earmark-pdf"></i> PDF
+             </span>`;
+
+        return `
+          <tr>
+            <td class="text-body-secondary small text-nowrap">${t.data_inici || '—'}</td>
+            <td>
+              <span class="fw-semibold small text-primary" style="font-family:monospace;">
+                ${t.referencia}
+              </span>
+            </td>
+            <td class="small text-nowrap text-body-secondary">
+              ${t.data_inici ? t.data_inici.split(' ')[0] : '—'}
+              ${t.data_final ? `<span class="mx-1 text-body-tertiary">–</span>${t.data_final}` : ''}
+            </td>
+            <td>${cicleBadge}</td>
+            <td>
+              <span class="badge bg-body-secondary text-body-emphasis border border-secondary border-opacity-25 px-2 py-1 fw-semibold">
+                ${formatCurrency(t.import)}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge ${badgeClass}">
+                <i class="bi ${badgeIcon}"></i> ${badgeLabel}
+              </span>
+            </td>
+            <td class="text-end">${pdfBtn}</td>
+          </tr>`;
+      }).join('');
+
+    } catch (err) {
+      console.error('[ParkLive] Error carregant tiquets subscripció:', err);
+
+      if (err.message?.includes('token d\'autenticació ha caducat')) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5 text-warning">
+              <i class="bi bi-clock-history me-1"></i> La sessió ha caducat. Torna a iniciar sessió.
+            </td>
+          </tr>`;
+      } else {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-5 text-danger">
+              <i class="bi bi-exclamation-triangle me-1"></i> Error al carregar els tiquets.
+            </td>
+          </tr>`;
+      }
+      if (paginationContainer) paginationContainer.innerHTML = '';
+    }
+  };
+
+  // ── Switcher de cicle ─────────────────────────────────────────────────────
+  document.getElementById('tickets-cycle-switcher')?.querySelectorAll('button[data-cycle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tickets-cycle-switcher .btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCicle = btn.dataset.cycle;
+      currentPage = 1;
+      fetchTickets();
+    });
+  });
+
+  // ── Cerca ─────────────────────────────────────────────────────────────────
+  const performSearch = () => {
+    if (searchInput) currentSearch = searchInput.value;
+    currentPage = 1;
+    fetchTickets();
+  };
+
+  searchBtn?.addEventListener('click', performSearch);
+  searchInput?.addEventListener('keyup', (e) => { if (e.key === 'Enter') performSearch(); });
+  statusSelect?.addEventListener('change', () => { currentPage = 1; fetchTickets(); });
+
+  // Càrrega inicial
+  fetchTickets();
+}

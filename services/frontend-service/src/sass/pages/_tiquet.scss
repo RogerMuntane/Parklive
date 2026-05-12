@@ -1,0 +1,189 @@
+// services/frontend-service/src/sass/pages/_tiquet.scss
+
+body.page-tiquet {
+    background-color: var(--bs-tertiary-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--bs-body-color);
+}
+
+.ticket-wrapper {
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.ticket-card {
+    background-color: var(--bs-body-bg);
+    border-radius: 12px;
+    box-shadow: var(--bs-box-shadow);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color-translucent);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.ticket-header {
+    background-color: var(--bs-primary);
+    color: var(--bs-white);
+    padding: 30px 20px 40px;
+    text-align: center;
+}
+
+.ticket-body {
+    padding: 30px 20px;
+    position: relative;
+    background-color: var(--bs-body-bg);
+}
+
+/* The dotted separator */
+.ticket-separator {
+    height: 0;
+    border-top: 2px dashed var(--bs-border-color);
+    margin: 0 20px;
+    position: relative;
+}
+
+.ticket-separator::before,
+.ticket-separator::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    width: 20px;
+    height: 20px;
+    background-color: var(--bs-tertiary-bg); // Matches page background
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.ticket-separator::before {
+    left: -30px;
+}
+
+.ticket-separator::after {
+    right: -30px;
+}
+
+.ticket-footer {
+    padding: 20px;
+    text-align: center;
+    background-color: var(--bs-tertiary-bg);
+    transition: background-color 0.3s ease;
+}
+
+.qr-placeholder {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    background-color: #ffffff !important; // Always white for maximum contrast
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+    i, img {
+        color: #000000 !important; // QR always black
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+}
+
+.success-checkmark {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    background-color: var(--bs-success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bs-white);
+    font-size: 2rem;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(var(--bs-success-rgb), 0.3);
+}
+
+/* Dark mode specific adjustments if needed beyond variables */
+[data-bs-theme="dark"] {
+    .ticket-card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .ticket-header {
+        background-color: darken(#2b2d42, 5%); // Using primary color from variables
+    }
+
+    .qr-placeholder {
+        background-color: #fff;
+        border-color: #444;
+    }
+
+    .ticket-body {
+        .text-danger {
+            color: lighten($crimson, 15%) !important;
+        }
+        
+        // Títols i dades importants
+        h3.text-body, .fw-bold, [data-tiquet] {
+            color: #f8f9fa !important;
+        }
+        
+        .text-muted {
+            color: rgba(248, 249, 250, 0.6) !important;
+        }
+    }
+
+    .ticket-footer small {
+        color: rgba(248, 249, 250, 0.4) !important;
+    }
+}
+
+@media print {
+    @page {
+        margin: 0;
+    }
+    body {
+        margin: 2cm !important;
+        background: none !important;
+        padding: 0;
+        color: #000 !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .ticket-wrapper {
+        max-width: 100%;
+        margin: 0;
+        box-shadow: none;
+    }
+    .ticket-card {
+        box-shadow: none;
+        border: 1px solid #000;
+        background-color: #fff !important;
+    }
+    .ticket-header {
+        color: #000 !important;
+        background-color: #fff !important;
+        border-bottom: 2px solid #000;
+    }
+    .success-checkmark {
+        background-color: transparent !important;
+        color: #000 !important;
+        border: 2px solid #000;
+        box-shadow: none;
+    }
+    .ticket-body, .ticket-footer, .ticket-separator {
+        background-color: #fff !important;
+    }
+    .ticket-separator {
+        border-top: 2px dashed #000;
+    }
+    .ticket-separator::before, .ticket-separator::after {
+        background-color: #fff !important;
+        display: none; // Often better to hide "cutouts" in print
+    }
+}

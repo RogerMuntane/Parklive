@@ -1,20 +1,45 @@
 <!-- Historial Component -->
 <section class="profile-section" id="section-history">
+    <!-- ── HISTORIAL DE RESERVES ─────────────────────────────────────── -->
     <div class="card shadow-sm border-0 rounded-4 mb-3">
         <div class="card-body p-4">
-            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-                <span class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger fs-5">
-                    <i class="bi bi-receipt"></i>
-                </span>
-                <div>
-                    <h2 class="card-title h6 fw-bold mb-0">Historial de pagaments</h2>
-                    <p class="card-subtitle text-muted small mb-0">Últims moviments del teu compte</p>
+
+            <!-- Capçalera + Controls de cerca -->
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger fs-5">
+                        <i class="bi bi-receipt"></i>
+                    </span>
+                    <div>
+                        <h2 class="card-title h6 fw-bold mb-0">Historial de reserves</h2>
+                        <p class="card-subtitle text-body-secondary small mb-0">Últims moviments del teu compte</p>
+                    </div>
+                </div>
+
+                <div class="history-search-controls d-flex align-items-center gap-2 flex-wrap">
+                    <!-- Input de cerca -->
+                    <input type="text" id="input-search-history"
+                        class="form-control form-control-sm history-search-input" placeholder="Cerca per nom...">
+
+                    <!-- Selector d'estat -->
+                    <select id="select-status-history" class="form-select form-select-sm history-status-select">
+                        <option value="completada,cancelada">Tots els estats</option>
+                        <option value="completada">Completat</option>
+                        <option value="cancelada">Cancel·lat</option>
+                    </select>
+
+                    <!-- Botó de cerca -->
+                    <button id="btn-search-history-submit" class="btn btn-sm btn-primary history-search-btn px-3">
+                        Cerca
+                    </button>
                 </div>
             </div>
+
+            <!-- Taula de reserves -->
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
-                        <tr class="text-uppercase text-secondary"
+                        <tr class="text-uppercase text-body-secondary"
                             style="letter-spacing:.06em;font-size:.72rem!important;">
                             <th class="border-0 fw-semibold">Data</th>
                             <th class="border-0 fw-semibold">Descripció</th>
@@ -23,45 +48,129 @@
                             <th class="border-0"></th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="history-table-body">
+                        <!-- Les reserves es carregaran dinàmicament aquí -->
                         <tr>
-                            <td class="text-muted small">10 mar 2025</td>
-                            <td>Aparcament – Zona Gràcia P3</td>
-                            <td><strong>2,50 €</strong></td>
-                            <td><span class="status-badge status-ok"><i class="bi bi-check-circle-fill"></i>
-                                    Completat</span></td>
-                            <td><button class="btn btn-outline-secondary btn-sm">PDF</button></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">08 mar 2025</td>
-                            <td>Subscripció Pla Bàsic</td>
-                            <td><strong>4,99 €</strong></td>
-                            <td><span class="status-badge status-ok"><i class="bi bi-check-circle-fill"></i>
-                                    Completat</span></td>
-                            <td><button class="btn btn-outline-secondary btn-sm">PDF</button></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">05 mar 2025</td>
-                            <td>Aparcament – Eixample C12</td>
-                            <td><strong>1,80 €</strong></td>
-                            <td><span class="status-badge status-pend"><i class="bi bi-hourglass-split"></i>
-                                    Pendent</span></td>
-                            <td><button class="btn btn-outline-secondary btn-sm">PDF</button></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">01 mar 2025</td>
-                            <td>Aparcament – Sarrià P1</td>
-                            <td><strong>3,20 €</strong></td>
-                            <td><span class="status-badge status-err"><i class="bi bi-x-circle-fill"></i> Error</span>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                Carregant historial...
                             </td>
-                            <td><button class="btn btn-outline-secondary btn-sm">PDF</button></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div class="d-flex justify-content-center mt-3">
-                <button class="btn btn-outline-secondary btn-sm">Veure tot l'historial</button>
+
+            <!-- Paginació Bootstrap generada dinàmicament -->
+            <div id="history-pagination-container" class="d-flex justify-content-center mt-4">
             </div>
+
+        </div>
+    </div>
+
+    <!-- ── HISTORIAL DE TIQUETS DE SUBSCRIPCIÓ ──────────────────────── -->
+    <div class="card shadow-sm border-0 rounded-4" id="tickets-card">
+        <div class="card-body p-4">
+
+            <!-- Capçalera -->
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger fs-5">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </span>
+                    <div>
+                        <h2 class="card-title h6 fw-bold mb-0">Historial de tiquets</h2>
+                        <p class="card-subtitle text-body-secondary small mb-0">Facturació i renovacions del teu pla</p>
+                    </div>
+                </div>
+
+                <!-- Controls de cerca per referència -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <input type="text" id="input-search-tickets"
+                        class="form-control form-control-sm history-search-input" placeholder="Cerca per referència...">
+                    <select id="select-status-tickets" class="form-select form-select-sm history-status-select">
+                        <option value="">Tots els estats</option>
+                        <option value="activa">Actiu</option>
+                        <option value="pendent">Pendent</option>
+                        <option value="cancelada">Cancel·lat</option>
+                        <option value="caducada">Caducat</option>
+                    </select>
+                    <button id="btn-search-tickets-submit" class="btn btn-sm btn-primary history-search-btn px-3">
+                        Cerca
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pills informatius del pla actual -->
+            <div class="d-flex flex-wrap gap-2 mb-3" id="tickets-info-pills">
+                <span class="subscription-info-pill">
+                    <i class="bi bi-star-fill text-danger me-1"></i>
+                    Pla actual: <strong id="pill-pla-actual" class="ms-1">—</strong>
+                </span>
+                <span class="subscription-info-pill">
+                    <i class="bi bi-person-check me-1"></i>
+                    Membre des de: <strong id="pill-membre-des-de" class="ms-1">—</strong>
+                </span>
+                <span class="subscription-info-pill">
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    Renovació: <strong id="pill-renovacio" class="ms-1">—</strong>
+                </span>
+                <!-- <span class="subscription-info-pill">
+                    <i class="bi bi-credit-card me-1"></i>
+                    Mètode: <strong id="pill-metode" class="ms-1">—</strong>
+                </span> -->
+            </div>
+
+            <!-- Alert informatiu de renovació (dinàmic) -->
+            <div id="tickets-renewal-alert"
+                class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 py-2 px-3 small mb-3 d-none"
+                role="alert">
+                <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+                <span id="tickets-renewal-alert-text"></span>
+                <a id="tickets-manage-link" href="#" class="ms-auto text-danger fw-semibold text-nowrap small">Gestionar
+                    pla</a>
+            </div>
+
+            <!-- Switcher Tots / Mensual / Anual -->
+            <div class="plan-switcher-container mb-3">
+                <div class="plan-switcher" id="tickets-cycle-switcher" role="group" aria-label="Filtre de cicle">
+                    <button type="button" id="btn-tickets-all" class="btn active" data-cycle="">Tots</button>
+                    <button type="button" id="btn-tickets-mensual" class="btn" data-cycle="mensual">Mensual</button>
+                    <button type="button" id="btn-tickets-anual" class="btn" data-cycle="anual">Anual</button>
+                </div>
+            </div>
+
+            <!-- Taula de tiquets -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="text-uppercase text-body-secondary"
+                            style="letter-spacing:.06em;font-size:.72rem!important;">
+                            <th class="border-0 fw-semibold">Data</th>
+                            <th class="border-0 fw-semibold">Referència</th>
+                            <th class="border-0 fw-semibold">Periode</th>
+                            <th class="border-0 fw-semibold">Cicle</th>
+                            <th class="border-0 fw-semibold">Import</th>
+                            <th class="border-0 fw-semibold">Estat</th>
+                            <th class="border-0"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tickets-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                Carregant tiquets...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Resum de resultats + Paginació -->
+            <div class="d-flex align-items-center justify-content-between mt-4 flex-wrap gap-2">
+                <p id="tickets-count-label" class="small text-body-secondary mb-0"></p>
+                <div id="tickets-pagination-container" class="d-flex justify-content-center"></div>
+            </div>
+
         </div>
     </div>
 </section>

@@ -1,5 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 
-*.pyc
-*.pyc
-*.pyc
+# Environments
+.env
+.env.*
+!.env.example
+
+# Auth & Secrets
 googleAuth.json
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads & Storage
+storage/*
+!storage/aparcaments/cataleg/
+!storage/blog/
+services/php-service/uploads/
+services/frontend-service/storage/
+services/python-service/storage/
+
+# Logs
+logs/
