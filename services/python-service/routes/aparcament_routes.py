@@ -1,3 +1,10 @@
+"""
+Rutes de l'API per a la consulta pública i gestió d'usuaris d'aparcaments.
+
+Defineix els endpoints per a la cerca geogràfica, detalls tècnics, disponibilitat
+en temps real i gestió de favorits/valoracions per part dels usuaris.
+"""
+
 from flask import Blueprint
 from controllers.aparcament_controller import (
     list_aparcaments,
@@ -16,13 +23,20 @@ aparcament_routes = Blueprint("aparcaments", __name__)
 
 @aparcament_routes.route("/api/aparcaments", methods=["GET"])
 def get_aparcaments():
-    """Endpoint GET per llistar tots els aparcaments"""
+    """
+    Retorna la llista global d'aparcaments.
+
+    Returns:
+        Response: JSON amb la llista d'aparcaments actius.
+    """
     return list_aparcaments()
 
 
 @aparcament_routes.route("/api/aparcaments/cerca", methods=["GET"])
 def cerca_aparcaments():
-    """Endpoint GET per cercar aparcaments amb filtres
+    """
+    Cerca avançada d'aparcaments amb filtres i geolocalització.
+
 
     Query params disponibles:
     - ciutat: text per filtrar per ciutat
@@ -48,13 +62,23 @@ def cerca_aparcaments():
 
 @aparcament_routes.route("/api/aparcaments/<int:id>", methods=["GET"])
 def get_aparcament(id):
-    """Endpoint GET per obtenir detall d'un aparcament"""
+    """
+    Obté el detall complet d'un aparcament específic.
+
+    Args:
+        id (int): Identificador de l'aparcament.
+
+    Returns:
+        Response: JSON amb les dades detallades de l'aparcament.
+    """
     return get_aparcament_detail(id)
 
 
 @aparcament_routes.route("/api/aparcaments/<int:id>/disponibilitat", methods=["GET"])
 def get_aparcament_disponibilitat(id):
-    """Endpoint GET per obtenir places disponibles per una franja horària.
+    """
+    Consulta la disponibilitat de places per a una franja horària.
+
 
     Query params:
     - data_entrada: inici de la franja (YYYY-MM-DD HH:MM o YYYY-MM-DD HH:MM:SS)
@@ -65,35 +89,77 @@ def get_aparcament_disponibilitat(id):
 
 @aparcament_routes.route("/api/usuari/favorits", methods=["GET"])
 def get_usuari_favorits():
-    """Endpoint GET per llistar favorits d'un usuari autenticat"""
+    """
+    Llista els aparcaments favorits de l'usuari autenticat.
+
+    Returns:
+        Response: JSON amb la llista de favorits.
+    """
     return list_aparcaments_favorits_usuari()
 
 
 @aparcament_routes.route("/api/usuari/favorits", methods=["POST"])
 def add_usuari_favorit():
-    """Endpoint POST per afegir un aparcament a favorits"""
+    """
+    Afegeix un aparcament a la llista de favorits de l'usuari.
+
+    Returns:
+        Response: JSON amb el resultat de l'operació.
+    """
     return add_aparcament_favorit()
 
 
 @aparcament_routes.route("/api/usuari/favorits/<int:aparcament_id>", methods=["DELETE"])
 def delete_usuari_favorit(aparcament_id):
-    """Endpoint DELETE per eliminar un aparcament de favorits"""
+    """
+    Elimina un aparcament dels favorits de l'usuari.
+
+    Args:
+        aparcament_id (int): ID de l'aparcament a eliminar.
+
+    Returns:
+        Response: JSON amb el resultat de l'operació.
+    """
     return remove_aparcament_favorit(aparcament_id)
 
 
 @aparcament_routes.route("/api/aparcaments/<int:id>/valoracions", methods=["POST"])
 def post_valoracio(id):
-    """Endpoint POST per crear una valoració per un aparcament"""
+    """
+    Crea una nova valoració (ressenya) per a un aparcament.
+
+    Args:
+        id (int): ID de l'aparcament a valorar.
+
+    Returns:
+        Response: JSON amb la nova valoració creada.
+    """
     return create_valoracio(id)
 
 @aparcament_routes.route("/api/aparcaments/<int:id>/valoracions/<int:valoracio_id>", methods=["PUT"])
 def put_valoracio(id, valoracio_id):
-    """Endpoint PUT per actualitzar una valoració existent d'un aparcament"""
-    # Ensure the authenticated user is the owner; delegating logic to controller
+    """
+    Actualitza una valoració existent realitzada per l'usuari.
+
+    Args:
+        id (int): ID de l'aparcament.
+        valoracio_id (int): ID de la valoració a editar.
+
+    Returns:
+        Response: JSON amb la valoració actualitzada.
+    """
     return update_user_valoracio(id)
 
 @aparcament_routes.route("/api/storage/valoracions/<filename>", methods=["GET"])
 def get_valoracio_foto(filename):
-    """Endpoint GET per servir fotos de valoracions des de l'emmagatzematge"""
+    """
+    Serveix fitxers d'imatge associats a les valoracions.
+
+    Args:
+        filename (str): Nom del fitxer d'imatge.
+
+    Returns:
+        Response: El fitxer d'imatge sol·licitat.
+    """
     return serve_valoracio_photo(filename)
 

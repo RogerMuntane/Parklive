@@ -1,3 +1,12 @@
+"""
+Model per a la gestió del cicle de vida de les reserves.
+
+Centralitza totes les operacions de base de dades relacionades amb les reserves:
+creació (via stored procedure `sp_crear_reserva`), llistat filtrat i paginator,
+visualització de detalls i transicions d'estat. Inclou lògica de sincronització
+del comptador de places disponibles i aplicació de recompenses de gamificació.
+"""
+
 from models.db_connection import get_db_connection, get_new_connection
 from datetime import datetime, date, timedelta
 from decimal import Decimal
@@ -5,7 +14,15 @@ import math
 
 
 def serialize_value(value):
-    """Converteix tipus no serialitzables a formats JSON"""
+    """
+    Converteix tipus de dades no serialitzables a formats compatibles amb JSON.
+    
+    Args:
+        value (Any): El valor a serialitzar (datetime, date, timedelta, Decimal, etc.).
+        
+    Returns:
+        Any: El valor convertit a string o float si cal, o el valor original.
+    """
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     elif isinstance(value, timedelta):
@@ -17,15 +34,29 @@ def serialize_value(value):
 
 def get_reserves_usuari(usuari_id, filters=None):
     """
-    Obté totes les reserves d'un usuari amb filtres opcionals
+    Obté totes les reserves d'un usuari amb filtratge flexible i paginació.
+    
+    Quan els filtres són simples (estat + paginació), delega al procediment
+    `sp_obtenir_historial_reserves` per rendiment. Amb filtres avançats (dates,
+    aparcament, cerca textual) executa una query dinàmica amb COUNT previ.
 
-    Filtres disponibles:
-    - estat: pendent, confirmada, en_curs, completada, cancelada
-    - data_desde: data mínima (format YYYY-MM-DD)
-    - data_fins: data màxima (format YYYY-MM-DD)
-    - aparcament_id: filtre per aparcament específic
-    - limit: límit de resultats (per defecte 20, màxim 100)
-    - offset: offset per paginació
+    Args:
+        usuari_id (int): ID de l'usuari.
+        filters (dict|None): Filtres opcionals:
+            - 'estat' (str|None): Un o múltiples estats separats per coma.
+            - 'data_desde' (str): Data mínima en format 'YYYY-MM-DD'.
+            - 'data_fins' (str): Data màxima en format 'YYYY-MM-DD'.
+            - 'aparcament_id' (int): Filtre per aparcament.
+            - 'search' (str): Cerca parcial per nom d'aparcament.
+            - 'limit' (int): Registres per pàgina (màx. 100).
+            - 'offset' (int): Desplaçament per paginació.
+                            
+    Returns:
+        dict: Diccionari amb claus 'total' (int), 'reserves' (list[dict])
+              i 'paginacio' (dict amb limit, offset, pagina_actual i total_pagines).
+        
+    Raises:
+        ValueError: Si l'estat és invàlid o el format de data és incorrecte.
     """
     if filters is None:
         filters = {}
@@ -287,14 +318,16 @@ def get_reserves_usuari(usuari_id, filters=None):
 
 def get_totes_reserves(filters=None):
     """
-    Obté totes les reserves (per a administradors)
+    Obté totes les reserves del sistema (ús administratiu).
 
-    Filtres disponibles:
-    - usuari_id: filtre per usuari
-    - aparcament_id: filtre per aparcament
-    - estat: pendent, confirmada, en_curs, completada, cancelada
-    - data_desde: data mínima
-    - data_fins: data màxima
+    Args:
+        filters (dict|None): Filtres per usuari, aparcament, estat, dates i paginació.
+        
+    Returns:
+        dict: Conté 'total', 'reserves' (serialitzades) i 'paginacio'.
+        
+    Raises:
+        ValueError: Si l'estat proporcionat és invàlid.
     """
     if filters is None:
         filters = {}
@@ -417,9 +450,21 @@ def get_totes_reserves(filters=None):
 
 def get_reserves_per_estat(estat, filters=None):
     """
-    Obté reserves filtrades per estat
+    Wrapper de conveniència per obtenir reserves filtrades per un estat concret.
+    
+    Delega a `get_totes_reserves` injectant el filtre d'estat al diccionari
+    de filtres. Valida l'estat abans de delegar.
 
-    Estats vàlids: pendent, confirmada, en_curs, completada, cancelada
+    Args:
+        estat (str): Estat de les reserves ('pendent', 'confirmada', 'en_curs',
+                     'completada', 'cancelada').
+        filters (dict|None): Filtres addicionals compatibles amb get_totes_reserves.
+        
+    Returns:
+        dict: Resultat paginat equivalent a get_totes_reserves.
+        
+    Raises:
+        ValueError: Si l'estat proporcionat no és un valor reconegut.
     """
     if filters is None:
         filters = {}
@@ -435,7 +480,16 @@ def get_reserves_per_estat(estat, filters=None):
 
 
 def obte_detall_reserva(reserva_id):
-    """Obté el detall complet d'una reserva específica"""
+    """
+    Obté el detall complet d'una reserva específica, incloent dades de l'usuari,
+    l'aparcament i el pagament associat.
+    
+    Args:
+        reserva_id (int): ID de la reserva.
+        
+    Returns:
+        dict|None: Diccionari estructurat amb tota la informació, o None si no existeix.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -525,19 +579,30 @@ def obte_detall_reserva(reserva_id):
 
 def crear_reserva(data):
     """
-    Crea una nova reserva
+    Crea una nova reserva amb validació, sincronització de places i gamificació.
+    
+    El flux d'execució és el següent:
+    1. Validació dels camps obligatoris i de l'existència de l'usuari.
+    2. Sincronització del comptador `places_disponibles` de l'aparcament per
+       a la franja horària sol·licitada (via UPDATE + subquery de reserves actives).
+    3. Aplicació opcional d'un descompte de gamificació si s'ha proporcionat
+       `recompensa_id` (marca la recompensa com a `utilitzada`).
+    4. Crida al procediment `sp_crear_reserva` per a la inserció atòmica.
+    5. Recuperació del detall complet de la reserva creada.
 
-    Paràmetres esperats en data:
-    - usuari_id: ID de l'usuari (requerit)
-    - aparcament_id: ID de l'aparcament (requerit)
-    - data_entrada: data i hora d'entrada (format: YYYY-MM-DD HH:MM:SS) (requerit)
-    - data_sortida: data i hora de sortida (format: YYYY-MM-DD HH:MM:SS) (requerit)
-    - preu_total: preu total de la reserva (requerit)
-    - descompte_aplicat: descompte aplicat (opcional, per defecte 0)
-    - notes: notes addicionals (opcional)
-
-    Retorna:
-    - ID de la nova reserva i el codi de reserva generat
+    Args:
+        data (dict): Dades de la reserva. Camps obligatoris: 'usuari_id',
+                     'aparcament_id', 'data_entrada' (YYYY-MM-DD HH:MM:SS),
+                     'data_sortida', 'preu_total'. Opcionals: 'recompensa_id',
+                     'descompte_aplicat', 'notes'.
+                    
+    Returns:
+        dict: Detall complet retornat per `obte_detall_reserva`, incloent
+              usuari, aparcament, pagament i totes les dates serialitzades.
+        
+    Raises:
+        ValueError: Si falten camps obligatoris, les dates tenen format incorrecte,
+                    la sortida és anterior a l'entrada, o el stored procedure retorna error.
     """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
@@ -670,7 +735,17 @@ def crear_reserva(data):
 
 def actualitzar_estat_reserva(reserva_id, nou_estat):
     """
-    Actualitza l'estat d'una reserva mitjançant el procedure sp_actualitzar_estat_reserva
+    Actualitza l'estat d'una reserva utilitzant el procediment 'sp_actualitzar_estat_reserva'.
+    
+    Args:
+        reserva_id (int): ID de la reserva.
+        nou_estat (str): El nou estat (completada, cancelada, etc.).
+        
+    Returns:
+        bool: True si s'ha actualitzat correctament.
+        
+    Raises:
+        ValueError: Si el procediment emmagatzemat retorna un error.
     """
     conn = get_new_connection()
     cursor = conn.cursor()
@@ -701,7 +776,19 @@ def actualitzar_estat_reserva(reserva_id, nou_estat):
 
 
 def actualitzar_tiquet_reserva(reserva_id, tiquet_path):
-    """Actualitza la ruta del tiquet PDF d'una reserva"""
+    """
+    Vincula un tiquet PDF generat a la seva reserva corresponent.
+    
+    S'utilitza una vegada el tiquet ha estat generat externament (per exemple,
+    pel controlador de reserves) i cal desar-ne la ruta per a descàrrega.
+
+    Args:
+        reserva_id (int): ID de la reserva.
+        tiquet_path (str): Ruta relativa o absoluta al fitxer PDF generat.
+        
+    Returns:
+        bool: True si la columna 'tiquet_path' s'ha actualitzat correctament.
+    """
     conn = get_new_connection()
     cursor = conn.cursor()
     try:

@@ -1,3 +1,15 @@
+"""
+Script de migració per a Clean URLs (ParkLive).
+
+Aquest script recorre el directori del frontend i elimina les extensions '.html'
+dels enllaços i referències internes en fitxers HTML i JS. També normalitza
+les referències a 'index.html' cap a la arrel '/'.
+
+Ús:
+    Aquest és un script de manteniment que s'ha d'executar quan s'afegeixen
+    noves pàgines o es vol assegurar la consistència de les Clean URLs.
+"""
+
 import os
 import re
 
@@ -12,6 +24,18 @@ pages = [
 ]
 
 def clean_content(content):
+    """
+    Processa el contingut d'un fitxer per aplicar les Clean URLs.
+
+    Substitueix totes les aparicions de fitxers de la llista 'pages' per la seva
+    versió sense extensió, aplicant regles especials per a l'índex.
+
+    Args:
+        content (str): Text original del fitxer (HTML o JS).
+
+    Returns:
+        tuple[str, bool]: Una parella amb el (nou_contingut, si_ha_estat_modificat).
+    """
     modified = False
     for page in pages:
         base_name = page.replace('.html', '')

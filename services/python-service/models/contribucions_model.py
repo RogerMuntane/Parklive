@@ -1,3 +1,12 @@
+"""
+Model per a la gestió de contribucions dels usuaris.
+
+Aquest mòdul gestiona el registre d'informació sobre la disponibilitat de l'aparcament
+al carrer (lliure/ocupat) reportada pels usuaris. Aquest sistema forma part de la
+gamificació de Parklive, atorgant punts als usuaris que ajuden a mantenir les
+dades actualitzades.
+"""
+
 from models.db_connection import get_new_connection
 from datetime import datetime
 from decimal import Decimal
@@ -5,7 +14,15 @@ import json
 
 
 def serialize_value(value):
-    """Converteix tipus no serialitzables a formats JSON"""
+    """
+    Converteix tipus de dades no serialitzables de MySQL a formats compatibles amb JSON.
+    
+    Args:
+        value (Any): El valor a serialitzar (datetime, Decimal, etc.).
+        
+    Returns:
+        Any: El valor convertit o l'original si ja és compatible.
+    """
     if isinstance(value, (datetime)):
         return value.isoformat()
     elif isinstance(value, Decimal):
@@ -14,7 +31,18 @@ def serialize_value(value):
 
 
 def _extract_callproc_out_params(result_args):
-    """Extreu OUT params de callproc tolerant tuple/list/dict formats."""
+    """
+    Extreu de forma segura els paràmetres de sortida (OUT) d'una crida a un procediment emmagatzemat.
+    
+    Aquesta funció és tolerant a les diferències de format entre diferents versions 
+    dels connectors MySQL per a Python.
+    
+    Args:
+        result_args (list|tuple|dict): Els arguments retornats per cursor.callproc.
+        
+    Returns:
+        tuple: (contribucio_id, error_msg) extrets dels paràmetres.
+    """
     if isinstance(result_args, (list, tuple)) and len(result_args) >= 2:
         return result_args[-2], result_args[-1]
 
@@ -28,10 +56,26 @@ def _extract_callproc_out_params(result_args):
 
 def crear_contribucio(data):
     """
-    Crea una nova contribució d'usuari
-    ...
-    Retorna:
-    - Dades de la contribució creada
+    Crea una nova contribució d'usuari reportant disponibilitat en una ubicació.
+    
+    El procés inclou:
+    1. Validació de camps obligatoris i formats.
+    2. Verificació de l'existència de l'usuari.
+    3. Processament de dades JSON addicionals si n'hi ha.
+    4. Execució del procediment 'sp_crear_contribucio' per garantir la consistència 
+       i l'atorgament de punts de gamificació.
+    5. Recuperació i serialització de la contribució creada.
+
+    Args:
+        data (dict): Dades del report: 'usuari_id', 'estat_reportat' (lliure/ocupat), 
+                     'latitud', 'longitud' i opcionalment 'dades' (JSON).
+        
+    Returns:
+        dict: Detalls de la contribució creada, incloent l'ID i els punts guanyats.
+        
+    Raises:
+        RuntimeError: Si hi ha problemes de connexió amb la base de dades.
+        ValueError: Si hi ha errors de validació en les dades d'entrada.
     """
     conn = get_new_connection()
     if not conn:
@@ -64,23 +108,22 @@ def crear_contribucio(data):
             if isinstance(data['dades'], dict):
                 dades_json = json.dumps(data['dades'])
             elif isinstance(data['dades'], str):
-                # Validar que és JSON vàlid
                 try:
                     json.loads(data['dades'])
                     dades_json = data['dades']
                 except json.JSONDecodeError:
                     raise ValueError("El camp 'dades' ha de ser JSON vàlid")
 
-        # Les contribucions ara són sempre de disponibilitat
+        # Punts atorgats per cada contribució de disponibilitat
         punts_guanyats = 5
 
-        # Les coordenades són obligatòries perquè la contribució és independent d'aparcaments.
+        # Coordenades geogràfiques
         latitud = data.get('latitud')
         longitud = data.get('longitud')
         if latitud is None or longitud is None:
             raise ValueError("Cal informar 'latitud' i 'longitud'")
 
-        # Procedure equivalent: sp_crear_contribucio(..., OUT contribucio_id, OUT error_msg)
+        # Crida al procediment emmagatzemat
         proc_args = [
             data['usuari_id'],
             data['estat_reportat'],
@@ -96,7 +139,7 @@ def crear_contribucio(data):
 
         contribucio_id, error_msg = _extract_callproc_out_params(result_args)
 
-        # Alguns connectors no retornen els OUT params de forma consistent.
+        # Fallback per a connectors que no retornen els OUT params correctament
         if (contribucio_id is None or str(contribucio_id).strip() in ('', '0')) and not error_msg:
             cursor.execute("SELECT LAST_INSERT_ID() AS contribucio_id")
             last_id_row = cursor.fetchone() or {}
@@ -108,7 +151,7 @@ def crear_contribucio(data):
         if not contribucio_id:
             raise ValueError("No s'ha pogut crear la contribució")
 
-        # Obtenir la contribució creada
+        # Recuperar el registre complet per confirmar la inserció
         cursor.execute("""
             SELECT
                 c.id,
@@ -131,7 +174,6 @@ def crear_contribucio(data):
         if not contribucio:
             raise RuntimeError("Error en recuperar la contribució creada")
 
-        # Serialitzar resposta
         return {
             'id': contribucio['id'],
             'usuari': {
@@ -161,8 +203,14 @@ def crear_contribucio(data):
 
 def get_contribucions_usuari(usuari_id, filters=None):
     """
-    Obté totes les contribucions d'un usuari
-    ...
+    Obté l'historial de contribucions realitzades per un usuari.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        filters (dict, optional): Diccionari amb 'limit' i 'offset' per a paginació.
+        
+    Returns:
+        list: Llista de contribucions amb ID, estat, punts i data.
     """
     if filters is None:
         filters = {}
@@ -183,14 +231,11 @@ def get_contribucions_usuari(usuari_id, filters=None):
     """
 
     params = [usuari_id]
-
-
     query += " ORDER BY c.created_at DESC"
 
     # Paginació
     limit = filters.get('limit', 20)
     offset = filters.get('offset', 0)
-
     query += " LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
@@ -199,7 +244,6 @@ def get_contribucions_usuari(usuari_id, filters=None):
     cursor.close()
     conn.close()
 
-    # Serialitzar
     result = []
     for c in contribucions:
         result.append({
@@ -210,3 +254,4 @@ def get_contribucions_usuari(usuari_id, filters=None):
         })
 
     return result
+

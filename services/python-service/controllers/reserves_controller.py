@@ -1,3 +1,11 @@
+"""
+Controlador per a la gestió del cicle de vida de les reserves.
+
+Centralitza tots els endpoints del mòdul de reserves: historial d'usuari,
+llistat d'administrador, detall, creació (amb pagament Stripe i generació PDF),
+cancel·lació (amb retenció de fons alliberada a Stripe) i descansa/pujada de tiquets PDF.
+"""
+
 from flask import jsonify, request, send_file
 import os
 from models.reserves_model import (
@@ -18,7 +26,24 @@ from middleware.jwt_auth import get_jwt_user_id, get_jwt_full_data
 
 def reserves_usuari_historial():
     """
-    Controlador per obtenir l'historial de reserves d'un usuari
+    GET /api/reserves - Retorna l'historial de reserves de l'usuari autenticat.
+
+    L'ID de l'usuari s'obté exclusivament del JWT per seguretat.
+    Si s'envia un 'user_id' com a query param que no coincideix amb el token, retorna 403.
+
+    Query params:
+        user_id (int|None): Verificació addicional (ha de coincidir amb el JWT).
+        estat (str|None): Filtre per estat ('pendent', 'confirmada', etc.).
+        limit (int): Màx resultats per pàgina (per defecte 50).
+        offset (int): Desplaçament per paginació.
+        search (str|None): Cerca per nom d'aparcament.
+
+    Returns:
+        JSON 200: Reserves paginades amb metadades.
+        JSON 400: Error de validació en els paràmetres.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: user_id no coincideix amb el token.
+        JSON 500: Error intern del servidor.
     """
     try:
         # Validar JWT i obtenir l'ID de l'usuari autenticat
@@ -57,8 +82,21 @@ def reserves_usuari_historial():
 
 def llistar_reserves():
     """
-    Controlador per llistar totes les reserves (Admin).
-    Requereix autenticació JWT i rol d'administrador.
+    GET /api/reserves/totes - Llista totes les reserves del sistema (only admin).
+
+    Requereix JWT amb rol 'administrador' o 'admin'.
+
+    Query params:
+        estat (str|None): Filtre per estat.
+        limit (int): Màx resultats (per defecte 50).
+        offset (int): Desplaçament per paginació.
+
+    Returns:
+        JSON 200: Totes les reserves paginades.
+        JSON 400: Error de validació.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: L'usuari no té rol d'administrador.
+        JSON 500: Error intern del servidor.
     """
     try:
         get_jwt_user_id()
@@ -93,8 +131,19 @@ def llistar_reserves():
 
 def detall_reserva(reserva_id):
     """
-    Controlador per obtenir el detall d'una reserva específica.
-    Requereix JWT. L'usuari només pot veure les seves reserves; admin pot veure qualsevol.
+    GET /api/reserves/<id> - Retorna el detall complet d'una reserva.
+
+    L'usuari només pot veure les seves pròpies reserves; un admin pot veure qualsevol.
+
+    Args:
+        reserva_id (int|str): ID de la reserva (de l'URL).
+
+    Returns:
+        JSON 200: Detall complet de la reserva (usuari, aparcament, pagament).
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: L'usuari no és propietari ni administrador.
+        JSON 404: La reserva no existeix.
+        JSON 500: Error intern del servidor.
     """
     try:
         usuari_autenticat_id = get_jwt_user_id()
@@ -122,7 +171,29 @@ def detall_reserva(reserva_id):
 
 def crear_nova_reserva():
     """
-    Controlador per crear una nova reserva
+    POST /api/reserves - Crea una reserva i processa el pagament via Stripe.
+
+    El flux complet és:
+    1. Validació JWT i camps obligatoris.
+    2. Prevalidació de disponibilitat per la franja horària sol·licitada.
+    3. Creació atòmica de la reserva al model.
+    4. Autorització del pagament amb Stripe (capture_method='manual').
+    5. Confirmació de la reserva i registre del pagament a la BD.
+    6. Generació automàtica del tiquet PDF.
+    Si qualsevol pas intermedi falla, la reserva queda en estat 'cancelada'.
+
+    Body JSON:
+        aparcament_id (int), data_entrada (str), data_sortida (str),
+        preu_total (float), payment_method_id (str), recompensa_id (int|None),
+        descompte_aplicat (float|None), notes (str|None).
+
+    Returns:
+        JSON 201: Reserva confirmada i detall complet.
+        JSON 400: Errors de validació, disponibilitat o targeta denegada.
+        JSON 401: JWT falta o és invàlid.
+        JSON 404: Aparcament no existeix.
+        JSON 409: No hi ha places disponibles per la franja.
+        JSON 500: Error intern del servidor.
     """
     # Validar JWT
     try:
@@ -306,9 +377,22 @@ def get_tiquet_pdf(reserva_id):
 
 def cancelar_reserva_usuari(reserva_id):
     """
-    Controlador per cancel·lar una reserva de l'usuari.
-    Només permet cancel·lar si falta més de 60 minuts per l'entrada.
-    Requereix JWT i que l'usuari sigui el propietari de la reserva.
+    DELETE /api/reserves/<id>/cancelar - Cancel·la una reserva de l'usuari.
+
+    Política: només es pot cancel·lar si falten més de 60 minuts per l'entrada
+    i la reserva està en estat 'confirmada' o 'pendent'. Cancel·la la retenció
+    de fons a Stripe si existeix un PaymentIntent autoritzat.
+
+    Args:
+        reserva_id (int|str): ID de la reserva (de l'URL).
+
+    Returns:
+        JSON 200: Confirmació de la cancel·lació i alliberament de fons.
+        JSON 400: Reserva ja cancel·lada, estat incorrecte o política de temps.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: L'usuari no és propietari de la reserva.
+        JSON 404: La reserva no existeix.
+        JSON 500: Error intern o falla a Stripe.
     """
     try:
         usuari_autenticat_id = get_jwt_user_id()
@@ -365,10 +449,25 @@ def cancelar_reserva_usuari(reserva_id):
 
 def pujar_tiquet_pdf(reserva_id):
     """
-    Rep un tiquet PDF generat pel frontend i el guarda al servidor i a la BDD.
-    L'operació és idempotent: si ja existia un tiquet per la mateixa reserva,
-    el sobreescriu sense retornar un error.
-    Requereix JWT. Només el propietari o un admin pot pujar el tiquet.
+    POST /api/reserves/<id>/tiquet - Puja i vincula un tiquet PDF a la reserva.
+
+    L'operació és idempotent: sobreescriu el tiquet si ja existia.
+    Valida els magic bytes del fitxer (%PDF) per evitar pujades incorrectes.
+    Només el propietari de la reserva o un administrador pot pujar el tiquet.
+
+    Args:
+        reserva_id (int|str): ID de la reserva (de l'URL).
+
+    Body multipart:
+        tiquet (File): Fitxer PDF generat pel frontend.
+
+    Returns:
+        JSON 200: Confirmació amb la ruta del fitxer desat.
+        JSON 400: Fitxer no enviat, sense nom, no PDF o magic bytes invadits.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: L'usuari no és propietari ni administrador.
+        JSON 404: La reserva no existeix.
+        JSON 500: Error desant el fitxer o actualitzant la BD.
     """
     try:
         usuari_autenticat_id = get_jwt_user_id()

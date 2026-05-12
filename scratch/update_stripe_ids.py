@@ -1,3 +1,16 @@
+"""
+Script d'actualització de IDs de Stripe per al Seed de la Base de Dades.
+
+Aquest script llegeix el fitxer SQL de llavor (seed) d'usuaris, identifica els
+IDs de client de Stripe temporals (ex: 'cus_XXX') i crea clients reals a Stripe
+mitjançant l'API oficial. Finalment, sobreescriu el fitxer SQL amb els IDs
+reals per garantir que el seed de producció/dev sigui funcional.
+
+Requisits:
+    - Variable d'entorn STRIPE_APIPrivada configurada al fitxer .env.
+    - Fitxer SQL existent a 'database/seeds/01_users.sql'.
+"""
+
 import os
 import re
 # pyrefly: ignore [missing-import]

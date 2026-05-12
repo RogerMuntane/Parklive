@@ -1,5 +1,9 @@
 """
-Controlador per operacions administratives dels aparcaments (CRUD + uploads).
+Controlador d'operacions administratives per a la gestió d'aparcaments (CRUD + imatges).
+
+Protegit per autenticació JWT amb rol d'administrador o operador. Gestiona el
+cicle de vida complet dels aparcaments: llistat paginator, creació, actualització
+i eliminació. El processament d'imatges es delega al model `admin_aparcament_model`.
 """
 
 from flask import jsonify, request
@@ -15,7 +19,20 @@ from middleware.jwt_auth import get_jwt_user_id
 
 
 def get_admin_list():
-    """GET /api/admin/aparcaments - Llistar aparcaments amb paginació i filtres"""
+    """
+    GET /api/admin/aparcaments - Llista els aparcaments amb filtres i paginació.
+
+    Query params:
+        search (str): Cerca per nom, adreça o ciutat.
+        type (str): Filtre per tipologia.
+        status (str): Filtre per estat (actiu/inactiu).
+        page (int): Número de pàgina (per defecte 1).
+        limit (int): Registres per pàgina (màx. 100, per defecte 10).
+
+    Returns:
+        JSON 200: Llista d'aparcaments i informació de paginació.
+        JSON 500: Error intern del servidor.
+    """
     try:
         search = request.args.get('search', '')
         tipo = request.args.get('type', '')
@@ -51,7 +68,18 @@ def get_admin_list():
 
 
 def create_admin():
-    """POST /api/admin/aparcaments?action=create - Crear aparcament nou amb imatges"""
+    """
+    POST /api/admin/aparcaments - Crea un nou aparcament (multipart/form-data).
+
+    Camps obligatoris del formulari: nom, tipus, adreca, ciutat, latitud, longitud.
+    Camps opcionals: imatges via 'parking_images[]', tarifes, horaris, etc.
+    Si el processament d'imatges falla, el rollback elimina l'aparcament creat.
+
+    Returns:
+        JSON 201: ID de l'aparcament creat.
+        JSON 400: Si falten camps obligatoris o les imatges són invàlides.
+        JSON 500: Error intern del servidor.
+    """
     try:
         # Obtenir dades del formulari (multipart/form-data)
         data = request.form.to_dict()
@@ -100,7 +128,20 @@ def create_admin():
 
 
 def update_admin():
-    """PUT /api/admin/aparcaments/{id} - Actualitzar aparcament amb imatges addicionals"""
+    """
+    PUT /api/admin/aparcaments - Actualitza les dades d'un aparcament existent.
+
+    Query params:
+        id (int): ID de l'aparcament a modificar (obligatori).
+
+    Camps del formulari: mateixos que create_admin.
+    Si s'envien imatges noves via 'parking_images[]', s'afegeixen a les existents.
+
+    Returns:
+        JSON 200: Confirmació de l'actualització.
+        JSON 400: Si l'ID falta, no és vàlid o falten camps obligatoris.
+        JSON 500: Error intern del servidor.
+    """
     try:
         parking_id = request.args.get('id')
         if not parking_id:
@@ -155,7 +196,17 @@ def update_admin():
 
 
 def delete_admin():
-    """DELETE /api/admin/aparcaments/{id} - Eliminar aparcament"""
+    """
+    DELETE /api/admin/aparcaments - Elimina un aparcament i tots els seus recursos.
+
+    Query params:
+        id (int): ID de l'aparcament a eliminar (obligatori).
+
+    Returns:
+        JSON 200: Confirmació de l'eliminació.
+        JSON 400: Si l'ID falta o no és vàlid.
+        JSON 500: Error intern del servidor.
+    """
     try:
         parking_id = request.args.get('id')
         if not parking_id:

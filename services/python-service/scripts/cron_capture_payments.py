@@ -1,21 +1,50 @@
-import sys
+"""
+Cron: Captura de pagaments autoritzats (ParkLive).
+
+S'executa periòdicament via ``cron_scheduler.sh`` (cada hora) i captura
+a Stripe els PaymentIntents autoritzats de reserves amb sortida passada.
+
+Flux:
+    1. Comprova DNS vers api.stripe.com (3 intents).
+    2. Consulta pagaments 'autoritzat' de reserves 'confirmada' amb sortida <= NOW().
+    3. Per cada pagament: captura Stripe → actualitza BD → recalcula places.
+
+Execució manual::
+
+    python3 scripts/cron_capture_payments.py
+"""
+
+import logging
 import os
+import socket
+import sys
+import time
 from datetime import datetime
 
-# Afegir el directori arrel al path per poder importar els models
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 from models.db_connection import get_db_connection
 from models.stripe_model import capture_payment_intent, actualitzar_estat_pagament_db
 from models.reserves_model import actualitzar_estat_reserva
 
-def capture_due_payments():
-    print(f"[{datetime.now()}] Iniciant captura de pagaments autoritzats per reserves confirmades...")
+def capture_due_payments() -> None:
+    """
+    Captura tots els pagaments Stripe autoritzats per a reserves finalitzades.
+
+    Consulta pagaments en estat 'autoritzat' de reserves 'confirmada' amb
+    data_sortida <= NOW() i els captura a Stripe. Després actualitza la BD
+    i recalcula la disponibilitat de l'aparcament afectat.
+    """
+    logger.info("Iniciant captura de pagaments autoritzats per reserves confirmades...")
     
-    # Pre-check de connectivitat amb Stripe (DNS) amb reintents
-    import socket
-    import time
-    
+    # Pre-check DNS: verificar connectivitat amb api.stripe.com
     dns_resolved = False
     max_dns_retries = 3
     for i in range(max_dns_retries):
@@ -24,16 +53,22 @@ def capture_due_payments():
             dns_resolved = True
             break
         except socket.gaierror:
-            print(f"[{datetime.now()}] ADVERTÈNCIA: No es pot resoldre 'api.stripe.com' (intent {i+1}/{max_dns_retries}). Reintentant en 5s...")
+            logger.warning(
+                "No es pot resoldre 'api.stripe.com' (intent %d/%d). Reintentant en 5s...",
+                i + 1, max_dns_retries
+            )
             time.sleep(5)
-    
+
     if not dns_resolved:
-        print(f"[{datetime.now()}] ERROR CRÍTIC: No es pot resoldre 'api.stripe.com' després de {max_dns_retries} intents. Aturant execució.")
+        logger.critical(
+            "No es pot resoldre 'api.stripe.com' després de %d intents. Aturant execució.",
+            max_dns_retries
+        )
         return
 
     conn = get_db_connection()
     if not conn:
-        print(f"[{datetime.now()}] ERROR: No es pot connectar a la base de dades.")
+        logger.error("No es pot connectar a la base de dades.")
         return
 
     cursor = conn.cursor(dictionary=True)
@@ -54,19 +89,19 @@ def capture_due_payments():
         due_payments = cursor.fetchall()
         
         if not due_payments:
-            print(f"[{datetime.now()}] No s'han trobat pagaments pendents de capturar.")
+            logger.info("No s'han trobat pagaments pendents de capturar.")
             return
-        
-        print(f"[{datetime.now()}] S'han trobat {len(due_payments)} pagaments pendents.")
+
+        logger.info("S'han trobat %d pagament(s) pendents de capturar.", len(due_payments))
 
         for p in due_payments:
             try:
                 pi_id = p['referencia_externa']
                 res_id = p['reserva_id']
                 codi = p['codi_reserva']
-                
-                print(f"[{datetime.now()}] Capturant pagament {pi_id} per la reserva {codi} (ID: {res_id})...")
-                
+
+                logger.info("Capturant pagament %s per la reserva %s (ID: %s)...", pi_id, codi, res_id)
+
                 # 1. Capturar a Stripe
                 stripe_res = capture_payment_intent(pi_id)
                 
@@ -99,21 +134,21 @@ def capture_due_payments():
                                 WHERE a.id = %s
                             """, (aparcament_id,))
                             conn.commit()
-                            print(f"[{datetime.now()}] places_disponibles actualitzades per aparcament ID {aparcament_id}.")
+                            logger.info("places_disponibles actualitzades per aparcament ID %s.", aparcament_id)
                         ap_cursor.close()
                     except Exception as upd_e:
-                        print(f"[{datetime.now()}] ADVERTÈNCIA: No s'ha pogut actualitzar places_disponibles: {upd_e}")
+                        logger.warning("No s'ha pogut actualitzar places_disponibles: %s", upd_e)
 
-                    print(f"[{datetime.now()}] Pagament capturat i reserva {codi} completada amb èxit.")
+                    logger.info("Pagament capturat i reserva %s completada amb èxit.", codi)
                 else:
-                    print(f"[{datetime.now()}] ERROR: No s'ha pogut capturar el pagament a Stripe per la reserva {codi}.")
+                    logger.error("No s'ha pogut capturar el pagament a Stripe per la reserva %s.", codi)
             except Exception as loop_e:
-                print(f"[{datetime.now()}] ERROR processant el pagament {pi_id}: {loop_e}")
+                logger.error("ERROR processant el pagament %s: %s", pi_id, loop_e)
 
-        print(f"[{datetime.now()}] Procés de captura finalitzat.")
+        logger.info("Procés de captura finalitzat.")
         
     except Exception as e:
-        print(f"[{datetime.now()}] ERROR en el cron de captura de pagaments: {e}")
+        logger.error("ERROR en el cron de captura de pagaments: %s", e)
     finally:
         if 'cursor' in locals() and cursor:
             cursor.close()

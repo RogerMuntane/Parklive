@@ -1,5 +1,13 @@
 """
-Rutas admin per gestionar aparcaments (CRUD + uploads).
+Rutes de l'API per a la gestió administrativa d'aparcaments.
+
+Aquest blueprint defineix els endpoints protegits que permeten als administradors
+realitzar operacions CRUD (Crear, Llegir, Actualitzar, Eliminar) sobre la base
+de dades d'aparcaments de ParkLive.
+
+Totes les rutes d'aquest fitxer requereixen:
+    - Autenticació vàlida (JWT).
+    - Rol d'administrador o operador.
 """
 
 from flask import Blueprint
@@ -19,7 +27,15 @@ admin_aparcament_routes = Blueprint("admin_aparcaments", __name__)
 @jwt_required
 @admin_required
 def list_admin_aparcaments():
-    """Llistar aparcaments amb filtres i paginació (admin)"""
+    """
+    Llista tots els aparcaments amb dades administratives.
+
+    Permet obtenir una llista completa per a la gestió del panell d'administració,
+    incloent filtres tècnics i estat del sistema.
+
+    Returns:
+        Response: Llista d'aparcaments en format JSON.
+    """
     return get_admin_list()
 
 
@@ -27,7 +43,18 @@ def list_admin_aparcaments():
 @jwt_required
 @admin_required
 def handle_aparcament():
-    """Crear o actualitzar aparcament (admin)"""
+    """
+    Gestor d'accions POST per a la gestió d'aparcaments.
+
+    Aquest endpoint actua com a multiplexor segons el paràmetre 'action'
+    de la query string per realitzar operacions de creació, edició o esborrat.
+
+    Query Params:
+        action (str): 'create', 'update' o 'delete'.
+
+    Returns:
+        Response: Resultat de l'operació realitzada.
+    """
     from flask import request
 
     action = request.args.get('action', '')

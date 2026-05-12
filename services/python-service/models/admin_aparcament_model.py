@@ -1,8 +1,10 @@
 """
-Model per gestionar operacions administratives dels aparcaments.
-Inclou CRUD, validacions de fotos i transaccions.
-Les imatges de parkings passen per Cloudinary per ser optimitzades (q_auto, f_webp)
-i es guarden localment un cop descarregades. L'espai al núvol s'allibera immediatament.
+Model per a la gestió administrativa dels aparcaments.
+
+Aquest mòdul gestiona les operacions CRUD (Crear, Llegir, Actualitzar, Esborrar)
+d'aparcaments des d'una perspectiva d'administració. Inclou lògica complexa
+per al processament d'imatges mitjançant Cloudinary per a l'optimització (WebP)
+i el posterior emmagatzematge local de les versions optimitzades.
 """
 
 from models.db_connection import get_new_connection
@@ -17,7 +19,7 @@ from PIL import Image
 
 # Configurar logger per a fallades de Cloudinary
 log_file = Path(__file__).parent.parent.parent / "logs" / "image_processing.log"
-# Ens assegurem que el directori existeix (tot i que ja hauria d'existir)
+# Ens assegurem que el directori existeix
 log_file.parent.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
@@ -27,13 +29,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Constants de configuració per a imatges
 MAX_PARKING_IMAGES = 10
 MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/webp'}
 
 
 def get_admin_aparcaments(search='', tipo='', status='', limit=10, offset=0):
-    """Obté aparcaments amb paginació per al panel admin"""
+    """
+    Obté una llista d'aparcaments amb filtres i paginació per al panell d'administració.
+    
+    Args:
+        search (str): Text per cercar per nom, adreça o ciutat.
+        tipo (str): Filtre per tipus d'aparcament.
+        status (str): Filtre per estat (actiu, inactiu).
+        limit (int): Nombre màxim de resultats.
+        offset (int): Desplaçament per a la paginació.
+        
+    Returns:
+        list: Llista de diccionaris amb les dades dels aparcaments.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -67,7 +82,17 @@ def get_admin_aparcaments(search='', tipo='', status='', limit=10, offset=0):
 
 
 def count_admin_aparcaments(search='', tipo='', status=''):
-    """Compta aparcaments amb filtres"""
+    """
+    Compta el nombre total d'aparcaments que coincideixen amb els filtres.
+    
+    Args:
+        search (str): Text de cerca.
+        tipo (str): Filtre de tipus.
+        status (str): Filtre d'estat.
+        
+    Returns:
+        int: Total d'aparcaments trobats.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -98,7 +123,18 @@ def count_admin_aparcaments(search='', tipo='', status=''):
 
 
 def create_aparcament(data):
-    """Crea un nou aparcament i retorna el seu ID"""
+    """
+    Crea un nou aparcament a la base de dades.
+    
+    Args:
+        data (dict): Dades de l'aparcament (nom, adreça, coordenades, tarifes, etc.).
+        
+    Returns:
+        int: L'ID de l'aparcament creat.
+        
+    Raises:
+        Exception: Si hi ha un error en la transacció o la inserció.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -164,7 +200,16 @@ def create_aparcament(data):
 
 
 def update_aparcament(parking_id, data):
-    """Actualitza un aparcament existent"""
+    """
+    Actualitza les dades d'un aparcament existent.
+    
+    Args:
+        parking_id (int): ID de l'aparcament a modificar.
+        data (dict): Nous valors per als camps de l'aparcament.
+        
+    Returns:
+        bool: True si l'actualització ha estat exitosa.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -228,14 +273,22 @@ def update_aparcament(parking_id, data):
 
 
 def delete_aparcament(parking_id):
-    """Elimina un aparcament (ON DELETE CASCADE elimina fotos automàticament)"""
+    """
+    Elimina un aparcament i les seves fotografies associades tant de la BD com del disc.
+    
+    Args:
+        parking_id (int): ID de l'aparcament a esborrar.
+        
+    Returns:
+        bool: True si s'ha eliminat correctament.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
         conn.start_transaction()
 
-        # Eliminar fotos del disc
+        # Eliminar fotos del disc abans d'eliminar el registre de la BD
         delete_parking_photos_from_disk(parking_id)
 
         query = "DELETE FROM aparcaments WHERE id = %s"
@@ -252,7 +305,9 @@ def delete_aparcament(parking_id):
 
 
 def count_parking_photos(parking_id):
-    """Compta quantes fotos té un aparcament"""
+    """
+    Retorna el nombre de fotografies que té un aparcament.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -269,25 +324,35 @@ def count_parking_photos(parking_id):
 
 def save_parking_images(parking_id, files, user_id=None):
     """
-    Guarda imatges subides per un aparcament.
+    Processa i guarda múltiples imatges per a un aparcament.
+    
+    El procés segueix aquests passos per a cada fitxer:
+    1. Validació de tipus MIME i mida.
+    2. Pujada a Cloudinary per a l'optimització (conversió a WebP i qualitat automàtica).
+    3. Descàrrega de la versió optimitzada des de Cloudinary.
+    4. Emmagatzematge local de la imatge optimitzada.
+    5. Inserció de la ruta relativa a la base de dades.
+    6. Fallback a processament local amb Pillow si Cloudinary falla.
 
-    Params:
-    - parking_id: ID de l'aparcament
-    - files: dict flask request.files o llista de FileStorage
-    - user_id: ID de l'usuari que puxa les imatges
-
-    Retorna llista de URLs guardades o llança excepció
+    Args:
+        parking_id (int): ID de l'aparcament.
+        files (dict|list): Fitxers provinents de la petició multipart.
+        user_id (int|None): ID de l'usuari que realitza la pujada.
+        
+    Returns:
+        list: Llista de les URLs relatives de les imatges guardades.
+        
+    Raises:
+        ValueError: Si se supera el màxim d'imatges o el format és invàlid.
+        Exception: Per errors en el sistema de fitxers o base de dades.
     """
 
     if not files:
         return []
 
-    # Normalitzar a llista si és un dict multipart de Flask (ImmutableMultiDict)
-    # IMPORTANT: usar getlist() és obligatori per obtenir TOTS els fitxers amb el
-    # mateix nom de camp. Amb files['parking_images[]'] Flask retorna només el primer.
+    # Normalitzar a llista si és un dict multipart de Flask
     files_list = []
     if hasattr(files, 'getlist'):
-        # Flask ImmutableMultiDict: getlist() retorna tots els fitxers del camp
         files_list = files.getlist('parking_images[]')
     elif isinstance(files, dict) and 'parking_images[]' in files:
         file_obj = files['parking_images[]']
@@ -295,7 +360,7 @@ def save_parking_images(parking_id, files, user_id=None):
     elif isinstance(files, list):
         files_list = files
 
-    # Filtrar fitxers buits o sense nom
+    # Filtrar fitxers buits
     files_list = [f for f in files_list if f and f.filename]
 
     if not files_list:
@@ -338,16 +403,16 @@ def save_parking_images(parking_id, files, user_id=None):
                 )
 
             # Validar mida
-            file_obj.seek(0, 2)  # Anar al final
+            file_obj.seek(0, 2)
             file_size = file_obj.tell()
-            file_obj.seek(0)  # Tornar al principi
+            file_obj.seek(0)
 
             if file_size > MAX_IMAGE_SIZE_BYTES:
                 raise ValueError(
                     f"La imatge {file_obj.filename} supera la mida màxima de 5MB."
                 )
 
-            # Nom local: sempre .webp (Cloudinary la convertirà i descarregarem el resultat)
+            # Generar nom de fitxer i rutes
             random_hash = hashlib.md5(
                 f"{parking_id}_{ordre}_{file_size}".encode()
             ).hexdigest()[:8]
@@ -377,23 +442,17 @@ def save_parking_images(parking_id, files, user_id=None):
                         out_file.write(img_response.content)
 
                 except Exception as cloud_err:
-                    # FALLBACK: Si falla Cloudinary, optimitzem localment amb Pillow
+                    # FALLBACK: Optimització local amb Pillow
                     logger.error(f"Error Cloudinary (parking {parking_id}): {str(cloud_err)}")
                     
                     file_obj.seek(0)
                     img = Image.open(file_obj)
-                    
-                    # Convertir a RGB/RGBA si cal per desar com a WebP
                     if img.mode in ("RGBA", "P"):
                         img = img.convert("RGBA")
                     else:
                         img = img.convert("RGB")
-                    
-                    # Desar localment com a WebP optimitzat
                     img.save(target_path, "WEBP", quality=80)
             finally:
-                # 3. JA NO esborrem de Cloudinary per mantenir una còpia al núvol
-                # L'espai s'anirà ocupant, però així es manté el backup demanat.
                 pass
 
             # 4. Inserir registre a BD amb la ruta local
@@ -416,7 +475,7 @@ def save_parking_images(parking_id, files, user_id=None):
         conn.commit()
     except Exception as e:
         conn.rollback()
-        # Intentar eliminar fitxers guardats si falla la transacció
+        # Neteja de fitxers si la transacció falla
         for url in saved_urls:
             try:
                 file_path = Path(f"services/python-service/{url}")
@@ -433,7 +492,12 @@ def save_parking_images(parking_id, files, user_id=None):
 
 
 def delete_parking_photos_from_disk(parking_id):
-    """Elimina les imatges del disc per un aparcament"""
+    """
+    Elimina físicament totes les fotografies d'un aparcament del disc dur.
+    
+    Args:
+        parking_id (int): ID de l'aparcament del qual es volen esborrar les fotos.
+    """
     try:
         base_storage = Path(__file__).parent.parent / "storage"
         parking_dir = base_storage / "aparcaments" / str(parking_id)
@@ -443,6 +507,6 @@ def delete_parking_photos_from_disk(parking_id):
                 file.unlink()
             parking_dir.rmdir()
     except Exception as e:
-        # No lancen excepció si falla la neteja del disc
         print(f"Error netejar fotos de {parking_id}: {str(e)}")
         pass
+

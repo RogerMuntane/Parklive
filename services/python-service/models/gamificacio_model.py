@@ -1,8 +1,25 @@
+"""
+Model per a la gestió de la gamificació.
+
+Aquest mòdul gestiona el sistema de recompenses de Parklive: el saldo de punts
+dels usuaris, el catàleg de recompenses disponibles i la lògica transaccional
+de bescanvi (redeem), incloent-hi l'activació automàtica de beneficis com 
+subscripcions premium temporals.
+"""
+
 import json
 from models.db_connection import get_new_connection
 
 def get_user_points(user_id):
-    """Retorna els punts actuals d'un usuari."""
+    """
+    Retorna el saldo actual de punts de gamificació d'un usuari.
+    
+    Args:
+        user_id (int): ID de l'usuari.
+        
+    Returns:
+        int: Nombre total de punts acumulats.
+    """
     conn = get_new_connection()
     if not conn:
         return 0
@@ -17,7 +34,12 @@ def get_user_points(user_id):
         conn.close()
 
 def get_recompenses():
-    """Retorna la llista de recompenses actives."""
+    """
+    Retorna el catàleg de totes les recompenses actives al sistema.
+    
+    Returns:
+        list: Llista de diccionaris amb els detalls de cada recompensa (nom, cost, tipus).
+    """
     conn = get_new_connection()
     if not conn:
         return []
@@ -32,8 +54,23 @@ def get_recompenses():
 
 def redeem_reward(user_id, reward_id):
     """
-    Realitza el bescanvi d'una recompensa.
-    Resta els punts, afegeix la recompensa a l'usuari i registra el moviment.
+    Gestiona el procés atòmic de bescanvi d'una recompensa per punts.
+    
+    Aquesta funció realitza les següents accions en una transacció:
+    1. Validació de punts suficients i estat de la recompensa.
+    2. Comprovació de si la recompensa és repetible (ex: premium sí, insígnia no).
+    3. Deducció de punts del saldo de l'usuari.
+    4. Registre de la propietat de la recompensa i historial de moviments.
+    5. Lògica especial per a 'premium_temporal':
+       - Si l'usuari ja té premium, s'estén la data de finalització.
+       - Si no en té, es crea una nova subscripció gratuïta de 30 dies.
+
+    Args:
+        user_id (int): ID de l'usuari que realitza la petició.
+        reward_id (int): ID de la recompensa a bescanviar.
+        
+    Returns:
+        tuple: (bool, str) on el booleà indica l'èxit i el text conté el missatge de feedback.
     """
     conn = get_new_connection()
     if not conn:
@@ -56,7 +93,7 @@ def redeem_reward(user_id, reward_id):
         
         cost = int(recompensa['requisit_punts'])
         
-        # 3. Comprovar punts de l'usuari (Bloqueig per a actualització)
+        # 3. Comprovar punts de l'usuari (Bloqueig per a actualització segura)
         cursor.execute("SELECT punts_gamificacio FROM usuaris WHERE id = %s FOR UPDATE", (user_id,))
         usuari = cursor.fetchone()
         if not usuari:
@@ -65,21 +102,19 @@ def redeem_reward(user_id, reward_id):
         if usuari['punts_gamificacio'] < cost:
             return False, f"No tens prou punts (en tens {usuari['punts_gamificacio']}, en calen {cost})"
         
-        # 4. Comprovar si ja té aquesta recompensa (excepte premium_temporal que es pot renovar)
+        # 4. Comprovar si ja té aquesta recompensa (excepte premium que es pot renovar)
         if recompensa['tipus'] != 'premium_temporal':
             cursor.execute("SELECT id FROM usuaris_recompenses WHERE usuari_id = %s AND recompensa_id = %s", (user_id, reward_id))
             if cursor.fetchone():
                 return False, "Ja has obtingut aquesta recompensa anteriorment i no es pot repetir"
 
-        # 5. Iniciar transacció per al bescanvi
-        # mysql-connector-python sol tenir autocommit=False per defecte,
-        # per tant ja hi ha una transacció iniciada en executar el primer query.
+        # 5. Executar el bescanvi (Transaccional)
+        # mysql-connector-python: commit() és necessari si no està en autocommit
         
         # A. Restar punts a l'usuari
         cursor.execute("UPDATE usuaris SET punts_gamificacio = punts_gamificacio - %s WHERE id = %s", (cost, user_id))
         
-        # B. Registrar a usuaris_recompenses
-        # Per premium_temporal: INSERT IGNORE + reset, per la resta: INSERT normal
+        # B. Registrar la propietat de la recompensa
         if recompensa['tipus'] == 'premium_temporal':
             cursor.execute(
                 """INSERT INTO usuaris_recompenses (usuari_id, recompensa_id, data_obtencio, utilitzada)
@@ -93,14 +128,14 @@ def redeem_reward(user_id, reward_id):
                 (user_id, reward_id)
             )
         
-        # C. Registrar el moviment de punts
+        # C. Registrar el moviment de punts per a auditories
         cursor.execute(
             """INSERT INTO punts_moviments (usuari_id, tipus_moviment, punts, origen_tipus, origen_id, descripcio) 
                VALUES (%s, 'bescanvi', %s, 'recompensa', %s, %s)""",
             (user_id, -cost, reward_id, f"Bescanvi de recompensa: {recompensa['nom']}")
         )
         
-        # D. Registrar a bescanvis_recompenses
+        # D. Registrar el bescanvi a la taula de logs
         cursor.execute(
             "INSERT INTO bescanvis_recompenses (usuari_id, recompensa_id, punts_cost) VALUES (%s, %s, %s)",
             (user_id, reward_id, cost)
@@ -108,22 +143,22 @@ def redeem_reward(user_id, reward_id):
         
         conn.commit()
 
-        # E. Si la recompensa és de tipus premium_temporal, activar el premium
+        # E. Lògica d'activació de Premium Temporal
         if recompensa['tipus'] == 'premium_temporal':
             try:
-                dies = 30  # Valor per defecte: 1 mes
+                dies = 30  # Valor per defecte
                 if recompensa.get('valor'):
                     import json as _json
                     valor_data = recompensa['valor'] if isinstance(recompensa['valor'], dict) else _json.loads(recompensa['valor'])
                     dies = int(valor_data.get('dies', 30))
 
-                # Actualitzar tipus_usuari
+                # Canviar el rol de l'usuari a premium si no ho era
                 cursor.execute(
                     "UPDATE usuaris SET tipus_usuari = 'premium' WHERE id = %s",
                     (user_id,)
                 )
 
-                # Comprovar si ja té una subscripció activa per estendre-la
+                # Cercar subscripció activa per estendre-la
                 cursor.execute(
                     "SELECT id, data_final FROM subscripcions WHERE usuari_id = %s AND estat = 'activa' ORDER BY id DESC LIMIT 1",
                     (user_id,)
@@ -131,41 +166,31 @@ def redeem_reward(user_id, reward_id):
                 sub_activa = cursor.fetchone()
 
                 if sub_activa:
-                    # Estendre la subscripció existent
-                    sub_id = sub_activa['id']
-                    # Si la data_final és anterior a avui (rar si està activa però possible), comencem des d'avui
-                    # Si no, sumem a la data_final existent
+                    # Estendre la subscripció des de la data final actual o avui (el que sigui posterior)
                     cursor.execute(
                         """UPDATE subscripcions 
                            SET data_final = DATE_ADD(GREATEST(data_final, CURDATE()), INTERVAL %s DAY)
                            WHERE id = %s""",
-                        (dies, sub_id)
+                        (dies, sub_activa['id'])
                     )
-                    print(f"[GAMIFICACIO] Subscripció {sub_id} estesa {dies} dies per a usuari {user_id}")
                 else:
-                    # Crear nova subscripció
+                    # Crear nova subscripció promocional
                     cursor.execute("""
                         INSERT INTO subscripcions 
                             (usuari_id, tipus, estat, data_inici, data_final, preu, metode_pagament, auto_renovacio)
                         VALUES 
                             (%s, 'mensual', 'activa', CURDATE(), DATE_ADD(CURDATE(), INTERVAL %s DAY), 0.00, 'altres', FALSE)
                     """, (user_id, dies))
-                    print(f"[GAMIFICACIO] Nova subscripció de {dies} dies creada per a usuari {user_id}")
 
                 conn.commit()
-                print(f"[GAMIFICACIO] Premium activat per {dies} dies a usuari {user_id}")
             except Exception as premium_err:
                 print(f"[GAMIFICACIO] Error activant premium: {premium_err}")
-                # No fem rollback del bescanvi de punts, però avisem
                 return True, f"Recompensa '{recompensa['nom']}' bescanviada, però hi ha hagut un error activant el premium. Contacta suport."
 
         return True, f"Recompensa '{recompensa['nom']}' bescanviada amb èxit!"
         
     except Exception as e:
-        try:
-            conn.rollback()
-        except:
-            pass
+        if conn: conn.rollback()
         print(f"[GAMIFICACIO] Error en bescanvi: {str(e)}")
         return False, f"Error intern: {str(e)}"
     finally:
@@ -173,7 +198,15 @@ def redeem_reward(user_id, reward_id):
         conn.close()
 
 def get_user_obtained_rewards(user_id):
-    """Retorna la llista de recompenses que ja té l'usuari."""
+    """
+    Llista totes les recompenses que l'usuari ha adquirit al llarg del temps.
+    
+    Args:
+        user_id (int): ID de l'usuari.
+        
+    Returns:
+        list: Llista de recompenses amb la seva data d'adquisició i estat d'ús.
+    """
     conn = get_new_connection()
     if not conn:
         return []
@@ -193,7 +226,15 @@ def get_user_obtained_rewards(user_id):
         conn.close()
 
 def get_user_available_rewards(user_id):
-    """Retorna les recompenses que l'usuari té però no ha fet servir encara."""
+    """
+    Obté les recompenses que l'usuari té en possessió i que encara no han estat aplicades/utilitzades.
+    
+    Args:
+        user_id (int): ID de l'usuari.
+        
+    Returns:
+        list: Llista de recompenses disponibles per ser aplicades (ex: cupons de descompte).
+    """
     conn = get_new_connection()
     if not conn:
         return []
@@ -211,3 +252,5 @@ def get_user_available_rewards(user_id):
     finally:
         cursor.close()
         conn.close()
+
+

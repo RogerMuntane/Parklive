@@ -1,3 +1,12 @@
+"""
+Model per a la gestió de codis de recuperació de contrasenya.
+
+Aquest mòdul gestiona la generació, enviament per correu electrònic i verificació
+de codis temporals per restablir la contrasenya dels usuaris. Inclou validacions
+de seguretat contra comptes OAuth i la integració amb procediments emmagatzemats
+per a l'actualització segura dels hashes de contrasenya.
+"""
+
 import hashlib
 import os
 import random
@@ -13,9 +22,22 @@ from models.email_sender import EmailSender
 
 
 class ResetCodeService(BaseService):
-    """Gestió de codis de recuperació de contrasenya."""
+    """
+    Servei per a la gestió del cicle de vida dels codis de recuperació.
+    
+    Aquest servei hereta de BaseService i s'encarrega de tota la lògica
+    relacionada amb la pèrdua de contrasenyes, des de la petició inicial
+    fins al canvi final.
+    """
 
     def __init__(self, ttl_minutes: Optional[int] = None):
+        """
+        Inicialitza el servei de recuperació.
+        
+        Args:
+            ttl_minutes (int, optional): Temps de vida del codi en minuts.
+                                         Per defecte s'agafa de RESET_CODE_TTL_MINUTES o 30.
+        """
         super().__init__()
         self.ttl_minutes = ttl_minutes or int(
             os.getenv("RESET_CODE_TTL_MINUTES", 30)
@@ -23,16 +45,42 @@ class ResetCodeService(BaseService):
         self.email_sender = EmailSender()
 
     def _generate_code(self, length: int = 6) -> str:
-        """Genera un codi alfanuméric aleatori (A-Z, a-z, 0-9)"""
+        """
+        Genera un codi alfanumèric aleatori.
+        
+        Args:
+            length (int): Longitud del codi a generar.
+            
+        Returns:
+            str: Codi generat (p. ex: "A1b2C3").
+        """
         return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
     def _hash_code(self, code: str) -> str:
-        """Encripta el codi amb SHA256 per emmagatzemar a BD"""
+        """
+        Encripta el codi amb SHA256 per a l'emmagatzematge segur a la BD.
+        
+        Args:
+            code (str): Codi en text pla.
+            
+        Returns:
+            str: Hash SHA256 del codi.
+        """
         return hashlib.sha256(code.encode("utf-8")).hexdigest()
 
     def create_and_send_code(self, email: str) -> Dict[str, Any]:
         """
-        Crea un codi de reset, l'emmagatzema a BD i l'envia per email.
+        Genera un codi de recuperació, el guarda a la BD i l'envia per correu.
+        
+        El mètode verifica que l'usuari existeixi i que no sigui un compte
+        creat mitjançant proveïdors externs (OAuth), ja que aquests no tenen
+        contrasenya gestionada per Parklive.
+
+        Args:
+            email (str): Correu electrònic de l'usuari.
+            
+        Returns:
+            dict: Resposta amb l'estat de l'operació, l'ID de verificació i data d'expiració.
         """
         try:
             conn = self._get_connection()
@@ -44,7 +92,6 @@ class ResetCodeService(BaseService):
 
             # Validar que el compte no sigui OAuth (Google / Apple)
             OAUTH_PLACEHOLDERS = {
-                # TODO ffer funcional el de apple i modificar-ho
                 "GOOGLE_OAUTH_NO_PASSWORD", "APPLE_OAUTH_NO_PASSWORD"}
             pwd = user.get("contrasenya_hash", "")
             if pwd in OAUTH_PLACEHOLDERS:
@@ -100,7 +147,26 @@ class ResetCodeService(BaseService):
         confirm_password: str,
     ) -> Dict[str, Any]:
         """
-        Verifica el codi de reset i canvia la contrasenya en un sol pas.
+        Verifica la validesa d'un codi i actualitza la contrasenya de l'usuari.
+        
+        Aquest mètode realitza múltiples comprovacions:
+        1. Validació de formats i coincidència de contrasenyes.
+        2. Existència del registre de recuperació i l'usuari associat.
+        3. Comprovació que el codi no hagi estat usat prèviament.
+        4. Verificació de la data d'expiració (TTL).
+        5. Validació del hash del codi introduït.
+        6. Actualització de la contrasenya a la BD mitjançant un 'stored procedure'.
+        7. Marcatge del codi com a utilitzat per evitar reús.
+
+        Args:
+            email (str): Correu de l'usuari.
+            code (str): Codi rebut per l'usuari.
+            verification_id (int): ID de la petició de reset.
+            new_password (str): Nova contrasenya desitjada.
+            confirm_password (str): Confirmació de la nova contrasenya.
+            
+        Returns:
+            dict: Resultat de l'operació amb missatge d'èxit o error detallat.
         """
         try:
             conn = self._get_connection()
@@ -134,7 +200,7 @@ class ResetCodeService(BaseService):
                     (verification_id, user["id"]),
                 )
             else:
-                # Agafar l'últim codi actiu de l'usuari
+                # Agafar l'últim codi actiu de l'usuari (fallback)
                 cursor.execute(
                     "SELECT id, usuari_id, code_hash, expires_at, used "
                     "FROM codis_reset_contrasenya "
@@ -213,3 +279,4 @@ class ResetCodeService(BaseService):
             import traceback
             traceback.print_exc()
             return self._handle_error(ex, "Error en canviar la contrasenya", 500)
+

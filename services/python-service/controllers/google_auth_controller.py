@@ -1,6 +1,10 @@
 """
-google_auth_controller.py
-Controlador per gestionar l'autenticació via Google OAuth 2.0.
+Controlador per a l'autenticació d'usuaris via Google OAuth 2.0.
+
+Gestiona el flux d'autenticació amb access tokens de Google: verifica el token,
+crea o recupera l'usuari a la BD local, genera el JWT de sessió i retorna
+el perfil de client de Stripe si ja existia. També exposa el Google Client ID
+per a la inicialització del client de Google Identity Services al frontend.
 """
 
 import os
@@ -10,14 +14,19 @@ from models.google_auth_model import GoogleAuthService
 
 def google_login():
     """
-    Endpoint POST per autenticar-se amb Google.
+    POST /api/auth/google - Autentica o registra un usuari via Google OAuth 2.0.
+
+    Verifica l'access_token amb l'endpoint userinfo de Google, crea o recupera
+    l'usuari a la BD local, i retorna un JWT de sessió compatible amb el sistema.
 
     Body JSON:
-    {
-        "credential": "<token JWT de Google Identity Services>"
-    }
+        access_token (str): Access token obtingut pel client via Google Identity Services.
 
-    Retorna les dades de l'usuari si el token és vàlid.
+    Returns:
+        JSON 200: success, message, user (perfil), token (JWT) i is_new (bool).
+        JSON 400: Si falta 'access_token' o el token no és vàlid.
+        JSON 401: Si l'email del compte Google no està verificat.
+        JSON 500: Error intern en el procés d'autenticació.
     """
     try:
         if not request.is_json:
@@ -70,8 +79,14 @@ def google_login():
 
 def get_google_client_id():
     """
-    Endpoint GET que retorna el Google Client ID.
-    El frontend el necessita per inicialitzar Google Identity Services.
+    GET /api/auth/google/client-id - Retorna el Google Client ID públic.
+
+    El frontend el necessita per inicialitzar Google Identity Services
+    (`initTokenClient`) abans de sol·licitar l'accés a l'usuari.
+
+    Returns:
+        JSON 200: client_id configurat al servidor.
+        JSON 503: Si GOOGLE_CLIENT_ID no està configurat a l'entorn.
     """
     client_id = os.getenv("GOOGLE_CLIENT_ID", "")
 

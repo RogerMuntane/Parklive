@@ -1,28 +1,127 @@
+"""
+Generador de tiquets PDF per a reserves de ParkLive.
+
+Aquest mòdul utilitza la llibreria ReportLab per construir un document PDF
+amb el disseny corporatiu de ParkLive. El tiquet inclou:
+  - Informació de l'aparcament (nom, adreça, ciutat).
+  - Dates i hores d'entrada i sortida.
+  - Codi de reserva i matrícula del vehicle.
+  - Preu total pagat.
+  - Codi QR generat dinàmicament via API externa (qrserver.com).
+
+Funció principal:
+    generar_tiquet_pdf_python(reserva, storage_path=None) -> str
+
+Dependencies:
+    - reportlab  : Generació del PDF.
+    - urllib     : Descàrrega del QR des de l'API pública.
+
+Variables d'entorn:
+    TICKET_STORAGE_PATH : Directori on s'emmagatzemen els tiquets PDF.
+                          Valor per defecte: /app/storage/tickets
+"""
+
+import logging
 import os
 from datetime import datetime
-from reportlab.pdfgen import canvas
+from urllib.error import URLError
+from urllib.request import Request, urlopen
+
+from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
-from reportlab.lib.colors import HexColor
-from urllib.request import urlopen, Request
-from urllib.error import URLError
+from reportlab.pdfgen import canvas
 
-def format_datetime(dt_str):
-    """Parses ISO datetime string and returns (date_str, time_str)"""
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Funcions auxiliars
+# ---------------------------------------------------------------------------
+
+def format_datetime(dt_str: str) -> tuple[str, str]:
+    """
+    Converteix un string ISO 8601 en una tupla de data i hora formatades.
+
+    Suporta formats com ``2026-04-15T10:00:00`` i ``2026-04-15T10:00:00Z``.
+    En cas d'error de parsejat, retorna el valor original i una cadena buida.
+
+    Args:
+        dt_str (str): Data/hora en format ISO 8601 o ``None``/cadena buida.
+
+    Returns:
+        tuple[str, str]: Parella ``(data, hora)`` en format ``DD/MM/YYYY`` i ``HH:MM``.
+                         Retorna ``("--/--/----", "--:--)`` si l'entrada és invàlida.
+    """
     if not dt_str:
         return "--/--/----", "--:--"
     try:
-        # Assuming format like 2026-04-15T10:00:00
         d = datetime.fromisoformat(dt_str.replace('Z', ''))
         return d.strftime("%d/%m/%Y"), d.strftime("%H:%M")
     except Exception:
         return dt_str, ""
 
-def generar_tiquet_pdf_python(reserva, storage_path=None):
+
+def _parse_matricula(notes: str | None) -> str:
     """
-    Genera un tiquet PDF usant ReportLab basat en el disseny del frontend.
-    Es crida automàticament durant la confirmació de la reserva.
-    La ruta s'obté de la variable d'entorn TICKET_STORAGE_PATH.
+    Extreu la matrícula del vehicle des del camp ``notes`` d'una reserva.
+
+    El camp ``notes`` pot contenir el text ``"Matrícula: ABC1234"``.
+    Si no es troba o el format és incorrecte, retorna ``"NO DISPONIBLE"``.
+
+    Args:
+        notes (str | None): Text de notes de la reserva.
+
+    Returns:
+        str: Matrícula extraïda o ``"NO DISPONIBLE"``.
+    """
+    if notes and "Matrícula:" in notes:
+        try:
+            return notes.split("Matrícula:")[1].strip()
+        except (IndexError, AttributeError):
+            pass
+    return "NO DISPONIBLE"
+
+
+# ---------------------------------------------------------------------------
+# Generador principal
+# ---------------------------------------------------------------------------
+
+def generar_tiquet_pdf_python(reserva: dict, storage_path: str | None = None) -> str:
+    """
+    Genera un tiquet PDF per a una reserva confirmada de ParkLive.
+
+    Construeix un document d'una pàgina en format A4 amb el disseny
+    corporatiu de ParkLive: capçalera de confirmació, detalls de
+    l'aparcament, dates d'entrada/sortida, resum econòmic i codi QR.
+
+    El PDF es dà un nom único basat en el ``codi_reserva`` i es desa
+    al directori indicat per la variable d'entorn ``TICKET_STORAGE_PATH``
+    (o al valor de ``storage_path`` si es proporciona explícitament).
+
+    Args:
+        reserva (dict): Diccionari amb les dades de la reserva. Camps esperats:
+            - ``codi_reserva`` (str)  : Identificador único de la reserva.
+            - ``data_entrada`` (str)  : Data/hora d'entrada en ISO 8601.
+            - ``data_sortida`` (str)  : Data/hora de sortida en ISO 8601.
+            - ``preu_total`` (float)  : Preu total pagat en euros.
+            - ``notes`` (str)         : Notes opcionals, pot incloure la matrícula.
+            - ``aparcament`` (dict)   : Sub-diccionari amb ``nom``, ``adreca`` i ``ciutat``.
+        storage_path (str | None): Directori de destí del PDF. Si és ``None``,
+            s'utilitza la variable d'entorn ``TICKET_STORAGE_PATH`` o el
+            valor per defecte ``/app/storage/tickets``.
+
+    Returns:
+        str: Ruta absoluta del fitxer PDF generat.
+
+    Raises:
+        OSError: Si no es pot crear el directori de destí o escriure el fitxer.
+
+    Notes:
+        - El codi QR es baixa des de ``https://api.qrserver.com``; si la
+          xarxa no està disponible, es mostra un missatge d'error al PDF.
+        - La funció utilitza coordenades absolutes (pt) per posicionar
+          cada element en el canvas de ReportLab.
     """
     if storage_path is None:
         storage_path = os.getenv("TICKET_STORAGE_PATH", "/app/storage/tickets")
@@ -126,13 +225,7 @@ def generar_tiquet_pdf_python(reserva, storage_path=None):
     c.setFillColor(secondary_text)
     c.drawString(margin_x + 50, y_pos, "Matrícula:")
     
-    matricula = "NO DISPONIBLE"
-    notes = reserva.get('notes', '')
-    if notes and "Matrícula:" in notes:
-        try:
-            matricula = notes.split("Matrícula:")[1].strip()
-        except:
-            pass
+    matricula = _parse_matricula(reserva.get('notes', ''))
 
     c.setFont("Helvetica-Bold", 12)
     c.setFillColor(primary_text)
@@ -170,14 +263,22 @@ def generar_tiquet_pdf_python(reserva, storage_path=None):
     
     try:
         req = Request(qr_url, headers={'User-Agent': 'Mozilla/5.0'})
-        qr_image = urlopen(req)
-        c.drawImage(ImageReader(qr_image), center_x - (qr_size/2), qr_y, width=qr_size, height=qr_size)
+        with urlopen(req, timeout=10) as qr_response:
+            c.drawImage(
+                ImageReader(qr_response),
+                center_x - (qr_size / 2),
+                qr_y,
+                width=qr_size,
+                height=qr_size,
+            )
     except Exception as e:
-        print(f"[PDF] No s'ha pogut baixar el QR: {e}")
-        # Si falla el QR previ, dibuixa text d'error al lloc del QR
-        c.setFont("Helvetica", 12)
+        logger.warning("[PDF] No s'ha pogut baixar el QR per a '%s': %s", qr_data, e)
+        c.setFont("Helvetica", 10)
         c.setFillColor(danger_text)
-        c.drawCentredString(center_x, qr_y + (qr_size/2), "[Error de xarxa carregant QR]")
+        c.drawCentredString(center_x, qr_y + (qr_size / 2), "[QR no disponible]")
+        c.setFont("Helvetica", 9)
+        c.setFillColor(secondary_text)
+        c.drawCentredString(center_x, qr_y + (qr_size / 2) - 16, str(qr_data))
 
     # Footer final
     c.setFont("Helvetica", 9)

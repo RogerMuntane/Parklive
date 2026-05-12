@@ -1,31 +1,36 @@
+"""
+Controlador per a les contribucions de disponibilitat (crowdsourcing d'usuaris).
+
+Gestiona la creació i consulta de reports d'estat d'aparcament enviats pels
+usuaris de l'aplicació, incloent validació de tipus de dades i paginació.
+"""
+
 from flask import jsonify, request
 from models.contribucions_model import crear_contribucio, get_contribucions_usuari
 
 
 def crear_nova_contribucio():
     """
-    Controlador per crear una nova contribució
+    POST /api/contribucions - Crea una nova contribució de disponibilitat.
 
-    Espera un JSON amb:
-    {
-        "usuari_id": 1,
-        "estat_reportat": "lliure",  // 'lliure' o 'ocupat'
-        "dades": {  // opcional
-            "comentari": "Hi ha 3 places lliures al segon pis",
-            "foto_url": "https://..."
-        },
-        "latitud": 41.3851,  // opcional
-        "longitud": 2.1734   // opcional
-    }
+    Body JSON:
+        usuari_id (int): ID de l'usuari reporter (obligatori).
+        estat_reportat (str): 'lliure' o 'ocupat' (obligatori).
+        dades (dict|None): Dades addicionals opcionals (comentari, foto_url).
+        latitud (float|None): Coordenada latitud de la ubicació (opcional).
+        longitud (float|None): Coordenada longitud de la ubicació (opcional).
+
+    Returns:
+        JSON 201: Contribució creada amb les dades persistides.
+        JSON 400: Si falten camps obligatoris o hi ha errors de tipus.
+        JSON 500: Error intern del servidor.
     """
     try:
-        # Validar que el request té dades JSON
         if not request.is_json:
             return jsonify({"error": "El contingut ha de ser JSON"}), 400
 
         data = request.get_json()
 
-        # Validar camps obligatoris
         required_fields = ['usuari_id', 'estat_reportat']
         missing_fields = [field for field in required_fields if field not in data]
 
@@ -34,7 +39,6 @@ def crear_nova_contribucio():
                 "error": f"Falten els següents camps obligatoris: {', '.join(missing_fields)}"
             }), 400
 
-        # Validar tipus de dades
         try:
             data['usuari_id'] = int(data['usuari_id'])
 
@@ -46,7 +50,6 @@ def crear_nova_contribucio():
         except (ValueError, TypeError):
             return jsonify({"error": "Els camps numèrics tenen tipus invàlids"}), 400
 
-        # Crear la contribució
         nova_contribucio = crear_contribucio(data)
 
         return jsonify({
@@ -62,12 +65,17 @@ def crear_nova_contribucio():
 
 def obtenir_contribucions_usuari():
     """
-    Controlador per obtenir l'historial de contribucions d'un usuari
+    GET /api/contribucions - Retorna l'historial de contribucions d'un usuari.
 
     Query params:
-    - usuari_id: ID de l'usuari (obligatori)
-    - limit: límit de resultats (opcional)
-    - offset: offset per paginació (opcional)
+        usuari_id (int): ID de l'usuari (obligatori).
+        limit (int): Nombre màxim de resultats (opcional).
+        offset (int): Desplaçament per a la paginació (opcional).
+
+    Returns:
+        JSON 200: Total i llista de contribucions.
+        JSON 400: Si falta usuari_id o els paràmetres no són numèrics.
+        JSON 500: Error intern del servidor.
     """
     try:
         usuari_id = request.args.get('usuari_id')
@@ -80,9 +88,7 @@ def obtenir_contribucions_usuari():
         except (ValueError, TypeError):
             return jsonify({"error": "usuari_id ha de ser un nombre"}), 400
 
-        # Construir filtres
         filters = {}
-
 
         if request.args.get('limit'):
             try:

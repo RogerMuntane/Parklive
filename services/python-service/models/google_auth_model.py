@@ -1,6 +1,9 @@
 """
-google_auth_model.py
-Servei per verificar tokens de Google OAuth i gestionar usuaris OAuth.
+Servei d'autenticació OAuth 2.0 amb Google.
+
+Verifica els access tokens emesos pel client de Google (initTokenClient),
+gestiona el registre o la recuperació d'usuaris al sistema i crea automàticament
+el perfil de client a Stripe per a nous registres.
 """
 
 import os
@@ -14,14 +17,23 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 
 class GoogleAuthService(BaseService):
-    """Servei d'autenticació amb Google OAuth 2.0."""
+    """Servei d'autenticació i registre d'usuaris via Google OAuth 2.0."""
 
     def verify_google_token(self, access_token: str) -> dict:
         """
-        Verifica un access_token de Google OAuth 2.0 cridant l'endpoint
-        userinfo de Google. Retorna les dades de l'usuari si el token és vàlid.
+        Verifica un access_token de Google OAuth 2.0 cridant l'endpoint userinfo.
 
-        Flux: initTokenClient() → requestAccessToken() → access_token
+        Comprova que el token és vàlid i que l'email associat està verificat per Google.
+        Retorna les dades pública de l'usuari (email, nom, foto, etc.).
+
+        Flux esperat al client: `initTokenClient()` → `requestAccessToken()` → access_token.
+
+        Args:
+            access_token (str): Token d'accés OAuth 2.0 emitat per Google.
+
+        Returns:
+            dict: Dades de l'usuari (email, name, given_name, family_name, picture, google_id)
+                  o diccionari amb 'error' i 'status_code' si el token no és vàlid.
         """
         try:
             resp = requests.get(
@@ -59,8 +71,18 @@ class GoogleAuthService(BaseService):
 
     def find_or_create_user(self, google_data: dict) -> dict:
         """
-        Busca un usuari per email. Si no existeix, el crea amb les dades de Google.
-        Retorna les dades de l'usuari serialitzades.
+        Busca un usuari existent per email o el crea amb les dades de Google.
+
+        Si l'usuari existeix però no té `stripe_customer_id`, en crea un de nou.
+        Si l'usuari no existeix, el registra via el stored procedure `sp_insertar_usuari`
+        amb un placeholder de contrasenya (GOOGLE_OAUTH_NO_PASSWORD) i crea el perfil Stripe.
+
+        Args:
+            google_data (dict): Dades retornades per `verify_google_token`.
+
+        Returns:
+            dict: Diccionari amb 'user' (dades serialitzades) i 'is_new' (bool),
+                  o amb 'error' i 'status_code' si falla la creació.
         """
         email = google_data["email"]
 

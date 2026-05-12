@@ -1,9 +1,21 @@
+"""
+Controlador per a les preguntes freqüents (FAQ).
+
+Exposa un únic endpoint públic per recuperar totes les FAQs actives
+ordenades per categoria i ordre de visualització.
+"""
+
 from flask import jsonify
 from models.faq_model import get_faqs
 
+
 def get_faqs_list():
     """
-    Controlador per obtenir totes les preguntes freqüents actives.
+    GET /api/faqs - Retorna totes les preguntes freqüents actives.
+
+    Returns:
+        JSON 200: Llista de FAQs amb 'success' True i 'data' (list).
+        JSON 500: Si hi ha un error intern al recuperar les dades.
     """
     try:
         faqs = get_faqs()

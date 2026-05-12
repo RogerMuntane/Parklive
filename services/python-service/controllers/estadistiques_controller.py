@@ -1,7 +1,9 @@
 """
-estadistiques_controller.py
-Controlador per a les estadístiques de l'usuari.
-Agrega totes les dades necessàries en una sola resposta JSON.
+Controlador d'estadístiques del perfil d'usuari.
+
+Agrega en un únic endpoint totes les mètriques del panell de l'usuari:
+KPIs, despesa mensual, distribucions, rànquings, gamificació i mètriques
+de qualitat. Inclou control d'accés basat en JWT i verificació de propietat.
 """
 from flask import jsonify, request
 from middleware.jwt_auth import get_jwt_user_id, get_jwt_full_data
@@ -20,9 +22,22 @@ from models.estadistiques_model import (
 
 def estadistiques_usuari():
     """
-    Retorna totes les estadístiques de l'usuari en un únic endpoint agregat.
-    Requereix autenticació JWT. L'usuari només pot consultar les seves pròpies dades;
-    el rol administrador pot consultar les de qualsevol usuari.
+    GET /api/estadistiques - Retorna totes les estadístiques de l'usuari en un únic bloc.
+
+    Requereix autenticació JWT. Un usuari bàsic o premium només pot veure les seves
+    pròpies dades. Un administrador pot consultar les de qualsevol usuari via 'user_id'.
+
+    Query params:
+        user_id (int|None): ID de l'usuari a consultar (opcional, requereix rol admin).
+
+    Returns:
+        JSON 200: Diccionari amb kpis, despesa_mensual, distribucio_tipus,
+                  reserves_per_estat, contribucions_per_tipus, dies_setmana,
+                  top_aparcaments, dades_detall i gamificacio.
+        JSON 400: Si user_id no és un enter vàlid.
+        JSON 401: Si el JWT falta o ha caducat.
+        JSON 403: Si l'usuari intenta veure dades d'un altre usuari sense permisos.
+        JSON 500: Error intern en el càlcul de les estadístiques.
     """
     # 1. Autenticar l'usuari
     try:

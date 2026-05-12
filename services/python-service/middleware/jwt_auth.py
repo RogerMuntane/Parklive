@@ -1,10 +1,27 @@
+"""
+Middleware d'autenticació i autorització basat en JWT.
+
+Aquest mòdul proporciona funcions per generar, extreure i validar tokens JWT,
+així com decoradors per protegir les rutes de Flask segons el rol de l'usuari.
+"""
+
 import os
 import jwt
 import time
 from flask import request
+from functools import wraps
+from flask import jsonify
 
 def _get_secret():
-    """Obté el secret JWT des de l'entorn. Llança RuntimeError si no està configurat."""
+    """
+    Obté el secret JWT des de les variables d'entorn.
+    
+    Returns:
+        str: El secret configurat.
+        
+    Raises:
+        RuntimeError: Si JWT_SECRET no està configurat al fitxer .env.
+    """
     secret = os.getenv('JWT_SECRET')
     if not secret:
         raise RuntimeError(
@@ -15,9 +32,14 @@ def _get_secret():
 def generate_jwt_token(user):
     """
     Genera un token JWT equivalent al de PHP.
+    
+    El token inclou dades bàsiques de l'usuari i metadades estàndard (iat, iss, exp).
 
-    :param user: Diccionari amb les dades de l'usuari (minim 'id').
-    :return: String amb el token JWT.
+    Args:
+        user (dict): Diccionari amb les dades de l'usuari (minim 'id').
+        
+    Returns:
+        str: El token JWT generat.
     """
     secret_key = _get_secret()
     issued_at = int(time.time())
@@ -50,10 +72,15 @@ def generate_jwt_token(user):
 def get_jwt_user_id(fallback_to_header=False):
     """
     Extreu i valida el token JWT de la capçalera Authorization: Bearer <token>.
-    Retorna l'ID de l'usuari si és vàlid, o llança ValueError si no ho és.
+    
+    Args:
+        fallback_to_header (bool): Depreccat. Si és True, permetia l'ús de X-User-ID.
 
-    :param fallback_to_header: Si és True, permetrà utilitzar X-User-ID si no hi ha Bearer (per transició).
-                               Per seguretat, s'hauria de posar a False quan tot estigui migrat.
+    Returns:
+        int: L'ID de l'usuari autenticat.
+        
+    Raises:
+        ValueError: Si el token falta, és invàlid o ha caducat.
     """
     auth_header = request.headers.get('Authorization')
 
@@ -84,9 +111,13 @@ def get_jwt_user_id(fallback_to_header=False):
 
 def get_jwt_full_data():
     """
-    Extreu i valida el JWT. Retorna el diccionari 'data' del payload
-    (id, nom, email, tipus_usuari). Llança ValueError si el token no és vàlid.
-    Útil per a comprovar el rol de l'usuari autenticat.
+    Extreu i valida el JWT, retornant totes les dades del payload.
+
+    Returns:
+        dict: Diccionari 'data' del payload (id, nom, email, tipus_usuari).
+        
+    Raises:
+        ValueError: Si el token falta o és invàlid.
     """
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
@@ -102,25 +133,36 @@ def get_jwt_full_data():
     raise ValueError("Cal iniciar sessió (Token no trobat)")
 
 
-# Decoradors per a rutes protegides
-from functools import wraps
-from flask import jsonify
-
-
 def jwt_required(f):
-    """Decorador per requerir JWT vàlid en una ruta"""
+    """
+    Decorador per requerir que l'usuari estigui autenticat amb un JWT vàlid.
+    
+    Args:
+        f (function): La funció (ruta) a protegir.
+        
+    Returns:
+        function: La funció decorada que verifica l'autenticació abans d'executar-se.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
             get_jwt_user_id()  # Validar JWT
             return f(*args, **kwargs)
         except ValueError as e:
-            return jsonify({'success': False, 'error': str(e)}), 401
+            return jsonify({'success': False, 'error' : str(e)}), 401
     return decorated_function
 
 
 def admin_required(f):
-    """Decorador per requerir rol admin o operador en una ruta"""
+    """
+    Decorador per requerir que l'usuari tingui el rol d'administrador o operador.
+    
+    Args:
+        f (function): La funció (ruta) a protegir.
+        
+    Returns:
+        function: La funció decorada que verifica els permisos abans d'executar-se.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
@@ -138,3 +180,4 @@ def admin_required(f):
         except ValueError as e:
             return jsonify({'success': False, 'error': str(e)}), 401
     return decorated_function
+

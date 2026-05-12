@@ -1,3 +1,12 @@
+"""
+Controlador per a la gestió de subscripcions i mètodes de pagament de Stripe.
+
+Exposa endpoints per a la gestió del cicle de vida d'una subscripció premium:
+creació, configuració de SetupIntent, canvi d'autorenovació, sincronització
+amb la BD local i consulta de l'historial de facturació. També gestiona
+les targetes desades (llistat i eliminació).
+"""
+
 from flask import jsonify, request
 import os
 from models.stripe_model import get_user_stripe_id, list_user_payment_methods, delete_payment_method, create_setup_intent, create_subscription
@@ -5,7 +14,18 @@ from models.stripe_model import get_user_stripe_id, list_user_payment_methods, d
 from middleware.jwt_auth import get_jwt_user_id
 
 def get_payment_methods():
-    """Endpoint per obtenir les targetes guardades d'un usuari"""
+    """
+    GET /api/stripe/payment-methods - Retorna les targetes desades d'un usuari.
+
+    Query params:
+        user_id (int|None): Verificació addicional (ha de coincidir amb el JWT).
+
+    Returns:
+        JSON 200: Llista de targetes amb brand, last4 i dates de caducitat.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: user_id no coincideix amb el token.
+        JSON 404: L'usuari no té compte de Stripe.
+    """
     try:
         usuari_autenticat_id = get_jwt_user_id()
     except ValueError as e:
@@ -38,7 +58,18 @@ def get_payment_methods():
     return jsonify(formatted_methods), 200
 
 def detach_payment_method(method_id):
-    """Endpoint per eliminar una targeta"""
+    """
+    DELETE /api/stripe/payment-methods/<id> - Desvincula una targeta de Stripe.
+
+    Args:
+        method_id (str): ID del PaymentMethod a eliminar (de l'URL).
+
+    Returns:
+        JSON 200: Confirmació de l'eliminació.
+        JSON 400: Si l'ID no s'ha proporcionat.
+        JSON 401: JWT falta o és invàlid.
+        JSON 500: Error al desvinular la targeta.
+    """
     # Validar que l'usuari estigui autenticat
     try:
         get_jwt_user_id()
@@ -55,7 +86,22 @@ def detach_payment_method(method_id):
         return jsonify({'error': 'No s\'ha pogut eliminar la targeta'}), 500
 
 def get_setup_intent():
-    """Endpoint per crear un SetupIntent client secret"""
+    """
+    GET /api/stripe/setup-intent - Crea un SetupIntent per vincular una nova targeta.
+
+    El client_secret retornat s'usa al frontend per inicialitzar el formulari
+    de targeta de Stripe Elements sense realitzar cap càrrec immediat.
+
+    Query params:
+        user_id (int|None): Verificació addicional (ha de coincidir amb el JWT).
+
+    Returns:
+        JSON 200: client_secret i stripe_publishable_key.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: user_id no coincideix amb el token.
+        JSON 404: L'usuari no té compte de Stripe.
+        JSON 500: Error al crear el SetupIntent.
+    """
     try:
         usuari_autenticat_id = get_jwt_user_id()
     except ValueError as e:
@@ -79,7 +125,25 @@ def get_setup_intent():
         return jsonify({'error': 'No s\'ha pogut crear el SetupIntent. Revisa els logs del servidor.'}), 500
 
 def handle_create_subscription():
-    """Endpoint per crear una subscripció"""
+    """
+    POST /api/stripe/subscriptions - Crea una nova subscripció premium.
+
+    Associa el mètode de pagament al client de Stripe, crea la subscripció
+    i persisteix les dades a la BD local (subscripcions, pagaments, factures).
+
+    Body JSON:
+        user_id (int|None): Verificació addicional.
+        payment_method_id (str): ID de la targeta a usar.
+        autorenovacio (bool): Si activa l'autorenovació (per defecte True).
+        plan_type (str): 'monthly' o 'annual' (per defecte 'monthly').
+
+    Returns:
+        JSON 200: subscriptionId, clientSecret i status de la subscripció.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: user_id no coincideix amb el token.
+        JSON 404: L'usuari no té compte de Stripe.
+        JSON 500: Error al crear la subscripció.
+    """
     try:
         usuari_autenticat_id = get_jwt_user_id()
     except ValueError as e:
@@ -110,7 +174,20 @@ def handle_create_subscription():
         return jsonify({'error': 'No s\'ha pogut crear la subscripció'}), 500
 
 def handle_update_autorenewal():
-    """Endpoint per actualitzar l'autorenovació d'una subscripció existent"""
+    """
+    PATCH /api/stripe/subscriptions/autorenewal - Actualitza l'autorenovació.
+
+    Body JSON:
+        user_id (int|None): Verificació addicional.
+        autorenovacio (bool): True per activar, False per desactivar (obligatori).
+
+    Returns:
+        JSON 200: Confirmació del canvi.
+        JSON 400: Si autorenovacio no s'ha proporcionat.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: user_id no coincideix amb el token.
+        JSON 500: Error al actualitzar a Stripe o BD.
+    """
     try:
         usuari_autenticat_id = get_jwt_user_id()
     except ValueError as e:
@@ -134,7 +211,21 @@ def handle_update_autorenewal():
         return jsonify({'error': 'No s\'ha pogut actualitzar l\'autorenovació'}), 500
 
 def get_subscription_details():
-    """Endpoint per obtenir els detalls de la subscripció activa"""
+    """
+    GET /api/stripe/subscriptions/details - Retorna el detall de la subscripció activa.
+
+    Prio ritza les dades de Stripe API amb fallback a la BD local.
+    Normalitza la resposta per a subscripcions Stripe natives i simulades.
+
+    Query params:
+        user_id (int|None): Verificació addicional.
+
+    Returns:
+        JSON 200: subscription_id, status, current_period_end, plan_amount, etc.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: user_id no coincideix amb el token.
+        JSON 404: No hi ha subscripció activa.
+    """
     try:
         usuari_autenticat_id = get_jwt_user_id()
     except ValueError as e:
@@ -161,7 +252,23 @@ def get_subscription_details():
     }), 200
 
 def handle_sync_subscription():
-    """Sincronitza la subscripció activa de Stripe amb la BD local."""
+    """
+    POST /api/stripe/subscriptions/sync - Sincronitza la subscripció de Stripe amb la BD local.
+
+    Cerca la subscripció activa del client a Stripe (provant estats 'active',
+    'trialing', 'past_due', 'incomplete') i la persisteix a la BD si no existia.
+    Útil després d'una migració o pujada manual de dades.
+
+    Body JSON o Query params:
+        user_id (int|None): Verificació addicional.
+
+    Returns:
+        JSON 200: Subscripció sincronitzada o ja existent.
+        JSON 401: JWT falta o és invàlid.
+        JSON 403: user_id no coincideix amb el token.
+        JSON 404: No s'ha trobat cap subscripció a Stripe.
+        JSON 500: Error intern o de l'API de Stripe.
+    """
     import stripe
     try:
         usuari_autenticat_id = get_jwt_user_id()
@@ -236,14 +343,21 @@ def handle_sync_subscription():
 
 def get_subscription_history():
     """
-    Endpoint GET per obtenir l'historial de tiquets de subscripció d'un usuari.
-    Consulta les taules subscripcions + factures de la BD local (sense cridar Stripe).
+    GET /api/stripe/subscriptions/history - Historial de subscripcions i factures.
+
+    Consulta la BD local (subscripcions + factures) i enriqueix amb URLs de
+    rebut de Stripe (receipt_url del Charge del PaymentIntent de cada factura).
 
     Query params:
-      - cicle: 'mensual' | 'anual' | '' (tots)
-      - estat: 'activa' | 'cancelada' | 'caducada' | '' (tots)
-      - limit: int (default 6)
-      - offset: int (default 0)
+        cicle (str): 'mensual' | 'anual' | '' (tots, per defecte buit).
+        estat (str): 'activa' | 'cancelada' | 'caducada' | '' (tots).
+        limit (int): Registres per pàgina, entre 1 i 50 (per defecte 6).
+        offset (int): Desplaçament per paginació (per defecte 0).
+
+    Returns:
+        JSON 200: tiquets (llista), resum (pla actual), paginacio (metadades).
+        JSON 401: JWT falta o és invàlid.
+        JSON 500: Error de connexió o intern del servidor.
     """
     try:
         usuari_autenticat_id = get_jwt_user_id()

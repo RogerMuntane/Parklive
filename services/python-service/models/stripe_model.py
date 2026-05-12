@@ -1,16 +1,32 @@
+"""
+Model per a la integració amb Stripe.
+
+Aquest mòdul gestiona tota la comunicació amb l'API de Stripe: creació de clients,
+gestió de mètodes de pagament, subscripcions premium, intents de pagament i
+sincronització amb la base de dades local.
+"""
+
 import stripe
 import os
 from datetime import datetime
 from models.db_connection import get_new_connection
 
 
-# Configurar Stripe d'entrada
+# Configurar Stripe d'entrada utilitzant la clau privada de l'entorn
 stripe.api_key = os.getenv('STRIPE_APIPrivada', '').strip()
 stripe.max_network_retries = 3  # Activar retries automàtics de l'SDK de Stripe
 
 
 def get_user_stripe_id(user_id):
-    """Obté el stripe_customer_id d'un usuari des de la BD"""
+    """
+    Obté l'identificador de client de Stripe (stripe_customer_id) d'un usuari.
+    
+    Args:
+        user_id (int): ID de l'usuari a la base de dades local.
+        
+    Returns:
+        str|None: El stripe_customer_id o None si no existeix o hi ha error.
+    """
     conn = get_new_connection()
     if not conn:
         return None
@@ -28,7 +44,15 @@ def get_user_stripe_id(user_id):
 
 
 def list_user_payment_methods(stripe_customer_id):
-    """Llista tots els mètodes de pagament (targetes) d'un client a Stripe"""
+    """
+    Llista tots els mètodes de pagament (targetes) vinculats a un client de Stripe.
+    
+    Args:
+        stripe_customer_id (str): Identificador del client a Stripe.
+        
+    Returns:
+        list: Llista d'objectes PaymentMethod de Stripe.
+    """
     if not stripe_customer_id:
         return []
 
@@ -44,7 +68,15 @@ def list_user_payment_methods(stripe_customer_id):
 
 
 def delete_payment_method(payment_method_id):
-    """Desvincula un mètode de pagament de Stripe"""
+    """
+    Desvincula (detach) un mètode de pagament de Stripe.
+    
+    Args:
+        payment_method_id (str): ID del mètode de pagament.
+        
+    Returns:
+        bool: True si s'ha desvinculat correctament.
+    """
     try:
         stripe.PaymentMethod.detach(payment_method_id)
         return True
@@ -54,7 +86,17 @@ def delete_payment_method(payment_method_id):
 
 
 def create_stripe_customer(user_id, email, name):
-    """Crea un client a Stripe i el vincula a l'usuari a la BD"""
+    """
+    Crea un nou perfil de client a Stripe i el vincula a l'usuari local.
+    
+    Args:
+        user_id (int): ID local de l'usuari.
+        email (str): Correu electrònic de l'usuari.
+        name (str): Nom complet de l'usuari.
+        
+    Returns:
+        str|None: El nou stripe_customer_id generat.
+    """
     try:
         customer = stripe.Customer.create(
             email=email,
@@ -81,7 +123,15 @@ def create_stripe_customer(user_id, email, name):
 
 
 def create_setup_intent(stripe_customer_id):
-    """Crea un SetupIntent per permetre desar una nova targeta"""
+    """
+    Crea un SetupIntent de Stripe per permetre desar una targeta sense realitzar cap pagament immediat.
+    
+    Args:
+        stripe_customer_id (str): ID del client a Stripe.
+        
+    Returns:
+        stripe.SetupIntent|None: L'objecte SetupIntent creat.
+    """
     if not stripe_customer_id:
         return None
 
@@ -100,7 +150,19 @@ def create_setup_intent(stripe_customer_id):
 
 
 def create_subscription(stripe_customer_id, payment_method_id, user_id, autorenovacio=True, plan_type='monthly'):
-    """Crea una subscripció premium per a un client"""
+    """
+    Crea una nova subscripció premium a Stripe i la registra a la base de dades local.
+    
+    Args:
+        stripe_customer_id (str): ID del client de Stripe.
+        payment_method_id (str): ID del mètode de pagament a utilitzar.
+        user_id (int): ID local de l'usuari.
+        autorenovacio (bool): Si la subscripció s'ha de renovar automàticament.
+        plan_type (str): 'monthly' o 'annual'.
+        
+    Returns:
+        stripe.Subscription|None: L'objecte subscripció creat.
+    """
     if plan_type == 'annual':
         price_id = os.getenv('STRIPE_Anual_PREMIUM_PRICE_ID')
     else:
@@ -140,7 +202,19 @@ def create_subscription(stripe_customer_id, payment_method_id, user_id, autoreno
 
 
 def _persist_subscription_to_db(user_id, subscription, autorenovacio=True):
-    """Guarda la subscripció, el pagament i la factura a la BD"""
+    """
+    Persisteix a la BD local una subscripció Stripe i la seva factura associada.
+
+    Realitza tres operacions dins la mateixa transacció:
+    1. Actualitza el `tipus_usuari` a 'premium'.
+    2. Insereix a la taula `subscripcions` amb dates i pla extretes del Stripe Subscription.
+    3. Insereix a `pagaments` i a `factures` amb el número de factura de Stripe.
+
+    Args:
+        user_id (int): ID local de l'usuari.
+        subscription (stripe.Subscription): Objecte subscripció retornat per Stripe API.
+        autorenovacio (bool): Si la subscripció s'ha de renovar automàticament.
+    """
     conn = get_new_connection()
     if not conn:
         return
@@ -194,7 +268,17 @@ def _persist_subscription_to_db(user_id, subscription, autorenovacio=True):
 
 
 def update_subscription_status(stripe_sub_id, status, data_final=None):
-    """Actualitza l'estat d'una subscripció a la BD"""
+    """
+    Actualitza l'estat d'una subscripció a la base de dades local.
+    
+    Args:
+        stripe_sub_id (str): ID de la subscripció a Stripe.
+        status (str): Nou estat (activa, cancelada, etc.).
+        data_final (str|None): Nova data de finalització si escau.
+        
+    Returns:
+        bool: True si s'ha actualitzat correctament.
+    """
     conn = get_new_connection()
     if not conn:
         return False
@@ -221,7 +305,16 @@ def update_subscription_status(stripe_sub_id, status, data_final=None):
 
 
 def update_user_premium_status(stripe_customer_id, is_premium):
-    """Actualitza el tipus d'usuari (premium/basic) basat en el customer_id de Stripe"""
+    """
+    Actualitza el tipus d'usuari (premium/basic) a la BD basat en el stripe_customer_id.
+    
+    Args:
+        stripe_customer_id (str): ID del client a Stripe.
+        is_premium (bool): True si l'usuari és premium.
+        
+    Returns:
+        bool: True si s'ha realitzat el canvi.
+    """
     conn = get_new_connection()
     if not conn:
         return False
@@ -243,7 +336,16 @@ def update_user_premium_status(stripe_customer_id, is_premium):
 
 
 def update_subscription_autorenewal(user_id, autorenovacio):
-    """Actualitza l'autorenovació tant a Stripe com a la BD local"""
+    """
+    Canvia l'estat d'autorenovació d'un usuari. Busca la subscripció activa i l'actualitza.
+    
+    Args:
+        user_id (int): ID local de l'usuari.
+        autorenovacio (bool): Nou estat d'autorenovació.
+        
+    Returns:
+        bool: True si s'ha actualitzat correctament.
+    """
     conn = get_new_connection()
     if not conn:
         return False
@@ -270,7 +372,19 @@ def update_subscription_autorenewal(user_id, autorenovacio):
 
 
 def set_subscription_autorenewal(stripe_sub_id, autorenovacio):
-    """Actualitza l'autorenovació a Stripe i a la BD centralitzadament"""
+    """
+    Estableix l'estat d'autorenovació a Stripe i sincronitza la BD local.
+
+    Modifica el paràmetre `cancel_at_period_end` a Stripe (True = no renova)
+    i actualitza el camp `auto_renovacio` a la taula `subscripcions`.
+
+    Args:
+        stripe_sub_id (str): ID de la subscripció a Stripe.
+        autorenovacio (bool): True per activar autorenovació, False per cancel·lar-la.
+
+    Returns:
+        bool: True si tant Stripe com la BD s'han actualitzat correctament.
+    """
     try:
         stripe.Subscription.modify(
             stripe_sub_id,
@@ -299,7 +413,21 @@ def set_subscription_autorenewal(stripe_sub_id, autorenovacio):
 
 
 def get_active_subscription(user_id):
-    """Obté els detalls de la subscripció activa des de Stripe"""
+    """
+    Obté els detalls complets de la subscripció activa des de Stripe, amb fallbacks locals.
+    
+    Aquesta funció és robusta i gestiona:
+    1. Cerca a la BD local per obtenir el stripe_subscription_id.
+    2. Recuperació de dades des de Stripe API.
+    3. Sincronització amb extensions locals de gamificació.
+    4. Fallbacks a dades locals si l'API de Stripe no respon o l'ID no es troba.
+
+    Args:
+        user_id (int): ID local de l'usuari.
+        
+    Returns:
+        dict|stripe.Subscription|None: L'objecte subscripció o un diccionari simulat.
+    """
     conn = get_new_connection()
     if not conn:
         return None
@@ -325,7 +453,6 @@ def get_active_subscription(user_id):
                 for r in all_rows:
                     print(f"  -> stripe_id={r['stripe_subscription_id']}, estat='{r['estat']}'")
                 # Fallback: si hi ha alguna sub amb stripe_subscription_id, intentem recuperar-la de Stripe
-                # per a estats com 'pending', 'incomplete', etc. que poden significar premium de fet.
                 best_row = next((r for r in all_rows if r['stripe_subscription_id']), None)
                 if best_row:
                     print(f"[DB][DIAG] Usant fallback amb stripe_id={best_row['stripe_subscription_id']} (estat BD: '{best_row['estat']}')")
@@ -393,8 +520,20 @@ def get_active_subscription(user_id):
     finally:
         conn.close()
 
+
 def createPaymentIntent(amount, currency, customer_id, payment_method_id):
-    """Crea i confirma automàticament un intent de pagament a Stripe"""
+    """
+    Crea i confirma automàticament un intent de pagament a Stripe amb captura manual.
+    
+    Args:
+        amount (int): Import en cèntims.
+        currency (str): Moneda (ex: 'eur').
+        customer_id (str): ID del client de Stripe.
+        payment_method_id (str): ID de la targeta.
+        
+    Returns:
+        stripe.PaymentIntent|None: L'intent de pagament creat.
+    """
     try:
         payment_intent = stripe.PaymentIntent.create(
             amount=amount,
@@ -416,7 +555,18 @@ def createPaymentIntent(amount, currency, customer_id, payment_method_id):
 
 def registrar_pagament_db(reserva_id, usuari_id, import_pagament, metode, referencia_externa, estat='completat'):
     """
-    Registra el pagament a la base de dades mitjançant el procedure sp_registrar_pagament
+    Registra un pagament a la base de dades local utilitzant el procediment 'sp_registrar_pagament'.
+    
+    Args:
+        reserva_id (int): ID de la reserva associada.
+        usuari_id (int): ID de l'usuari.
+        import_pagament (float): Import total.
+        metode (str): Mètode de pagament.
+        referencia_externa (str): ID de referència de Stripe (PaymentIntent).
+        estat (str): Estat del pagament.
+        
+    Returns:
+        int: L'ID del pagament registrat a la BD.
     """
     from models.db_connection import get_new_connection
     conn = get_new_connection()
@@ -447,7 +597,7 @@ def registrar_pagament_db(reserva_id, usuari_id, import_pagament, metode, refere
         if error_msg:
             raise ValueError(error_msg)
 
-        return pagament_id  # Retorna el pagament_id
+        return pagament_id
     except Exception as e:
         conn.rollback()
         raise e
@@ -457,12 +607,27 @@ def registrar_pagament_db(reserva_id, usuari_id, import_pagament, metode, refere
 
 
 def log_failed_payment(stripe_customer_id, invoice_id, amount):
-    """Registra un intent de pagament fallit"""
+    """
+    Registra al log un intent de pagament fallit per a auditoria i depósit.
+
+    Args:
+        stripe_customer_id (str): ID del client de Stripe.
+        invoice_id (str): ID de la factura fallida.
+        amount (int): Import en cèntims.
+    """
     print(f"[Webhook] PAGAMENT FALLIT: Customer={stripe_customer_id}, Invoice={invoice_id}, Amount={amount}")
 
 
 def cancel_payment_intent(payment_intent_id):
-    """Cancel·la a Stripe un PaymentIntent autoritzat (un-captured)"""
+    """
+    Cancel·la un PaymentIntent que ha estat autoritzat però encara no capturat.
+    
+    Args:
+        payment_intent_id (str): ID de l'intent a Stripe.
+        
+    Returns:
+        stripe.PaymentIntent|None: L'objecte cancel·lat.
+    """
     try:
         payment_intent = stripe.PaymentIntent.cancel(payment_intent_id)
         return payment_intent
@@ -473,8 +638,14 @@ def cancel_payment_intent(payment_intent_id):
 
 def capture_payment_intent(payment_intent_id):
     """
-    Captura a Stripe la totalitat d'un PaymentIntent autoritzat anteriorment.
-    Implementa una petita lògica de reintent per errors de connexió (DNS/Xarxa).
+    Captura la totalitat d'un PaymentIntent autoritzat anteriorment.
+    Implementa reintents automàtics en cas d'errors de xarxa o DNS.
+    
+    Args:
+        payment_intent_id (str): ID de l'intent a Stripe.
+        
+    Returns:
+        stripe.PaymentIntent|None: L'intent de pagament capturat.
     """
     import time
     max_retries = 3
@@ -485,20 +656,28 @@ def capture_payment_intent(payment_intent_id):
             payment_intent = stripe.PaymentIntent.capture(payment_intent_id)
             return payment_intent
         except stripe.error.APIConnectionError as e:
-            # Error de xarxa o DNS (com el NameResolutionError)
+            # Error de xarxa o DNS
             print(f"[Stripe] Error de connexió en capturar {payment_intent_id} (intent {attempt + 1}/{max_retries}): {e}")
             if attempt < max_retries - 1:
                 time.sleep(retry_delay)
             else:
                 return None
         except Exception as e:
-            # Altres errors (targeta, estat invàlid, etc.) no els reintentem aquí
             print(f"[Stripe] Error capturant intent de pagament {payment_intent_id}: {e}")
             return None
 
 
 def actualitzar_estat_pagament_db(referencia_externa, nou_estat):
-    """Actualitza l'estat d'un pagament cercant-lo per la seva referència externa (Stripe PI ID)"""
+    """
+    Actualitza l'estat d'un pagament a la BD cercant per la referència externa de Stripe.
+    
+    Args:
+        referencia_externa (str): ID de referència (Stripe PaymentIntent).
+        nou_estat (str): Nou estat (completat, fallit, etc.).
+        
+    Returns:
+        bool: True si s'ha actualitzat la fila.
+    """
     conn = get_new_connection()
     if not conn:
         return False
@@ -519,3 +698,4 @@ def actualitzar_estat_pagament_db(referencia_externa, nou_estat):
         if 'cursor' in locals():
             cursor.close()
         conn.close()
+

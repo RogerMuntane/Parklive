@@ -1,3 +1,11 @@
+"""
+Controlador per a la gestió pública i de favorits d'aparcaments.
+
+Exposa endpoints per llistar, cercar i consultar aparcaments amb filtres
+avançats (text, geogràfics, tarifes, accessibilitat). Gestiona també
+les llistes de favorits i la consulta de disponibilitat per franja horària.
+"""
+
 from flask import jsonify, request
 from datetime import datetime
 from models.aparcament_model import (
@@ -14,7 +22,19 @@ from middleware.jwt_auth import get_jwt_user_id
 
 def _get_authenticated_user_id(fallback_value=None):
     """
-    Obté l'usuari autenticat. Ara crida a la validació de JWT per major seguretat.
+    Extreu i valida l'ID d'usuari del token JWT de la petició.
+
+    Si la validació JWT falla però s'ha proporcionat un `fallback_value`,
+    l'utilitza com a alternativa (útil en endpoints mixtos autenticat/anònim).
+
+    Args:
+        fallback_value (int|str|None): Valor alternatiu si JWT no és present.
+
+    Returns:
+        int: L'ID de l'usuari autenticat.
+
+    Raises:
+        ValueError: Si el JWT és invàlid i no hi ha fallback disponible.
     """
     try:
         # Eliminem el fallback_to_header per fer el JWT estrictament obligatori.
@@ -30,7 +50,13 @@ def _get_authenticated_user_id(fallback_value=None):
 
 
 def list_aparcaments():
-    """Controlador per llistar tots els aparcaments"""
+    """
+    GET /api/aparcaments - Retorna la llista completa d'aparcaments.
+
+    Returns:
+        JSON 200: Array amb tots els aparcaments.
+        JSON 500: Error intern del servidor.
+    """
     try:
         aparcaments = get_all_aparcaments()
         return jsonify(aparcaments), 200
@@ -39,7 +65,18 @@ def list_aparcaments():
 
 
 def get_aparcament_detail(aparcament_id):
-    """Controlador per obtenir detall d'un aparcament específic"""
+    """
+    GET /api/aparcaments/<id> - Retorna el detall complet d'un aparcament.
+
+    Args:
+        aparcament_id (int|str): ID de l'aparcament (de l'URL).
+
+    Returns:
+        JSON 200: Diccionari amb totes les dades de l'aparcament.
+        JSON 400: Si l'ID no és numèric.
+        JSON 404: Si l'aparcament no existeix.
+        JSON 500: Error intern del servidor.
+    """
     try:
         # Validar que l'ID sigui un número vàlid
         try:
@@ -62,7 +99,21 @@ def get_aparcament_detail(aparcament_id):
 
 
 def search_aparcaments():
-    """Controlador per cercar aparcaments amb filtres"""
+    """
+    GET /api/aparcaments/search - Cerca aparcaments amb filtres avançats.
+
+    Query params (tots opcionals):
+        ciutat (str), tipus (str), disponibilitat (str, separats per coma),
+        altura_min (float), tarifa_hora_min/max (float), tarifa_dia_min/max (float),
+        accessibilitat/carrega_electrica/videovigilancia/obert_24h (bool: 'true'/'1'/'si'),
+        valoracio_min (float), latitud/longitud/radi_km (float per cerca geogràfica),
+        data_entrada/data_sortida (str), limite (int), offset (int).
+
+    Returns:
+        JSON 200: Resultats filtrats i paginats.
+        JSON 400: Error de validació en els paràmetres.
+        JSON 500: Error intern del servidor.
+    """
     try:
         # Obtenir els filtres dels query params
         filters = {}
@@ -158,7 +209,19 @@ def search_aparcaments():
 
 
 def add_aparcament_favorit():
-    """Controlador per afegir un aparcament a favorits."""
+    """
+    POST /api/aparcaments/favorits - Afegeix un aparcament a la llista de favorits.
+
+    Body JSON:
+        aparcament_id (int): ID de l'aparcament a afegir (obligatori).
+        usuari_id (int|None): ID d'usuari de fallback si JWT no és present.
+
+    Returns:
+        JSON 201: Resultat de l'operació d'inserció.
+        JSON 400: Si falta aparcament_id o les dades no són JSON.
+        JSON 401: Si JWT és invàlid i no hi ha fallback.
+        JSON 500: Error intern del servidor.
+    """
     try:
         if not request.is_json:
             return jsonify({"error": "El contingut ha de ser JSON"}), 400
@@ -182,7 +245,20 @@ def add_aparcament_favorit():
 
 
 def remove_aparcament_favorit(aparcament_id):
-    """Controlador per eliminar un aparcament de favorits."""
+    """
+    DELETE /api/aparcaments/<id>/favorits - Elimina un aparcament de favorits.
+
+    Args:
+        aparcament_id (int|str): ID de l'aparcament a eliminar (de l'URL).
+
+    Query params:
+        usuari_id (int|None): Fallback si JWT no és present.
+
+    Returns:
+        JSON 200: Confirmació de l'eliminació.
+        JSON 401: Si JWT és invàlid i no hi ha fallback.
+        JSON 500: Error intern del servidor.
+    """
     try:
         usuari_id = _get_authenticated_user_id(request.args.get('usuari_id'))
         aparcament_id = int(aparcament_id)
@@ -199,7 +275,19 @@ def remove_aparcament_favorit(aparcament_id):
 
 
 def list_aparcaments_favorits_usuari():
-    """Controlador per llistar favorits d'un usuari autenticat."""
+    """
+    GET /api/aparcaments/favorits - Retorna els aparcaments favorits de l'usuari.
+
+    Query params:
+        usuari_id (int|None): Fallback si JWT no és present.
+        limit (int): Nombre màxim de resultats (per defecte 1000, màx 5000).
+        offset (int): Desplaçament per a la paginació.
+
+    Returns:
+        JSON 200: total, favorits_ids (llista d'IDs) i favorits (llista completa).
+        JSON 401: Si JWT és invàlid i no hi ha fallback.
+        JSON 500: Error intern del servidor.
+    """
     try:
         usuari_id = _get_authenticated_user_id(request.args.get('usuari_id'))
 

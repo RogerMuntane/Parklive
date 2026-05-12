@@ -1,10 +1,28 @@
+"""
+Model per a la gestió d'aparcaments.
+
+Aquest mòdul conté les funcions per interactuar amb la base de dades en relació
+als aparcaments: cerca, filtratge avançat, detalls, favorits i càlcul de disponibilitat
+dinàmica basada en reserves existents.
+"""
+
 from models.db_connection import get_db_connection, get_new_connection
 from shared.serializers import serialize_row, serialize_rows
 import math
 from datetime import datetime, timedelta
 
 def enrich_records_with_photos(records):
-    """Enriqueix una llista de registres d'aparcament amb la URL de la seva primera foto."""
+    """
+    Enriqueix una llista de registres d'aparcament amb la URL de la seva primera foto.
+    
+    Busca la foto amb l'ordre més baix (ordre 1) per a cada aparcament proporcionat.
+    
+    Args:
+        records (list|dict): Una llista de diccionaris o un diccionari individual d'aparcament.
+        
+    Returns:
+        list|dict: Els registres originals amb el camp 'foto_principal' afegit.
+    """
     if not records:
         return records
     
@@ -16,12 +34,11 @@ def enrich_records_with_photos(records):
     ids = [item['id'] for item in items if 'id' in item and item.get('id')]
     if not ids:
         return records
-        
+    
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
     try:
         # Aquesta subquery busca la URL de la primera foto per a cada ID d'aparcament
-        # Es basa en l'ordre i després en l'ID per consistència
         placeholders = ','.join(['%s'] * len(ids))
         query = f"""
             SELECT f.aparcament_id, f.url
@@ -50,14 +67,17 @@ def enrich_records_with_photos(records):
         conn.close()
 
 
-
 def get_all_aparcaments():
-    """Obté tots els aparcaments de la base de dades"""
+    """
+    Obté tots els aparcaments de la base de dades utilitzant el procediment 'sp_llistar_aparcaments'.
+    
+    Returns:
+        list: Llista de diccionaris amb la informació enriquida dels aparcaments.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # Procedure equivalent: sp_llistar_aparcaments(limit, offset)
         cursor.callproc('sp_llistar_aparcaments', [1000, 0])
         aparcaments = []
         for result in cursor.stored_results():
@@ -70,40 +90,39 @@ def get_all_aparcaments():
 
 
 def get_aparcament_by_id(aparcament_id):
-    """Obté un aparcament per ID amb les seves fotos i valoracions"""
+    """
+    Obté la informació detallada d'un aparcament, incloent totes les seves fotos i valoracions.
+    
+    Args:
+        aparcament_id (int): ID de l'aparcament.
+        
+    Returns:
+        dict|None: Dades completes de l'aparcament o None si no es troba.
+    """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # Procedure equivalent: sp_obtenir_aparcament_detall(aparcament_id)
         cursor.callproc('sp_obtenir_aparcament_detall', [aparcament_id])
 
         aparcament = None
         fotos = []
         valoracions = []
 
-        # Iterar sobre tots els result sets retornats pel procedure
-        # Es fa fetchall() a cada result set per deixar la connexió neta
         for idx, result in enumerate(cursor.stored_results()):
             if idx == 0:
-                # Primer result set: Dades de l'aparcament (una sola fila)
                 rows = result.fetchall()
                 aparcament = rows[0] if rows else None
             elif idx == 1:
-                # Segon result set: Fotografies
                 fotos = result.fetchall()
             elif idx == 2:
-                # Tercer result set: Valoracions recents
                 valoracions = result.fetchall()
             else:
-                # Consumir qualsevol result set addicional inesperat
                 result.fetchall()
 
-        # Si no es troba, retorna None
         if aparcament is None:
             return None
 
-        # Serialitzar les dades i afegir les llistes de fotos i valoracions
         resultat = serialize_row(aparcament)
         resultat['fotos'] = serialize_rows(fotos)
         resultat['valoracions'] = serialize_rows(valoracions)
@@ -116,17 +135,24 @@ def get_aparcament_by_id(aparcament_id):
 
 def get_aparcaments_by_filters(filters):
     """
-    Cerca aparcaments segons filtres especificats
+    Realitza una cerca avançada d'aparcaments aplicant múltiples filtres dinàmics.
+    
+    Suporta dos camins d'execució:
+    1. Procediment emmagatzemat (sp_cercar_aparcaments) per a filtres bàsics.
+    2. Consulta SQL manual per a filtres avançats (tarifes, disponibilitat temporal, valoració mitjana, radi geogràfic).
 
-    Retorna un dict amb:
-    - total: Nombre total de resultats
-    - resultats: Array d'aparcaments filtrats
-    - paginacio: Info de paginació
+    Args:
+        filters (dict): Diccionari amb els paràmetres de cerca (ciutat, tipus, dates, lat/lon, etc.).
+        
+    Returns:
+        dict: Resultats paginats amb el total de coincidències i metadades.
+        
+    Raises:
+        ValueError: Si els valors dels filtres de valoració o coordenades són fora de rang.
     """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Si només s'usen filtres compatibles, delegar al procedure
     procedure_supported_filters = {
         'ciutat', 'tipus', 'accessibilitat', 'carrega_electrica',
         'latitud', 'longitud', 'limite', 'offset'
@@ -136,7 +162,6 @@ def get_aparcaments_by_filters(filters):
         if value is not None and key not in procedure_supported_filters
     }
 
-    # Forçar consulta manual si hi ha disponibilitat o dates per fer el càlcul dinàmic
     if filters.get('disponibilitat') or filters.get('data_entrada') or filters.get('data_sortida'):
         unsupported_filters.add('dynamic_availability')
 
@@ -149,8 +174,6 @@ def get_aparcaments_by_filters(filters):
         if offset < 0:
             offset = 0
 
-        # Compatibilitat: hi ha entorns amb sp_cercar_aparcaments de 8 args
-        # (sense videovigilancia/obert_24h) i d'altres amb 10 args.
         try:
             cursor.callproc('sp_cercar_aparcaments', [
                 filters.get('ciutat'),
@@ -184,32 +207,26 @@ def get_aparcaments_by_filters(filters):
             cursor.close()
             conn.close()
 
-    # ── Camí de query manual (filtres avançats) ──────────────────────────────
+    # Camí de consulta avançada
     try:
-        # Construcció de la query base usant la vista per incloure valoracions
         query = "SELECT * FROM vista_aparcaments_complet WHERE estat = 'actiu'"
         params = []
 
-        # Filtre per ciutat
         if filters.get('ciutat'):
             query += " AND ciutat LIKE %s"
             params.append(f"%{filters['ciutat']}%")
 
-        # Filtre per tipus (suporta múltiples valors separats per coma)
         if filters.get('tipus'):
             tipus_values = filters['tipus'].split(',')
             valid_tipus = ['carrer', 'cobert', 'aire_lliure',
                            'subterrani', 'parking_public', 'parking_privat']
-            
             for t in tipus_values:
                 if t not in valid_tipus:
                     raise ValueError(f"Tipus invàlid: {t}")
-            
             placeholders = ', '.join(['%s'] * len(tipus_values))
             query += f" AND tipus IN ({placeholders})"
             params.extend(tipus_values)
 
-        # Filtres per tarifa per hora
         if filters.get('tarifa_hora_min') is not None:
             query += " AND tarifa_hora >= %s"
             params.append(filters['tarifa_hora_min'])
@@ -218,7 +235,6 @@ def get_aparcaments_by_filters(filters):
             query += " AND tarifa_hora <= %s"
             params.append(filters['tarifa_hora_max'])
 
-        # Filtres per tarifa per dia
         if filters.get('tarifa_dia_min') is not None:
             query += " AND tarifa_dia >= %s"
             params.append(filters['tarifa_dia_min'])
@@ -227,45 +243,35 @@ def get_aparcaments_by_filters(filters):
             query += " AND tarifa_dia <= %s"
             params.append(filters['tarifa_dia_max'])
 
-        # Filtre d'accessibilitat
         if filters.get('accessibilitat') is not None:
             query += " AND accessibilitat = %s"
             params.append(filters['accessibilitat'])
 
-        # Filtre de càrrega elèctrica
         if filters.get('carrega_electrica') is not None:
             query += " AND carrega_electrica = %s"
             params.append(filters['carrega_electrica'])
 
-        # Filtre de videovigilancia
         if filters.get('videovigilancia') is not None:
             query += " AND videovigilancia = %s"
             params.append(filters['videovigilancia'])
 
-        # Filtre de obert 24 hores
         if filters.get('obert_24h') is not None:
             query += " AND obert_24h = %s"
             params.append(filters['obert_24h'])
 
-        # Filtre de disponibilitat dinàmica (Basat en reserves)
+        # Filtre de disponibilitat dinàmica
         if filters.get('disponibilitat') or filters.get('data_entrada') or filters.get('data_sortida'):
             data_entrada = filters.get('data_entrada')
             data_sortida = filters.get('data_sortida')
             
-            # Si falten les dues dates, usem ara -> ara + 2h
             if not data_entrada and not data_sortida:
                 now = datetime.now()
-                # Arrodonir a 30 min superiors
                 now = now.replace(minute=(now.minute // 30) * 30, second=0, microsecond=0)
                 data_entrada = now.strftime('%Y-%m-%d %H:%M')
                 data_sortida = (now + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
-            # Si en falta només una, posem un default raonable per l'altra
             elif not data_entrada:
-                # Entrada = sortida - 2h (o ara si sortida és molt propera)
-                # Per simplicitat usem ara
                 data_entrada = datetime.now().strftime('%Y-%m-%d %H:%M')
             elif not data_sortida:
-                # Sortida = entrada + 2h
                 try:
                     dt_in = datetime.strptime(data_entrada, '%Y-%m-%d %H:%M:%S')
                 except ValueError:
@@ -278,10 +284,7 @@ def get_aparcaments_by_filters(filters):
             disp = filters.get('disponibilitat', [])
             if isinstance(disp, str): disp = [disp]
             
-            # Només apliquem el filtre restrictiu si s'ha marcat explícitament "disponible" 
-            # o si l'usuari ha posat dates al cercador
             if 'disponible' in disp or filters.get('data_entrada') or filters.get('data_sortida'):
-                # 1. Excloure per reserves (dinàmic)
                 query += """
                 AND id NOT IN (
                     SELECT r.aparcament_id
@@ -295,25 +298,20 @@ def get_aparcaments_by_filters(filters):
                 """
                 params.extend([data_entrada, data_sortida])
 
-                # 2. Excloure si està estàticament ple ARA (només si l'interval inclou "ara")
                 try:
-                    # Intentem parsejar per comparar com a datetime objectes, és més segur
                     fmt = '%Y-%m-%d %H:%M:%S' if len(data_entrada) > 16 else '%Y-%m-%d %H:%M'
                     dt_in = datetime.strptime(data_entrada, fmt)
                     fmt_out = '%Y-%m-%d %H:%M:%S' if len(data_sortida) > 16 else '%Y-%m-%d %H:%M'
                     dt_out = datetime.strptime(data_sortida, fmt_out)
                     now = datetime.now()
-                    
                     if dt_in <= now <= dt_out:
                         query += " AND places_disponibles > 0"
                 except Exception:
-                    # Fallback a comparació de strings si el format és inesperat
                     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     if data_entrada <= now_str <= data_sortida:
                         query += " AND places_disponibles > 0"
             
             elif 'ocupat' in disp:
-                # Cas contrari: mostrar només els plens
                 query += """
                 AND id IN (
                     SELECT r.aparcament_id
@@ -327,31 +325,23 @@ def get_aparcaments_by_filters(filters):
                 """
                 params.extend([data_entrada, data_sortida])
 
-        # Filtre d'altura mínima
         if filters.get('altura_min') is not None:
             query += " AND (altura_maxima IS NULL OR altura_maxima >= %s)"
             params.append(filters['altura_min'])
 
-        # Filtre de valoració mínima
         if filters.get('valoracio_min') is not None:
             if filters['valoracio_min'] < 0 or filters['valoracio_min'] > 5:
                 raise ValueError("Valoració mínima ha de ser entre 0 i 5")
             query += " AND valoracio_mitjana >= %s"
             params.append(filters['valoracio_min'])
 
-        # Filtre de proximitat geogràfica (radi en km)
         if filters.get('latitud') is not None and filters.get('longitud') is not None:
             lat = filters['latitud']
             lon = filters['longitud']
             radi_km = filters.get('radi_km', 10)
-
-            # Validar coordenades
-            if lat < -90 or lat > 90:
-                raise ValueError("Latitud ha de ser entre -90 i 90")
-            if lon < -180 or lon > 180:
-                raise ValueError("Longitud ha de ser entre -180 i 180")
-            if radi_km <= 0:
-                raise ValueError("Radi ha de ser positiu")
+            if lat < -90 or lat > 90: raise ValueError("Latitud ha de ser entre -90 i 90")
+            if lon < -180 or lon > 180: raise ValueError("Longitud ha de ser entre -180 i 180")
+            if radi_km <= 0: raise ValueError("Radi ha de ser positiu")
 
             query += """
             AND (
@@ -364,30 +354,23 @@ def get_aparcaments_by_filters(filters):
             """
             params.extend([lat, lat, lon, radi_km])
 
-        # Construir la query de count amb els mateixos filtres
-        cursor.execute(query.replace("SELECT * FROM",
-                       "SELECT COUNT(*) as total FROM"), params)
+        # Query de recompte
+        cursor.execute(query.replace("SELECT * FROM", "SELECT COUNT(*) as total FROM"), params)
         total_result = cursor.fetchone()
         total = total_result['total'] if total_result else 0
 
-        # Afegir paginació i ordenació
         limite = filters.get('limite', 20)
         offset = filters.get('offset', 0)
-
-        if limite <= 0 or limite > 100:
-            limite = 20
-        if offset < 0:
-            offset = 0
+        if limite <= 0 or limite > 100: limite = 20
+        if offset < 0: offset = 0
 
         query += " ORDER BY valoracio_mitjana DESC, id ASC"
         query += " LIMIT %s OFFSET %s"
         params.extend([limite, offset])
 
-        # Executar la query
         cursor.execute(query, params)
         aparcaments = cursor.fetchall()
 
-        # Retornar resultats amb metadades de paginació
         return {
             'total': total,
             'resultats': enrich_records_with_photos(serialize_rows(aparcaments)),
@@ -398,61 +381,59 @@ def get_aparcaments_by_filters(filters):
                 'total_pagines': math.ceil(total / limite) if limite > 0 else 1
             }
         }
-
     finally:
         cursor.close()
         conn.close()
 
 
 def add_user_favorite_parking(usuari_id, aparcament_id):
-    """Afegeix un aparcament a favorits per un usuari."""
+    """
+    Afegeix un aparcament a la llista de favorits d'un usuari.
+    
+    Args:
+        usuari_id (int): ID de l'usuari.
+        aparcament_id (int): ID de l'aparcament.
+        
+    Returns:
+        dict: Estat de l'operació {'ok': True}.
+    """
     conn = get_new_connection() or get_db_connection()
     cursor = conn.cursor()
-
     try:
         proc_args = [usuari_id, aparcament_id, None, None]
         result_args = cursor.callproc('sp_afegir_aparcament_favorit', proc_args)
-        # Consumim qualsevol result set pendent per deixar la connexió neta.
-        for result in cursor.stored_results():
-            result.fetchall()
+        for result in cursor.stored_results(): result.fetchall()
         conn.commit()
-
-        resultat = bool(result_args[2])
-        error_msg = result_args[3]
-
-        if error_msg:
-            raise ValueError(error_msg)
-
-        return {'ok': resultat}
+        if result_args[3]: raise ValueError(result_args[3])
+        return {'ok': bool(result_args[2])}
     finally:
         cursor.close()
         conn.close()
 
 
 def remove_user_favorite_parking(usuari_id, aparcament_id):
-    """Elimina un aparcament de favorits per un usuari."""
+    """
+    Elimina un aparcament dels favorits d'un usuari.
+    
+    Args:
+        usuari_id (int): ID de l'usuari.
+        aparcament_id (int): ID de l'aparcament.
+        
+    Returns:
+        dict: Resum de l'eliminació.
+    """
     conn = get_new_connection() or get_db_connection()
     cursor = conn.cursor()
-
     try:
         proc_args = [usuari_id, aparcament_id, None, None, None]
         result_args = cursor.callproc('sp_eliminar_aparcament_favorit', proc_args)
-        # Consumim qualsevol result set pendent per deixar la connexió neta.
-        for result in cursor.stored_results():
-            result.fetchall()
+        for result in cursor.stored_results(): result.fetchall()
         conn.commit()
-
-        resultat = bool(result_args[2])
-        files_afectades = int(result_args[3] or 0)
-        error_msg = result_args[4]
-
-        if error_msg:
-            raise ValueError(error_msg)
-
+        if result_args[4]: raise ValueError(result_args[4])
         return {
-            'ok': resultat,
-            'eliminat': files_afectades > 0,
-            'files_afectades': files_afectades,
+            'ok': bool(result_args[2]),
+            'eliminat': int(result_args[3] or 0) > 0,
+            'files_afectades': int(result_args[3] or 0),
         }
     finally:
         cursor.close()
@@ -460,18 +441,25 @@ def remove_user_favorite_parking(usuari_id, aparcament_id):
 
 
 def get_user_favorite_parkings(usuari_id, limit=1000, offset=0):
-    """Llista els aparcaments favorits d'un usuari."""
+    """
+    Llista els aparcaments favorits de l'usuari.
+    
+    Args:
+        usuari_id (int): ID de l'usuari.
+        limit (int): Límit de resultats.
+        offset (int): Paginació.
+        
+    Returns:
+        list: Llista d'aparcaments favorits enriquida.
+    """
     conn = get_new_connection() or get_db_connection()
     cursor = conn.cursor(dictionary=True)
-
     try:
         cursor.callproc('sp_llistar_aparcaments_favorits_usuari', [usuari_id, limit, offset])
         favorits = []
         for result in cursor.stored_results():
             rows = result.fetchall()
-            if rows:
-                favorits.extend(rows)
-
+            if rows: favorits.extend(rows)
         return enrich_records_with_photos(serialize_rows(favorits))
     finally:
         cursor.close()
@@ -480,22 +468,18 @@ def get_user_favorite_parkings(usuari_id, limit=1000, offset=0):
 
 def get_places_disponibles_per_franja(aparcament_id, data_entrada, data_sortida):
     """
-    Calcula les places disponibles d'un aparcament per una franja horària concreta.
-
-    Compta quantes reserves actives (confirmada o pendent) se solapen amb l'interval
-    [data_entrada, data_sortida] i les resta de la capacitat total.
-
-    Paràmetres:
-    - aparcament_id: ID de l'aparcament
-    - data_entrada: datetime d'inici de la franja
-    - data_sortida: datetime de fi de la franja
-
-    Retorna:
-    - dict amb capacitat_total, reserves_actives i places_lliures
+    Calcula dinàmicament la disponibilitat de places per a una franja horària.
+    
+    Args:
+        aparcament_id (int): ID de l'aparcament.
+        data_entrada (str): Inici de l'interval.
+        data_sortida (str): Fi de l'interval.
+        
+    Returns:
+        dict|None: Resum de places lliures i capacitat.
     """
     conn = get_new_connection()
     cursor = conn.cursor(dictionary=True)
-
     try:
         query = """
             SELECT
@@ -512,10 +496,7 @@ def get_places_disponibles_per_franja(aparcament_id, data_entrada, data_sortida)
         """
         cursor.execute(query, (data_sortida, data_entrada, aparcament_id))
         row = cursor.fetchone()
-
-        if not row:
-            return None
-
+        if not row: return None
         return {
             'capacitat_total': int(row['capacitat_total'] or 0),
             'reserves_actives': int(row['reserves_actives'] or 0),
@@ -524,3 +505,5 @@ def get_places_disponibles_per_franja(aparcament_id, data_entrada, data_sortida)
     finally:
         cursor.close()
         conn.close()
+
+

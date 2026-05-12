@@ -1,4 +1,10 @@
-from flask import jsonify, request, send_from_directory
+"""
+Controlador per a la gestió de valoracions d'aparcaments.
+
+Gestiona la creació, consulta i actualització de ressenyes d'usuaris.
+Inclou processament d'imatges via Cloudinary (amb fallback Pillow local)
+i serveix les imatges optimitzades des del directori storage/valoracions.
+"""
 import os
 import uuid
 import hashlib
@@ -24,9 +30,17 @@ logger = logging.getLogger(__name__)
 
 def _process_valoracio_image(file_obj):
     """
-    Optimitza una imatge de valoració usant Cloudinary.
-    La puja, la descarrega optimitzada (webp, auto quality) i la guarda localment.
-    Si falla Cloudinary, usa Pillow localment com a fallback.
+    Optimitza i desa una imatge de valoració en format WebP.
+
+    Puja la imatge a Cloudinary per aplicar transformació q_auto + f_webp,
+    la descarrega i la desa localment a storage/valoracions/. Si Cloudinary
+    falla, usa Pillow com a fallback per optimitzar localment.
+
+    Args:
+        file_obj (FileStorage): Objecte fitxer de la petició multipart.
+
+    Returns:
+        str|None: Nom del fitxer WebP desat localment, o None si falla tot el procés.
     """
     if not file_obj or not file_obj.filename:
         return None
@@ -93,7 +107,14 @@ def _process_valoracio_image(file_obj):
 
 def serve_valoracio_photo(filename):
     """
-    Serveix una imatge de valoració des del directori storage/valoracions
+    GET /api/valoracions/foto/<filename> - Serveix una imatge de valoració.
+
+    Args:
+        filename (str): Nom del fitxer WebP dins del directori storage/valoracions.
+
+    Returns:
+        Response: Contingut de la imatge amb el content-type correcte.
+        JSON 404: Si la imatge no existeix al directori.
     """
     try:
         # Ruta absoluta al directori de valoracions
@@ -110,8 +131,21 @@ from models.valoracio_model import add_valoracio
 from controllers.aparcament_controller import _get_authenticated_user_id
 def update_valoracio(valoracio_id, puntuacio, comentari=None):
     """
-    Actualitza una valoració existent.
-    Verifica que l'usuari autenticat sigui el propietari de la valoració.
+    Actualitza la puntuació i el comentari d'una valoració existent.
+
+    Comprova que l'usuari autenticat via JWT és el propietari de la valoració
+    abans d'aplicar cap canvi.
+
+    Args:
+        valoracio_id (int): ID de la valoració a modificar.
+        puntuacio (int): Nova puntuació (1-5).
+        comentari (str|None): Nou text del comentari (opcional).
+
+    Returns:
+        JSON 200: Confirmació de l'actualització.
+        JSON 401: Si el JWT falta o és invàlid.
+        JSON 403: Si l'usuari no és el propietari de la valoració.
+        JSON 404: Si la valoració no existeix.
     """
     try:
         usuari_id = _get_authenticated_user_id()
@@ -153,7 +187,25 @@ def update_valoracio(valoracio_id, puntuacio, comentari=None):
 
 def create_valoracio(aparcament_id):
     """
-    Controlador per crear una nova valoració per a un aparcament.
+    POST /api/aparcaments/<id>/valoracions - Crea una nova valoració.
+
+    Accepta tant peticions multipart/form-data (amb imatges) com JSON pur.
+    Processa un màxim de 3 imatges adjuntes i les desa en WebP optimitzat.
+
+    Args:
+        aparcament_id (int|str): ID de l'aparcament a valorar (de l'URL).
+
+    Body (multipart o JSON):
+        puntuacio (int): Puntuació entre 1 i 5 (obligatori).
+        comentari (str|None): Text de la ressenya (opcional).
+        aspectes_valorats (list|None): Aspectes seleccionats en JSON (opcional).
+        fotos_url[] (File[]): Fins a 3 imatges adjuntes (opcional, només multipart).
+
+    Returns:
+        JSON 201: ID de la valoració creada.
+        JSON 400: Si la puntuació falta, està fora de rang o l'ID d'aparcament és invàlid.
+        JSON 401: Si el JWT falta o és invàlid.
+        JSON 500: Error intern del servidor.
     """
     try:
         import os
@@ -226,8 +278,24 @@ def create_valoracio(aparcament_id):
 
 def update_user_valoracio(aparcament_id):
     """
-    Actualitza la valoració d'un usuari per a un aparcament existent.
-    Busca la valoració del usuari i la actualitza.
+    PUT /api/aparcaments/<id>/valoracions - Actualitza la valoració de l'usuari autenticat.
+
+    Cerca la valoració existent de l'usuari per a l'aparcament i la modifica.
+    Delega l'actualització efectiva a la funció `update_valoracio`.
+
+    Args:
+        aparcament_id (int|str): ID de l'aparcament (de l'URL).
+
+    Body JSON:
+        puntuacio (int): Nova puntuació entre 1 i 5 (obligatori).
+        comentari (str|None): Nou comentari (opcional).
+
+    Returns:
+        JSON 200: Confirmació de l'actualització.
+        JSON 400: Si la puntuació és invàlida o el cos no és JSON.
+        JSON 401: Si el JWT falta o és invàlid.
+        JSON 404: Si l'usuari no ha valorat previàment aquest aparcament.
+        JSON 500: Error intern del servidor.
     """
     try:
         if not request.is_json:

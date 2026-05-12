@@ -1,15 +1,26 @@
 """
-estadistiques_model.py
-Model per obtenir estadístiques d'un usuari per al component de perfil.
-Usa connexions noves per a cada crida per garantir thread-safety.
+Model per a la generació d'estadístiques i KPIs.
+
+Aquest mòdul conté les funcions per calcular mètriques d'ús per a l'usuari:
+resums de reserves, despesa mensual, distribucions de tipus, rànquings d'aparcaments
+i progrés de gamificació. Està dissenyat per alimentar el panell de perfil de l'usuari.
 """
+
 from models.db_connection import get_new_connection
 from datetime import datetime
 from decimal import Decimal
 
 
 def serialize_value(value):
-    """Converteix tipus no serialitzables a formats JSON compatibles."""
+    """
+    Converteix tipus de dades no serialitzables a formats compatibles amb JSON.
+    
+    Args:
+        value (Any): El valor a serialitzar.
+        
+    Returns:
+        Any: El valor convertit o l'original.
+    """
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, Decimal):
@@ -19,7 +30,19 @@ def serialize_value(value):
 
 def get_kpis_usuari(usuari_id):
     """
-    Retorna les mètriques principals de l'usuari.
+    Calcula els indicadors clau de rendiment (KPIs) per a un usuari.
+    
+    Inclou el total de reserves, despesa acumulada, hores aparcades i tendències
+    comparatives respecte al mes anterior.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        
+    Returns:
+        dict: Diccionari amb mètriques ('total_reserves', 'reserves_trend', 'despesa_trend', etc.).
+        
+    Raises:
+        Exception: Si no es pot connectar a la base de dades.
     """
     conn = get_new_connection()
     if not conn:
@@ -75,7 +98,7 @@ def get_kpis_usuari(usuari_id):
 
         # Calcul de tendències (delta respecte al mes anterior)
         reserves_trend = int(mes_actual['reserves_mes']) - int(mes_anterior['reserves_mes'])
-        despesa_trend = float(mes_actual['despesa_mes']) - float(mes_anterior['despesa_mes'])
+        despesa_trend = float(mes_actual['despesa_mes']) - float(mes_anterior['reserves_mes'])
 
         return {
             'total_reserves': int(kpis['total_reserves']),
@@ -97,7 +120,14 @@ def get_kpis_usuari(usuari_id):
 
 def get_despesa_mensual(usuari_id, mesos=8):
     """
-    Retorna la despesa mensual de les últimes `mesos` mesos (reserves completades).
+    Retorna la sèrie històrica de despesa mensual per a gràfics.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        mesos (int): Nombre de mesos a recuperar cap enrere.
+        
+    Returns:
+        list: Llista de diccionaris amb etiquetes de mes i totals.
     """
     conn = get_new_connection()
     if not conn:
@@ -107,7 +137,7 @@ def get_despesa_mensual(usuari_id, mesos=8):
     try:
         cursor.execute("""
             SELECT
-                DATE_FORMAT(data_entrada, '%b %Y') AS mes_label,
+                DATE_FORMAT(data_entrada, '%%b %%Y') AS mes_label,
                 YEAR(data_entrada) AS year,
                 MONTH(data_entrada) AS month,
                 COALESCE(SUM(preu_total), 0) AS total
@@ -115,7 +145,7 @@ def get_despesa_mensual(usuari_id, mesos=8):
             WHERE usuari_id = %s
               AND estat = 'completada'
               AND data_entrada >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
-            GROUP BY YEAR(data_entrada), MONTH(data_entrada), DATE_FORMAT(data_entrada, '%b %Y')
+            GROUP BY YEAR(data_entrada), MONTH(data_entrada), DATE_FORMAT(data_entrada, '%%b %%Y')
             ORDER BY year ASC, month ASC
         """, (usuari_id, mesos))
 
@@ -136,7 +166,13 @@ def get_despesa_mensual(usuari_id, mesos=8):
 
 def get_distribucio_tipus_aparcament(usuari_id):
     """
-    Retorna la distribució dels tipus d'aparcament usats per l'usuari.
+    Calcula el percentatge d'ús de cada tipus d'aparcament (públic, privat, etc.).
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        
+    Returns:
+        list: Llista amb el recompte i percentatge per tipus.
     """
     conn = get_new_connection()
     if not conn:
@@ -173,7 +209,13 @@ def get_distribucio_tipus_aparcament(usuari_id):
 
 def get_reserves_per_estat(usuari_id):
     """
-    Retorna el recompte de reserves agrupades per estat.
+    Retorna el resum de reserves segons el seu estat actual.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        
+    Returns:
+        list: Recompte per estat (confirmada, cancelada, etc.).
     """
     conn = get_new_connection()
     if not conn:
@@ -197,7 +239,13 @@ def get_reserves_per_estat(usuari_id):
 
 def get_contribucions_per_tipus(usuari_id):
     """
-    Retorna el recompte de contribucions de l'usuari per tipus i estat de validació.
+    Obté les estadístiques de contribucions de l'usuari.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        
+    Returns:
+        list: Recompte per tipus de contribució (lliure, ocupat).
     """
     conn = get_new_connection()
     if not conn:
@@ -230,7 +278,13 @@ def get_contribucions_per_tipus(usuari_id):
 
 def get_reserves_per_dia_setmana(usuari_id):
     """
-    Retorna el recompte de reserves per dia de la setmana (0=Dl…6=Dg).
+    Calcula la freqüència d'ús dels aparcaments segons el dia de la setmana.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        
+    Returns:
+        list: Llista de 7 elements amb el recompte per dia (Dl-Dg).
     """
     conn = get_new_connection()
     if not conn:
@@ -263,7 +317,14 @@ def get_reserves_per_dia_setmana(usuari_id):
 
 def get_top_aparcaments(usuari_id, limit=5):
     """
-    Retorna els aparcaments més usats per l'usuari.
+    Obté el rànquing dels aparcaments on l'usuari ha reservat més vegades.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        limit (int): Nombre de resultats a retornar.
+        
+    Returns:
+        list: Llista d'aparcaments amb nom, ciutat i nombre d'usos.
     """
     conn = get_new_connection()
     if not conn:
@@ -304,7 +365,13 @@ def get_top_aparcaments(usuari_id, limit=5):
 
 def get_dades_detall(usuari_id):
     """
-    Retorna dades de resum de detall.
+    Calcula mètriques mitjanes per usuari (despesa mitjana, durada mitjana, valoracions).
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        
+    Returns:
+        dict: Resum de mitjanes i totals de participació.
     """
     conn = get_new_connection()
     if not conn:
@@ -354,7 +421,13 @@ def get_dades_detall(usuari_id):
 
 def get_gamificacio_usuari(usuari_id):
     """
-    Retorna els punts de gamificació i les recompenses.
+    Obté dades de gamificació: punts actuals, insignies obtingudes i propera fita.
+
+    Args:
+        usuari_id (int): ID de l'usuari.
+        
+    Returns:
+        dict: Estat actual de gamificació i progrés percentual cap a la propera recompensa.
     """
     conn = get_new_connection()
     if not conn:
@@ -413,3 +486,4 @@ def get_gamificacio_usuari(usuari_id):
     finally:
         cursor.close()
         conn.close()
+
