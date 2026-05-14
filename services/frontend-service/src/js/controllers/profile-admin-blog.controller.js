@@ -3,6 +3,11 @@ import { pythonApi } from '../api.js';
 let articlesData = [];
 let modalInstance = null;
 
+/**
+ * renderBlogTable - Funció per a renderBlogTable.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function renderBlogTable() {
   const tbody = document.getElementById('admin-blog-tbody');
   if (!tbody) return;
@@ -75,6 +80,11 @@ function renderBlogTable() {
   });
 }
 
+/**
+ * loadArticles - Funció per a loadArticles.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function loadArticles() {
   const loading = document.getElementById('admin-blog-loading');
   const errorEl = document.getElementById('admin-blog-error');
@@ -103,6 +113,12 @@ async function loadArticles() {
   }
 }
 
+/**
+ * openArticleModal - Funció per a openArticleModal.
+ *
+ * @param {any} id - Paràmetre id
+ * @returns {any} Resultat de la funció.
+ */
 function openArticleModal(id = null) {
   const form = document.getElementById('blog-article-form');
   const modalEl = document.getElementById('blogArticleModal');
@@ -154,6 +170,12 @@ function openArticleModal(id = null) {
   modalInstance.show();
 }
 
+/**
+ * saveArticle - Funció per a saveArticle.
+ *
+ * @param {any} e - Paràmetre e
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function saveArticle(e) {
   e.preventDefault();
 
@@ -221,6 +243,12 @@ async function saveArticle(e) {
   }
 }
 
+/**
+ * deleteArticle - Funció per a deleteArticle.
+ *
+ * @param {any} id - Paràmetre id
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function deleteArticle(id) {
   try {
     const response = await pythonApi.delete(`/api/blog/${id}`);
@@ -234,6 +262,11 @@ async function deleteArticle(id) {
   }
 }
 
+/**
+ * initAdminBlog - Funció exportada per a initAdminBlog.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initAdminBlog() {
   const btnAdd = document.getElementById('btn-add-article');
   if (btnAdd) {

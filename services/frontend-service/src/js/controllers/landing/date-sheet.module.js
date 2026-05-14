@@ -1,3 +1,8 @@
+/**
+ * setupDateMiniSheet - Funció exportada per a setupDateMiniSheet.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function setupDateMiniSheet() {
   const openBtn = document.getElementById('mapDateSheetBtn');
   const sheet = document.getElementById('dateMiniSheet');

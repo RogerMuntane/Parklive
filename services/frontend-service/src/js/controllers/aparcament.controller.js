@@ -20,6 +20,11 @@ import {
  * Obté tots els aparcaments disponibles.
  * @returns {Promise<Array>}
  */
+/**
+ * llistarAparcaments - Funció exportada per a llistarAparcaments.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function llistarAparcaments() {
   try {
     const data = await pythonApi.get('/api/aparcaments');
@@ -41,6 +46,12 @@ export async function llistarAparcaments() {
  *   videovigilancia, obert_24h, valoracio_min, latitud, longitud,
  *   radi_km, limite, offset
  * @returns {Promise<Array>}
+ */
+/**
+ * cercarAparcaments - Funció exportada per a cercarAparcaments.
+ *
+ * @param {any} filtres - Paràmetre filtres
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function cercarAparcaments(filtres = {}) {
   try {
@@ -66,6 +77,12 @@ export async function cercarAparcaments(filtres = {}) {
  * @param {number|string} id
  * @returns {Promise<Object>}
  */
+/**
+ * obtenirAparcament - Funció exportada per a obtenirAparcament.
+ *
+ * @param {any} id - Paràmetre id
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function obtenirAparcament(id) {
   try {
     return await pythonApi.get(`/api/aparcaments/${id}`);
@@ -82,6 +99,13 @@ export async function obtenirAparcament(id) {
  *
  * @param {Array}       aparcaments – Array d'objectes aparcament
  * @param {HTMLElement} container   – Element DOM on injectar el HTML
+ */
+/**
+ * renderAparcaments - Funció exportada per a renderAparcaments.
+ *
+ * @param {any} aparcaments - Paràmetre aparcaments
+ * @param {any} container - Paràmetre container
+ * @returns {any} Resultat de la funció.
  */
 export function renderAparcaments(aparcaments, container) {
   if (!container) return;
@@ -125,6 +149,13 @@ export function renderAparcaments(aparcaments, container) {
  * @param {Object}      aparcament – Objecte amb totes les dades
  * @param {HTMLElement}  container  – Element DOM on injectar
  */
+/**
+ * renderDetallAparcament - Funció exportada per a renderDetallAparcament.
+ *
+ * @param {any} aparcament - Paràmetre aparcament
+ * @param {any} container - Paràmetre container
+ * @returns {any} Resultat de la funció.
+ */
 export function renderDetallAparcament(aparcament, container) {
   if (!container || !aparcament) return;
 
@@ -164,6 +195,11 @@ export function renderDetallAparcament(aparcament, container) {
 /**
  * Inicialitza la interfície d'aparcaments.
  * Detecta els elements de la pàgina i carrega les dades.
+ */
+/**
+ * initAparcaments - Funció exportada per a initAparcaments.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function initAparcaments() {
   const listContainer = document.querySelector('[data-role="aparcaments-list"]');
@@ -243,6 +279,12 @@ export async function initAparcaments() {
  * Connecta events de clic als botons "Veure detall" dins d'un contenidor.
  * @param {HTMLElement} container
  */
+/**
+ * attachDetailListeners - Funció per a attachDetailListeners.
+ *
+ * @param {any} container - Paràmetre container
+ * @returns {any} Resultat de la funció.
+ */
 function attachDetailListeners(container) {
   container.querySelectorAll('.btn-detall').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -257,6 +299,12 @@ function attachDetailListeners(container) {
  * Escapa caràcters HTML per evitar XSS.
  * @param {string} str
  * @returns {string}
+ */
+/**
+ * escapeHtml - Funció per a escapeHtml.
+ *
+ * @param {any} str - Paràmetre str
+ * @returns {any} Resultat de la funció.
  */
 function escapeHtml(str) {
   if (!str) return '';

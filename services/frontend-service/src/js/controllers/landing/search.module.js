@@ -24,11 +24,27 @@ const LOCATION_EXPANSION_RADII_KM = [5, 15, 40, 120, 300];
 const AVAIL_CONCURRENCY = 1;
 
 let userLocation = null;
+/**
+ * setUserLocationMarker - Funció per a setUserLocationMarker.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 let setUserLocationMarker = () => {};
+/**
+ * setSearchAnchor - Funció per a setSearchAnchor.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 let setSearchAnchor = () => {};
 let searchAnchorLocation = null;
 let hideParkingMarkerById = null;
 
+/**
+ * setUserLocation - Funció per a setUserLocation.
+ *
+ * @param {any} nextLocation - Paràmetre nextLocation
+ * @returns {any} Resultat de la funció.
+ */
 function setUserLocation(nextLocation) {
   if (
     nextLocation
@@ -50,6 +66,12 @@ function setUserLocation(nextLocation) {
   // NOTE: No toques searchAnchorLocation aquí tampoc.
 }
 
+/**
+ * updateSearchAnchor - Funció per a updateSearchAnchor.
+ *
+ * @param {any} nextLocation - Paràmetre nextLocation
+ * @returns {any} Resultat de la funció.
+ */
 function updateSearchAnchor(nextLocation) {
   if (
     nextLocation
@@ -66,6 +88,12 @@ function updateSearchAnchor(nextLocation) {
   searchAnchorLocation = null;
 }
 
+/**
+ * buildLocationLabelFromPhotonProperties - Funció per a buildLocationLabelFromPhotonProperties.
+ *
+ * @param {any} properties - Paràmetre properties
+ * @returns {any} Resultat de la funció.
+ */
 function buildLocationLabelFromPhotonProperties(properties = {}) {
   const parts = [
     properties.name,
@@ -77,10 +105,22 @@ function buildLocationLabelFromPhotonProperties(properties = {}) {
   return parts.join(', ');
 }
 
+/**
+ * normalizeQuery - Funció per a normalizeQuery.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function normalizeQuery(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+/**
+ * buildLocationLabelFromNominatim - Funció per a buildLocationLabelFromNominatim.
+ *
+ * @param {any} entry - Paràmetre entry
+ * @returns {any} Resultat de la funció.
+ */
 function buildLocationLabelFromNominatim(entry = {}) {
   const displayName = String(entry.display_name || '').trim();
   if (!displayName) return '';
@@ -94,6 +134,12 @@ function buildLocationLabelFromNominatim(entry = {}) {
   return chunks.join(', ');
 }
 
+/**
+ * geocodeWithNominatim - Funció per a geocodeWithNominatim.
+ *
+ * @param {any} query - Paràmetre query
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function geocodeWithNominatim(query) {
   const url = new URL(NOMINATIM_ENDPOINT);
   url.searchParams.set('format', 'jsonv2');
@@ -125,6 +171,12 @@ async function geocodeWithNominatim(query) {
   return { lat, lon };
 }
 
+/**
+ * geocodeWithPhoton - Funció per a geocodeWithPhoton.
+ *
+ * @param {any} query - Paràmetre query
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function geocodeWithPhoton(query) {
   const url = new URL(PHOTON_ENDPOINT);
   url.searchParams.set('q', query);
@@ -159,6 +211,13 @@ async function geocodeWithPhoton(query) {
   return { lat, lon };
 }
 
+/**
+ * fetchLocationSuggestions - Funció per a fetchLocationSuggestions.
+ *
+ * @param {any} query - Paràmetre query
+ * @param {any} signal - Paràmetre signal
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function fetchLocationSuggestions(query, signal) {
   const trimmedQuery = query.trim();
   if (!trimmedQuery || trimmedQuery.length < 1) return [];
@@ -235,6 +294,13 @@ async function fetchLocationSuggestions(query, signal) {
     .filter(Boolean);
 }
 
+/**
+ * scoreParkingSuggestion - Funció per a scoreParkingSuggestion.
+ *
+ * @param {any} item - Paràmetre item
+ * @param {any} loweredQuery - Paràmetre loweredQuery
+ * @returns {any} Resultat de la funció.
+ */
 function scoreParkingSuggestion(item, loweredQuery) {
   const name = normalizeQuery(item?.nom);
   const address = normalizeQuery(item?.adreca);
@@ -250,6 +316,12 @@ function scoreParkingSuggestion(item, loweredQuery) {
   return -1;
 }
 
+/**
+ * buildParkingSuggestionLabel - Funció per a buildParkingSuggestionLabel.
+ *
+ * @param {any} item - Paràmetre item
+ * @returns {any} Resultat de la funció.
+ */
 function buildParkingSuggestionLabel(item) {
   const name = String(item?.nom || 'Aparcament').trim();
   const city = String(item?.ciutat || '').trim();
@@ -257,6 +329,13 @@ function buildParkingSuggestionLabel(item) {
   return name;
 }
 
+/**
+ * buildParkingSuggestions - Funció per a buildParkingSuggestions.
+ *
+ * @param {any} query - Paràmetre query
+ * @param {any} parkingCatalog - Paràmetre parkingCatalog
+ * @returns {any} Resultat de la funció.
+ */
 function buildParkingSuggestions(query, parkingCatalog) {
   const loweredQuery = normalizeQuery(query);
   if (!loweredQuery || loweredQuery.length < SUGGESTIONS_MIN_QUERY_LENGTH) return [];
@@ -282,6 +361,13 @@ function buildParkingSuggestions(query, parkingCatalog) {
     .slice(0, PARKING_SUGGESTIONS_LIMIT);
 }
 
+/**
+ * mergeSuggestions - Funció per a mergeSuggestions.
+ *
+ * @param {any} locationItems - Paràmetre locationItems
+ * @param {any} parkingItems - Paràmetre parkingItems
+ * @returns {any} Resultat de la funció.
+ */
 function mergeSuggestions(locationItems, parkingItems) {
   const merged = [];
 
@@ -296,6 +382,12 @@ function mergeSuggestions(locationItems, parkingItems) {
   return merged.slice(0, SUGGESTIONS_TOTAL_LIMIT);
 }
 
+/**
+ * geocodeSearchLocation - Funció per a geocodeSearchLocation.
+ *
+ * @param {any} query - Paràmetre query
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function geocodeSearchLocation(query) {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) return null;
@@ -315,12 +407,24 @@ async function geocodeSearchLocation(query) {
   }
 }
 
+/**
+ * formatEuroPerHour - Funció per a formatEuroPerHour.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function formatEuroPerHour(value) {
   const amount = Number(value);
   if (!Number.isFinite(amount)) return '—';
   return `${amount.toFixed(2).replace('.', ',')} €/h`;
 }
 
+/**
+ * formatParkingType - Funció per a formatParkingType.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function formatParkingType(value) {
   const typeMap = {
     carrer: 'Carrer',
@@ -334,24 +438,50 @@ function formatParkingType(value) {
   return typeMap[value] || 'No indicat';
 }
 
+/**
+ * formatMaxHeight - Funció per a formatMaxHeight.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function formatMaxHeight(value) {
   const height = Number(value);
   if (!Number.isFinite(height) || height <= 0) return 'No indicada';
   return `${height.toFixed(2).replace('.', ',')} m`;
 }
 
+/**
+ * formatAvailabilitySummary - Funció per a formatAvailabilitySummary.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function formatAvailabilitySummary() {
   // No usem les dades de la BD (poden ser obsoletes).
   // Retornem un placeholder que serà omplert per enrichDisponibilitatAsync.
   return '<span class="spinner-border spinner-border-sm text-secondary opacity-50" role="status"></span> <small class="text-muted">Calculant...</small>';
 }
 
+/**
+ * formatSchedule - Funció per a formatSchedule.
+ *
+ * @param {any} open24h - Paràmetre open24h
+ * @param {any} openingTime - Paràmetre openingTime
+ * @param {any} closingTime - Paràmetre closingTime
+ * @returns {any} Resultat de la funció.
+ */
 function formatSchedule(open24h, openingTime, closingTime) {
   if (open24h) return '24 h';
   if (!openingTime || !closingTime) return 'No indicat';
   return `${String(openingTime).slice(0, 5)}-${String(closingTime).slice(0, 5)}`;
 }
 
+/**
+ * formatRatingSummary - Funció per a formatRatingSummary.
+ *
+ * @param {any} avgRating - Paràmetre avgRating
+ * @param {any} totalRatings - Paràmetre totalRatings
+ * @returns {any} Resultat de la funció.
+ */
 function formatRatingSummary(avgRating, totalRatings) {
   const avg = Number(avgRating);
   const count = Number(totalRatings);
@@ -363,6 +493,15 @@ function formatRatingSummary(avgRating, totalRatings) {
   return `${avg.toFixed(1).replace('.', ',')} (${count})`;
 }
 
+/**
+ * computeDistanceKm - Funció per a computeDistanceKm.
+ *
+ * @param {any} fromLat - Paràmetre fromLat
+ * @param {any} fromLon - Paràmetre fromLon
+ * @param {any} toLat - Paràmetre toLat
+ * @param {any} toLon - Paràmetre toLon
+ * @returns {any} Resultat de la funció.
+ */
 function computeDistanceKm(fromLat, fromLon, toLat, toLon) {
   const earthRadiusKm = 6371;
   const toRadians = (value) => (value * Math.PI) / 180;
@@ -380,6 +519,13 @@ function computeDistanceKm(fromLat, fromLon, toLat, toLon) {
   return earthRadiusKm * c;
 }
 
+/**
+ * normalizeParking - Funció per a normalizeParking.
+ *
+ * @param {any} raw - Paràmetre raw
+ * @param {any} origin - Paràmetre origin
+ * @returns {any} Resultat de la funció.
+ */
 function normalizeParking(raw, origin = null) {
   const lat = Number(raw.latitud);
   const lon = Number(raw.longitud);
@@ -444,12 +590,26 @@ function normalizeParking(raw, origin = null) {
   };
 }
 
+/**
+ * parsePositiveNumber - Funció per a parsePositiveNumber.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function parsePositiveNumber(value) {
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue) || numericValue <= 0) return null;
   return numericValue;
 }
 
+/**
+ * addRadiusParam - Funció per a addRadiusParam.
+ *
+ * @param {any} params - Paràmetre params
+ * @param {any} distanceRange - Paràmetre distanceRange
+ * @param {any} radiusOverrideKm - Paràmetre radiusOverrideKm
+ * @returns {any} Resultat de la funció.
+ */
 function addRadiusParam(params, distanceRange, radiusOverrideKm) {
   const overrideRadius = parsePositiveNumber(radiusOverrideKm);
   if (overrideRadius) {
@@ -466,6 +626,13 @@ function addRadiusParam(params, distanceRange, radiusOverrideKm) {
   return null;
 }
 
+/**
+ * addUserLocationParams - Funció per a addUserLocationParams.
+ *
+ * @param {any} params - Paràmetre params
+ * @param {any} forceSearchAnchor - Paràmetre forceSearchAnchor
+ * @returns {any} Resultat de la funció.
+ */
 function addUserLocationParams(params, forceSearchAnchor = false) {
   const anchor = forceSearchAnchor ? searchAnchorLocation : (searchAnchorLocation || userLocation);
   if (!anchor) {
@@ -477,6 +644,14 @@ function addUserLocationParams(params, forceSearchAnchor = false) {
   params.longitud = anchor.lon;
 }
 
+/**
+ * buildSearchParams - Funció per a buildSearchParams.
+ *
+ * @param {any} { ignoreCityFilter - Paràmetre { ignoreCityFilter
+ * @param {any} radiusOverrideKm - Paràmetre radiusOverrideKm
+ * @param {any} forceSearchAnchor - Paràmetre forceSearchAnchor
+ * @returns {any} Resultat de la funció.
+ */
 function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null, forceSearchAnchor = false } = {}) {
   const searchTerm = document.getElementById('mapSearchInput')?.value.trim() || '';
   const priceRange = document.getElementById('priceRange')?.value;
@@ -569,10 +744,21 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null, 
   return { params, searchTerm };
 }
 
+/**
+ * isFavoritesOnlyFilterEnabled - Funció per a isFavoritesOnlyFilterEnabled.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function isFavoritesOnlyFilterEnabled() {
   return document.getElementById('favoritesOnly')?.checked === true;
 }
 
+/**
+ * resolveSearchOrigin - Funció per a resolveSearchOrigin.
+ *
+ * @param {any} records - Paràmetre records
+ * @returns {any} Resultat de la funció.
+ */
 function resolveSearchOrigin(records) {
   const anchor = searchAnchorLocation || userLocation;
   if (anchor) {
@@ -592,6 +778,13 @@ function resolveSearchOrigin(records) {
   return null;
 }
 
+/**
+ * normalizeAndSortSpots - Funció per a normalizeAndSortSpots.
+ *
+ * @param {any} records - Paràmetre records
+ * @param {any} origin - Paràmetre origin
+ * @returns {any} Resultat de la funció.
+ */
 function normalizeAndSortSpots(records, origin) {
   return records
     .map((item) => normalizeParking(item, origin))
@@ -610,6 +803,12 @@ function normalizeAndSortSpots(records, origin) {
     });
 }
 
+/**
+ * resolveFavoritesState - Funció per a resolveFavoritesState.
+ *
+ * @param {any} favoritesOnly - Paràmetre favoritesOnly
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function resolveFavoritesState(favoritesOnly) {
   // Favorits: requereix estar autenticat I ser usuari premium
   const isLoggedIn = isAuthenticated();
@@ -646,11 +845,23 @@ async function resolveFavoritesState(favoritesOnly) {
   };
 }
 
+/**
+ * fetchRecordsByParams - Funció per a fetchRecordsByParams.
+ *
+ * @param {any} params - Paràmetre params
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function fetchRecordsByParams(params) {
   const response = await pythonApi.get('/api/aparcaments/cerca', params);
   return Array.isArray(response) ? response : response?.resultats || [];
 }
 
+/**
+ * fetchRecordsExpandingRadius - Funció per a fetchRecordsExpandingRadius.
+ *
+ * @param {any} ignoreCityFilter - Paràmetre ignoreCityFilter
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function fetchRecordsExpandingRadius(ignoreCityFilter) {
   for (const radiusKm of LOCATION_EXPANSION_RADII_KM) {
     const { params } = buildSearchParams({ ignoreCityFilter, radiusOverrideKm: radiusKm });
@@ -663,6 +874,12 @@ async function fetchRecordsExpandingRadius(ignoreCityFilter) {
   return [];
 }
 
+/**
+ * fallbackToTextSearch - Funció per a fallbackToTextSearch.
+ *
+ * @param {any} searchTerm - Paràmetre searchTerm
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function fallbackToTextSearch(searchTerm) {
   if (!searchTerm) return [];
 
@@ -683,6 +900,12 @@ async function fallbackToTextSearch(searchTerm) {
   }
 }
 
+/**
+ * fallbackToNearestSearch - Funció per a fallbackToNearestSearch.
+ *
+ * @param {any} origin - Paràmetre origin
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function fallbackToNearestSearch(origin) {
   if (!origin) return [];
 
@@ -711,6 +934,12 @@ async function fallbackToNearestSearch(origin) {
   }
 }
 
+/**
+ * escapeHtml - Funció per a escapeHtml.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function escapeHtml(value) {
   if (!value) return '';
   const div = document.createElement('div');
@@ -727,6 +956,12 @@ function escapeHtml(value) {
  * @param {Date} d
  * @returns {string}
  */
+/**
+ * toLocalDateTimeStr - Funció per a toLocalDateTimeStr.
+ *
+ * @param {any} d - Paràmetre d
+ * @returns {any} Resultat de la funció.
+ */
 function toLocalDateTimeStr(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return (
@@ -739,6 +974,11 @@ function toLocalDateTimeStr(d) {
  * Retorna [dataEntrada, dataSortida] per la consulta de disponibilitat.
  * Usa les dates del cercador si estan seleccionades; sinó ara → ara+2h.
  * @returns {[string, string]}
+ */
+/**
+ * getDisponibilitatFranja - Funció per a getDisponibilitatFranja.
+ *
+ * @returns {any} Resultat de la funció.
  */
 function getDisponibilitatFranja() {
   const entryDate = document.getElementById('entryDate')?.value;
@@ -765,6 +1005,12 @@ function getDisponibilitatFranja() {
  * i actualitza els elements [data-avail-spot-id] al DOM.
  *
  * @param {Array} spots - Spots normalitzats ja renderitzats
+ */
+/**
+ * enrichDisponibilitatAsync - Funció per a enrichDisponibilitatAsync.
+ *
+ * @param {any} spots - Paràmetre spots
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 async function enrichDisponibilitatAsync(spots) {
   if (!spots || spots.length === 0) return;
@@ -1032,6 +1278,14 @@ function renderResults({
   renderPagination(panel, { currentPage, totalPages, onChangePage });
 }
 
+/**
+ * fetchSearchResults - Funció per a fetchSearchResults.
+ *
+ * @param {any} { ignoreCityFilter - Paràmetre { ignoreCityFilter
+ * @param {any} expandLocationRadius - Paràmetre expandLocationRadius
+ * @param {any} viewportRadiusKm - Paràmetre viewportRadiusKm
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadius = false, viewportRadiusKm = null } = {}) {
   const forceSearchAnchor = Boolean(viewportRadiusKm);
   const { searchTerm } = buildSearchParams({ ignoreCityFilter, radiusOverrideKm: viewportRadiusKm, forceSearchAnchor });

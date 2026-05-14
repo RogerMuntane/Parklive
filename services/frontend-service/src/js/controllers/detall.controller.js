@@ -18,6 +18,12 @@ import { PHP_API_URL, PYTHON_API_URL } from '../config.js';
 /*  Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
+/**
+ * esc - Funció per a esc.
+ *
+ * @param {any} str - Paràmetre str
+ * @returns {any} Resultat de la funció.
+ */
 function esc(str) {
   if (!str) return '';
   const div = document.createElement('div');
@@ -25,6 +31,12 @@ function esc(str) {
   return div.innerHTML;
 }
 
+/**
+ * formatCurrency - Funció per a formatCurrency.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function formatCurrency(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return '—';
@@ -98,6 +110,12 @@ function setFeature(key, enabled) {
 /*  Renderització completa                                              */
 /* ------------------------------------------------------------------ */
 
+/**
+ * renderDetall - Funció per a renderDetall.
+ *
+ * @param {any} a - Paràmetre a
+ * @returns {any} Resultat de la funció.
+ */
 function renderDetall(a) {
   /* ── Hero ─────────────────────────────────────────────────────── */
   fill('nom', esc(a.nom || 'Aparcament'));
@@ -327,6 +345,12 @@ function renderDetall(a) {
  * @param {Date} d
  * @returns {string}
  */
+/**
+ * toLocalDateTimeString - Funció per a toLocalDateTimeString.
+ *
+ * @param {any} d - Paràmetre d
+ * @returns {any} Resultat de la funció.
+ */
 function toLocalDateTimeString(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return (
@@ -342,6 +366,12 @@ function toLocalDateTimeString(d) {
  * Utilitza la franja horària actual (ara → ara+2h) per defecte.
  *
  * @param {string|number} aparcamentId
+ */
+/**
+ * fetchAndUpdateDisponibilitat - Funció per a fetchAndUpdateDisponibilitat.
+ *
+ * @param {any} aparcamentId - Paràmetre aparcamentId
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 async function fetchAndUpdateDisponibilitat(aparcamentId) {
   try {
@@ -385,6 +415,12 @@ async function fetchAndUpdateDisponibilitat(aparcamentId) {
   }
 }
 
+/**
+ * initDetallFavoriteButton - Funció per a initDetallFavoriteButton.
+ *
+ * @param {any} aparcamentId - Paràmetre aparcamentId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function initDetallFavoriteButton(aparcamentId) {
   const favoriteBtn = document.querySelector('[data-detall="favorit-btn"]');
   const favoriteIcon = document.querySelector('[data-detall="favorit-icon"]');
@@ -583,17 +619,33 @@ function renderCarousel(fotos) {
 /*  Estat de càrrega / error                                            */
 /* ------------------------------------------------------------------ */
 
+/**
+ * showSkeleton - Funció per a showSkeleton.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function showSkeleton() {
   document.querySelector('[data-detall-state="loading"]').style.display = '';
   document.querySelector('[data-detall-state="content"]').style.display = 'none';
   document.querySelector('[data-detall-state="error"]').style.display = 'none';
 }
 
+/**
+ * showContent - Funció per a showContent.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function showContent() {
   document.querySelector('[data-detall-state="loading"]').style.display = 'none';
   document.querySelector('[data-detall-state="content"]').style.display = '';
 }
 
+/**
+ * showError - Funció per a showError.
+ *
+ * @param {any} msg - Paràmetre msg
+ * @returns {any} Resultat de la funció.
+ */
 function showError(msg = "No s'ha pogut carregar l'aparcament.") {
   document.querySelector('[data-detall-state="loading"]').style.display = 'none';
   document.querySelector('[data-detall-state="content"]').style.display = 'none';
@@ -607,6 +659,11 @@ function showError(msg = "No s'ha pogut carregar l'aparcament.") {
 /*  Inicialització pública                                              */
 /* ------------------------------------------------------------------ */
 
+/**
+ * initDetallAparcament - Funció exportada per a initDetallAparcament.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initDetallAparcament() {
   const id = getQueryParam('id');
 

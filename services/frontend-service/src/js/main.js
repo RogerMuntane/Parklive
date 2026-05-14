@@ -13,6 +13,11 @@
  * Busca tots els <div class="template-slot" data-template="ruta.html">
  * i hi injecta el HTML corresponent.
  */
+/**
+ * loadTemplates - Funció per a loadTemplates.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function loadTemplates() {
   const slots = document.querySelectorAll('.template-slot[data-template]');
 
@@ -39,17 +44,33 @@ async function loadTemplates() {
 
 /*  2. TEMA CLAR / FOSC                                                */
 
+/**
+ * getPreferredTheme - Funció per a getPreferredTheme.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function getPreferredTheme() {
   const storedTheme = localStorage.getItem('theme');
   if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+/**
+ * applyTheme - Funció per a applyTheme.
+ *
+ * @param {any} theme - Paràmetre theme
+ * @returns {any} Resultat de la funció.
+ */
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-bs-theme', theme);
   localStorage.setItem('theme', theme);
 }
 
+/**
+ * initThemeToggle - Funció per a initThemeToggle.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function initThemeToggle() {
   // Sempre aplicar el tema, encara que no hi hagi botons de toggle
   applyTheme(getPreferredTheme());
@@ -94,6 +115,11 @@ import { PHP_API_URL } from './config.js';
  * Comprova si l'usuari té la sessió iniciada.
  * - Si SÍ  → mostra icona logout (box-arrow-in-right) i tanca sessió al clic.
  * - Si NO  → mostra icona persona (person) i enllaça al dashboard/login.
+ */
+/**
+ * initAuthToggle - Funció per a initAuthToggle.
+ *
+ * @returns {any} Resultat de la funció.
  */
 function initAuthToggle() {
   const btn = document.querySelector('[data-role="auth-toggle"]');
@@ -205,6 +231,11 @@ function initAuthToggle() {
 /**
  * Actualitza el nom i el pla de l'usuari al sidebar si existeix.
  */
+/**
+ * initSidebarData - Funció per a initSidebarData.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function initSidebarData() {
   const nameEl = document.getElementById('sidebar-user-name');
   const planEl = document.getElementById('sidebar-user-plan');
@@ -289,6 +320,11 @@ const PROTECTED_PAGES = [
  * oculta el contingut i redirigeix a login.
  * Retorna `true` si cal bloquejar l'execució (no autenticat a pàgina protegida).
  */
+/**
+ * applyAuthGuard - Funció per a applyAuthGuard.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function applyAuthGuard() {
   const bodyClass = document.body.className;
   const isProtected = PROTECTED_PAGES.some((cls) => bodyClass.includes(cls));
@@ -312,6 +348,11 @@ function applyAuthGuard() {
  * Obté el rol de l'usuari de la sessió actual.
  * @returns {'admin'|'operador'|'premium'|'basic'|null}
  */
+/**
+ * getUserRole - Funció per a getUserRole.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function getUserRole() {
   try {
     const raw = sessionStorage.getItem('parklive_user_data');
@@ -328,6 +369,12 @@ function getUserRole() {
  * @param {string} requiredRole - Rol mínim requerit ('admin', 'operador', etc.)
  * @returns {boolean}
  */
+/**
+ * hasRole - Funció per a hasRole.
+ *
+ * @param {any} requiredRole - Paràmetre requiredRole
+ * @returns {any} Resultat de la funció.
+ */
 function hasRole(requiredRole) {
   const role = getUserRole();
   if (requiredRole === 'admin') return role === 'admin';
@@ -341,6 +388,11 @@ function hasRole(requiredRole) {
  * Toggle de visibilitat de contrasenyes.
  * Busca botons amb data-action="toggle-password" i alterna
  * el type del input adjacent entre "password" i "text".
+ */
+/**
+ * initPasswordToggles - Funció per a initPasswordToggles.
+ *
+ * @returns {any} Resultat de la funció.
  */
 function initPasswordToggles() {
   document.querySelectorAll('[data-action="toggle-password"]').forEach((btn) => {
@@ -366,6 +418,11 @@ function initPasswordToggles() {
  *
  * Utilitza import() dinàmic per carregar només el codi necessari
  * (code-splitting natiu sense bundler).
+ */
+/**
+ * initControllers - Funció per a initControllers.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 async function initControllers() {
   const bodyClass = document.body.className;

@@ -20,6 +20,12 @@ let paymentElementMounted = false;
  * @param {string} userId - ID de l'usuari.
  * @returns {Promise<Object|null>} Instància de Stripe.
  */
+/**
+ * initStripe - Funció exportada per a initStripe.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initStripe(userId) {
     if (stripeInstance) return stripeInstance;
 
@@ -40,6 +46,12 @@ export async function initStripe(userId) {
     return stripeInstance;
 }
 
+/**
+ * loadPaymentMethods - Funció exportada per a loadPaymentMethods.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function loadPaymentMethods(userId) {
     const container = document.getElementById('payment-methods-container');
     if (!container) return [];
@@ -69,6 +81,13 @@ export async function loadPaymentMethods(userId) {
  * @param {string} userId - ID de l'usuari.
  * @private
  */
+/**
+ * deleteCard - Funció per a deleteCard.
+ *
+ * @param {any} methodId - Paràmetre methodId
+ * @param {any} userId - Paràmetre userId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function deleteCard(methodId, userId) {
     try {
         const success = await stripeService.deleteStripeCard(methodId);
@@ -88,6 +107,12 @@ async function deleteCard(methodId, userId) {
  * Configura el botó i el modal per afegir noves targetes.
  * 
  * @param {string} userId - ID de l'usuari.
+ */
+/**
+ * initStripeButton - Funció exportada per a initStripeButton.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @returns {any} Resultat de la funció.
  */
 export function initStripeButton(userId) {
     const btnAdd = document.getElementById('btn-add-card');
@@ -179,6 +204,11 @@ export function initStripeButton(userId) {
  * a premium durant la sessió (sessionStorage estava desactualitzat).
  * @private
  */
+/**
+ * _updateSidebarForPremium - Funció per a _updateSidebarForPremium.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function _updateSidebarForPremium() {
     const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
     const manageBtn = document.querySelector('.sidebar-nav-item[data-section="manage"]');
@@ -193,6 +223,12 @@ function _updateSidebarForPremium() {
  * Carrega targetes per a la compra del pla.
  * 
  * @param {string} userId - ID de l'usuari.
+ */
+/**
+ * loadCardsForPlan - Funció exportada per a loadCardsForPlan.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function loadCardsForPlan(userId) {
     try {
@@ -211,6 +247,15 @@ export async function loadCardsForPlan(userId) {
  * @param {boolean} autorenovacio - Si s'activa l'autorenovació.
  * @param {string} planType - 'monthly' o 'annual'.
  * @returns {Promise<Object>} Resultat.
+ */
+/**
+ * createSubscription - Funció exportada per a createSubscription.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @param {any} paymentMethodId - Paràmetre paymentMethodId
+ * @param {any} autorenovacio - Paràmetre autorenovacio
+ * @param {any} planType - Paràmetre planType
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function createSubscription(userId, paymentMethodId, autorenovacio = true, planType = 'monthly') {
     try {
@@ -236,6 +281,13 @@ export async function createSubscription(userId, paymentMethodId, autorenovacio 
  * @param {boolean} autorenovacio - Nou estat.
  * @returns {Promise<Object>} Resultat.
  */
+/**
+ * updateSubscriptionAutorenewal - Funció exportada per a updateSubscriptionAutorenewal.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @param {any} autorenovacio - Paràmetre autorenovacio
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function updateSubscriptionAutorenewal(userId, autorenovacio) {
     try {
         await stripeService.updateStripeAutorenewal(userId, autorenovacio);
@@ -250,6 +302,13 @@ export async function updateSubscriptionAutorenewal(userId, autorenovacio) {
  * Actualitza el resum del pla i la secció de gestió.
  * 
  * @param {string} userId - ID de l'usuari.
+ */
+/**
+ * updatePlanSummary - Funció exportada per a updatePlanSummary.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @param {any} methods - Paràmetre methods
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function updatePlanSummary(userId, methods = null) {
     const summaryContainer = document.getElementById('payment-plan-summary');
@@ -384,6 +443,12 @@ export async function updatePlanSummary(userId, methods = null) {
  * Inicialitza la secció de pagaments.
  * 
  * @param {string} userId - ID de l'usuari.
+ */
+/**
+ * initProfilePaymentSection - Funció exportada per a initProfilePaymentSection.
+ *
+ * @param {any} userId - Paràmetre userId
+ * @returns {any} Resultat de la funció.
  */
 export function initProfilePaymentSection(userId) {
     loadPaymentMethods(userId);

@@ -15,6 +15,12 @@ import { crearReserva } from './reserves.controller.js';
 
 let aparcamentData = null;
 
+/**
+ * esc - Funció per a esc.
+ *
+ * @param {any} str - Paràmetre str
+ * @returns {any} Resultat de la funció.
+ */
 function esc(str) {
   if (!str) return '';
   const div = document.createElement('div');
@@ -31,6 +37,13 @@ function getLocalDateString(date) {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * fill - Funció per a fill.
+ *
+ * @param {any} key - Paràmetre key
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function fill(key, value) {
   document.querySelectorAll(`[data-reserva="${key}"]`).forEach((el) => {
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
@@ -41,11 +54,21 @@ function fill(key, value) {
   });
 }
 
+/**
+ * showSkeleton - Funció per a showSkeleton.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function showSkeleton() {
   document.querySelector('[data-reserva-state="loading"]')?.style.setProperty('display', '', 'important');
   document.querySelector('[data-reserva-state="content"]')?.style.setProperty('display', 'none', 'important');
 }
 
+/**
+ * showContent - Funció per a showContent.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function showContent() {
   document.querySelector('[data-reserva-state="loading"]')?.style.setProperty('display', 'none', 'important');
   document.querySelector('[data-reserva-state="content"]')?.style.setProperty('display', '', 'important');
@@ -63,6 +86,13 @@ function debounce(fn, delay) {
 /**
  * Actualitza la UI de disponibilitat (places, barra, color)
  * en base a les dades rebudes del backend.
+ */
+/**
+ * updateDisponibilitatUI - Funció per a updateDisponibilitatUI.
+ *
+ * @param {any} { places_lliures - Paràmetre { places_lliures
+ * @param {any} capacitat_total } - Paràmetre capacitat_total }
+ * @returns {any} Resultat de la funció.
  */
 function updateDisponibilitatUI({ places_lliures, capacitat_total }) {
   fill('places-lliures', places_lliures);
@@ -91,6 +121,14 @@ function updateDisponibilitatUI({ places_lliures, capacitat_total }) {
  * Lògica de fetch de disponibilitat (sense debounce).
  * Reutilitzable per la càrrega inicial i per els canvis de l'usuari.
  */
+/**
+ * _doFetchDisponibilitat - Funció per a _doFetchDisponibilitat.
+ *
+ * @param {any} aparcamentId - Paràmetre aparcamentId
+ * @param {any} dataEntrada - Paràmetre dataEntrada
+ * @param {any} dataSortida - Paràmetre dataSortida
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function _doFetchDisponibilitat(aparcamentId, dataEntrada, dataSortida) {
   try {
     const params = new URLSearchParams({
@@ -108,6 +146,11 @@ async function _doFetchDisponibilitat(aparcamentId, dataEntrada, dataSortida) {
 /** Versió amb debounce per als canvis interactius de l'usuari (evita masses crides) */
 const fetchDisponibilitatFranja = debounce(_doFetchDisponibilitat, 600);
 
+/**
+ * calculateCost - Funció per a calculateCost.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function calculateCost() {
   if (!aparcamentData) return;
 
@@ -197,6 +240,12 @@ function calculateCost() {
   }
 }
 
+/**
+ * updateEndDateTime - Funció per a updateEndDateTime.
+ *
+ * @param {any} hoursToAdd - Paràmetre hoursToAdd
+ * @returns {any} Resultat de la funció.
+ */
 function updateEndDateTime(hoursToAdd) {
   const inDateEl = document.getElementById('entrada-data');
   const inTimeEl = document.getElementById('entrada-hora');
@@ -219,6 +268,11 @@ function updateEndDateTime(hoursToAdd) {
   updateSummaryDates();
 }
 
+/**
+ * updateSummaryDates - Funció per a updateSummaryDates.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function updateSummaryDates() {
   const inDateEl = document.getElementById('entrada-data');
   const inTimeEl = document.getElementById('entrada-hora');
@@ -233,6 +287,11 @@ function updateSummaryDates() {
   }
 }
 
+/**
+ * renderPaymentMethods - Funció per a renderPaymentMethods.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function renderPaymentMethods() {
     const container = document.getElementById('payment-methods-container');
     if (!container) return;
@@ -293,6 +352,11 @@ async function renderPaymentMethods() {
     }
 }
 
+/**
+ * renderDiscounts - Funció per a renderDiscounts.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function renderDiscounts() {
     const container = document.getElementById('discounts-container');
     const section = document.getElementById('discounts-section');
@@ -352,6 +416,11 @@ async function renderDiscounts() {
     }
 }
 
+/**
+ * initReservaAparcament - Funció exportada per a initReservaAparcament.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initReservaAparcament() {
   const id = getQueryParam('id');
   if (!id) {

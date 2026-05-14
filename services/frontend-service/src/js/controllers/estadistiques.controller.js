@@ -64,6 +64,14 @@ function destroyChart(id) {
  * @param {'area'|'donut'|'bar'|'spark'} variant
  * @param {number} height - Alçada en píxels.
  */
+/**
+ * showChartSkeleton - Funció per a showChartSkeleton.
+ *
+ * @param {any} elId - Paràmetre elId
+ * @param {any} variant - Paràmetre variant
+ * @param {any} height - Paràmetre height
+ * @returns {any} Resultat de la funció.
+ */
 function showChartSkeleton(elId, variant = 'bar', height = 190) {
   const el = document.getElementById(elId);
   if (!el || el.dataset.skeletonActive) return;
@@ -99,6 +107,12 @@ function showChartSkeleton(elId, variant = 'bar', height = 190) {
  * Elimina el skeleton i prepara el contenidor per a la gràfica.
  * @param {string} elId - ID del div contenidor.
  */
+/**
+ * clearChartSkeleton - Funció per a clearChartSkeleton.
+ *
+ * @param {any} elId - Paràmetre elId
+ * @returns {any} Resultat de la funció.
+ */
 function clearChartSkeleton(elId) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -113,12 +127,22 @@ function clearChartSkeleton(elId) {
 /**
  * Detecta si el tema actiu és fosc (data-bs-theme="dark" a <html>).
  */
+/**
+ * isDarkTheme - Funció per a isDarkTheme.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function isDarkTheme() {
   return document.documentElement.getAttribute('data-bs-theme') === 'dark';
 }
 
 /**
  * Retorna les opcions comunes d'ApexCharts adaptades al tema.
+ */
+/**
+ * baseChartOptions - Funció per a baseChartOptions.
+ *
+ * @returns {any} Resultat de la funció.
  */
 function baseChartOptions() {
   const dark = isDarkTheme();
@@ -154,12 +178,24 @@ function baseChartOptions() {
 /**
  * Formata un valor monetari en format "12,50 €".
  */
+/**
+ * fmtEur - Funció per a fmtEur.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function fmtEur(value) {
   return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
 /**
  * Formata hores: "3,5h" → "3h 30min"
+ */
+/**
+ * fmtHores - Funció per a fmtHores.
+ *
+ * @param {any} hores - Paràmetre hores
+ * @returns {any} Resultat de la funció.
  */
 function fmtHores(hores) {
   const h = Math.floor(hores);
@@ -169,6 +205,12 @@ function fmtHores(hores) {
 
 // ─── KPI Cards ────────────────────────────────────────────────────────────────
 
+/**
+ * renderKpis - Funció per a renderKpis.
+ *
+ * @param {any} kpis - Paràmetre kpis
+ * @returns {any} Resultat de la funció.
+ */
 function renderKpis(kpis) {
   // Total reserves
   const elTotal = document.getElementById('stat-total-reserves');
@@ -205,6 +247,12 @@ function renderKpis(kpis) {
 
 // ─── Gràfica 1: Despesa mensual (Area Chart) ─────────────────────────────────
 
+/**
+ * renderDespesaMensual - Funció per a renderDespesaMensual.
+ *
+ * @param {any} dades - Paràmetre dades
+ * @returns {any} Resultat de la funció.
+ */
 function renderDespesaMensual(dades) {
   clearChartSkeleton('chart-despesa-mensual');
   const el = document.getElementById('chart-despesa-mensual');
@@ -256,6 +304,12 @@ function renderDespesaMensual(dades) {
 
 // ─── Gràfica 2: Distribució per tipus (Donut) ────────────────────────────────
 
+/**
+ * renderTipusAparcament - Funció per a renderTipusAparcament.
+ *
+ * @param {any} distribucio - Paràmetre distribucio
+ * @returns {any} Resultat de la funció.
+ */
 function renderTipusAparcament(distribucio) {
   clearChartSkeleton('chart-tipus-aparcament');
   const el = document.getElementById('chart-tipus-aparcament');
@@ -320,6 +374,12 @@ function renderTipusAparcament(distribucio) {
 
 // ─── Gràfica 3: Reserves per estat (Bar radial) ──────────────────────────────
 
+/**
+ * renderReservesEstat - Funció per a renderReservesEstat.
+ *
+ * @param {any} estats - Paràmetre estats
+ * @returns {any} Resultat de la funció.
+ */
 function renderReservesEstat(estats) {
   clearChartSkeleton('chart-reserves-estat');
   const el = document.getElementById('chart-reserves-estat');
@@ -369,6 +429,12 @@ function renderReservesEstat(estats) {
 
 // ─── Gràfica 4: Contribucions per tipus (Grouped Bar) ────────────────────────
 
+/**
+ * renderContribucions - Funció per a renderContribucions.
+ *
+ * @param {any} contribucions - Paràmetre contribucions
+ * @returns {any} Resultat de la funció.
+ */
 function renderContribucions(contribucions) {
   clearChartSkeleton('chart-contribucions-tipus');
   const el = document.getElementById('chart-contribucions-tipus');
@@ -421,6 +487,12 @@ function renderContribucions(contribucions) {
 
 // ─── Gràfica 5: Reserves per dia de la setmana (Bar petit) ──────────────────
 
+/**
+ * renderDiesSetmana - Funció per a renderDiesSetmana.
+ *
+ * @param {any} dies - Paràmetre dies
+ * @returns {any} Resultat de la funció.
+ */
 function renderDiesSetmana(dies) {
   clearChartSkeleton('chart-dies-setmana');
   const el = document.getElementById('chart-dies-setmana');
@@ -466,6 +538,12 @@ function renderDiesSetmana(dies) {
 
 // ─── Top aparcaments ──────────────────────────────────────────────────────────
 
+/**
+ * renderTopAparcaments - Funció per a renderTopAparcaments.
+ *
+ * @param {any} topParking - Paràmetre topParking
+ * @returns {any} Resultat de la funció.
+ */
 function renderTopAparcaments(topParking) {
   const container = document.getElementById('stat-top-aparcaments');
   if (!container) return;
@@ -488,6 +566,12 @@ function renderTopAparcaments(topParking) {
 
 // ─── Dades de detall ─────────────────────────────────────────────────────────
 
+/**
+ * renderDadesDetall - Funció per a renderDadesDetall.
+ *
+ * @param {any} detall - Paràmetre detall
+ * @returns {any} Resultat de la funció.
+ */
 function renderDadesDetall(detall) {
   const map = {
     'stat-despesa-mitja': fmtEur(detall.despesa_mitja),
@@ -504,6 +588,12 @@ function renderDadesDetall(detall) {
 
 // ─── Gamificació ─────────────────────────────────────────────────────────────
 
+/**
+ * renderGamificacio - Funció per a renderGamificacio.
+ *
+ * @param {any} gamificacio - Paràmetre gamificacio
+ * @returns {any} Resultat de la funció.
+ */
 function renderGamificacio(gamificacio) {
   // Punts centrals
   const elPunts = document.getElementById('stat-gamificacio-punts');
@@ -547,6 +637,13 @@ const INSIGNIES_DEFAULT = [
   { nom: 'Explorador', descripcio: '5 ciutats', icon: 'bi-map', color: 'text-secondary', requisit_punts: 500 },
 ];
 
+/**
+ * renderInsignies - Funció per a renderInsignies.
+ *
+ * @param {any} insignies - Paràmetre insignies
+ * @param {any} propera - Paràmetre propera
+ * @returns {any} Resultat de la funció.
+ */
 function renderInsignies(insignies, propera) {
   const container = document.getElementById('stat-insignies-container');
   if (!container) return;
@@ -580,6 +677,12 @@ function renderInsignies(insignies, propera) {
 
 // ─── Tipus preferits (progress bars a Dades de detall) ───────────────────────
 
+/**
+ * renderTipusPreferits - Funció per a renderTipusPreferits.
+ *
+ * @param {any} distribucio - Paràmetre distribucio
+ * @returns {any} Resultat de la funció.
+ */
 function renderTipusPreferits(distribucio) {
   const container = document.getElementById('stat-tipus-preferits');
   if (!container) return;
@@ -608,6 +711,11 @@ function renderTipusPreferits(distribucio) {
 
 // ─── Estat de càrrega / error ─────────────────────────────────────────────────
 
+/**
+ * showLoadingState - Funció per a showLoadingState.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function showLoadingState() {
   // KPI cards: spinner petit
   ['stat-total-reserves', 'stat-total-despesa', 'stat-temps-aparcat', 'stat-punts'].forEach(id => {
@@ -635,6 +743,12 @@ function showLoadingState() {
   });
 }
 
+/**
+ * showErrorBanner - Funció per a showErrorBanner.
+ *
+ * @param {any} msg - Paràmetre msg
+ * @returns {any} Resultat de la funció.
+ */
 function showErrorBanner(msg) {
   const section = document.getElementById('section-stadistics');
   if (!section) return;
@@ -657,6 +771,11 @@ function showErrorBanner(msg) {
  * Inicialitza el component d'estadístiques.
  * Crida a l'API Python, obté totes les dades i renderitza els gràfics i KPIs.
  * Si ApexCharts no és disponible, espera fins que estigui carregat (CDN async).
+ */
+/**
+ * initEstadistiques - Funció exportada per a initEstadistiques.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function initEstadistiques() {
   const section = document.getElementById('section-stadistics');
@@ -703,6 +822,11 @@ export async function initEstadistiques() {
 /**
  * Torna a disparar les animacions de les gràfiques sense duplicar elements.
  */
+/**
+ * refreshEstadistiques - Funció exportada per a refreshEstadistiques.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function refreshEstadistiques() {
   Object.keys(_charts).forEach(id => {
     const chart = _charts[id];
@@ -721,6 +845,12 @@ export function refreshEstadistiques() {
 /**
  * Torna una Promise que es resol quan window.ApexCharts estigui disponible.
  * Permet que el CDN es carregui de manera asíncrona sense errors.
+ */
+/**
+ * waitForApexCharts - Funció per a waitForApexCharts.
+ *
+ * @param {any} timeoutMs - Paràmetre timeoutMs
+ * @returns {any} Resultat de la funció.
  */
 function waitForApexCharts(timeoutMs = 5000) {
   return new Promise((resolve, reject) => {

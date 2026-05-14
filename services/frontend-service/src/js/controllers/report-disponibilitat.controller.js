@@ -6,6 +6,13 @@ const DEFAULT_ZOOM = 14;
 const REPORT_COOLDOWN_SECONDS = 60;
 const COOLDOWN_STORAGE_KEY = 'parklive_report_disponibilitat_cooldown_until';
 
+/**
+ * setStatusButtons - Funció per a setStatusButtons.
+ *
+ * @param {any} statusButtons - Paràmetre statusButtons
+ * @param {any} nextStatus - Paràmetre nextStatus
+ * @returns {any} Resultat de la funció.
+ */
 function setStatusButtons(statusButtons, nextStatus) {
   statusButtons.forEach((button) => {
     const active = button.dataset.status === nextStatus;
@@ -14,6 +21,14 @@ function setStatusButtons(statusButtons, nextStatus) {
   });
 }
 
+/**
+ * showToast - Funció per a showToast.
+ *
+ * @param {any} toastEl - Paràmetre toastEl
+ * @param {any} message - Paràmetre message
+ * @param {any} type - Paràmetre type
+ * @returns {any} Resultat de la funció.
+ */
 function showToast(toastEl, message, type = 'success') {
   if (!toastEl) return;
   toastEl.textContent = message;
@@ -25,6 +40,11 @@ function showToast(toastEl, message, type = 'success') {
   }, 2600);
 }
 
+/**
+ * getCooldownUntil - Funció per a getCooldownUntil.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function getCooldownUntil() {
   const storedValue = Number(globalThis.localStorage.getItem(COOLDOWN_STORAGE_KEY));
   if (!Number.isFinite(storedValue) || storedValue <= Date.now()) {
@@ -34,6 +54,12 @@ function getCooldownUntil() {
   return storedValue;
 }
 
+/**
+ * setCooldownUntil - Funció per a setCooldownUntil.
+ *
+ * @param {any} untilMs - Paràmetre untilMs
+ * @returns {any} Resultat de la funció.
+ */
 function setCooldownUntil(untilMs) {
   if (!Number.isFinite(untilMs) || untilMs <= Date.now()) {
     globalThis.localStorage.removeItem(COOLDOWN_STORAGE_KEY);
@@ -43,11 +69,22 @@ function setCooldownUntil(untilMs) {
   globalThis.localStorage.setItem(COOLDOWN_STORAGE_KEY, String(Math.floor(untilMs)));
 }
 
+/**
+ * formatCooldownText - Funció per a formatCooldownText.
+ *
+ * @param {any} secondsLeft - Paràmetre secondsLeft
+ * @returns {any} Resultat de la funció.
+ */
 function formatCooldownText(secondsLeft) {
   const safeSeconds = Math.max(0, Math.ceil(secondsLeft));
   return `Espera ${safeSeconds}s`;
 }
 
+/**
+ * resolveCurrentPosition - Funció per a resolveCurrentPosition.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function resolveCurrentPosition() {
   if (!globalThis.navigator?.geolocation) {
     throw new Error('El teu navegador no admet geolocalització.');
@@ -84,6 +121,11 @@ async function resolveCurrentPosition() {
   });
 }
 
+/**
+ * initReportDisponibilitat - Funció exportada per a initReportDisponibilitat.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initReportDisponibilitat() {
   const form = document.getElementById('reportDisponibilitatForm');
   const mapEl = document.getElementById('reportDisponibilitatMap');

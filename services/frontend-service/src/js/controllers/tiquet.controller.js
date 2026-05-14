@@ -11,12 +11,25 @@ import { obtenirDetallReserva } from './reserves.controller.js';
 import { pythonApi } from '../api.js';
 import { getQueryParam, showAlert } from '../utils.js';
 
+/**
+ * fillTiquetData - Funció per a fillTiquetData.
+ *
+ * @param {any} key - Paràmetre key
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function fillTiquetData(key, value) {
   document.querySelectorAll(`[data-tiquet="${key}"]`).forEach((el) => {
     el.innerHTML = value !== null && value !== undefined ? value : '—';
   });
 }
 
+/**
+ * formatDateToShort - Funció per a formatDateToShort.
+ *
+ * @param {any} dateString - Paràmetre dateString
+ * @returns {any} Resultat de la funció.
+ */
 function formatDateToShort(dateString) {
   if (!dateString) return '--/--/----';
   const d = new Date(dateString);
@@ -26,6 +39,12 @@ function formatDateToShort(dateString) {
   return `${day}/${month}/${year}`;
 }
 
+/**
+ * formatTimeToShort - Funció per a formatTimeToShort.
+ *
+ * @param {any} dateString - Paràmetre dateString
+ * @returns {any} Resultat de la funció.
+ */
 function formatTimeToShort(dateString) {
   if (!dateString) return '--:--';
   const d     = new Date(dateString);
@@ -37,6 +56,12 @@ function formatTimeToShort(dateString) {
 /**
  * Retorna una Promise que es resol quan la imatge QR estigui completament carregada,
  * o es rebutja si hi ha un error de xarxa / timeout de 10 s.
+ */
+/**
+ * waitForQR - Funció per a waitForQR.
+ *
+ * @param {any} imgEl - Paràmetre imgEl
+ * @returns {any} Resultat de la funció.
  */
 function waitForQR(imgEl) {
   return new Promise((resolve, reject) => {
@@ -53,6 +78,11 @@ function waitForQR(imgEl) {
   });
 }
 
+/**
+ * initTiquetAparcament - Funció exportada per a initTiquetAparcament.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initTiquetAparcament() {
   const reservaId = getQueryParam('id');
   if (!reservaId) {
@@ -154,6 +184,13 @@ export async function initTiquetAparcament() {
  *  - S'apliquen estils inline blancs per garantir que el tema (dark/light) no afecti el render.
  *  - S'eliminen elements no pertinents (botons, no-print, etc.) del clon.
  *  - Un cop generat el PDF, el contenidor temporal s'elimina del DOM.
+ */
+/**
+ * generarIEnviarPDF - Funció per a generarIEnviarPDF.
+ *
+ * @param {any} reservaId - Paràmetre reservaId
+ * @param {any} codiReserva - Paràmetre codiReserva
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 async function generarIEnviarPDF(reservaId, codiReserva) {
   const original = document.querySelector('.ticket-card');

@@ -4,6 +4,12 @@ import { PHP_API_URL, PYTHON_API_URL } from '../config.js';
 /**
  * Utilitat per formatar dates de manera llegible.
  */
+/**
+ * formatDate - Funció per a formatDate.
+ *
+ * @param {any} dateStr - Paràmetre dateStr
+ * @returns {any} Resultat de la funció.
+ */
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -16,6 +22,12 @@ function formatDate(dateStr) {
 
 /**
  * Renderitza la llista d'articles a blog
+ */
+/**
+ * renderBlogList - Funció per a renderBlogList.
+ *
+ * @param {any} articles - Paràmetre articles
+ * @returns {any} Resultat de la funció.
  */
 function renderBlogList(articles) {
   const container = document.getElementById('blog-container');
@@ -70,6 +82,12 @@ function renderBlogList(articles) {
 /**
  * Renderitza un article concret a blog-detall
  */
+/**
+ * renderBlogArticle - Funció per a renderBlogArticle.
+ *
+ * @param {any} article - Paràmetre article
+ * @returns {any} Resultat de la funció.
+ */
 function renderBlogArticle(article) {
   const container = document.getElementById('blog-detall-container');
   if (!container) return;
@@ -102,6 +120,11 @@ function renderBlogArticle(article) {
   contentEl.innerHTML = article.contingut.replace(/\n/g, '<br>');
 }
 
+/**
+ * initBlogList - Funció exportada per a initBlogList.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initBlogList() {
   const loading = document.getElementById('blog-loading');
   const errorEl = document.getElementById('blog-error');
@@ -127,6 +150,11 @@ export async function initBlogList() {
   }
 }
 
+/**
+ * initBlogDetail - Funció exportada per a initBlogDetail.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initBlogDetail() {
   const params = new URLSearchParams(window.location.search);
   const slug = params.get('slug');

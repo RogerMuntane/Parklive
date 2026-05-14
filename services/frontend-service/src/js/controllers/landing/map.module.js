@@ -4,6 +4,12 @@ const MIN_ZOOM = 4;
 const OPEN_AIR_BASE_RADIUS_METERS = 45;
 const REPORT_DISPONIBILITAT_MARKER_RADIUS = 7;
 
+/**
+ * escapeHtml - Funció per a escapeHtml.
+ *
+ * @param {any} value - Paràmetre value
+ * @returns {any} Resultat de la funció.
+ */
 function escapeHtml(value) {
   if (!value) return '';
   const div = document.createElement('div');
@@ -11,10 +17,22 @@ function escapeHtml(value) {
   return div.innerHTML;
 }
 
+/**
+ * isOpenAirParking - Funció per a isOpenAirParking.
+ *
+ * @param {any} spot - Paràmetre spot
+ * @returns {any} Resultat de la funció.
+ */
 function isOpenAirParking(spot) {
   return spot?.raw?.tipus === 'aire_lliure';
 }
 
+/**
+ * computeOpenAirRadius - Funció per a computeOpenAirRadius.
+ *
+ * @param {any} spot - Paràmetre spot
+ * @returns {any} Resultat de la funció.
+ */
 function computeOpenAirRadius(spot) {
   const totalCapacity = Number(spot?.raw?.capacitat_total);
   if (!Number.isFinite(totalCapacity) || totalCapacity <= 0) {
@@ -24,6 +42,13 @@ function computeOpenAirRadius(spot) {
   return Math.max(35, Math.min(95, Math.round(Math.sqrt(totalCapacity) * 3.2)));
 }
 
+/**
+ * normalizeLatLng - Funció per a normalizeLatLng.
+ *
+ * @param {any} leaflet - Paràmetre leaflet
+ * @param {any} location - Paràmetre location
+ * @returns {any} Resultat de la funció.
+ */
 function normalizeLatLng(leaflet, location) {
   const lat = Number(location?.lat);
   const lon = Number(location?.lon);
@@ -35,6 +60,11 @@ function normalizeLatLng(leaflet, location) {
   return leaflet.latLng(lat, lon);
 }
 
+/**
+ * initLandingMap - Funció exportada per a initLandingMap.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initLandingMap() {
   const mapElement = document.getElementById('map');
   const leaflet = globalThis.L;

@@ -1,5 +1,11 @@
 import { pythonApi } from '../api.js';
 
+/**
+ * renderFaqs - Funció per a renderFaqs.
+ *
+ * @param {any} faqs - Paràmetre faqs
+ * @returns {any} Resultat de la funció.
+ */
 function renderFaqs(faqs) {
   const container = document.getElementById('faq-container');
   if (!container) return;
@@ -48,6 +54,11 @@ function renderFaqs(faqs) {
   container.innerHTML = html;
 }
 
+/**
+ * initFaq - Funció exportada per a initFaq.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initFaq() {
   const loading = document.getElementById('faq-loading');
   const errorEl = document.getElementById('faq-error');
