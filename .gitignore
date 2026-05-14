@@ -20,7 +20,7 @@ googleAuth.json
 Thumbs.db
 
 # Uploads & Storage
-storage/*
+storage/tiquets/*
 !storage/aparcaments/cataleg/
 !storage/blog/
 services/php-service/uploads/

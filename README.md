@@ -74,8 +74,7 @@ parklive/
 │   ├── tickets/                 # Tiquets de reserva generats en PDF
 │   ├── aparcaments/             # Imatges optimitzades dels aparcaments (WebP)
 │   ├── blog/                    # Imatges del blog i contingut multimèdia
-│   ├── profiles/                # Fotos de perfil dels usuaris
-│   └── street_reports.jsonl     # Base de dades de reports de places en carrer
+│   └── profiles/                # Fotos de perfil dels usuaris
 │
 ├── logs/                        # Registres d'execució i errors de processament
 │
