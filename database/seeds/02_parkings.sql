@@ -1,3 +1,6 @@
+-- Arxiu: 02_parkings.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. APARCAMENTS (15 aparcaments a Barcelona)
 INSERT INTO aparcaments (
         id,

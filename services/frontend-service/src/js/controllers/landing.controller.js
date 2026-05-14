@@ -256,6 +256,8 @@ function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLoca
 export function initLanding() {
   if (landingInitialized) return;
 
+  // 1. Inicialitzem el component central del mapa amb Leaflet (o similar)
+  // Això ens retorna l'estat del mapa i les referències de control
   const mapState = initLandingMap();
   if (!mapState) return;
 
@@ -278,11 +280,13 @@ export function initLanding() {
   } = mapState;
 
   setStreetReports([]);
+  // 2. Comprovem l'estat inicial del filtre per veure si hem de carregar aparcaments estructurals o alertes de carrer
   const initialCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
   if (initialCategory !== 'structure') {
     refreshStreetReportsFromApi(setStreetReports);
   }
 
+  // 3. Configurem el controlador global de filtres de cerca avançada
   const toggleFilters = createFiltersController({ map, updateOpenPopupsLayout });
 
   globalThis.Filtres = toggleFilters;
@@ -292,6 +296,7 @@ export function initLanding() {
   setupSearchBar({ closeFilters: toggleFilters });
   setupDateMiniSheet();
 
+  // 4. Inicialitzem el servei de cerques interconnectant els controls i l'autocompletar amb el mapa
   const { runSearch, setUserLocation, setSearchAnchor } = initLandingSearch({
     setParkingSpots,
     focusParkingById,
@@ -303,6 +308,7 @@ export function initLanding() {
     },
   });
 
+  // 5. Associem el botó "Localitza'm" per fixar les coordenades geolocalitzades del dispositiu i llançar cerca
   setLocateMeAction(() => {
     resolveCurrentLocation({
       map,

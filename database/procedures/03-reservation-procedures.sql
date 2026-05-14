@@ -1,3 +1,6 @@
+-- Arxiu: 03-reservation-procedures.sql
+-- Descripció: Aquest arxiu defineix els procediments emmagatzemats (Stored Procedures) per la lògica de base de dades.
+
 USE parklive_db;
 -- Eliminar procedures si existeixen (per poder recrear-los)
 DROP PROCEDURE IF EXISTS sp_crear_reserva;
@@ -30,6 +33,9 @@ BEGIN
     DECLARE v_codi_unic VARCHAR(20);
     DECLARE v_existeix INT DEFAULT 1;
 
+    -- Si falla qualsevol query de la transacció salta aquest handler:
+    -- 1. Fa un Rollback automàtic per desfer tot els canvis a mitges
+    -- 2. Evita inconsistències en taules creuades (ex: pagaments vs reserves)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -39,6 +45,7 @@ BEGIN
     END;
 
     -- Iniciar transacció
+    -- Bloc transaccional per assegurar l'atomicidad (garanteix operacions segures en cas de caiguda)
     START TRANSACTION;
 
     -- Validar que les dates siguin correctes
@@ -139,12 +146,16 @@ BEGIN
     DECLARE v_estat_actual VARCHAR(50);
     DECLARE v_aparcament_id INT;
 
+    -- Si falla qualsevol query de la transacció salta aquest handler:
+    -- 1. Fa un Rollback automàtic per desfer tot els canvis a mitges
+    -- 2. Evita inconsistències en taules creuades (ex: pagaments vs reserves)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
         SET p_error_msg = 'Error al actualitzar la reserva: Excepció SQL';
     END;
 
+    -- Bloc transaccional per assegurar l'atomicidad (garanteix operacions segures en cas de caiguda)
     START TRANSACTION;
 
     SELECT estat, aparcament_id INTO v_estat_actual, v_aparcament_id

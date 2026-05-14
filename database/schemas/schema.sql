@@ -1,3 +1,6 @@
+-- Arxiu: schema.sql
+-- Descripció: Aquest arxiu defineix l'estructura i creació de les taules (DDL - Data Definition Language).
+
 -- BASE DE DADES PARKLIVE
 -- Crear la base de dades
 CREATE DATABASE IF NOT EXISTS parklive_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -22,6 +25,7 @@ CREATE TABLE usuaris (
     preferencies JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- Índexs per accelerar les cerques en columnes molt utilitzades
     INDEX idx_email (email),
     INDEX idx_tipus_usuari (tipus_usuari),
     INDEX idx_estat (estat),
@@ -157,6 +161,7 @@ CREATE TABLE fotografies_aparcaments (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- TAULES DE RESERVES I PAGAMENTS
 -- Taula de reserves
+-- Taula de reserves: Gestiona el cicle de vida d'una reserva d'aparcament (relaciona usuari, vehicle i plaça)
 CREATE TABLE reserves (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuari_id INT UNSIGNED NOT NULL,
@@ -185,6 +190,7 @@ CREATE TABLE reserves (
     INDEX idx_codi (codi_reserva)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- Taula de pagaments
+-- Taula de pagaments: Registra les transaccions d'Stripe o d'altres passarel·les relacionades amb reserves/suscripcions
 CREATE TABLE pagaments (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     reserva_id INT UNSIGNED,

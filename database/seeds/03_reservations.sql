@@ -1,3 +1,6 @@
+-- Arxiu: 03_reservations.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. RESERVES
 INSERT INTO reserves (
         id,

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Arxiu: setup.sh
+# Descripció: Script de terminal per a tasques d'inicialització o configuració de l'entorn de base de dades.
+
 # database/setup.sh - Script de configuració de base de dades per Parklive
 
 set -e  # Aturar si hi ha errors

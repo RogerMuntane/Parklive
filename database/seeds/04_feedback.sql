@@ -1,3 +1,6 @@
+-- Arxiu: 04_feedback.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. VALORACIONS
 INSERT INTO valoracions (
         usuari_id,

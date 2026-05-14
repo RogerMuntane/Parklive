@@ -1,3 +1,6 @@
+-- Arxiu: 02-parking-procedures.sql
+-- Descripció: Aquest arxiu defineix els procediments emmagatzemats (Stored Procedures) per la lògica de base de dades.
+
 -- STORED PROCEDURES PARKLIVE - GESTIÓ D'APARCAMENTS
 USE parklive_db;
 -- Eliminar procedures si existeixen (per poder recrear-los)
@@ -85,6 +88,9 @@ BEGIN
     DECLARE v_usuari_existeix INT DEFAULT 0;
     DECLARE v_aparcament_existeix INT DEFAULT 0;
 
+    -- Si falla qualsevol query de la transacció salta aquest handler:
+    -- 1. Fa un Rollback automàtic per desfer tot els canvis a mitges
+    -- 2. Evita inconsistències en taules creuades (ex: pagaments vs reserves)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -92,6 +98,7 @@ BEGIN
         SET p_error_msg = 'Error SQL en afegir l''aparcament a favorits';
     END;
 
+    -- Bloc transaccional per assegurar l'atomicidad (garanteix operacions segures en cas de caiguda)
     START TRANSACTION;
 
     SELECT COUNT(*) INTO v_usuari_existeix
@@ -145,6 +152,9 @@ CREATE PROCEDURE sp_eliminar_aparcament_favorit(
     OUT p_error_msg VARCHAR(500)
 )
 BEGIN
+    -- Si falla qualsevol query de la transacció salta aquest handler:
+    -- 1. Fa un Rollback automàtic per desfer tot els canvis a mitges
+    -- 2. Evita inconsistències en taules creuades (ex: pagaments vs reserves)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -153,6 +163,7 @@ BEGIN
         SET p_error_msg = 'Error SQL en eliminar l''aparcament de favorits';
     END;
 
+    -- Bloc transaccional per assegurar l'atomicidad (garanteix operacions segures en cas de caiguda)
     START TRANSACTION;
 
     DELETE FROM usuaris_favorits_aparcaments

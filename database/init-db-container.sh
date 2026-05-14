@@ -1,4 +1,7 @@
 #!/bin/sh
+# Arxiu: init-db-container.sh
+# Descripció: Script de terminal per a tasques d'inicialització o configuració de l'entorn de base de dades.
+
 # database/init-db-container.sh - S'executa dins del contenidor MySQL
 # Utilitza les variables d'entorn MYSQL_* (provinents de .env via docker-compose)
 
