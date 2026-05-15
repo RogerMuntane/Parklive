@@ -34,8 +34,9 @@ Parklive és un sistema complet de gestió d'aparcaments que implementa una arqu
 ## APIs i Serveis Externs
 - **Stripe API**: Pasarel·la de pagament per a reserves puntuals i subscripcions Premium. S'utilitzen *Stripe Elements*, *SetupIntents* i *Webhooks*.
 - **Google OAuth 2.0**: Autenticació d'usuaris mitjançant Google Identity Services.
-- **Cloudinary API**: Optimització automàtica d'imatges (WebP, qualitat auto). S'utilitza com a motor principal de transformació amb un sistema de 
+- **Cloudinary API**: Optimització automàtica d'imatges (WebP, qualitat auto). S'utilitza com a motor principal de transformació amb sistema de fallback local via Pillow.
 - **Servidor SMTP**: Servei per a l'enviament de correus electrònics (recuperació de contrasenyes).
+
 ## Arquitectura del Projecte
 
 El projecte segueix una arquitectura de microserveis on cada servei implementa el seu propi patró MVC:
@@ -48,7 +49,10 @@ parklive/
 │   │   ├── controllers/         # Controladors de la lògica de negoci
 │   │   ├── routes/              # Definicions de les rutes de l'API
 │   │   ├── middleware/          # Middlewares d'autenticació i validació
-│   │   ├── scripts/             # Tasques programades i utilitats
+│   │   ├── scripts/             # Tasques programades (cron)
+│   │   ├── utils/               # Utilitats internes del servei
+│   │   ├── views/               # Plantilles i generació de documents
+│   │   ├── tests/               # Tests unitaris i d'integració
 │   │   ├── requirements.txt     # Dependències Python
 │   │   └── Dockerfile           # Contenidor Docker
 │   │
@@ -65,10 +69,9 @@ parklive/
 │       └── Dockerfile           # Contenidor Docker
 │
 ├── shared/                      # Recursos compartits entre serveis
-│   ├── utils/                   # Utilitats comunes
-│   ├── middlewares/             # Middleware compartit
-│   ├── validators/              # Validadors de dades
-│   └── constants/               # Constants globals
+│   ├── constants/               # Constants globals
+│   ├── types/                   # Definicions de tipus compartits
+│   └── serializers.py           # Serialitzadors de dades compartits
 │
 ├── storage/                     # Emmagatzematge persistent de fitxers (Volum Docker)
 │   ├── tickets/                 # Tiquets de reserva generats en PDF
@@ -79,9 +82,14 @@ parklive/
 ├── logs/                        # Registres d'execució i errors de processament
 │
 ├── database/                    # Scripts i configuració de base de dades
-│   ├── migrations/              # Migracions de BD
+│   ├── migrations/              # Migracions de BD (SQL incrementals)
 │   ├── seeds/                   # Dades de prova
-│   └── schemas/                 # Esquemes de BD
+│   ├── schemas/                 # Esquemes de BD
+│   ├── procedures/              # Procediments emmagatzemats MySQL
+│   ├── models/                  # Models SQL de referència
+│   ├── backup/                  # Còpies de seguretat de la BD
+│   ├── init-db-container.sh     # Script d'inicialització executat per Docker
+│   └── setup.sh                 # Script d'inicialització manual
 │
 ├── docker-compose.yml           # Orquestració de contenidors
 ├── .env.example                 # Exemple de variables d'entorn
@@ -93,6 +101,38 @@ parklive/
 ### Prerequisits
 - Docker i Docker Compose
 - Git
+
+### ⚠️ Nota: Xarxa del Thos i Codina (DNS Institucional)
+
+Si fas el `docker-compose build` connectat a la **xarxa del Thos i Codina**, és possible que el DNS institucional bloquegi la resolució de noms durant la instal·lació de paquets (pip, apt, composer), causant errors del tipus:
+
+```
+Could not resolve host: pypi.org
+ERROR: Could not find a version that satisfies the requirement ...
+```
+
+**Solució:** Sobrescriu temporalment el DNS de Docker abans de fer el build:
+
+```bash
+# Opció 1: Afegir DNS públics globalment al daemon de Docker
+# Edita (o crea) /etc/docker/daemon.json i afegeix:
+sudo bash -c 'cat > /etc/docker/daemon.json <<EOF
+{
+  "dns": ["8.8.8.8", "1.1.1.1"]
+}
+EOF'
+sudo systemctl restart docker
+```
+
+```bash
+# Opció 2 (alternativa ràpida, sense reiniciar Docker):
+# Fes el build passant el DNS directament
+DOCKER_BUILDKIT=0 docker-compose build --build-arg BUILDKIT_INLINE_CACHE=0
+# O bé usa la xarxa de l'host durant el build (ja configurat al docker-compose.yml):
+# network: host  ← ja present als serveis python-service i cron-service
+```
+
+> Els serveis `python-service` i `cron-service` ja inclouen `network: host` al context de build i DNS `8.8.8.8` / `1.1.1.1` en temps d'execució per mitigar aquest problema.
 
 ### Passos d'Instal·lació
 
@@ -114,11 +154,13 @@ parklive/
    docker-compose up -d
    ```
 
-4. **Executar migracions i seeds:**
+4. **Migracions i seeds (BD):**
    ```bash
-   # Les migracions s'executen automàticament en iniciar el contenidor db, 
-   # però pots forçar la càrrega de dades:
-   docker-compose exec python-service python manage.py seed
+   # Les migracions i seeds s'executen automàticament quan el contenidor
+   # 'mysql' s'inicia per primera vegada, via init-db-container.sh.
+   # Per re-inicialitzar manualment la BD (⚠️ esborra dades existents):
+   docker-compose down -v
+   docker-compose up -d
    ```
 
 ## Ús i Desenvolupament
@@ -136,7 +178,7 @@ docker-compose down
 ```
 
 ### Accedir als serveis
-- **Frontend**: http://localhost:3307
+- **Frontend**: http://localhost:3000
 - **Python API**: http://localhost:5000
 - **PHP API**: http://localhost:8080
 - **phpMyAdmin**: http://localhost:8081
@@ -146,4 +188,4 @@ docker-compose down
 - Roger Muntané - [@RogerMuntane](https://github.com/RogerMuntane)
 - Xavier Ruiz - [@Emperor-Xizzle](https://github.com/Emperor-Xizzle)
 
-**Última actualització**: 2026-05-07
+**Última actualització**: 2026-05-15
