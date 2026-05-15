@@ -18,7 +18,7 @@ from models.reserves_model import (
     actualitzar_tiquet_reserva
 )
 from models.aparcament_model import get_places_disponibles_per_franja
-from models.stripe_model import get_user_stripe_id, createPaymentIntent, registrar_pagament_db, cancel_payment_intent
+from models.stripe_model import get_user_stripe_id, authorize_or_setup_payment, registrar_pagament_db, cancel_payment_intent
 from datetime import datetime, timedelta
 from utils.pdf_generator import generar_tiquet_pdf_python
 
@@ -278,24 +278,32 @@ def crear_nova_reserva():
             return jsonify({"error": "L'usuari no té un compte de pagament vinculat."}), 400
 
         import_en_centims = int(data['preu_total'] * 100)
-        payment_intent = createPaymentIntent(
+        result = authorize_or_setup_payment(
             amount=import_en_centims,
             currency='eur',
             customer_id=stripe_customer_id,
             payment_method_id=payment_method_id
         )
 
-        if not payment_intent or payment_intent.status not in ['succeeded', 'requires_capture']:
+        # Normalitzem el resultat tant si és PaymentIntent com SetupIntent
+        stripe_ref_id = result['id']
+        stripe_status = result['status']
+        is_free = result['type'] == 'setup_intent'
+
+        # Validar que l'autorització ha estat correcta
+        valid_statuses = ['requires_capture', 'succeeded'] if not is_free else ['succeeded']
+        if stripe_status not in valid_statuses:
             actualitzar_estat_reserva(reserva_id, 'cancelada')
             return jsonify({"error": "La targeta ha estat denegada pel banc o l'autorització ha fallat."}), 400
 
+        estat_pagament = 'completat' if is_free else 'autoritzat'
         registrar_pagament_db(
             reserva_id=reserva_id,
             usuari_id=data['usuari_id'],
             import_pagament=data['preu_total'],
             metode='targeta_credit',
-            referencia_externa=payment_intent.id,
-            estat='autoritzat'
+            referencia_externa=stripe_ref_id,
+            estat=estat_pagament
         )
 
         actualitzar_estat_reserva(reserva_id, 'confirmada')
@@ -428,13 +436,17 @@ def cancelar_reserva_usuari(reserva_id):
                 "error": "Política de cancel·lació: No es pot cancel·lar falten menys de 60 minuts per l'entrada."
             }), 400
 
-        # 1. Cancel·lar a Stripe si existeix un payment_intent
+        # 1. Alliberar fons a Stripe si existeix un PaymentIntent autoritzat.
+        # Les reserves gratuïtes usen un SetupIntent (prefix 'si_') que NO reté
+        # fons, per tant no cal (ni es pot) cancel·lar-lo com a PaymentIntent.
         pagament = reserva.get('pagament')
         if pagament and pagament.get('referencia_externa'):
-            pi_id = pagament['referencia_externa']
-            stripe_res = cancel_payment_intent(pi_id)
-            if not stripe_res:
-                return jsonify({"error": "No s'ha pogut cancel·lar la retenció de fons a Stripe."}), 500
+            ref_id = pagament['referencia_externa']
+            if ref_id.startswith('pi_'):
+                stripe_res = cancel_payment_intent(ref_id)
+                if not stripe_res:
+                    return jsonify({"error": "No s'ha pogut cancel·lar la retenció de fons a Stripe."}), 500
+            # Si és 'si_' (SetupIntent gratuït) no cal cap acció a Stripe.
 
         # 2. Actualitzar estat reserva a 'cancelada'
         success = actualitzar_estat_reserva(reserva_id, 'cancelada')

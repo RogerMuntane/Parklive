@@ -521,23 +521,51 @@ def get_active_subscription(user_id):
         conn.close()
 
 
+# Import mínim per moneda (en cèntims), tal com defineix Stripe.
+# https://docs.stripe.com/currencies#minimum-and-maximum-charge-amounts
+STRIPE_MIN_AMOUNTS = {
+    'eur': 50,
+    'usd': 50,
+    'gbp': 30,
+}
+
+
 def createPaymentIntent(amount, currency, customer_id, payment_method_id):
     """
     Crea i confirma automàticament un intent de pagament a Stripe amb captura manual.
-    
+
+    Si l'import és inferior al mínim permès per Stripe per a la moneda indicada
+    (p. ex. 50 cèntims per EUR), eleva un ValueError descriptiu en lloc de
+    deixar que l'API de Stripe retorni un error 400 confús.
+
     Args:
-        amount (int): Import en cèntims.
-        currency (str): Moneda (ex: 'eur').
+        amount (int): Import en cèntims (ha de ser >= mínim de la moneda).
+        currency (str): Moneda en minúscules (ex: 'eur').
         customer_id (str): ID del client de Stripe.
-        payment_method_id (str): ID de la targeta.
-        
+        payment_method_id (str): ID de la targeta guardada a Stripe.
+
     Returns:
-        stripe.PaymentIntent|None: L'intent de pagament creat.
+        stripe.PaymentIntent|None: L'intent de pagament creat amb estat
+        'requires_capture' (captura manual) o 'succeeded'.
+
+    Raises:
+        ValueError: Si l'import és 0 o inferior al mínim de la moneda.
+        Exception: Si la targeta és denegada pel banc.
     """
+    currency_lower = (currency or 'eur').lower()
+    min_amount = STRIPE_MIN_AMOUNTS.get(currency_lower, 50)
+
+    if amount < min_amount:
+        raise ValueError(
+            f"L'import ({amount} cèntims) és inferior al mínim permès per Stripe "
+            f"per a {currency_lower.upper()} ({min_amount} cèntims). "
+            f"Per a reserves gratuïtes, utilitza 'authorize_or_setup_payment'."
+        )
+
     try:
         payment_intent = stripe.PaymentIntent.create(
             amount=amount,
-            currency=currency,
+            currency=currency_lower,
             customer=customer_id,
             payment_method=payment_method_id,
             confirm=True,
@@ -551,6 +579,68 @@ def createPaymentIntent(amount, currency, customer_id, payment_method_id):
     except Exception as e:
         print(f"[Stripe] Error creant intent de pagament: {e}")
         return None
+
+
+def authorize_or_setup_payment(amount, currency, customer_id, payment_method_id):
+    """
+    Punt d'entrada unificat per a pagaments de reserves.
+
+    Decideix automàticament entre PaymentIntent i SetupIntent:
+    - Si l'import és >= al mínim de Stripe → `PaymentIntent` amb captura manual.
+    - Si l'import és 0 o inferior al mínim → `SetupIntent` per verificar la
+      targeta sense cap càrrec (reserves gratuïtes o amb descompte total).
+
+    Args:
+        amount (int): Import en cèntims.
+        currency (str): Moneda en minúscules (ex: 'eur').
+        customer_id (str): ID del client de Stripe.
+        payment_method_id (str): ID del mètode de pagament.
+
+    Returns:
+        dict: Diccionari normalitzat amb:
+            - 'type' (str): 'payment_intent' o 'setup_intent'.
+            - 'id' (str): ID de l'objecte Stripe.
+            - 'status' (str): Estat retornat per Stripe.
+            - 'object' (stripe obj): L'objecte original de Stripe.
+
+    Raises:
+        Exception: Propaga excepcions de targeta denegada o errors de l'API.
+    """
+    currency_lower = (currency or 'eur').lower()
+    min_amount = STRIPE_MIN_AMOUNTS.get(currency_lower, 50)
+
+    if amount >= min_amount:
+        # Flux estàndard: autoritzar i capturar en el moment de check-out
+        pi = createPaymentIntent(amount, currency_lower, customer_id, payment_method_id)
+        return {
+            'type': 'payment_intent',
+            'id': pi.id,
+            'status': pi.status,
+            'object': pi,
+        }
+    else:
+        # Reserves gratuïtes o descompte del 100%: només verificar la targeta
+        print(f"[Stripe] Import {amount} < mínim {min_amount} per {currency_lower}. Usant SetupIntent.")
+        try:
+            stripe.PaymentMethod.attach(payment_method_id, customer=customer_id)
+            si = stripe.SetupIntent.create(
+                customer=customer_id,
+                payment_method=payment_method_id,
+                confirm=True,
+                automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
+            )
+            return {
+                'type': 'setup_intent',
+                'id': si.id,
+                'status': si.status,
+                'object': si,
+            }
+        except stripe.error.CardError as e:
+            print(f"[Stripe] Targeta denegada al SetupIntent ({e.user_message})")
+            raise Exception(e.user_message)
+        except Exception as e:
+            print(f"[Stripe] Error creant SetupIntent: {e}")
+            raise
 
 
 def registrar_pagament_db(reserva_id, usuari_id, import_pagament, metode, referencia_externa, estat='completat'):
