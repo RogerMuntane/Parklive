@@ -1,3 +1,6 @@
+-- Arxiu: 04-payment-procedures.sql
+-- Descripció: Aquest arxiu defineix els procediments emmagatzemats (Stored Procedures) per la lògica de base de dades.
+
 USE parklive_db;
 
 -- ===========================================
@@ -21,6 +24,9 @@ CREATE PROCEDURE sp_registrar_pagament(
     OUT p_error_msg VARCHAR(500)
 )
 BEGIN
+    -- Si falla qualsevol query de la transacció salta aquest handler:
+    -- 1. Fa un Rollback automàtic per desfer tot els canvis a mitges
+    -- 2. Evita inconsistències en taules creuades (ex: pagaments vs reserves)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -28,8 +34,10 @@ BEGIN
         SET p_error_msg = 'Error al registrar el pagament: Excepció SQL';
     END;
 
+    -- Bloc transaccional per assegurar l'atomicidad (garanteix operacions segures en cas de caiguda)
     START TRANSACTION;
 
+        -- Registrem l'històric immutabile a la nostra DB vinculat a l'Intent d'Stripe
     INSERT INTO pagaments (
         reserva_id,
         usuari_id,

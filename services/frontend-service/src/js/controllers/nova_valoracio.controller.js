@@ -2,6 +2,11 @@ import { pythonApi } from '../api.js';
 import { getQueryParam, showBootstrapAlert } from '../utils.js';
 import { PHP_API_URL } from '../config.js';
 
+/**
+ * initNovaValoracio - Funció exportada per a initNovaValoracio.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initNovaValoracio() {
   const aparcamentId = getQueryParam('id');
   

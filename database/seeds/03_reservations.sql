@@ -1,3 +1,6 @@
+-- Arxiu: 03_reservations.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. RESERVES
 INSERT INTO reserves (
         id,
@@ -311,7 +314,7 @@ VALUES
 -- 6. GENERACIÓ PRECISA D'ESTATS D'OCUPACIÓ (TEST REQUERIT)
 -- P2 (Rambla Catalunya): Volem exactament el 50% d'ocupació (150 de 300). Ja en teníem 3. N'afegim 147.
 INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
-SELECT 5, 2, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 24 HOUR, 'en_curs', 28.00, 0.00, CONCAT('RES-AUTO-P2-', n), 'Auto-generat 50%'
+SELECT 5, 2, NOW() - INTERVAL 1 HOUR, DATE_ADD(NOW(), INTERVAL 1 YEAR), 'en_curs', 28.00, 0.00, CONCAT('RES-AUTO-P2-', n), 'Auto-generat 50%'
 FROM (
     SELECT (a.N + b.N * 10 + c.N * 100) AS n
     FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) a
@@ -322,7 +325,7 @@ WHERE n < 147;
 
 -- P17 (Mataró Centre): Volem exactament 1 plaça lliure (49 de 50). Ja en teníem 8. N'afegim 41.
 INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
-SELECT 6, 17, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 12 HOUR, 'en_curs', 18.00, 0.00, CONCAT('RES-AUTO-P17-', n), 'Auto-generat Casi Ple'
+SELECT 6, 17, NOW() - INTERVAL 1 HOUR, DATE_ADD(NOW(), INTERVAL 1 YEAR), 'en_curs', 18.00, 0.00, CONCAT('RES-AUTO-P17-', n), 'Auto-generat Casi Ple'
 FROM (
     SELECT (a.N + b.N * 10) AS n
     FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) a

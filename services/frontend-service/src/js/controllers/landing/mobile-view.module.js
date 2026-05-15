@@ -1,5 +1,10 @@
 const COMPACT_VIEW_STATE_STORAGE_KEY = 'parklive.mobileMapViewVisible';
 
+/**
+ * readStoredCompactState - Funció per a readStoredCompactState.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function readStoredCompactState() {
   try {
     return globalThis.sessionStorage.getItem(COMPACT_VIEW_STATE_STORAGE_KEY) === '1';
@@ -8,6 +13,12 @@ function readStoredCompactState() {
   }
 }
 
+/**
+ * writeStoredCompactState - Funció per a writeStoredCompactState.
+ *
+ * @param {any} mapVisible - Paràmetre mapVisible
+ * @returns {any} Resultat de la funció.
+ */
 function writeStoredCompactState(mapVisible) {
   try {
     globalThis.sessionStorage.setItem(COMPACT_VIEW_STATE_STORAGE_KEY, mapVisible ? '1' : '0');

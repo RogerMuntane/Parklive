@@ -19,6 +19,13 @@ const SEARCH_LOCATION_ZOOM = 15;
 const MAP_DYNAMIC_LOAD_DEBOUNCE_MS = 380;
 const MAP_DYNAMIC_MIN_ZOOM = 12;
 
+/**
+ * computeDistanceKm - Funció per a computeDistanceKm.
+ *
+ * @param {any} from - Paràmetre from
+ * @param {any} to - Paràmetre to
+ * @returns {any} Resultat de la funció.
+ */
 function computeDistanceKm(from, to) {
   const earthRadiusKm = 6371;
   const toRad = (value) => (value * Math.PI) / 180;
@@ -35,6 +42,12 @@ function computeDistanceKm(from, to) {
   return earthRadiusKm * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
+/**
+ * getMapViewportContext - Funció per a getMapViewportContext.
+ *
+ * @param {any} map - Paràmetre map
+ * @returns {any} Resultat de la funció.
+ */
 function getMapViewportContext(map) {
   if (!map || typeof map.getCenter !== 'function' || typeof map.getBounds !== 'function') {
     return null;
@@ -57,6 +70,12 @@ function getMapViewportContext(map) {
   };
 }
 
+/**
+ * refreshStreetReportsFromApi - Funció per a refreshStreetReportsFromApi.
+ *
+ * @param {any} setStreetReports - Paràmetre setStreetReports
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function refreshStreetReportsFromApi(setStreetReports) {
   try {
     const response = await pythonApi.get('/api/reports/disponibilitat', {
@@ -69,6 +88,11 @@ async function refreshStreetReportsFromApi(setStreetReports) {
   }
 }
 
+/**
+ * getCurrentBrowserLocation - Funció per a getCurrentBrowserLocation.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function getCurrentBrowserLocation() {
   return new Promise((resolve, reject) => {
     if (!globalThis.navigator?.geolocation) {
@@ -180,6 +204,16 @@ async function resolveCurrentLocation({
   }
 }
 
+/**
+ * tryAutoLocateAndSearch - Funció per a tryAutoLocateAndSearch.
+ *
+ * @param {any} { map - Paràmetre { map
+ * @param {any} setUserLocation - Paràmetre setUserLocation
+ * @param {any} runSearch - Paràmetre runSearch
+ * @param {any} focusUserLocation - Paràmetre focusUserLocation
+ * @param {any} setSearchAnchor } - Paràmetre setSearchAnchor }
+ * @returns {any} Resultat de la funció.
+ */
 function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation, setSearchAnchor }) {
 
   // Calcular el viewport inicial para la primera búsqueda
@@ -214,9 +248,16 @@ function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLoca
   });
 }
 
+/**
+ * initLanding - Funció exportada per a initLanding.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initLanding() {
   if (landingInitialized) return;
 
+  // 1. Inicialitzem el component central del mapa amb Leaflet (o similar)
+  // Això ens retorna l'estat del mapa i les referències de control
   const mapState = initLandingMap();
   if (!mapState) return;
 
@@ -239,11 +280,13 @@ export function initLanding() {
   } = mapState;
 
   setStreetReports([]);
+  // 2. Comprovem l'estat inicial del filtre per veure si hem de carregar aparcaments estructurals o alertes de carrer
   const initialCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
   if (initialCategory !== 'structure') {
     refreshStreetReportsFromApi(setStreetReports);
   }
 
+  // 3. Configurem el controlador global de filtres de cerca avançada
   const toggleFilters = createFiltersController({ map, updateOpenPopupsLayout });
 
   globalThis.Filtres = toggleFilters;
@@ -253,6 +296,7 @@ export function initLanding() {
   setupSearchBar({ closeFilters: toggleFilters });
   setupDateMiniSheet();
 
+  // 4. Inicialitzem el servei de cerques interconnectant els controls i l'autocompletar amb el mapa
   const { runSearch, setUserLocation, setSearchAnchor } = initLandingSearch({
     setParkingSpots,
     focusParkingById,
@@ -264,6 +308,7 @@ export function initLanding() {
     },
   });
 
+  // 5. Associem el botó "Localitza'm" per fixar les coordenades geolocalitzades del dispositiu i llançar cerca
   setLocateMeAction(() => {
     resolveCurrentLocation({
       map,

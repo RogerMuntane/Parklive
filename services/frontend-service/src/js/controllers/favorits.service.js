@@ -4,6 +4,11 @@ import { getUserId, isAuthenticated } from '../utils.js';
 let cachedFavoriteIds = null;
 let pendingLoadPromise = null;
 
+/**
+ * getNumericUserId - Funció per a getNumericUserId.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function getNumericUserId() {
   const rawUserId = getUserId();
   const userId = Number(rawUserId);
@@ -14,11 +19,22 @@ function getNumericUserId() {
   return userId;
 }
 
+/**
+ * clearFavoritesCache - Funció exportada per a clearFavoritesCache.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function clearFavoritesCache() {
   cachedFavoriteIds = null;
   pendingLoadPromise = null;
 }
 
+/**
+ * loadFavoriteIds - Funció exportada per a loadFavoriteIds.
+ *
+ * @param {any} { force - Paràmetre { force
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function loadFavoriteIds({ force = false } = {}) {
   if (!isAuthenticated()) {
     clearFavoritesCache();
@@ -60,11 +76,23 @@ export async function loadFavoriteIds({ force = false } = {}) {
   }
 }
 
+/**
+ * isFavoriteParking - Funció exportada per a isFavoriteParking.
+ *
+ * @param {any} parkingId - Paràmetre parkingId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function isFavoriteParking(parkingId) {
   const ids = await loadFavoriteIds();
   return ids.has(String(parkingId));
 }
 
+/**
+ * addFavoriteParking - Funció exportada per a addFavoriteParking.
+ *
+ * @param {any} parkingId - Paràmetre parkingId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function addFavoriteParking(parkingId) {
   const userId = getNumericUserId();
   await pythonApi.post('/api/usuari/favorits', {
@@ -80,6 +108,12 @@ export async function addFavoriteParking(parkingId) {
   return true;
 }
 
+/**
+ * removeFavoriteParking - Funció exportada per a removeFavoriteParking.
+ *
+ * @param {any} parkingId - Paràmetre parkingId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function removeFavoriteParking(parkingId) {
   const userId = getNumericUserId();
   await pythonApi.delete(`/api/usuari/favorits/${encodeURIComponent(String(parkingId))}?usuari_id=${encodeURIComponent(String(userId))}`);
@@ -91,6 +125,12 @@ export async function removeFavoriteParking(parkingId) {
   return true;
 }
 
+/**
+ * toggleFavoriteParking - Funció exportada per a toggleFavoriteParking.
+ *
+ * @param {any} parkingId - Paràmetre parkingId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function toggleFavoriteParking(parkingId) {
   const isFavorite = await isFavoriteParking(parkingId);
   if (isFavorite) {

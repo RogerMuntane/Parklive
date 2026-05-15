@@ -1,5 +1,10 @@
 import { isPremiumUser } from '../../utils.js';
 
+/**
+ * initFilterPanelControls - Funció exportada per a initFilterPanelControls.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initFilterPanelControls() {
   const updateRangeValues = () => {
     const priceRange = document.getElementById('priceRange');
@@ -148,6 +153,12 @@ export function initFilterPanelControls() {
   }
 }
 
+/**
+ * setupSearchBar - Funció exportada per a setupSearchBar.
+ *
+ * @param {any} { closeFilters } - Paràmetre { closeFilters }
+ * @returns {any} Resultat de la funció.
+ */
 export function setupSearchBar({ closeFilters }) {
   const mapSearchBar = document.getElementById('mapSearchBar');
   const backdrop = document.getElementById('filtersBackdrop');
@@ -164,6 +175,13 @@ export function setupSearchBar({ closeFilters }) {
   }
 }
 
+/**
+ * createFiltersController - Funció exportada per a createFiltersController.
+ *
+ * @param {any} { map - Paràmetre { map
+ * @param {any} updateOpenPopupsLayout } - Paràmetre updateOpenPopupsLayout }
+ * @returns {any} Resultat de la funció.
+ */
 export function createFiltersController({ map, updateOpenPopupsLayout }) {
   const toggleFilters = (forceState) => {
     const sidepanel = document.getElementById('filtresSidepanel');

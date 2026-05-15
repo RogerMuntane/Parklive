@@ -28,6 +28,12 @@ import {
  *   estat, data_desde, data_fins, aparcament_id, limit, offset
  * @returns {Promise<Array>}
  */
+/**
+ * obtenirReservesUsuari - Funció exportada per a obtenirReservesUsuari.
+ *
+ * @param {any} filtres - Paràmetre filtres
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function obtenirReservesUsuari(filtres = {}) {
   const usuariId = getUserId();
   if (!usuariId) throw new Error('Usuari no autenticat');
@@ -58,6 +64,12 @@ export async function obtenirReservesUsuari(filtres = {}) {
  *   data_desde, data_fins, limit, offset
  * @returns {Promise<Array>}
  */
+/**
+ * obtenirTotesReserves - Funció exportada per a obtenirTotesReserves.
+ *
+ * @param {any} filtres - Paràmetre filtres
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function obtenirTotesReserves(filtres = {}) {
   const params = {
     limit: DEFAULT_LIMIT,
@@ -80,6 +92,13 @@ export async function obtenirTotesReserves(filtres = {}) {
  * @param {string} estat – pendent, confirmada, en_curs, completada, cancelada
  * @param {Object} [filtres] – limit, offset
  * @returns {Promise<Array>}
+ */
+/**
+ * obtenirReservesPerEstat - Funció exportada per a obtenirReservesPerEstat.
+ *
+ * @param {any} estat - Paràmetre estat
+ * @param {any} filtres - Paràmetre filtres
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function obtenirReservesPerEstat(estat, filtres = {}) {
   if (!estat) throw new Error('L\'estat és obligatori');
@@ -106,6 +125,12 @@ export async function obtenirReservesPerEstat(estat, filtres = {}) {
  * @param {number|string} reservaId
  * @returns {Promise<Object>}
  */
+/**
+ * obtenirDetallReserva - Funció exportada per a obtenirDetallReserva.
+ *
+ * @param {any} reservaId - Paràmetre reservaId
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function obtenirDetallReserva(reservaId) {
   try {
     return await pythonApi.get(`/api/reserves/${reservaId}`);
@@ -122,6 +147,12 @@ export async function obtenirDetallReserva(reservaId) {
  *   usuari_id, aparcament_id, data_entrada, data_sortida, preu_total
  *   Opcionals: descompte_aplicat, notes
  * @returns {Promise<Object>} – Resposta amb message i reserva
+ */
+/**
+ * crearReserva - Funció exportada per a crearReserva.
+ *
+ * @param {any} dades - Paràmetre dades
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function crearReserva(dades) {
   const required = ['usuari_id', 'aparcament_id', 'data_entrada', 'data_sortida', 'preu_total'];
@@ -143,6 +174,12 @@ export async function crearReserva(dades) {
  * Cancel·la una reserva d'un usuari.
  * @param {number|string} reservaId
  * @returns {Promise<Object>}
+ */
+/**
+ * cancelarReserva - Funció exportada per a cancelarReserva.
+ *
+ * @param {any} reservaId - Paràmetre reservaId
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function cancelarReserva(reservaId) {
   if (!reservaId) throw new Error('ID de reserva obligatori');
@@ -171,6 +208,13 @@ const ESTAT_CLASSES = {
  *
  * @param {Array}       reserves  – Llista de reserves
  * @param {HTMLElement}  container
+ */
+/**
+ * renderReserves - Funció exportada per a renderReserves.
+ *
+ * @param {any} reserves - Paràmetre reserves
+ * @param {any} container - Paràmetre container
+ * @returns {any} Resultat de la funció.
  */
 export function renderReserves(reserves, container) {
   if (!container) return;
@@ -221,6 +265,13 @@ export function renderReserves(reserves, container) {
  * @param {Object}      reserva
  * @param {HTMLElement}  container
  */
+/**
+ * renderDetallReserva - Funció exportada per a renderDetallReserva.
+ *
+ * @param {any} reserva - Paràmetre reserva
+ * @param {any} container - Paràmetre container
+ * @returns {any} Resultat de la funció.
+ */
 export function renderDetallReserva(reserva, container) {
   if (!container || !reserva) return;
 
@@ -249,6 +300,11 @@ export function renderDetallReserva(reserva, container) {
 /**
  * Punt d'entrada del controlador de reserves.
  * Detecta elements DOM i vincula events.
+ */
+/**
+ * initReserves - Funció exportada per a initReserves.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function initReserves() {
   const listContainer = document.querySelector('[data-role="reserves-list"]');
@@ -386,6 +442,12 @@ export async function initReserves() {
 /**
  * Carrega les reserves de l'usuari i les renderitza amb format profile.
  */
+/**
+ * carregarReservesPerfil - Funció per a carregarReservesPerfil.
+ *
+ * @param {any} container - Paràmetre container
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function carregarReservesPerfil(container) {
   try {
     // Podem filtrar per mostrar només les que no estan cancel·lades o totes
@@ -412,6 +474,12 @@ async function carregarReservesPerfil(container) {
  * Carrega i renderitza les reserves de l'usuari actual.
  * @param {HTMLElement} container
  */
+/**
+ * carregarReserves - Funció per a carregarReserves.
+ *
+ * @param {any} container - Paràmetre container
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function carregarReserves(container) {
   try {
     const reserves = await obtenirReservesUsuari();
@@ -426,6 +494,12 @@ async function carregarReserves(container) {
  * Connecta click als botons "Detall" de cada fila.
  * @param {HTMLElement} container
  */
+/**
+ * attachReservaDetailListeners - Funció per a attachReservaDetailListeners.
+ *
+ * @param {any} container - Paràmetre container
+ * @returns {any} Resultat de la funció.
+ */
 function attachReservaDetailListeners(container) {
   container.querySelectorAll('.btn-detall-reserva').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -439,6 +513,13 @@ function attachReservaDetailListeners(container) {
  * Renderitza la secció de reserves del perfil d'usuari (cards modernes).
  * @param {Array} reserves 
  * @param {HTMLElement} container 
+ */
+/**
+ * renderProfileReserves - Funció exportada per a renderProfileReserves.
+ *
+ * @param {any} reserves - Paràmetre reserves
+ * @param {any} container - Paràmetre container
+ * @returns {any} Resultat de la funció.
  */
 export function renderProfileReserves(reserves, container) {
   if (!container) return;
@@ -583,6 +664,12 @@ if (typeof window !== 'undefined') {
  * Escapa caràcters HTML.
  * @param {string} str
  * @returns {string}
+ */
+/**
+ * escapeHtml - Funció per a escapeHtml.
+ *
+ * @param {any} str - Paràmetre str
+ * @returns {any} Resultat de la funció.
  */
 function escapeHtml(str) {
   if (!str) return '';

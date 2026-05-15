@@ -1,3 +1,6 @@
+-- Arxiu: 07_system.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. CONFIGURACIÓ DEL SISTEMA
 INSERT INTO configuracio_sistema (clau, valor, tipus, descripcio)
 VALUES (

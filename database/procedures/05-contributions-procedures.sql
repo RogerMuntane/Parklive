@@ -1,3 +1,6 @@
+-- Arxiu: 05-contributions-procedures.sql
+-- Descripció: Aquest arxiu defineix els procediments emmagatzemats (Stored Procedures) per la lògica de base de dades.
+
 
 -- STORED PROCEDURES PARKLIVE - GESTIÓ DE CONTRIBUCIONS
 USE parklive_db;
@@ -24,6 +27,9 @@ CREATE PROCEDURE sp_crear_contribucio(
     OUT p_error_msg VARCHAR(500)
 )
 BEGIN
+    -- Si falla qualsevol query de la transacció salta aquest handler:
+    -- 1. Fa un Rollback automàtic per desfer tot els canvis a mitges
+    -- 2. Evita inconsistències en taules creuades (ex: pagaments vs reserves)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -32,6 +38,7 @@ BEGIN
     END;
 
     -- Iniciar transacció
+    -- Bloc transaccional per assegurar l'atomicidad (garanteix operacions segures en cas de caiguda)
     START TRANSACTION;
     SET p_error_msg = NULL;
 

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Arxiu: init-db.sh
+# Descripció: Script de terminal per a tasques d'inicialització o configuració de l'entorn de base de dades.
+
 # database/manual-init.sh - Executar inicialització manualment des del host
 
 set -e

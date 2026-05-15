@@ -14,6 +14,11 @@ import { pythonApi, phpApi } from '../api.js';
  * Requereix que el HTML tingui els inputs amb id: pass-actual, pass-nova, pass-confirm
  * i un botó amb id: btn-update-password
  */
+/**
+ * initProfilePasswordForm - Funció exportada per a initProfilePasswordForm.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initProfilePasswordForm() {
   const actual = document.getElementById('pass-actual');
   const nova = document.getElementById('pass-nova');
@@ -159,6 +164,11 @@ export function initProfilePasswordForm() {
   }
 }
 
+/**
+ * initProfileInfoForm - Funció exportada per a initProfileInfoForm.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initProfileInfoForm() {
   const nomInput = document.getElementById('p-nom');
   const cognomsInput = document.getElementById('p-cognoms');
@@ -196,6 +206,11 @@ export async function initProfileInfoForm() {
 /**
  * Inicialitza els botons de Desar i Cancel·lar del formulari de dades personals.
  * Envia les dades al PHP i actualitza sessionStorage en cas d'èxit.
+ */
+/**
+ * initProfileInfoSaveForm - Funció exportada per a initProfileInfoSaveForm.
+ *
+ * @returns {any} Resultat de la funció.
  */
 export function initProfileInfoSaveForm() {
   const nomInput = document.getElementById('p-nom');
@@ -303,6 +318,11 @@ export function initProfileInfoSaveForm() {
 /**
  * Inicialitza la secció de Mètodes de Pagament
  */
+/**
+ * initProfilePaymentSection - Funció exportada per a initProfilePaymentSection.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initProfilePaymentSection() {
   const section = document.getElementById('section-payment');
   if (!section) return;
@@ -321,6 +341,11 @@ export async function initProfilePaymentSection() {
 
 /**
  * Inicialitza la secció de Gestió del Pla
+ */
+/**
+ * initProfilePlanSection - Funció exportada per a initProfilePlanSection.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function initProfilePlanSection() {
   const btnUpdate = document.getElementById('btn-update-plan');
@@ -503,6 +528,11 @@ export async function initProfilePlanSection() {
 
 /**
  * Inicialitza l'historial de reserves del perfil
+ */
+/**
+ * initProfileHistorySection - Funció exportada per a initProfileHistorySection.
+ *
+ * @returns {any} Resultat de la funció.
  */
 export function initProfileHistorySection() {
   const tableBody = document.getElementById('history-table-body');
@@ -714,6 +744,11 @@ export function initProfileHistorySection() {
 /**
  * Inicialitza la secció de favorits del perfil
  */
+/**
+ * initProfileFavoritesSection - Funció exportada per a initProfileFavoritesSection.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function initProfileFavoritesSection() {
   const listEl = document.getElementById('favorites-list');
   if (!listEl) return;
@@ -839,6 +874,11 @@ export async function initProfileFavoritesSection() {
 /**
  * Inicialitza la càrrega d'imatge de perfil
  */
+/**
+ * initProfileImageUpload - Funció exportada per a initProfileImageUpload.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initProfileImageUpload() {
   const uploadInput = document.getElementById('profile-upload-input');
   const uploadBtn = document.getElementById('btn-upload-avatar');
@@ -919,6 +959,11 @@ export function initProfileImageUpload() {
 
 /**
  * Inicialitza la secció de Punts i Recompenses
+ */
+/**
+ * initProfilePointsSection - Funció exportada per a initProfilePointsSection.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function initProfilePointsSection() {
   const pointsText = document.getElementById('user-total-points');
@@ -1110,6 +1155,11 @@ export async function initProfilePointsSection() {
 /**
  * Carrega les insignies de l'usuari i les mostra al sidebar
  */
+/**
+ * loadSidebarBadges - Funció exportada per a loadSidebarBadges.
+ *
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 export async function loadSidebarBadges() {
   const userId = getUserId();
   const container = document.getElementById('sidebar-badges-container');
@@ -1147,6 +1197,11 @@ export async function loadSidebarBadges() {
 /**
  * Inicialitza la secció d'historial de tiquets de subscripció.
  * Completament independent de l'historial de reserves.
+ */
+/**
+ * initProfileTicketsSection - Funció exportada per a initProfileTicketsSection.
+ *
+ * @returns {any} Resultat de la funció.
  */
 export function initProfileTicketsSection() {
   const tableBody = document.getElementById('tickets-table-body');

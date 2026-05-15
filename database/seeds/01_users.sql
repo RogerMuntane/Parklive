@@ -1,3 +1,6 @@
+-- Arxiu: 01_users.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. USUARIS (20 usuaris de diferents tipus)
 -- Nota: Contrasenyes són totes "Password123!"
 -- Hash generat: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi

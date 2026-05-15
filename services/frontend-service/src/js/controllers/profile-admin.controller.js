@@ -8,6 +8,11 @@ import { PHP_API_URL } from '../config.js';
 import { phpApi } from '../api.js';
 import { showBootstrapAlert } from '../utils.js';
 
+/**
+ * initAdminUserCRUD - Funció exportada per a initAdminUserCRUD.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initAdminUserCRUD() {
     const section = document.getElementById('section-admin-users');
     if (!section) return;
@@ -49,6 +54,12 @@ export function initAdminUserCRUD() {
 
 let currentPage = 1;
 
+/**
+ * loadUsers - Funció per a loadUsers.
+ *
+ * @param {any} page - Paràmetre page
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function loadUsers(page = 1) {
     currentPage = page;
     const tableBody = document.getElementById('users-table-body');
@@ -84,6 +95,12 @@ async function loadUsers(page = 1) {
     }
 }
 
+/**
+ * renderUsers - Funció per a renderUsers.
+ *
+ * @param {any} users - Paràmetre users
+ * @returns {any} Resultat de la funció.
+ */
 function renderUsers(users) {
     const tableBody = document.getElementById('users-table-body');
     if (!tableBody) return;
@@ -138,6 +155,12 @@ function renderUsers(users) {
     `).join('');
 }
 
+/**
+ * renderPagination - Funció per a renderPagination.
+ *
+ * @param {any} pagination - Paràmetre pagination
+ * @returns {any} Resultat de la funció.
+ */
 function renderPagination(pagination) {
     const paginationContainer = document.getElementById('users-pagination');
     if (!paginationContainer) return;
@@ -192,6 +215,12 @@ function renderPagination(pagination) {
     });
 }
 
+/**
+ * handleFormSubmit - Funció per a handleFormSubmit.
+ *
+ * @param {any} e - Paràmetre e
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function handleFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
@@ -221,6 +250,11 @@ async function handleFormSubmit(e) {
     }
 }
 
+/**
+ * resetForm - Funció per a resetForm.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function resetForm() {
     const form = document.getElementById('form-user');
     if (form) {
@@ -265,6 +299,12 @@ window.deleteUser = function (id) {
     modal.show();
 };
 
+/**
+ * performDelete - Funció per a performDelete.
+ *
+ * @param {any} id - Paràmetre id
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function performDelete(id) {
     try {
         const result = await phpApi.post(`/api/admin/users?action=delete&id=${id}`);
@@ -281,6 +321,13 @@ async function performDelete(id) {
     }
 }
 
+/**
+ * debounce - Funció per a debounce.
+ *
+ * @param {any} func - Paràmetre func
+ * @param {any} wait - Paràmetre wait
+ * @returns {any} Resultat de la funció.
+ */
 function debounce(func, wait) {
     let timeout;
     return function (...args) {

@@ -1,3 +1,6 @@
+-- Arxiu: 06_content.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. ARTICLES DEL BLOG
 INSERT INTO articles_blog (
         titol,

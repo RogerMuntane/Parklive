@@ -1,3 +1,11 @@
+/**
+ * initResultsPanelToggle - Funció exportada per a initResultsPanelToggle.
+ *
+ * @param {any} { map - Paràmetre { map
+ * @param {any} updateOpenPopupsLayout - Paràmetre updateOpenPopupsLayout
+ * @param {any} compactBreakpoint - Paràmetre compactBreakpoint
+ * @returns {any} Resultat de la funció.
+ */
 export function initResultsPanelToggle({ map, updateOpenPopupsLayout, compactBreakpoint = 991.98 }) {
   const toggleBtn = document.getElementById('toggleResultsPanelBtn');
   if (!toggleBtn || !map) return;

@@ -11,6 +11,15 @@ import { showBootstrapAlert } from '../../utils.js';
  * @param {Object} [options] - Opcions addicionals per a Intl.DateTimeFormat.
  * @returns {string} La data formatada.
  */
+/**
+ * formatStripeDate - Funció exportada per a formatStripeDate.
+ *
+ * @param {any} timestamp - Paràmetre timestamp
+ * @param {any} options - Paràmetre options
+ * @param {any} month: 'long' - Paràmetre month: 'long'
+ * @param {any} year: 'numeric' } - Paràmetre year: 'numeric' }
+ * @returns {any} Resultat de la funció.
+ */
 export function formatStripeDate(timestamp, options = { day: '2-digit', month: 'long', year: 'numeric' }) {
     if (!timestamp) return '--/--/----';
     const date = new Date(timestamp * 1000);
@@ -22,6 +31,13 @@ export function formatStripeDate(timestamp, options = { day: '2-digit', month: '
  * 
  * @param {Array} methods - Llista de mètodes de pagament.
  * @param {Function} onDeleteCallback - Callback quan es vol eliminar una targeta.
+ */
+/**
+ * renderPaymentMethods - Funció exportada per a renderPaymentMethods.
+ *
+ * @param {any} methods - Paràmetre methods
+ * @param {any} onDeleteCallback - Paràmetre onDeleteCallback
+ * @returns {any} Resultat de la funció.
  */
 export function renderPaymentMethods(methods, onDeleteCallback) {
     const container = document.getElementById('payment-methods-container');
@@ -78,6 +94,12 @@ export function renderPaymentMethods(methods, onDeleteCallback) {
  * 
  * @param {Array} methods - Llista de mètodes.
  */
+/**
+ * renderCardsForPlan - Funció exportada per a renderCardsForPlan.
+ *
+ * @param {any} methods - Paràmetre methods
+ * @returns {any} Resultat de la funció.
+ */
 export function renderCardsForPlan(methods) {
     const container = document.getElementById('saved-cards-plan');
     if (!container) return;
@@ -119,6 +141,13 @@ export function renderCardsForPlan(methods) {
  * 
  * @param {Object} sub - Detalls de la subscripció.
  * @param {Object} primaryCard - Targeta principal.
+ */
+/**
+ * updatePlanSummaryUI - Funció exportada per a updatePlanSummaryUI.
+ *
+ * @param {any} sub - Paràmetre sub
+ * @param {any} primaryCard - Paràmetre primaryCard
+ * @returns {any} Resultat de la funció.
  */
 export function updatePlanSummaryUI(sub, primaryCard) {
     const nextInvoiceDate = document.getElementById('next-invoice-date');
@@ -166,6 +195,11 @@ export function updatePlanSummaryUI(sub, primaryCard) {
 /**
  * Renderitza la interfície per a un usuari amb pla Bàsic.
  */
+/**
+ * renderBasicPlanUI - Funció exportada per a renderBasicPlanUI.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function renderBasicPlanUI() {
     const planBadgeUi = document.getElementById('plan-badge-ui');
     const planIconUi = document.getElementById('plan-icon-ui');
@@ -199,6 +233,14 @@ export function renderBasicPlanUI() {
  * @param {Object} subscription - Objecte amb dades de subscripció.
  * @param {Object} [primaryCard] - Targeta principal.
  * @param {Object} callbacks - Objecte amb callbacks (onAutorenewChange).
+ */
+/**
+ * updateManageSectionUI - Funció exportada per a updateManageSectionUI.
+ *
+ * @param {any} subscription - Paràmetre subscription
+ * @param {any} primaryCard - Paràmetre primaryCard
+ * @param {any} callbacks - Paràmetre callbacks
+ * @returns {any} Resultat de la funció.
  */
 export function updateManageSectionUI(subscription, primaryCard, callbacks) {
     const manageSection = document.getElementById('section-manage');
@@ -358,6 +400,12 @@ export function updateManageSectionUI(subscription, primaryCard, callbacks) {
  * 
  * @param {boolean} isLoading - Si s'ha de mostrar l'spinner.
  */
+/**
+ * setLoading - Funció exportada per a setLoading.
+ *
+ * @param {any} isLoading - Paràmetre isLoading
+ * @returns {any} Resultat de la funció.
+ */
 export function setLoading(isLoading) {
     const btn = document.getElementById('submit');
     const spinner = document.getElementById('spinner');
@@ -374,6 +422,13 @@ export function setLoading(isLoading) {
  * @param {string} msg - El missatge a mostrar.
  * @param {string} [type='danger'] - El tipus d'alerta Bootstrap.
  */
+/**
+ * showMessage - Funció exportada per a showMessage.
+ *
+ * @param {any} msg - Paràmetre msg
+ * @param {any} type - Paràmetre type
+ * @returns {any} Resultat de la funció.
+ */
 export function showMessage(msg, type = 'danger') {
     const div = document.getElementById('payment-message');
     if (!div) return;
@@ -385,6 +440,11 @@ export function showMessage(msg, type = 'danger') {
 /**
  * Amaga el missatge d'alerta del formulari.
  */
+/**
+ * hideMessage - Funció exportada per a hideMessage.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function hideMessage() {
     const div = document.getElementById('payment-message');
     if (div) div.classList.add('d-none');
@@ -395,6 +455,13 @@ export function hideMessage() {
  * 
  * @param {string} type - 'success' o 'danger'.
  * @param {string} msg - Missatge.
+ */
+/**
+ * showAlert - Funció exportada per a showAlert.
+ *
+ * @param {any} type - Paràmetre type
+ * @param {any} msg - Paràmetre msg
+ * @returns {any} Resultat de la funció.
  */
 export function showAlert(type, msg) {
     showBootstrapAlert(type, msg);

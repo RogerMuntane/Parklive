@@ -14,6 +14,13 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 let adminMap = null;
 let adminMarker = null;
 
+/**
+ * initAdminMap - Funció per a initAdminMap.
+ *
+ * @param {any} lat - Paràmetre lat
+ * @param {any} lng - Paràmetre lng
+ * @returns {any} Resultat de la funció.
+ */
 function initAdminMap(lat, lng) {
     const latInput = document.getElementById('admin-aparcament-lat');
     const lngInput = document.getElementById('admin-aparcament-lng');
@@ -29,6 +36,11 @@ function initAdminMap(lat, lng) {
     adminMarker = result.marker;
 }
 
+/**
+ * initAdminParkingCRUD - Funció exportada per a initAdminParkingCRUD.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 export function initAdminParkingCRUD() {
     const section = document.getElementById('section-admin-parkings');
     if (!section) return;
@@ -116,6 +128,12 @@ export function initAdminParkingCRUD() {
 
 let currentPage = 1;
 
+/**
+ * loadParkings - Funció per a loadParkings.
+ *
+ * @param {any} page - Paràmetre page
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function loadParkings(page = 1) {
     currentPage = page;
     const tableBody = document.getElementById('parkings-table-body');
@@ -155,6 +173,12 @@ async function loadParkings(page = 1) {
     }
 }
 
+/**
+ * renderParkings - Funció per a renderParkings.
+ *
+ * @param {any} parkings - Paràmetre parkings
+ * @returns {any} Resultat de la funció.
+ */
 function renderParkings(parkings) {
     const tableBody = document.getElementById('parkings-table-body');
     if (!tableBody) return;
@@ -206,6 +230,12 @@ function renderParkings(parkings) {
     `}).join('');
 }
 
+/**
+ * renderPagination - Funció per a renderPagination.
+ *
+ * @param {any} pagination - Paràmetre pagination
+ * @returns {any} Resultat de la funció.
+ */
 function renderPagination(pagination) {
     const paginationContainer = document.getElementById('parkings-pagination');
     if (!paginationContainer) return;
@@ -259,6 +289,12 @@ function renderPagination(pagination) {
 
 let isSubmitting = false;
 
+/**
+ * handleFormSubmit - Funció per a handleFormSubmit.
+ *
+ * @param {any} e - Paràmetre e
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function handleFormSubmit(e) {
     e.preventDefault();
 
@@ -360,6 +396,11 @@ async function handleFormSubmit(e) {
     }
 }
 
+/**
+ * resetForm - Funció per a resetForm.
+ *
+ * @returns {any} Resultat de la funció.
+ */
 function resetForm() {
     const form = document.getElementById('form-parking');
     if (form) {
@@ -452,6 +493,12 @@ window.deleteParking = function (id) {
     modal.show();
 };
 
+/**
+ * performDelete - Funció per a performDelete.
+ *
+ * @param {any} id - Paràmetre id
+ * @returns {Promise<any>} Promesa amb el resultat.
+ */
 async function performDelete(id) {
     try {
         const result = await pythonApi.post(`/api/admin/aparcaments?action=delete&id=${id}`, {});
@@ -468,6 +515,13 @@ async function performDelete(id) {
     }
 }
 
+/**
+ * debounce - Funció per a debounce.
+ *
+ * @param {any} func - Paràmetre func
+ * @param {any} wait - Paràmetre wait
+ * @returns {any} Resultat de la funció.
+ */
 function debounce(func, wait) {
     let timeout;
     return function (...args) {

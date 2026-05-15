@@ -1,6 +1,10 @@
+-- Arxiu: 00_cleanup.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- DADES DE PROVA PARKLIVE - SEED DATA COMPLET
 USE parklive_db;
 -- Desactivar comprovació de claus forànies temporalment
+-- Això s'apaga momentàniament per evitar errors al fer TRUNCATE de taules que tenen restriccions referencials amb d'altres
 SET FOREIGN_KEY_CHECKS = 0;
 -- Netejar taules (només per desenvolupament!)
 TRUNCATE TABLE usuaris_recompenses;

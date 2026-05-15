@@ -3,6 +3,8 @@
  * NO editar manualment — es regenera cada cop que el contenidor s'inicia.
  */
 export const ENV = Object.freeze({
+  APP_ENV: 'development',
+  API_HOST: '127.0.0.1',
   PHP_SERVICE_PORT: '8080',
   PYTHON_SERVICE_PORT: '5000',
   STRIPE_PUBLIC_KEY: 'pk_test_51TE5UUBadMjk0sTNB8XirHF8YaSCz4eZSaAhScPpbqSA0pt1KSEGvle9LEvfvLm2PdPqBEDU8faMPl9rJIUV3Rgq00Pbg97OfP',

@@ -1,3 +1,6 @@
+-- Arxiu: 05_gamification.sql
+-- Descripció: Aquest arxiu conté sentències (INSERT) per poblar inicialment la base de dades amb dades fictícies de prova.
+
 -- 1. NETEJA DE DADES PRÈVIES (per evitar conflictes de claus foranes i IDs)
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE usuaris_recompenses;

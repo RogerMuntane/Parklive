@@ -1,3 +1,6 @@
+-- Arxiu: 01-user-procedures.sql
+-- Descripció: Aquest arxiu defineix els procediments emmagatzemats (Stored Procedures) per la lògica de base de dades.
+
 -- STORED PROCEDURES PARKLIVE - GESTIÓ D'USUARIS
 USE parklive_db;
 -- Eliminar procedures si existeixen (per poder recrear-los)
@@ -53,7 +56,8 @@ SET p_nou_id = NULL;
 SET p_error_msg = 'Error al insertar usuari: Excepcio SQL';
 END;
 -- Iniciar transacció
-START TRANSACTION;
+-- Bloc transaccional per assegurar l'atomicidad (que o s'aplica tot, o no s'aplica res)
+    START TRANSACTION;
 -- Validar que l'email no estigui buit
 IF p_email IS NULL
 OR TRIM(p_email) = '' THEN
@@ -121,7 +125,8 @@ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK;
 SET p_actualitzat = FALSE;
 SET p_error_msg = 'Error al actualitzar contrasenya: Excepció SQL';
 END;
-START TRANSACTION;
+-- Bloc transaccional per assegurar l'atomicidad (que o s'aplica tot, o no s'aplica res)
+    START TRANSACTION;
 -- Validar que l'email no estigui buit
 IF p_email IS NULL
 OR TRIM(p_email) = '' THEN
@@ -251,6 +256,9 @@ BEGIN
     DECLARE v_activa BOOLEAN;
     DECLARE v_punts_actuals INT;
 
+    -- Si falla qualsevol query de la transacció salta aquest handler:
+    -- 1. Fa un Rollback automàtic per desfer tot els canvis a mitges
+    -- 2. Passa un missatge d'error a la variable de sortida perque Node/Python pugui printar-ho
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -258,6 +266,7 @@ BEGIN
         SET p_error_msg = 'Error al bescanviar recompensa: Excepció SQL';
     END;
 
+    -- Bloc transaccional per assegurar l'atomicidad (que o s'aplica tot, o no s'aplica res)
     START TRANSACTION;
     SET p_error_msg = NULL;
 
