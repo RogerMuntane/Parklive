@@ -1,3 +1,12 @@
+/**
+ * ParkLive – landing.controller.js
+ *
+ * Controlador principal de la pàgina d'inici (landing).
+ * Orquestra la inicialització del mapa, els filtres de cerca, la
+ * geolocalització de l'usuari, la càrrega dinàmica d'aparcaments
+ * i les contribucions de disponibilitat de carrer.
+ */
+
 import { initLandingMap } from './landing/map.module.js';
 import { pythonApi } from '../api.js';
 import { showBootstrapAlert } from '../utils.js';
@@ -20,11 +29,12 @@ const MAP_DYNAMIC_LOAD_DEBOUNCE_MS = 380;
 const MAP_DYNAMIC_MIN_ZOOM = 12;
 
 /**
- * computeDistanceKm - Funció per a computeDistanceKm.
+ * Calcula la distància en kilòmetres entre dos punts geogràfics
+ * usant la fórmula de Haversine.
  *
- * @param {any} from - Paràmetre from
- * @param {any} to - Paràmetre to
- * @returns {any} Resultat de la funció.
+ * @param {{lat: number, lon: number}} from - Punt d'origen.
+ * @param {{lat: number, lon: number}} to   - Punt de destí.
+ * @returns {number} La distància en kilòmetres.
  */
 function computeDistanceKm(from, to) {
   const earthRadiusKm = 6371;
@@ -43,10 +53,11 @@ function computeDistanceKm(from, to) {
 }
 
 /**
- * getMapViewportContext - Funció per a getMapViewportContext.
+ * Obté el context del viewport actual del mapa (centre i radi).
+ * Retorna null si el mapa no és vàlid.
  *
- * @param {any} map - Paràmetre map
- * @returns {any} Resultat de la funció.
+ * @param {L.Map} map - La instància del mapa Leaflet.
+ * @returns {{center: {lat: number, lon: number}, radiusKm: number}|null}
  */
 function getMapViewportContext(map) {
   if (!map || typeof map.getCenter !== 'function' || typeof map.getBounds !== 'function') {
@@ -71,10 +82,11 @@ function getMapViewportContext(map) {
 }
 
 /**
- * refreshStreetReportsFromApi - Funció per a refreshStreetReportsFromApi.
+ * Descarrega les contribucions de disponibilitat de carrer des de l'API
+ * i les injecta al mapa via `setStreetReports`.
  *
- * @param {any} setStreetReports - Paràmetre setStreetReports
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {Function} setStreetReports - Funció del mapa per actualitzar les contribucions.
+ * @returns {Promise<void>}
  */
 async function refreshStreetReportsFromApi(setStreetReports) {
   try {
@@ -89,9 +101,10 @@ async function refreshStreetReportsFromApi(setStreetReports) {
 }
 
 /**
- * getCurrentBrowserLocation - Funció per a getCurrentBrowserLocation.
+ * Retorna una Promise que es resol amb la posició GPS actual del navegador.
+ * Rebutja si la geolocalització no està disponible o la precisió és molt baixa.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {Promise<GeolocationPosition>} La posició del dispositiu.
  */
 function getCurrentBrowserLocation() {
   return new Promise((resolve, reject) => {
@@ -123,6 +136,22 @@ function getCurrentBrowserLocation() {
   });
 }
 
+/**
+ * Resol la ubicació actual de l'usuari i actualitza el mapa.
+ * Si falla la geolocalització, el mapa es mostra amb el centre per defecte.
+ *
+ * @param {Object}   options                    - Opcions de configuració.
+ * @param {L.Map}    options.map                 - La instància del mapa.
+ * @param {Function} options.setUserLocation     - Emmagatzema la ubicació de l'usuari.
+ * @param {Function} options.setSearchAnchor     - Fixa el punt d'ancoratge de la cerca.
+ * @param {Function} options.runSearch           - Executa la cerca d'aparcaments.
+ * @param {Function} options.focusUserLocation   - Centra el mapa en la ubicació de l'usuari.
+ * @param {Array}    options.fallbackCenter       - Centre de fallback si falla el GPS.
+ * @param {number}   options.fallbackZoom         - Zoom de fallback.
+ * @param {number}   [options.viewportRadiusKm]   - Radi del viewport per filtrar per distància.
+ * @param {boolean}  [options.silent=false]       - Si true, no mostra alertes d'error.
+ * @returns {Promise<boolean|void>} True si l'èxit, void si falla.
+ */
 async function resolveCurrentLocation({
   map,
   setUserLocation,
@@ -205,14 +234,16 @@ async function resolveCurrentLocation({
 }
 
 /**
- * tryAutoLocateAndSearch - Funció per a tryAutoLocateAndSearch.
+ * Intenta la geolocalització automàtica en carregar la pàgina.
+ * Si falla, el mapa es centra al viewport per defecte i llança la cerca inicial.
  *
- * @param {any} { map - Paràmetre { map
- * @param {any} setUserLocation - Paràmetre setUserLocation
- * @param {any} runSearch - Paràmetre runSearch
- * @param {any} focusUserLocation - Paràmetre focusUserLocation
- * @param {any} setSearchAnchor } - Paràmetre setSearchAnchor }
- * @returns {any} Resultat de la funció.
+ * @param {Object}   options                 - Opcions de configuració.
+ * @param {L.Map}    options.map              - La instància del mapa.
+ * @param {Function} options.setUserLocation  - Emmagatzema la ubicació de l'usuari.
+ * @param {Function} options.runSearch        - Executa la cerca d'aparcaments.
+ * @param {Function} options.focusUserLocation - Centra el mapa en la ubicació de l'usuari.
+ * @param {Function} options.setSearchAnchor  - Fixa el punt d'ancoratge de la cerca.
+ * @returns {void}
  */
 function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLocation, setSearchAnchor }) {
 
@@ -249,9 +280,12 @@ function tryAutoLocateAndSearch({ map, setUserLocation, runSearch, focusUserLoca
 }
 
 /**
- * initLanding - Funció exportada per a initLanding.
+ * Punt d'entrada del controlador de la landing page.
+ * Inicialitza el mapa, els filtres, el servei de cerca i
+ * la càrrega dinàmica de marcadors en moure o fer zoom al mapa.
+ * Executa una sola vegada (protecció contra re-inicialització).
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 export function initLanding() {
   if (landingInitialized) return;

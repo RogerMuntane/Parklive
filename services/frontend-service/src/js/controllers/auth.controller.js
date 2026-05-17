@@ -25,11 +25,9 @@ let _googleClientId = null;
 
 /**
  * Obté el Google Client ID des de la configuració o el backend Python.
- */
-/**
- * getGoogleClientId - Funció per a getGoogleClientId.
+ * Primer intenta el valor injectat per Webpack; si no existeix, el demana al backend.
  *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @returns {Promise<string|null>} El Client ID de Google, o null si no es pot obtenir.
  */
 async function getGoogleClientId() {
   if (_googleClientId) return _googleClientId;
@@ -57,11 +55,9 @@ async function getGoogleClientId() {
 
 /**
  * Inicialitza el formulari de login (pàgina page-login).
- */
-/**
- * initLogin - Funció per a initLogin.
+ * Intercepta el submit, valida les dades i les envia al servei PHP.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function initLogin() {
   const form = document.querySelector('.form-auth');
@@ -116,11 +112,9 @@ function initLogin() {
 
 /**
  * Inicialitza el formulari de registre (pàgina page-register).
- */
-/**
- * initRegister - Funció per a initRegister.
+ * Valida que les contrasenyes coincideixin i envia les dades al servei PHP.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function initRegister() {
   const form = document.querySelector('.form-auth');
@@ -175,13 +169,9 @@ function initRegister() {
 
 /**
  * Mostra un pas del formulari de reset i amaga els altres.
- * @param {'step-request'|'step-verify'|'step-success'} stepId
- */
-/**
- * showResetStep - Funció per a showResetStep.
  *
- * @param {any} stepId - Paràmetre stepId
- * @returns {any} Resultat de la funció.
+ * @param {'step-request'|'step-verify'|'step-success'} stepId - ID del pas a mostrar.
+ * @returns {void}
  */
 function showResetStep(stepId) {
   document.querySelectorAll('.step').forEach((s) => s.classList.add('d-none'));
@@ -193,11 +183,8 @@ function showResetStep(stepId) {
  * Inicialitza la sol·licitud de codi de reset via el servei Python.
  * S'utilitza en qualsevol pàgina que tingui un formulari amb id
  * "reset-request-form" o la classe "form-reset-request".
- */
-/**
- * initRequestResetCode - Funció per a initRequestResetCode.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function initRequestResetCode() {
   const form = document.querySelector('.form-reset-request, #reset-request-form');
@@ -251,11 +238,9 @@ function initRequestResetCode() {
 
 /**
  * Inicialitza el formulari de verificació de codi i canvi de contrasenya.
- */
-/**
- * initVerifyResetCode - Funció per a initVerifyResetCode.
+ * Gestiona el flux de verificació i el botó de reenviar codi.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function initVerifyResetCode() {
   const form = document.querySelector('.form-reset-verify, #reset-verify-form');
@@ -378,15 +363,11 @@ function initVerifyResetCode() {
 /**
  * Gestiona la resposta del token d'accés de Google.
  * Envia l'access_token al backend Python per verificar-lo i
- * crear/trobar l'usuari a la BD.
+ * crear/trobar l'usuari a la BD. Sincronitza la sessió amb PHP.
  *
- * @param {Object} tokenResponse – Resposta de requestAccessToken()
- */
-/**
- * handleGoogleTokenResponse - Funció per a handleGoogleTokenResponse.
- *
- * @param {any} tokenResponse - Paràmetre tokenResponse
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {Object} tokenResponse - Resposta de requestAccessToken().
+ * @param {string} tokenResponse.access_token - El token d'accés de Google.
+ * @returns {Promise<void>}
  */
 async function handleGoogleTokenResponse(tokenResponse) {
   hideAllAlerts();
@@ -441,11 +422,8 @@ async function handleGoogleTokenResponse(tokenResponse) {
  * 2. addEventListener('click') → tokenClient.requestAccessToken()
  * 3. Google obre popup real de selecció de compte
  * 4. Callback rep access_token → enviar al backend per verificar
- */
-/**
- * initGoogleSignIn - Funció per a initGoogleSignIn.
  *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @returns {Promise<void>}
  */
 async function initGoogleSignIn() {
   const googleBtns = document.querySelectorAll('[data-action="google-login"]');
@@ -490,20 +468,11 @@ async function initGoogleSignIn() {
 /*  HELPERS PHP                                                         */
 
 /**
- * Envia un formulari al servei PHP.
- * Envia les dades com a FormData amb Accept: application/json
- * perquè PHP retorni JSON en comptes de redirects.
+ * Envia dades al servei PHP via la capa `phpApi`.
  *
- * @param {string}   endpoint – Ruta relativa del controlador PHP
- * @param {Object}   payload  – Dades clau-valor a enviar
+ * @param {string} endpoint - Ruta relativa del controlador PHP.
+ * @param {Object} payload  - Dades clau-valor a enviar.
  * @returns {Promise<{success: boolean, message?: string}>}
- */
-/**
- * postToPhp - Funció per a postToPhp.
- *
- * @param {any} endpoint - Paràmetre endpoint
- * @param {any} payload - Paràmetre payload
- * @returns {Promise<any>} Promesa amb el resultat.
  */
 async function postToPhp(endpoint, payload) {
   try {
@@ -518,13 +487,11 @@ async function postToPhp(endpoint, payload) {
 
 
 /**
- * Fa logout de l'usuari: neteja sessió, crida backend i redirigeix.
- */
-/**
- * logoutUser - Funció exportada per a logoutUser.
+ * Fa logout de l'usuari: neteja la sessió local, crida el backend PHP
+ * per invalidar la sessió del servidor i redirigeix.
  *
- * @param {any} redirectUrl - Paràmetre redirectUrl
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string} [redirectUrl='/login'] - URL de redirecció post-logout.
+ * @returns {Promise<void>}
  */
 export async function logoutUser(redirectUrl = '/login') {
   clearUserSession();
@@ -540,11 +507,9 @@ export async function logoutUser(redirectUrl = '/login') {
 
 /**
  * Inicialitza els botons de logout a qualsevol pàgina.
- */
-/**
- * initLogout - Funció per a initLogout.
+ * Cerca elements amb `[data-action="logout"]` o `.btn-logout`.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function initLogout() {
   const logoutBtns = document.querySelectorAll('[data-action="logout"], .btn-logout');
@@ -562,13 +527,11 @@ function initLogout() {
 /* ================================================================== */
 
 /**
- * Punt d'entrada del controlador. Detecta la pàgina actual
- * i inicialitza els gestors d'events adequats.
- */
-/**
- * initAuth - Funció exportada per a initAuth.
+ * Punt d'entrada del controlador d'autenticació.
+ * Detecta la pàgina actual per `body.className` i inicialitza
+ * els gestors d'events adequats (login, registre, reset, Google OAuth, logout).
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 export function initAuth() {
   const body = document.body.className;

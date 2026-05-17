@@ -1,11 +1,20 @@
+/**
+ * ParkLive – nova_valoracio.controller.js
+ *
+ * Controlador del formulari de creació d'una nova valoració d'aparcament.
+ * Gestiona la pràctica interactiva d'estrelles, la previsualització
+ * de fotos adjuntes i l'enviament multiform de dades a la Python API.
+ */
+
 import { pythonApi } from '../api.js';
 import { getQueryParam, showBootstrapAlert } from '../utils.js';
 import { PHP_API_URL } from '../config.js';
 
 /**
- * initNovaValoracio - Funció exportada per a initNovaValoracio.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Inicialitza la lògica del formulari de creació d'una nova valoració.
+ * Vincula l'estrellat interactiu i l'enviament de dades al backend.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initNovaValoracio() {
   const aparcamentId = getQueryParam('id');
@@ -58,6 +67,12 @@ export async function initNovaValoracio() {
     });
   }
 
+  /**
+   * Renderitza la previsualització de les fotos seleccionades.
+   * Genera miniatures amb botó d'eliminació per a cada imatge.
+   *
+   * @returns {void}
+   */
   function renderPreviews() {
     previewContainer.innerHTML = '';
     selectedFiles.forEach((file, index) => {
@@ -81,6 +96,14 @@ export async function initNovaValoracio() {
     });
   }
 
+  /**
+   * Elimina una foto de la llista de fitxers seleccionats per índex
+   * i re-renderitza les miniatures. Exposada com a API global per
+   * poder ser cridada des dels atributs `onclick` dels botons del DOM.
+   *
+   * @param {number} index - L'índex de la foto a eliminar.
+   * @returns {void}
+   */
   window.removeFoto = (index) => {
     selectedFiles.splice(index, 1);
     renderPreviews();

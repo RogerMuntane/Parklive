@@ -1,9 +1,19 @@
+/**
+ * ParkLive – filters.module.js
+ *
+ * Mòdul que gestiona els controls del panell de filtres de la landing:
+ * sliders de preu i distància, toggles visuals, reset, barra de cerca
+ * i la lògica d'apertura/tancament del sidepanel de filtres.
+ */
+
 import { isPremiumUser } from '../../utils.js';
 
 /**
- * initFilterPanelControls - Funció exportada per a initFilterPanelControls.
+ * Inicialitza tots els controls interactius del panell de filtres:
+ * sliders de rang, opcions de vehicle, reset del formulari
+ * i toggles personalitzats. Amaga elements premium si l'usuari no ho és.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 export function initFilterPanelControls() {
   const updateRangeValues = () => {
@@ -154,10 +164,12 @@ export function initFilterPanelControls() {
 }
 
 /**
- * setupSearchBar - Funció exportada per a setupSearchBar.
+ * Configura la barra de cerca per prevenir el submit per defecte
+ * i tanca els filtres al clicar el backdrop.
  *
- * @param {any} { closeFilters } - Paràmetre { closeFilters }
- * @returns {any} Resultat de la funció.
+ * @param {Object}   options              - Opcions de configuració.
+ * @param {Function} options.closeFilters - Funció per tancar el panell de filtres.
+ * @returns {void}
  */
 export function setupSearchBar({ closeFilters }) {
   const mapSearchBar = document.getElementById('mapSearchBar');
@@ -176,11 +188,16 @@ export function setupSearchBar({ closeFilters }) {
 }
 
 /**
- * createFiltersController - Funció exportada per a createFiltersController.
+ * Crea i retorna el controlador de toggle del sidepanel de filtres.
+ * Vincula el botó d'obertura i el botó de tancament.
+ * En obrir/tancar el sidepanel, invalida la mida del mapa per evitar
+ * problemes de renderització de tiles.
  *
- * @param {any} { map - Paràmetre { map
- * @param {any} updateOpenPopupsLayout } - Paràmetre updateOpenPopupsLayout }
- * @returns {any} Resultat de la funció.
+ * @param {Object}   options                    - Opcions de configuració.
+ * @param {L.Map}    options.map                 - La instància del mapa Leaflet.
+ * @param {Function} options.updateOpenPopupsLayout - Funció per refrescar popups oberts.
+ * @returns {Function} toggleFilters             - Funció per obrir/tancar el panell.
+ *                     Accepta un booleà opcional: true = obrir, false = tancar.
  */
 export function createFiltersController({ map, updateOpenPopupsLayout }) {
   const toggleFilters = (forceState) => {

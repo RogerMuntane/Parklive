@@ -90,6 +90,13 @@ class GoogleAuthService(BaseService):
         user = self._fetch_user_by_email(email)
 
         if user:
+            # Comprovar si està suspès
+            if user.get("estat") == "suspès":
+                return {
+                    "error": "El teu compte ha estat suspès. Si us plau, contacta amb suport.",
+                    "status_code": 403,
+                }
+
             
             # Si l'usuari ja existeix, comprovem si té stripe_customer_id
             if not user.get("stripe_customer_id"):

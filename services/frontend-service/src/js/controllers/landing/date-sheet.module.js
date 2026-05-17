@@ -1,7 +1,17 @@
 /**
- * setupDateMiniSheet - Funció exportada per a setupDateMiniSheet.
+ * ParkLive – date-sheet.module.js
  *
- * @returns {any} Resultat de la funció.
+ * Mòdul que gestiona el mini-full (bottom sheet) de selecció de dates
+ * per a la cerca de la landing page en dispositius mòbils.
+ * Sincronitza els inputs de cerca principals amb els del full.
+ */
+
+/**
+ * Inicialitza el mini-full de selecció de dates.
+ * Vincula els events d'apertura, tancament i aplicació de dates,
+ * i inicialitza Flatpickr en tots els inputs de data de la landing.
+ *
+ * @returns {void}
  */
 export function setupDateMiniSheet() {
   const openBtn = document.getElementById('mapDateSheetBtn');

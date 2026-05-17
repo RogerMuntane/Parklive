@@ -13,12 +13,6 @@ const API_STRIPE_PATH = '/api/stripe';
  * @param {string} userId - ID de l'usuari.
  * @returns {Promise<Object>} Objecte amb client_secret i stripe_publishable_key.
  */
-/**
- * fetchSetupIntent - Funció exportada per a fetchSetupIntent.
- *
- * @param {any} userId - Paràmetre userId
- * @returns {Promise<any>} Promesa amb el resultat.
- */
 export async function fetchSetupIntent(userId) {
     try {
         return await pythonApi.get(`${API_STRIPE_PATH}/setup-intent`, { user_id: userId });
@@ -34,12 +28,6 @@ export async function fetchSetupIntent(userId) {
  * @param {string} userId - ID de l'usuari.
  * @returns {Promise<Array>} Llista de mètodes de pagament.
  */
-/**
- * fetchPaymentMethods - Funció exportada per a fetchPaymentMethods.
- *
- * @param {any} userId - Paràmetre userId
- * @returns {Promise<any>} Promesa amb el resultat.
- */
 export async function fetchPaymentMethods(userId) {
     try {
         return await pythonApi.get(`${API_STRIPE_PATH}/payment-methods`, { user_id: userId, t: Date.now() });
@@ -54,12 +42,6 @@ export async function fetchPaymentMethods(userId) {
  * 
  * @param {string} methodId - ID del mètode (pm_...).
  * @returns {Promise<boolean>} Cert si s'ha eliminat correctament.
- */
-/**
- * deleteStripeCard - Funció exportada per a deleteStripeCard.
- *
- * @param {any} methodId - Paràmetre methodId
- * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function deleteStripeCard(methodId) {
     try {
@@ -78,15 +60,6 @@ export async function deleteStripeCard(methodId) {
  * @param {boolean} autorenovacio - Si s'activa l'autorenovació.
  * @param {string} planType - 'monthly' o 'annual'.
  * @returns {Promise<Object>} Resposta de Stripe (id, status, clientSecret).
- */
-/**
- * createStripeSubscription - Funció exportada per a createStripeSubscription.
- *
- * @param {any} userId - Paràmetre userId
- * @param {any} paymentMethodId - Paràmetre paymentMethodId
- * @param {any} autorenovacio - Paràmetre autorenovacio
- * @param {any} planType - Paràmetre planType
- * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function createStripeSubscription(userId, paymentMethodId, autorenovacio, planType = 'monthly') {
     try {
@@ -108,13 +81,6 @@ export async function createStripeSubscription(userId, paymentMethodId, autoreno
  * @param {boolean} autorenovacio - Nou estat.
  * @returns {Promise<boolean>} Cert si s'ha actualitzat correctament.
  */
-/**
- * updateStripeAutorenewal - Funció exportada per a updateStripeAutorenewal.
- *
- * @param {any} userId - Paràmetre userId
- * @param {any} autorenovacio - Paràmetre autorenovacio
- * @returns {Promise<any>} Promesa amb el resultat.
- */
 export async function updateStripeAutorenewal(userId, autorenovacio) {
     try {
         await pythonApi.post(`${API_STRIPE_PATH}/update-autorenewal`, {
@@ -132,12 +98,6 @@ export async function updateStripeAutorenewal(userId, autorenovacio) {
  * 
  * @param {string} userId - ID de l'usuari.
  * @returns {Promise<Object>} Detalls de la subscripció.
- */
-/**
- * fetchSubscriptionDetails - Funció exportada per a fetchSubscriptionDetails.
- *
- * @param {any} userId - Paràmetre userId
- * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function fetchSubscriptionDetails(userId) {
     try {
@@ -157,12 +117,6 @@ export async function fetchSubscriptionDetails(userId) {
  *
  * @param {string} userId - ID de l'usuari.
  * @returns {Promise<Object|null>} Resultat de la sincronització.
- */
-/**
- * syncSubscription - Funció exportada per a syncSubscription.
- *
- * @param {any} userId - Paràmetre userId
- * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function syncSubscription(userId) {
     try {

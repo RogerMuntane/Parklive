@@ -50,7 +50,12 @@ const ESTAT_MAP = {
 // Registre de gràfiques per destruir-les en reinicialitzar
 const _charts = {};
 
-/** Destrueix una gràfica existent si hi és. */
+/** 
+ * Destrueix una gràfica existent si hi és. 
+ * 
+ * @param {string} id - ID de la gràfica.
+ * @returns {void}
+ */
 function destroyChart(id) {
   if (_charts[id]) {
     _charts[id].destroy();
@@ -63,14 +68,7 @@ function destroyChart(id) {
  * @param {string} elId   - ID del div contenidor.
  * @param {'area'|'donut'|'bar'|'spark'} variant
  * @param {number} height - Alçada en píxels.
- */
-/**
- * showChartSkeleton - Funció per a showChartSkeleton.
- *
- * @param {any} elId - Paràmetre elId
- * @param {any} variant - Paràmetre variant
- * @param {any} height - Paràmetre height
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function showChartSkeleton(elId, variant = 'bar', height = 190) {
   const el = document.getElementById(elId);
@@ -106,12 +104,7 @@ function showChartSkeleton(elId, variant = 'bar', height = 190) {
 /**
  * Elimina el skeleton i prepara el contenidor per a la gràfica.
  * @param {string} elId - ID del div contenidor.
- */
-/**
- * clearChartSkeleton - Funció per a clearChartSkeleton.
- *
- * @param {any} elId - Paràmetre elId
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function clearChartSkeleton(elId) {
   const el = document.getElementById(elId);
@@ -126,11 +119,8 @@ function clearChartSkeleton(elId) {
 
 /**
  * Detecta si el tema actiu és fosc (data-bs-theme="dark" a <html>).
- */
-/**
- * isDarkTheme - Funció per a isDarkTheme.
- *
- * @returns {any} Resultat de la funció.
+ * 
+ * @returns {boolean} True si és fosc, false altrament.
  */
 function isDarkTheme() {
   return document.documentElement.getAttribute('data-bs-theme') === 'dark';
@@ -138,11 +128,8 @@ function isDarkTheme() {
 
 /**
  * Retorna les opcions comunes d'ApexCharts adaptades al tema.
- */
-/**
- * baseChartOptions - Funció per a baseChartOptions.
- *
- * @returns {any} Resultat de la funció.
+ * 
+ * @returns {Object} Configuració base.
  */
 function baseChartOptions() {
   const dark = isDarkTheme();
@@ -177,12 +164,9 @@ function baseChartOptions() {
 
 /**
  * Formata un valor monetari en format "12,50 €".
- */
-/**
- * fmtEur - Funció per a fmtEur.
- *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * 
+ * @param {number|string} value - El valor a formatar.
+ * @returns {string} El text formatat.
  */
 function fmtEur(value) {
   return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value);
@@ -190,12 +174,9 @@ function fmtEur(value) {
 
 /**
  * Formata hores: "3,5h" → "3h 30min"
- */
-/**
- * fmtHores - Funció per a fmtHores.
- *
- * @param {any} hores - Paràmetre hores
- * @returns {any} Resultat de la funció.
+ * 
+ * @param {number} hores - Hores en format decimal.
+ * @returns {string} El text formatat.
  */
 function fmtHores(hores) {
   const h = Math.floor(hores);
@@ -206,10 +187,10 @@ function fmtHores(hores) {
 // ─── KPI Cards ────────────────────────────────────────────────────────────────
 
 /**
- * renderKpis - Funció per a renderKpis.
- *
- * @param {any} kpis - Paràmetre kpis
- * @returns {any} Resultat de la funció.
+ * Renderitza les targetes de KPIs (indicadors clau de rendiment).
+ * 
+ * @param {Object} kpis - Dades dels KPIs.
+ * @returns {void}
  */
 function renderKpis(kpis) {
   // Total reserves
@@ -248,10 +229,10 @@ function renderKpis(kpis) {
 // ─── Gràfica 1: Despesa mensual (Area Chart) ─────────────────────────────────
 
 /**
- * renderDespesaMensual - Funció per a renderDespesaMensual.
- *
- * @param {any} dades - Paràmetre dades
- * @returns {any} Resultat de la funció.
+ * Renderitza la gràfica d'àrea de despesa mensual.
+ * 
+ * @param {Array<Object>} dades - Dades de despesa mensual.
+ * @returns {void}
  */
 function renderDespesaMensual(dades) {
   clearChartSkeleton('chart-despesa-mensual');
@@ -305,10 +286,10 @@ function renderDespesaMensual(dades) {
 // ─── Gràfica 2: Distribució per tipus (Donut) ────────────────────────────────
 
 /**
- * renderTipusAparcament - Funció per a renderTipusAparcament.
- *
- * @param {any} distribucio - Paràmetre distribucio
- * @returns {any} Resultat de la funció.
+ * Renderitza la gràfica de donut de distribució per tipus d'aparcament.
+ * 
+ * @param {Array<Object>} distribucio - Dades de distribució.
+ * @returns {void}
  */
 function renderTipusAparcament(distribucio) {
   clearChartSkeleton('chart-tipus-aparcament');
@@ -375,10 +356,10 @@ function renderTipusAparcament(distribucio) {
 // ─── Gràfica 3: Reserves per estat (Bar radial) ──────────────────────────────
 
 /**
- * renderReservesEstat - Funció per a renderReservesEstat.
- *
- * @param {any} estats - Paràmetre estats
- * @returns {any} Resultat de la funció.
+ * Renderitza la gràfica de barres de reserves per estat.
+ * 
+ * @param {Array<Object>} estats - Dades de reserves per estat.
+ * @returns {void}
  */
 function renderReservesEstat(estats) {
   clearChartSkeleton('chart-reserves-estat');
@@ -430,10 +411,10 @@ function renderReservesEstat(estats) {
 // ─── Gràfica 4: Contribucions per tipus (Grouped Bar) ────────────────────────
 
 /**
- * renderContribucions - Funció per a renderContribucions.
- *
- * @param {any} contribucions - Paràmetre contribucions
- * @returns {any} Resultat de la funció.
+ * Renderitza la gràfica de barres de contribucions per tipus.
+ * 
+ * @param {Array<Object>} contribucions - Dades de contribucions.
+ * @returns {void}
  */
 function renderContribucions(contribucions) {
   clearChartSkeleton('chart-contribucions-tipus');
@@ -488,10 +469,10 @@ function renderContribucions(contribucions) {
 // ─── Gràfica 5: Reserves per dia de la setmana (Bar petit) ──────────────────
 
 /**
- * renderDiesSetmana - Funció per a renderDiesSetmana.
- *
- * @param {any} dies - Paràmetre dies
- * @returns {any} Resultat de la funció.
+ * Renderitza la gràfica (sparkline) de reserves per dia de la setmana.
+ * 
+ * @param {Array<Object>} dies - Dades de reserves per dia.
+ * @returns {void}
  */
 function renderDiesSetmana(dies) {
   clearChartSkeleton('chart-dies-setmana');
@@ -539,10 +520,10 @@ function renderDiesSetmana(dies) {
 // ─── Top aparcaments ──────────────────────────────────────────────────────────
 
 /**
- * renderTopAparcaments - Funció per a renderTopAparcaments.
- *
- * @param {any} topParking - Paràmetre topParking
- * @returns {any} Resultat de la funció.
+ * Renderitza el llistat dels aparcaments més utilitzats.
+ * 
+ * @param {Array<Object>} topParking - Llista dels aparcaments principals.
+ * @returns {void}
  */
 function renderTopAparcaments(topParking) {
   const container = document.getElementById('stat-top-aparcaments');
@@ -567,10 +548,10 @@ function renderTopAparcaments(topParking) {
 // ─── Dades de detall ─────────────────────────────────────────────────────────
 
 /**
- * renderDadesDetall - Funció per a renderDadesDetall.
- *
- * @param {any} detall - Paràmetre detall
- * @returns {any} Resultat de la funció.
+ * Renderitza altres dades de detall estadístic.
+ * 
+ * @param {Object} detall - Objecte amb les dades de detall.
+ * @returns {void}
  */
 function renderDadesDetall(detall) {
   const map = {
@@ -589,10 +570,10 @@ function renderDadesDetall(detall) {
 // ─── Gamificació ─────────────────────────────────────────────────────────────
 
 /**
- * renderGamificacio - Funció per a renderGamificacio.
- *
- * @param {any} gamificacio - Paràmetre gamificacio
- * @returns {any} Resultat de la funció.
+ * Renderitza l'estat actual de la gamificació (punts, progressió i recompenses).
+ * 
+ * @param {Object} gamificacio - Dades de gamificació.
+ * @returns {void}
  */
 function renderGamificacio(gamificacio) {
   // Punts centrals
@@ -638,11 +619,11 @@ const INSIGNIES_DEFAULT = [
 ];
 
 /**
- * renderInsignies - Funció per a renderInsignies.
- *
- * @param {any} insignies - Paràmetre insignies
- * @param {any} propera - Paràmetre propera
- * @returns {any} Resultat de la funció.
+ * Renderitza les insígnies obtingudes i bloquejades a la secció de gamificació.
+ * 
+ * @param {Array<Object>} insignies - Llista d'insígnies de l'usuari.
+ * @param {Object} propera - Dades de la propera recompensa.
+ * @returns {void}
  */
 function renderInsignies(insignies, propera) {
   const container = document.getElementById('stat-insignies-container');
@@ -678,10 +659,10 @@ function renderInsignies(insignies, propera) {
 // ─── Tipus preferits (progress bars a Dades de detall) ───────────────────────
 
 /**
- * renderTipusPreferits - Funció per a renderTipusPreferits.
- *
- * @param {any} distribucio - Paràmetre distribucio
- * @returns {any} Resultat de la funció.
+ * Renderitza les barres de progrés dels tipus d'aparcament preferits.
+ * 
+ * @param {Array<Object>} distribucio - Distribució per tipus.
+ * @returns {void}
  */
 function renderTipusPreferits(distribucio) {
   const container = document.getElementById('stat-tipus-preferits');
@@ -712,9 +693,9 @@ function renderTipusPreferits(distribucio) {
 // ─── Estat de càrrega / error ─────────────────────────────────────────────────
 
 /**
- * showLoadingState - Funció per a showLoadingState.
- *
- * @returns {any} Resultat de la funció.
+ * Configura la interfície en estat de càrrega mentre s'obtenen les dades.
+ * 
+ * @returns {void}
  */
 function showLoadingState() {
   // KPI cards: spinner petit
@@ -744,10 +725,10 @@ function showLoadingState() {
 }
 
 /**
- * showErrorBanner - Funció per a showErrorBanner.
- *
- * @param {any} msg - Paràmetre msg
- * @returns {any} Resultat de la funció.
+ * Mostra un banner d'error si falla la càrrega de dades.
+ * 
+ * @param {string} msg - El missatge d'error.
+ * @returns {void}
  */
 function showErrorBanner(msg) {
   const section = document.getElementById('section-stadistics');
@@ -771,11 +752,8 @@ function showErrorBanner(msg) {
  * Inicialitza el component d'estadístiques.
  * Crida a l'API Python, obté totes les dades i renderitza els gràfics i KPIs.
  * Si ApexCharts no és disponible, espera fins que estigui carregat (CDN async).
- */
-/**
- * initEstadistiques - Funció exportada per a initEstadistiques.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initEstadistiques() {
   const section = document.getElementById('section-stadistics');
@@ -821,11 +799,8 @@ export async function initEstadistiques() {
 
 /**
  * Torna a disparar les animacions de les gràfiques sense duplicar elements.
- */
-/**
- * refreshEstadistiques - Funció exportada per a refreshEstadistiques.
- *
- * @returns {any} Resultat de la funció.
+ * 
+ * @returns {void}
  */
 export function refreshEstadistiques() {
   Object.keys(_charts).forEach(id => {
@@ -845,12 +820,9 @@ export function refreshEstadistiques() {
 /**
  * Torna una Promise que es resol quan window.ApexCharts estigui disponible.
  * Permet que el CDN es carregui de manera asíncrona sense errors.
- */
-/**
- * waitForApexCharts - Funció per a waitForApexCharts.
- *
- * @param {any} timeoutMs - Paràmetre timeoutMs
- * @returns {any} Resultat de la funció.
+ * 
+ * @param {number} timeoutMs - Temps màxim d'espera en mil·lisegons.
+ * @returns {Promise<void>}
  */
 function waitForApexCharts(timeoutMs = 5000) {
   return new Promise((resolve, reject) => {

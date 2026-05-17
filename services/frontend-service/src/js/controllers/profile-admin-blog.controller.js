@@ -4,9 +4,9 @@ let articlesData = [];
 let modalInstance = null;
 
 /**
- * renderBlogTable - Funció per a renderBlogTable.
- *
- * @returns {any} Resultat de la funció.
+ * Renderitza la taula d'articles del blog a l'àrea d'administració.
+ * 
+ * @returns {void}
  */
 function renderBlogTable() {
   const tbody = document.getElementById('admin-blog-tbody');
@@ -81,9 +81,9 @@ function renderBlogTable() {
 }
 
 /**
- * loadArticles - Funció per a loadArticles.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Carrega la llista d'articles des de l'API.
+ * 
+ * @returns {Promise<void>}
  */
 async function loadArticles() {
   const loading = document.getElementById('admin-blog-loading');
@@ -114,10 +114,11 @@ async function loadArticles() {
 }
 
 /**
- * openArticleModal - Funció per a openArticleModal.
- *
- * @param {any} id - Paràmetre id
- * @returns {any} Resultat de la funció.
+ * Obre el modal per crear o editar un article.
+ * Si es passa un ID, es carreguen les dades de l'article per editar.
+ * 
+ * @param {number|string|null} [id=null] - L'ID de l'article a editar, o null per crear-ne un de nou.
+ * @returns {void}
  */
 function openArticleModal(id = null) {
   const form = document.getElementById('blog-article-form');
@@ -171,10 +172,10 @@ function openArticleModal(id = null) {
 }
 
 /**
- * saveArticle - Funció per a saveArticle.
- *
- * @param {any} e - Paràmetre e
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Gestiona l'enviament del formulari de creació o edició d'un article.
+ * 
+ * @param {Event} e - L'objecte de l'esdeveniment (submit).
+ * @returns {Promise<void>}
  */
 async function saveArticle(e) {
   e.preventDefault();
@@ -244,10 +245,10 @@ async function saveArticle(e) {
 }
 
 /**
- * deleteArticle - Funció per a deleteArticle.
- *
- * @param {any} id - Paràmetre id
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Executa la petició HTTP per esborrar un article.
+ * 
+ * @param {number|string} id - L'ID de l'article a esborrar.
+ * @returns {Promise<void>}
  */
 async function deleteArticle(id) {
   try {
@@ -263,9 +264,9 @@ async function deleteArticle(id) {
 }
 
 /**
- * initAdminBlog - Funció exportada per a initAdminBlog.
- *
- * @returns {any} Resultat de la funció.
+ * Inicialitza la lògica d'administració del blog.
+ * 
+ * @returns {void}
  */
 export function initAdminBlog() {
   const btnAdd = document.getElementById('btn-add-article');

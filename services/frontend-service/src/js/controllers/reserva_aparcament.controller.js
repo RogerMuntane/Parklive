@@ -16,10 +16,10 @@ import { crearReserva } from './reserves.controller.js';
 let aparcamentData = null;
 
 /**
- * esc - Funció per a esc.
- *
- * @param {any} str - Paràmetre str
- * @returns {any} Resultat de la funció.
+ * Escapa codi HTML per evitar atacs XSS.
+ * 
+ * @param {string} str - La cadena de text a escapar.
+ * @returns {string} La cadena escapada.
  */
 function esc(str) {
   if (!str) return '';
@@ -29,7 +29,12 @@ function esc(str) {
 }
 
 
-/** Retorna la data en format YYYY-MM-DD en hora local */
+/**
+ * Retorna la data en format YYYY-MM-DD en hora local.
+ * 
+ * @param {Date} date - L'objecte Date.
+ * @returns {string} La data formatada.
+ */
 function getLocalDateString(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -38,11 +43,11 @@ function getLocalDateString(date) {
 }
 
 /**
- * fill - Funció per a fill.
- *
- * @param {any} key - Paràmetre key
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * Injecta un valor al DOM, ja sigui com a `value` d'un input o com a `innerHTML`.
+ * 
+ * @param {string} key - El valor de l'atribut `data-reserva`.
+ * @param {string|number} value - El contingut a assignar.
+ * @returns {void}
  */
 function fill(key, value) {
   document.querySelectorAll(`[data-reserva="${key}"]`).forEach((el) => {
@@ -55,9 +60,8 @@ function fill(key, value) {
 }
 
 /**
- * showSkeleton - Funció per a showSkeleton.
- *
- * @returns {any} Resultat de la funció.
+ * Mostra l'estat de càrrega (Skeleton Loading).
+ * @returns {void}
  */
 function showSkeleton() {
   document.querySelector('[data-reserva-state="loading"]')?.style.setProperty('display', '', 'important');
@@ -65,16 +69,21 @@ function showSkeleton() {
 }
 
 /**
- * showContent - Funció per a showContent.
- *
- * @returns {any} Resultat de la funció.
+ * Oculta l'estat de càrrega i mostra el contingut.
+ * @returns {void}
  */
 function showContent() {
   document.querySelector('[data-reserva-state="loading"]')?.style.setProperty('display', 'none', 'important');
   document.querySelector('[data-reserva-state="content"]')?.style.setProperty('display', '', 'important');
 }
 
-/** Debounce helper */
+/**
+ * Executa una funció amb debounce per evitar sobrecàrrega de crides (ex. canvis ràpids d'inputs).
+ * 
+ * @param {Function} fn - La funció a executar.
+ * @param {number} delay - Els mil·lisegons a esperar abans d'executar.
+ * @returns {Function} La funció embolcallada (debounced).
+ */
 function debounce(fn, delay) {
   let timer;
   return (...args) => {
@@ -86,13 +95,11 @@ function debounce(fn, delay) {
 /**
  * Actualitza la UI de disponibilitat (places, barra, color)
  * en base a les dades rebudes del backend.
- */
-/**
- * updateDisponibilitatUI - Funció per a updateDisponibilitatUI.
- *
- * @param {any} { places_lliures - Paràmetre { places_lliures
- * @param {any} capacitat_total } - Paràmetre capacitat_total }
- * @returns {any} Resultat de la funció.
+ * 
+ * @param {Object} data - Dades de disponibilitat.
+ * @param {number} data.places_lliures - Les places lliures disponibles.
+ * @param {number} data.capacitat_total - La capacitat total de l'aparcament.
+ * @returns {void}
  */
 function updateDisponibilitatUI({ places_lliures, capacitat_total }) {
   fill('places-lliures', places_lliures);
@@ -120,14 +127,11 @@ function updateDisponibilitatUI({ places_lliures, capacitat_total }) {
 /**
  * Lògica de fetch de disponibilitat (sense debounce).
  * Reutilitzable per la càrrega inicial i per els canvis de l'usuari.
- */
-/**
- * _doFetchDisponibilitat - Funció per a _doFetchDisponibilitat.
- *
- * @param {any} aparcamentId - Paràmetre aparcamentId
- * @param {any} dataEntrada - Paràmetre dataEntrada
- * @param {any} dataSortida - Paràmetre dataSortida
- * @returns {Promise<any>} Promesa amb el resultat.
+ * 
+ * @param {string|number} aparcamentId - L'identificador de l'aparcament.
+ * @param {string} dataEntrada - La data i hora d'entrada (YYYY-MM-DD HH:MM:SS).
+ * @param {string} dataSortida - La data i hora de sortida (YYYY-MM-DD HH:MM:SS).
+ * @returns {Promise<void>}
  */
 async function _doFetchDisponibilitat(aparcamentId, dataEntrada, dataSortida) {
   try {
@@ -147,9 +151,10 @@ async function _doFetchDisponibilitat(aparcamentId, dataEntrada, dataSortida) {
 const fetchDisponibilitatFranja = debounce(_doFetchDisponibilitat, 600);
 
 /**
- * calculateCost - Funció per a calculateCost.
- *
- * @returns {any} Resultat de la funció.
+ * Calcula i actualitza el cost total de la reserva a la interfície.
+ * Gestiona el càlcul d'hores, tarifes, IVA i aplicació de descomptes.
+ * 
+ * @returns {void}
  */
 function calculateCost() {
   if (!aparcamentData) return;
@@ -241,10 +246,10 @@ function calculateCost() {
 }
 
 /**
- * updateEndDateTime - Funció per a updateEndDateTime.
- *
- * @param {any} hoursToAdd - Paràmetre hoursToAdd
- * @returns {any} Resultat de la funció.
+ * Suma un cert nombre d'hores a la data d'entrada actual i ho assigna com a data de sortida.
+ * 
+ * @param {number} hoursToAdd - El nombre d'hores a sumar.
+ * @returns {void}
  */
 function updateEndDateTime(hoursToAdd) {
   const inDateEl = document.getElementById('entrada-data');
@@ -269,9 +274,9 @@ function updateEndDateTime(hoursToAdd) {
 }
 
 /**
- * updateSummaryDates - Funció per a updateSummaryDates.
- *
- * @returns {any} Resultat de la funció.
+ * Actualitza el resum lateral amb les dates seleccionades per l'usuari.
+ * 
+ * @returns {void}
  */
 function updateSummaryDates() {
   const inDateEl = document.getElementById('entrada-data');
@@ -288,9 +293,10 @@ function updateSummaryDates() {
 }
 
 /**
- * renderPaymentMethods - Funció per a renderPaymentMethods.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Descarrega els mètodes de pagament vinculats a l'usuari (targetes Stripe)
+ * i renderitza la llista perquè pugui triar-ne un.
+ * 
+ * @returns {Promise<void>}
  */
 async function renderPaymentMethods() {
     const container = document.getElementById('payment-methods-container');
@@ -353,9 +359,10 @@ async function renderPaymentMethods() {
 }
 
 /**
- * renderDiscounts - Funció per a renderDiscounts.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Descarrega les recompenses o descomptes que té l'usuari de la gamificació
+ * i renderitza la llista per aplicar-ne un a la reserva.
+ * 
+ * @returns {Promise<void>}
  */
 async function renderDiscounts() {
     const container = document.getElementById('discounts-container');
@@ -417,9 +424,11 @@ async function renderDiscounts() {
 }
 
 /**
- * initReservaAparcament - Funció exportada per a initReservaAparcament.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Inicialitza tota la pàgina de reserva:
+ * Descarrega l'aparcament, els mètodes de pagament, els descomptes, 
+ * configura el Flatpickr i prepara l'enviament del formulari.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initReservaAparcament() {
   const id = getQueryParam('id');
