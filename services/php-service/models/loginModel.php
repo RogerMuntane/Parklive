@@ -59,6 +59,11 @@ class LoginModel
 
         $usuari = $this->obtenirUsuariPerEmail($email);
 
+        if ($usuari && $usuari['estat'] === 'suspès') {
+            $this->errors[] = "El teu compte ha estat suspès. Si us plau, contacta amb suport.";
+            return null;
+        }
+
         if (!$usuari || !password_verify($contrasenya, $usuari['contrasenya_hash'])) {
             $this->errors[] = "Email o contrasenya incorrectes";
             return null;
