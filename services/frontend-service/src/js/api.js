@@ -36,12 +36,6 @@ export class ApiError extends Error {
  * @param {Object} params
  * @returns {string} – p. ex. '?ciutat=Barcelona&limit=20' o '' si buit
  */
-/**
- * buildQueryString - Funció per a buildQueryString.
- *
- * @param {any} params - Paràmetre params
- * @returns {any} Resultat de la funció.
- */
 function buildQueryString(params = {}) {
   const entries = Object.entries(params).filter(
     ([, v]) => v !== undefined && v !== null && v !== '',

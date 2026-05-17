@@ -12,11 +12,11 @@ import { pythonApi } from '../api.js';
 import { getQueryParam, showAlert } from '../utils.js';
 
 /**
- * fillTiquetData - Funció per a fillTiquetData.
- *
- * @param {any} key - Paràmetre key
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * Omple tots els elements del DOM que tinguin l'atribut [data-tiquet="key"] amb el valor proporcionat.
+ * 
+ * @param {string} key - La clau de l'atribut data-tiquet.
+ * @param {string|number|null|undefined} value - El valor a inserir a l'element HTML.
+ * @returns {void}
  */
 function fillTiquetData(key, value) {
   document.querySelectorAll(`[data-tiquet="${key}"]`).forEach((el) => {
@@ -25,10 +25,10 @@ function fillTiquetData(key, value) {
 }
 
 /**
- * formatDateToShort - Funció per a formatDateToShort.
- *
- * @param {any} dateString - Paràmetre dateString
- * @returns {any} Resultat de la funció.
+ * Formateja una cadena de data a un format curt (DD/MM/YYYY).
+ * 
+ * @param {string|Date} dateString - La data a formatar.
+ * @returns {string} La data formatada o '--/--/----' si no es proporciona.
  */
 function formatDateToShort(dateString) {
   if (!dateString) return '--/--/----';
@@ -40,10 +40,10 @@ function formatDateToShort(dateString) {
 }
 
 /**
- * formatTimeToShort - Funció per a formatTimeToShort.
- *
- * @param {any} dateString - Paràmetre dateString
- * @returns {any} Resultat de la funció.
+ * Formateja una cadena de data a un format curt d'hora (HH:MM).
+ * 
+ * @param {string|Date} dateString - La data o hora a formatar.
+ * @returns {string} L'hora formatada o '--:--' si no es proporciona.
  */
 function formatTimeToShort(dateString) {
   if (!dateString) return '--:--';
@@ -56,12 +56,9 @@ function formatTimeToShort(dateString) {
 /**
  * Retorna una Promise que es resol quan la imatge QR estigui completament carregada,
  * o es rebutja si hi ha un error de xarxa / timeout de 10 s.
- */
-/**
- * waitForQR - Funció per a waitForQR.
- *
- * @param {any} imgEl - Paràmetre imgEl
- * @returns {any} Resultat de la funció.
+ * 
+ * @param {HTMLImageElement} imgEl - L'element imatge (<img>) del QR.
+ * @returns {Promise<void>} Es resol si la imatge carrega amb èxit.
  */
 function waitForQR(imgEl) {
   return new Promise((resolve, reject) => {
@@ -79,9 +76,11 @@ function waitForQR(imgEl) {
 }
 
 /**
- * initTiquetAparcament - Funció exportada per a initTiquetAparcament.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Inicialitza la pàgina del tiquet.
+ * Llegeix els paràmetres de la URL, obté les dades de la reserva, les pinta a la vista,
+ * genera el codi QR i prepara l'enllaç de descàrrega del PDF.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initTiquetAparcament() {
   const reservaId = getQueryParam('id');
@@ -184,13 +183,10 @@ export async function initTiquetAparcament() {
  *  - S'apliquen estils inline blancs per garantir que el tema (dark/light) no afecti el render.
  *  - S'eliminen elements no pertinents (botons, no-print, etc.) del clon.
  *  - Un cop generat el PDF, el contenidor temporal s'elimina del DOM.
- */
-/**
- * generarIEnviarPDF - Funció per a generarIEnviarPDF.
- *
- * @param {any} reservaId - Paràmetre reservaId
- * @param {any} codiReserva - Paràmetre codiReserva
- * @returns {Promise<any>} Promesa amb el resultat.
+ * 
+ * @param {string|number} reservaId - L'ID de la reserva.
+ * @param {string} codiReserva - El codi únic de la reserva.
+ * @returns {Promise<Object|void>} La resposta de l'API o res en cas d'error.
  */
 async function generarIEnviarPDF(reservaId, codiReserva) {
   const original = document.querySelector('.ticket-card');

@@ -2,9 +2,10 @@ import { showBootstrapAlert, getUserId, getUserSession, setFormLoading } from '.
 import { pythonApi } from '../api.js';
 
 /**
- * initContacte - Funció exportada per a initContacte.
- *
- * @returns {any} Resultat de la funció.
+ * Inicialitza el formulari de contacte.
+ * Vincula l'esdeveniment de submit i envia les dades a l'API de contacte.
+ * 
+ * @returns {void}
  */
 export function initContacte() {
   const mapEl = document.getElementById('contact-map');

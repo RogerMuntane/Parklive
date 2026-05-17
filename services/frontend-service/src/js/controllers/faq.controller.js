@@ -1,10 +1,11 @@
 import { pythonApi } from '../api.js';
 
 /**
- * renderFaqs - Funció per a renderFaqs.
- *
- * @param {any} faqs - Paràmetre faqs
- * @returns {any} Resultat de la funció.
+ * Renderitza la llista de Preguntes Freqüents (FAQs).
+ * Agrupa les preguntes per categoria i genera l'HTML de l'acordió.
+ * 
+ * @param {Array<Object>} faqs - Llista d'objectes de FAQ.
+ * @returns {void}
  */
 function renderFaqs(faqs) {
   const container = document.getElementById('faq-container');
@@ -55,9 +56,10 @@ function renderFaqs(faqs) {
 }
 
 /**
- * initFaq - Funció exportada per a initFaq.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Inicialitza la pàgina de FAQs.
+ * Carrega les FAQs des de l'API i gestiona els estats de càrrega i error.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initFaq() {
   const loading = document.getElementById('faq-loading');

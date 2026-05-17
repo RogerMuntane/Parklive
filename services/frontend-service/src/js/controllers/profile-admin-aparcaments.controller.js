@@ -15,11 +15,12 @@ let adminMap = null;
 let adminMarker = null;
 
 /**
- * initAdminMap - Funció per a initAdminMap.
- *
- * @param {any} lat - Paràmetre lat
- * @param {any} lng - Paràmetre lng
- * @returns {any} Resultat de la funció.
+ * Inicialitza el mapa (Leaflet) del modal d'administració d'aparcaments.
+ * Permet escollir la ubicació (lat/lng) fent clic al mapa.
+ * 
+ * @param {number} lat - Latitud inicial.
+ * @param {number} lng - Longitud inicial.
+ * @returns {void}
  */
 function initAdminMap(lat, lng) {
     const latInput = document.getElementById('admin-aparcament-lat');
@@ -37,9 +38,10 @@ function initAdminMap(lat, lng) {
 }
 
 /**
- * initAdminParkingCRUD - Funció exportada per a initAdminParkingCRUD.
- *
- * @returns {any} Resultat de la funció.
+ * Inicialitza la lògica del CRUD d'aparcaments a l'àrea d'administració.
+ * Vincula els esdeveniments dels formularis, buscadors, modals i la pujada d'imatges.
+ * 
+ * @returns {void}
  */
 export function initAdminParkingCRUD() {
     const section = document.getElementById('section-admin-parkings');
@@ -129,10 +131,10 @@ export function initAdminParkingCRUD() {
 let currentPage = 1;
 
 /**
- * loadParkings - Funció per a loadParkings.
- *
- * @param {any} page - Paràmetre page
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Carrega la llista d'aparcaments des de l'API (amb paginació i cerca).
+ * 
+ * @param {number} [page=1] - Pàgina a carregar.
+ * @returns {Promise<void>}
  */
 async function loadParkings(page = 1) {
     currentPage = page;
@@ -174,10 +176,10 @@ async function loadParkings(page = 1) {
 }
 
 /**
- * renderParkings - Funció per a renderParkings.
- *
- * @param {any} parkings - Paràmetre parkings
- * @returns {any} Resultat de la funció.
+ * Renderitza la taula d'aparcaments a la vista d'administració.
+ * 
+ * @param {Array<Object>} parkings - Llista d'aparcaments a mostrar.
+ * @returns {void}
  */
 function renderParkings(parkings) {
     const tableBody = document.getElementById('parkings-table-body');
@@ -231,10 +233,10 @@ function renderParkings(parkings) {
 }
 
 /**
- * renderPagination - Funció per a renderPagination.
- *
- * @param {any} pagination - Paràmetre pagination
- * @returns {any} Resultat de la funció.
+ * Renderitza els controls de paginació de la taula d'aparcaments.
+ * 
+ * @param {Object} pagination - Dades de paginació (total, limit, offset, etc.).
+ * @returns {void}
  */
 function renderPagination(pagination) {
     const paginationContainer = document.getElementById('parkings-pagination');
@@ -290,10 +292,11 @@ function renderPagination(pagination) {
 let isSubmitting = false;
 
 /**
- * handleFormSubmit - Funció per a handleFormSubmit.
- *
- * @param {any} e - Paràmetre e
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Gestiona l'enviament del formulari de creació o edició d'un aparcament.
+ * Envia les dades via FormData per incloure la imatge i les coordenades.
+ * 
+ * @param {Event} e - Objecte de l'esdeveniment (submit).
+ * @returns {Promise<void>}
  */
 async function handleFormSubmit(e) {
     e.preventDefault();
@@ -397,9 +400,9 @@ async function handleFormSubmit(e) {
 }
 
 /**
- * resetForm - Funció per a resetForm.
- *
- * @returns {any} Resultat de la funció.
+ * Neteja el formulari del modal d'aparcaments (inputs, mapa, imatge, validacions).
+ * 
+ * @returns {void}
  */
 function resetForm() {
     const form = document.getElementById('form-parking');
@@ -494,10 +497,10 @@ window.deleteParking = function (id) {
 };
 
 /**
- * performDelete - Funció per a performDelete.
- *
- * @param {any} id - Paràmetre id
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Executa la petició HTTP per esborrar un aparcament.
+ * 
+ * @param {number|string} id - Identificador de l'aparcament.
+ * @returns {Promise<void>}
  */
 async function performDelete(id) {
     try {
@@ -516,11 +519,11 @@ async function performDelete(id) {
 }
 
 /**
- * debounce - Funció per a debounce.
- *
- * @param {any} func - Paràmetre func
- * @param {any} wait - Paràmetre wait
- * @returns {any} Resultat de la funció.
+ * Executa una funció amb retard (debounce) per evitar l'excés de peticions en cercar.
+ * 
+ * @param {Function} func - Funció a executar.
+ * @param {number} wait - Retard en mil·lisegons.
+ * @returns {Function} La funció embolcallada (debounced).
  */
 function debounce(func, wait) {
     let timeout;

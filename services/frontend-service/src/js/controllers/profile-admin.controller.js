@@ -9,9 +9,10 @@ import { phpApi } from '../api.js';
 import { showBootstrapAlert } from '../utils.js';
 
 /**
- * initAdminUserCRUD - Funció exportada per a initAdminUserCRUD.
- *
- * @returns {any} Resultat de la funció.
+ * Inicialitza la lògica del CRUD d'usuaris a l'àrea d'administració.
+ * Vincula els esdeveniments dels formularis, buscadors i modals.
+ * 
+ * @returns {void}
  */
 export function initAdminUserCRUD() {
     const section = document.getElementById('section-admin-users');
@@ -55,10 +56,10 @@ export function initAdminUserCRUD() {
 let currentPage = 1;
 
 /**
- * loadUsers - Funció per a loadUsers.
- *
- * @param {any} page - Paràmetre page
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Carrega la llista d'usuaris des de l'API (amb paginació i cerca).
+ * 
+ * @param {number} [page=1] - Pàgina a carregar.
+ * @returns {Promise<void>}
  */
 async function loadUsers(page = 1) {
     currentPage = page;
@@ -96,10 +97,10 @@ async function loadUsers(page = 1) {
 }
 
 /**
- * renderUsers - Funció per a renderUsers.
- *
- * @param {any} users - Paràmetre users
- * @returns {any} Resultat de la funció.
+ * Renderitza la taula d'usuaris.
+ * 
+ * @param {Array<Object>} users - Llista d'usuaris a mostrar.
+ * @returns {void}
  */
 function renderUsers(users) {
     const tableBody = document.getElementById('users-table-body');
@@ -156,10 +157,10 @@ function renderUsers(users) {
 }
 
 /**
- * renderPagination - Funció per a renderPagination.
- *
- * @param {any} pagination - Paràmetre pagination
- * @returns {any} Resultat de la funció.
+ * Renderitza els controls de paginació de la taula d'usuaris.
+ * 
+ * @param {Object} pagination - Dades de paginació (total, limit, offset, etc.).
+ * @returns {void}
  */
 function renderPagination(pagination) {
     const paginationContainer = document.getElementById('users-pagination');
@@ -216,10 +217,10 @@ function renderPagination(pagination) {
 }
 
 /**
- * handleFormSubmit - Funció per a handleFormSubmit.
- *
- * @param {any} e - Paràmetre e
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Gestiona l'enviament del formulari de creació o edició d'un usuari.
+ * 
+ * @param {Event} e - Objecte de l'esdeveniment (submit).
+ * @returns {Promise<void>}
  */
 async function handleFormSubmit(e) {
     e.preventDefault();
@@ -251,9 +252,9 @@ async function handleFormSubmit(e) {
 }
 
 /**
- * resetForm - Funció per a resetForm.
- *
- * @returns {any} Resultat de la funció.
+ * Neteja el formulari del modal d'usuaris (inputs, estats visuals, validacions).
+ * 
+ * @returns {void}
  */
 function resetForm() {
     const form = document.getElementById('form-user');
@@ -300,10 +301,10 @@ window.deleteUser = function (id) {
 };
 
 /**
- * performDelete - Funció per a performDelete.
- *
- * @param {any} id - Paràmetre id
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Executa la petició HTTP per esborrar un usuari.
+ * 
+ * @param {number|string} id - Identificador de l'usuari.
+ * @returns {Promise<void>}
  */
 async function performDelete(id) {
     try {
@@ -322,11 +323,11 @@ async function performDelete(id) {
 }
 
 /**
- * debounce - Funció per a debounce.
- *
- * @param {any} func - Paràmetre func
- * @param {any} wait - Paràmetre wait
- * @returns {any} Resultat de la funció.
+ * Executa una funció amb retard (debounce) per evitar l'excés de peticions en cercar.
+ * 
+ * @param {Function} func - Funció a executar.
+ * @param {number} wait - Retard en mil·lisegons.
+ * @returns {Function} La funció embolcallada (debounced).
  */
 function debounce(func, wait) {
     let timeout;

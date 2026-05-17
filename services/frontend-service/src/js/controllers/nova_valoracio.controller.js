@@ -3,9 +3,10 @@ import { getQueryParam, showBootstrapAlert } from '../utils.js';
 import { PHP_API_URL } from '../config.js';
 
 /**
- * initNovaValoracio - Funció exportada per a initNovaValoracio.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Inicialitza la lògica del formulari de creació d'una nova valoració.
+ * Vincula l'estrellat interactiu i l'enviament de dades al backend.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initNovaValoracio() {
   const aparcamentId = getQueryParam('id');

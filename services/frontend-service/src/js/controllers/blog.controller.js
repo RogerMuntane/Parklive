@@ -2,13 +2,10 @@ import { pythonApi } from '../api.js';
 import { PHP_API_URL, PYTHON_API_URL } from '../config.js';
 
 /**
- * Utilitat per formatar dates de manera llegible.
- */
-/**
- * formatDate - Funció per a formatDate.
- *
- * @param {any} dateStr - Paràmetre dateStr
- * @returns {any} Resultat de la funció.
+ * Utilitat per formatar dates de manera llegible (ex. "17 de maig de 2026").
+ * 
+ * @param {string|Date} dateStr - La data a formatar.
+ * @returns {string} La data formatada en català.
  */
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -21,13 +18,11 @@ function formatDate(dateStr) {
 }
 
 /**
- * Renderitza la llista d'articles a blog
- */
-/**
- * renderBlogList - Funció per a renderBlogList.
- *
- * @param {any} articles - Paràmetre articles
- * @returns {any} Resultat de la funció.
+ * Renderitza la llista d'articles a la pàgina principal del blog.
+ * Genera l'HTML de les targetes i els injecta al DOM.
+ * 
+ * @param {Array<Object>} articles - Llista d'objectes amb la informació de cada article.
+ * @returns {void}
  */
 function renderBlogList(articles) {
   const container = document.getElementById('blog-container');
@@ -80,13 +75,11 @@ function renderBlogList(articles) {
 }
 
 /**
- * Renderitza un article concret a blog-detall
- */
-/**
- * renderBlogArticle - Funció per a renderBlogArticle.
- *
- * @param {any} article - Paràmetre article
- * @returns {any} Resultat de la funció.
+ * Renderitza un article concret a la pàgina de blog-detall.
+ * Actualitza el títol del document i omple tots els camps del DOM.
+ * 
+ * @param {Object} article - Les dades de l'article a mostrar.
+ * @returns {void}
  */
 function renderBlogArticle(article) {
   const container = document.getElementById('blog-detall-container');
@@ -121,9 +114,10 @@ function renderBlogArticle(article) {
 }
 
 /**
- * initBlogList - Funció exportada per a initBlogList.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Inicialitza la pàgina principal del blog.
+ * Carrega els articles de l'API i els mostra, gestionant l'estat de càrrega i errors.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initBlogList() {
   const loading = document.getElementById('blog-loading');
@@ -151,9 +145,10 @@ export async function initBlogList() {
 }
 
 /**
- * initBlogDetail - Funció exportada per a initBlogDetail.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * Inicialitza la pàgina de detall d'un article del blog.
+ * Llegeix el slug de la URL, crida l'API i mostra el contingut sencer de l'article.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initBlogDetail() {
   const params = new URLSearchParams(window.location.search);
