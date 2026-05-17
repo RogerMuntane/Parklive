@@ -6,6 +6,11 @@
  * i creació de reserves des del frontend.
  */
 
+import { pythonApi } from '../api.js';
+import { getUserId, getQueryParam, showAlert, hideAllAlerts, validateForm, serializeForm, setFormLoading, formatDate, formatCurrency } from '../utils.js';
+import { DEFAULT_LIMIT } from '../config.js';
+
+
 /**
  * Obté l'historial de reserves d'un usuari.
  *
@@ -442,3 +447,100 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+/**
+ * Renderitza el detall complet d'una reserva.
+ *
+ * @param {Object}      reserva
+ * @param {HTMLElement}  container
+ */
+export function renderDetallReserva(reserva, container) {
+  if (!container || !reserva) return;
+
+  const r = reserva;
+  container.innerHTML = `
+    <div class="detall-reserva">
+      <header class="detall-header">
+        <h2>Reserva #${r.id}</h2>
+        <span class="badge badge-${ESTAT_CLASSES[r.estat] || 'secondary'}">${escapeHtml(r.estat || '—')}</span>
+      </header>
+      <div class="detall-info">
+        <dl>
+          <dt>Aparcament</dt><dd>${escapeHtml(r.nom_aparcament || String(r.aparcament_id || '—'))}</dd>
+          <dt>Data d'entrada</dt><dd>${formatDate(r.data_entrada)}</dd>
+          <dt>Data de sortida</dt><dd>${formatDate(r.data_sortida)}</dd>
+          <dt>Preu total</dt><dd>${formatCurrency(r.preu_total)}</dd>
+          <dt>Descompte</dt><dd>${r.descompte_aplicat ? formatCurrency(r.descompte_aplicat) : '—'}</dd>
+          <dt>Notes</dt><dd>${escapeHtml(r.notes || '—')}</dd>
+        </dl>
+      </div>
+    </div>`;
+}
+
+/**
+ * Obté el detall d'una reserva concreta.
+ *
+ * @param {string|number} reservaId
+ * @returns {Promise<Object>}
+ */
+export async function obtenirDetallReserva(reservaId) {
+  try {
+    return await pythonApi.get(`/api/reserves/${reservaId}`);
+  } catch (err) {
+    console.error('[ParkLive] Error obtenint detall de la reserva:', err);
+    throw err;
+  }
+}
+
+/**
+ * Crea una nova reserva.
+ *
+ * @param {Object} dades
+ * @returns {Promise<Object>}
+ */
+export async function crearReserva(dades) {
+  try {
+    return await pythonApi.post('/api/reserves', dades);
+  } catch (err) {
+    console.error('[ParkLive] Error creant reserva:', err);
+    throw err;
+  }
+}
+
+/**
+ * Cancel·la una reserva existent.
+ *
+ * @param {string|number} reservaId
+ * @returns {Promise<Object>}
+ */
+export async function cancelarReserva(reservaId) {
+  try {
+    return await pythonApi.put(`/api/reserves/${reservaId}/cancelar`);
+  } catch (err) {
+    console.error('[ParkLive] Error cancel·lant reserva:', err);
+    throw err;
+  }
+}
+
+/**
+ * Obté reserves per estat (i altres filtres).
+ *
+ * @param {string} estat
+ * @param {Object} [filtres={}]
+ * @returns {Promise<Array>}
+ */
+export async function obtenirReservesPerEstat(estat, filtres = {}) {
+  const params = {
+    estat,
+    limit: DEFAULT_LIMIT,
+    offset: 0,
+    ...filtres,
+  };
+  try {
+    return await pythonApi.get('/api/reserves', params);
+  } catch (err) {
+    console.error('[ParkLive] Error obtenint reserves per estat:', err);
+    throw err;
+  }
+}
+
