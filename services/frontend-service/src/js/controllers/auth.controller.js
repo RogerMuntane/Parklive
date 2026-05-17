@@ -422,8 +422,7 @@ async function handleGoogleTokenResponse(tokenResponse) {
  * 2. addEventListener('click') → tokenClient.requestAccessToken()
  * 3. Google obre popup real de selecció de compte
  * 4. Callback rep access_token → enviar al backend per verificar
- */
-/**
+ *
  * @returns {Promise<void>}
  */
 async function initGoogleSignIn() {

@@ -249,7 +249,16 @@ async function carregarReservesPerfil(container) {
   try {
     const data = await obtenirReservesUsuari({ returnFullData: true });
     const reserves = data?.reserves || data || [];
-    renderProfileReserves(reserves, container);
+
+    // Filtrar reserves actives (futures o en curs)
+    const ara = new Date();
+    const reservesActives = reserves.filter(r => {
+      const dataSortida = new Date(r.data_sortida);
+      const est = (r.estat || '').trim().toLowerCase();
+      return ['confirmada', 'en_curs', 'pendent'].includes(est) && dataSortida >= ara;
+    });
+
+    renderProfileReserves(reservesActives, container);
   } catch (err) {
     showAlert('error', 'No s\'han pogut carregar les reserves del perfil.');
   }
@@ -500,6 +509,10 @@ export async function obtenirDetallReserva(reservaId) {
  */
 export async function crearReserva(dades) {
   try {
+    // Validació prèvia a la crida s'assumeix correcta des dels formularis UI
+    if (!dades.usuari_id || !dades.aparcament_id || !dades.data_entrada || !dades.data_sortida || !dades.preu_total) {
+      throw new Error('Falten camps obligatoris per crear la reserva.');
+    }
     return await pythonApi.post('/api/reserves', dades);
   } catch (err) {
     console.error('[ParkLive] Error creant reserva:', err);
@@ -515,7 +528,7 @@ export async function crearReserva(dades) {
  */
 export async function cancelarReserva(reservaId) {
   try {
-    return await pythonApi.put(`/api/reserves/${reservaId}/cancelar`);
+    return await pythonApi.post(`/api/reserves/${reservaId}/cancel`);
   } catch (err) {
     console.error('[ParkLive] Error cancel·lant reserva:', err);
     throw err;
@@ -530,6 +543,9 @@ export async function cancelarReserva(reservaId) {
  * @returns {Promise<Array>}
  */
 export async function obtenirReservesPerEstat(estat, filtres = {}) {
+  if (!estat) {
+    throw new Error("El paràmetre 'estat' és obligatori.");
+  }
   const params = {
     estat,
     limit: DEFAULT_LIMIT,
@@ -537,7 +553,7 @@ export async function obtenirReservesPerEstat(estat, filtres = {}) {
     ...filtres,
   };
   try {
-    return await pythonApi.get('/api/reserves', params);
+    return await pythonApi.get('/api/reserves/estat', params);
   } catch (err) {
     console.error('[ParkLive] Error obtenint reserves per estat:', err);
     throw err;
