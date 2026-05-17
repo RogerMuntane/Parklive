@@ -1,12 +1,6 @@
 const REPORT_DISPONIBILITAT_CACHE_KEY = 'parklive_report_disponibilitat_cache_v1';
 const REPORT_DISPONIBILITAT_CACHE_LIMIT = 50;
 
-/**
- * normalizeReport - Funció per a normalizeReport.
- *
- * @param {any} raw - Paràmetre raw
- * @returns {any} Resultat de la funció.
- */
 function normalizeReport(raw) {
   if (!raw || typeof raw !== 'object') return null;
 
@@ -31,11 +25,6 @@ function normalizeReport(raw) {
   };
 }
 
-/**
- * readCacheRows - Funció per a readCacheRows.
- *
- * @returns {any} Resultat de la funció.
- */
 function readCacheRows() {
   try {
     const raw = globalThis.localStorage.getItem(REPORT_DISPONIBILITAT_CACHE_KEY);
@@ -47,12 +36,6 @@ function readCacheRows() {
   }
 }
 
-/**
- * writeCacheRows - Funció per a writeCacheRows.
- *
- * @param {any} rows - Paràmetre rows
- * @returns {any} Resultat de la funció.
- */
 function writeCacheRows(rows) {
   try {
     globalThis.localStorage.setItem(REPORT_DISPONIBILITAT_CACHE_KEY, JSON.stringify(rows));
@@ -62,20 +45,10 @@ function writeCacheRows(rows) {
   }
 }
 
-/**
- * getReportDisponibilitatCacheKey - Funció exportada per a getReportDisponibilitatCacheKey.
- *
- * @returns {any} Resultat de la funció.
- */
 export function getReportDisponibilitatCacheKey() {
   return REPORT_DISPONIBILITAT_CACHE_KEY;
 }
 
-/**
- * getCachedReportDisponibilitat - Funció exportada per a getCachedReportDisponibilitat.
- *
- * @returns {any} Resultat de la funció.
- */
 export function getCachedReportDisponibilitat() {
   return readCacheRows()
     .map((row) => normalizeReport(row))
@@ -83,12 +56,6 @@ export function getCachedReportDisponibilitat() {
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 }
 
-/**
- * appendReportDisponibilitatToCache - Funció exportada per a appendReportDisponibilitatToCache.
- *
- * @param {any} report - Paràmetre report
- * @returns {any} Resultat de la funció.
- */
 export function appendReportDisponibilitatToCache(report) {
   const normalized = normalizeReport(report);
   if (!normalized) return;
@@ -102,12 +69,6 @@ export function appendReportDisponibilitatToCache(report) {
   writeCacheRows(nextRows);
 }
 
-/**
- * mergeReportDisponibilitatIntoCache - Funció exportada per a mergeReportDisponibilitatIntoCache.
- *
- * @param {any} reports - Paràmetre reports
- * @returns {any} Resultat de la funció.
- */
 export function mergeReportDisponibilitatIntoCache(reports = []) {
   const existing = getCachedReportDisponibilitat();
   const normalizedIncoming = (Array.isArray(reports) ? reports : [])

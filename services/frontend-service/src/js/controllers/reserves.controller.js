@@ -1,38 +1,17 @@
 /**
  * ParkLive – reserves.controller.js
- * Controlador de reserves: historial d'usuari, llistat admin,
- * filtre per estat, detall i creació de reserves.
- * Consumeix l'API Python (Flask) via AJAX.
+ *
+ * Controlador de reserves d'usuari: obté l'historial, renderitza
+ * les taules i les targetes del perfil, i gestiona la cancel·lació
+ * i creació de reserves des del frontend.
  */
-
-import { pythonApi } from '../api.js';
-import { DEFAULT_LIMIT } from '../config.js';
-import {
-  showAlert,
-  hideAllAlerts,
-  serializeForm,
-  validateForm,
-  setFormLoading,
-  formatDate,
-  formatCurrency,
-  getUserId,
-  getQueryParam,
-} from '../utils.js';
-
-/*  FUNCIONS D'ACCÉS A L'API                                           */
 
 /**
  * Obté l'historial de reserves d'un usuari.
  *
- * @param {Object} [filtres] – Claus opcionals:
+ * @param {Object} [filtres={}] – Claus opcionals:
  *   estat, data_desde, data_fins, aparcament_id, limit, offset
  * @returns {Promise<Array>}
- */
-/**
- * obtenirReservesUsuari - Funció exportada per a obtenirReservesUsuari.
- *
- * @param {any} filtres - Paràmetre filtres
- * @returns {Promise<any>} Promesa amb el resultat.
  */
 export async function obtenirReservesUsuari(filtres = {}) {
   const usuariId = getUserId();
@@ -57,143 +36,6 @@ export async function obtenirReservesUsuari(filtres = {}) {
   }
 }
 
-/**
- * Obté totes les reserves (admin). Accepta filtres opcionals.
- *
- * @param {Object} [filtres] – usuari_id, aparcament_id, estat,
- *   data_desde, data_fins, limit, offset
- * @returns {Promise<Array>}
- */
-/**
- * obtenirTotesReserves - Funció exportada per a obtenirTotesReserves.
- *
- * @param {any} filtres - Paràmetre filtres
- * @returns {Promise<any>} Promesa amb el resultat.
- */
-export async function obtenirTotesReserves(filtres = {}) {
-  const params = {
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    ...filtres,
-  };
-
-  try {
-    const data = await pythonApi.get('/api/reserves', params);
-    return Array.isArray(data) ? data : (data?.reserves || []);
-  } catch (err) {
-    console.error('[ParkLive] Error obtenint totes les reserves:', err);
-    throw err;
-  }
-}
-
-/**
- * Obté reserves filtrades per estat.
- *
- * @param {string} estat – pendent, confirmada, en_curs, completada, cancelada
- * @param {Object} [filtres] – limit, offset
- * @returns {Promise<Array>}
- */
-/**
- * obtenirReservesPerEstat - Funció exportada per a obtenirReservesPerEstat.
- *
- * @param {any} estat - Paràmetre estat
- * @param {any} filtres - Paràmetre filtres
- * @returns {Promise<any>} Promesa amb el resultat.
- */
-export async function obtenirReservesPerEstat(estat, filtres = {}) {
-  if (!estat) throw new Error('L\'estat és obligatori');
-
-  const params = {
-    estat,
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    ...filtres,
-  };
-
-  try {
-    const data = await pythonApi.get('/api/reserves/estat', params);
-    return Array.isArray(data) ? data : (data?.reserves || []);
-  } catch (err) {
-    console.error(`[ParkLive] Error obtenint reserves per estat "${estat}":`, err);
-    throw err;
-  }
-}
-
-/**
- * Obté el detall d'una reserva concreta.
- *
- * @param {number|string} reservaId
- * @returns {Promise<Object>}
- */
-/**
- * obtenirDetallReserva - Funció exportada per a obtenirDetallReserva.
- *
- * @param {any} reservaId - Paràmetre reservaId
- * @returns {Promise<any>} Promesa amb el resultat.
- */
-export async function obtenirDetallReserva(reservaId) {
-  try {
-    return await pythonApi.get(`/api/reserves/${reservaId}`);
-  } catch (err) {
-    console.error(`[ParkLive] Error obtenint detall reserva ${reservaId}:`, err);
-    throw err;
-  }
-}
-
-/**
- * Crea una nova reserva.
- *
- * @param {Object} dades – Camps obligatoris:
- *   usuari_id, aparcament_id, data_entrada, data_sortida, preu_total
- *   Opcionals: descompte_aplicat, notes
- * @returns {Promise<Object>} – Resposta amb message i reserva
- */
-/**
- * crearReserva - Funció exportada per a crearReserva.
- *
- * @param {any} dades - Paràmetre dades
- * @returns {Promise<any>} Promesa amb el resultat.
- */
-export async function crearReserva(dades) {
-  const required = ['usuari_id', 'aparcament_id', 'data_entrada', 'data_sortida', 'preu_total'];
-  const missing = required.filter((k) => !dades[k] && dades[k] !== 0);
-
-  if (missing.length > 0) {
-    throw new Error(`Falten camps obligatoris: ${missing.join(', ')}`);
-  }
-
-  try {
-    return await pythonApi.post('/api/reserves', dades);
-  } catch (err) {
-    console.error('[ParkLive] Error creant reserva:', err);
-    throw err;
-  }
-}
-
-/**
- * Cancel·la una reserva d'un usuari.
- * @param {number|string} reservaId
- * @returns {Promise<Object>}
- */
-/**
- * cancelarReserva - Funció exportada per a cancelarReserva.
- *
- * @param {any} reservaId - Paràmetre reservaId
- * @returns {Promise<any>} Promesa amb el resultat.
- */
-export async function cancelarReserva(reservaId) {
-  if (!reservaId) throw new Error('ID de reserva obligatori');
-
-  try {
-    return await pythonApi.post(`/api/reserves/${reservaId}/cancel`);
-  } catch (err) {
-    console.error(`[ParkLive] Error cancel·lant reserva ${reservaId}:`, err);
-    throw err;
-  }
-}
-
-/*  RENDERITZACIÓ                                                       */
-
 /** Mapatge d'estats a classes CSS per badges */
 const ESTAT_CLASSES = {
   pendent: 'warning',
@@ -206,15 +48,9 @@ const ESTAT_CLASSES = {
 /**
  * Renderitza una taula de reserves dins d'un contenidor.
  *
- * @param {Array}       reserves  – Llista de reserves
- * @param {HTMLElement}  container
- */
-/**
- * renderReserves - Funció exportada per a renderReserves.
- *
- * @param {any} reserves - Paràmetre reserves
- * @param {any} container - Paràmetre container
- * @returns {any} Resultat de la funció.
+ * @param {Array<Object>} reserves  - Llista de reserves.
+ * @param {HTMLElement}   container - Element DOM on renderitzar.
+ * @returns {void}
  */
 export function renderReserves(reserves, container) {
   if (!container) return;
@@ -260,51 +96,10 @@ export function renderReserves(reserves, container) {
 }
 
 /**
- * Renderitza el detall complet d'una reserva.
- *
- * @param {Object}      reserva
- * @param {HTMLElement}  container
- */
-/**
- * renderDetallReserva - Funció exportada per a renderDetallReserva.
- *
- * @param {any} reserva - Paràmetre reserva
- * @param {any} container - Paràmetre container
- * @returns {any} Resultat de la funció.
- */
-export function renderDetallReserva(reserva, container) {
-  if (!container || !reserva) return;
-
-  const r = reserva;
-  container.innerHTML = `
-    <div class="detall-reserva">
-      <header class="detall-header">
-        <h2>Reserva #${r.id}</h2>
-        <span class="badge badge-${ESTAT_CLASSES[r.estat] || 'secondary'}">${escapeHtml(r.estat || '—')}</span>
-      </header>
-      <div class="detall-info">
-        <dl>
-          <dt>Aparcament</dt><dd>${escapeHtml(r.nom_aparcament || String(r.aparcament_id || '—'))}</dd>
-          <dt>Data d'entrada</dt><dd>${formatDate(r.data_entrada)}</dd>
-          <dt>Data de sortida</dt><dd>${formatDate(r.data_sortida)}</dd>
-          <dt>Preu total</dt><dd>${formatCurrency(r.preu_total)}</dd>
-          <dt>Descompte</dt><dd>${r.descompte_aplicat ? formatCurrency(r.descompte_aplicat) : '—'}</dd>
-          <dt>Notes</dt><dd>${escapeHtml(r.notes || '—')}</dd>
-        </dl>
-      </div>
-    </div>`;
-}
-
-/*  INICIALITZACIÓ DE LA PÀGINA                                        */
-
-/**
  * Punt d'entrada del controlador de reserves.
  * Detecta elements DOM i vincula events.
- */
-/**
- * initReserves - Funció exportada per a initReserves.
- *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * 
+ * @returns {Promise<void>}
  */
 export async function initReserves() {
   const listContainer = document.querySelector('[data-role="reserves-list"]');
@@ -440,45 +235,26 @@ export async function initReserves() {
 }
 
 /**
- * Carrega les reserves de l'usuari i les renderitza amb format profile.
- */
-/**
- * carregarReservesPerfil - Funció per a carregarReservesPerfil.
+ * Carrega i renderitza les reserves del perfil de l'usuari actual (cards modernes).
  *
- * @param {any} container - Paràmetre container
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {HTMLElement} container - L'element on es renderitzaran les targetes.
+ * @returns {Promise<void>}
  */
 async function carregarReservesPerfil(container) {
   try {
-    // Podem filtrar per mostrar només les que no estan cancel·lades o totes
-    const reserves = await obtenirReservesUsuari();
-
-    // Filtrar reserves actives (futures o en curs)
-    const ara = new Date();
-    const reservesActives = reserves.filter(r => {
-      const dataSortida = new Date(r.data_sortida);
-      const est = (r.estat || '').trim().toLowerCase();
-      return ['confirmada', 'en_curs', 'pendent'].includes(est) && dataSortida >= ara;
-    });
-
-    // Les reserves solen venir ordenades per data d'entrada desc
-    renderProfileReserves(reservesActives, container);
+    const data = await obtenirReservesUsuari({ returnFullData: true });
+    const reserves = data?.reserves || data || [];
+    renderProfileReserves(reserves, container);
   } catch (err) {
-    container.innerHTML = `<div class="alert alert-danger">Error carregant reserves: ${err.message}</div>`;
+    showAlert('error', 'No s\'han pogut carregar les reserves del perfil.');
   }
 }
 
-/*  HELPERS PRIVATS                                                     */
-
 /**
- * Carrega i renderitza les reserves de l'usuari actual.
- * @param {HTMLElement} container
- */
-/**
- * carregarReserves - Funció per a carregarReserves.
+ * Carrega i renderitza les reserves de l'usuari actual (vista taula genèrica).
  *
- * @param {any} container - Paràmetre container
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {HTMLElement} container - L'element on es renderitzaran les reserves.
+ * @returns {Promise<void>}
  */
 async function carregarReserves(container) {
   try {
@@ -491,16 +267,14 @@ async function carregarReserves(container) {
 }
 
 /**
- * Connecta click als botons "Detall" de cada fila.
- * @param {HTMLElement} container
- */
-/**
- * attachReservaDetailListeners - Funció per a attachReservaDetailListeners.
+ * Connecta el click als botons "Detall" de cada fila de la taula.
  *
- * @param {any} container - Paràmetre container
- * @returns {any} Resultat de la funció.
+ * @param {HTMLElement} container - El contenidor que té els botons.
+ * @returns {void}
  */
 function attachReservaDetailListeners(container) {
+  if (!container) return;
+
   container.querySelectorAll('.btn-detall-reserva').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
@@ -511,15 +285,11 @@ function attachReservaDetailListeners(container) {
 
 /**
  * Renderitza la secció de reserves del perfil d'usuari (cards modernes).
- * @param {Array} reserves 
- * @param {HTMLElement} container 
- */
-/**
- * renderProfileReserves - Funció exportada per a renderProfileReserves.
+ * Inclou estat, dates, codi de reserva i botons d'acció (cancel·lar / veure tiquet).
  *
- * @param {any} reserves - Paràmetre reserves
- * @param {any} container - Paràmetre container
- * @returns {any} Resultat de la funció.
+ * @param {Array<Object>} reserves  - Llista de reserves a mostrar.
+ * @param {HTMLElement}   container - Contenidor HTML de destí.
+ * @returns {void}
  */
 export function renderProfileReserves(reserves, container) {
   if (!container) return;
@@ -661,15 +431,10 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Escapa caràcters HTML.
- * @param {string} str
- * @returns {string}
- */
-/**
- * escapeHtml - Funció per a escapeHtml.
+ * Escapa caràcters HTML per evitar XSS.
  *
- * @param {any} str - Paràmetre str
- * @returns {any} Resultat de la funció.
+ * @param {string} str - La cadena a escapar.
+ * @returns {string} La cadena escapada.
  */
 function escapeHtml(str) {
   if (!str) return '';

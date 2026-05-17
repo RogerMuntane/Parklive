@@ -1,9 +1,17 @@
+/**
+ * ParkLive – mobile-view.module.js
+ *
+ * Mòdul que gestiona el toggle mapa/resultats en dispositius mòbils.
+ * Persisteix l'estat del mode compacte a sessionStorage i sincronitza
+ * el viewport del mapa Leaflet en canviar entre vistes.
+ */
+
 const COMPACT_VIEW_STATE_STORAGE_KEY = 'parklive.mobileMapViewVisible';
 
 /**
- * readStoredCompactState - Funció per a readStoredCompactState.
+ * Llegeix l'estat persistit del mode mapa compacte de sessionStorage.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {boolean} True si el mapa estava visible en l'última visita.
  */
 function readStoredCompactState() {
   try {
@@ -14,10 +22,10 @@ function readStoredCompactState() {
 }
 
 /**
- * writeStoredCompactState - Funció per a writeStoredCompactState.
+ * Persisteix l'estat del mode mapa compacte a sessionStorage.
  *
- * @param {any} mapVisible - Paràmetre mapVisible
- * @returns {any} Resultat de la funció.
+ * @param {boolean} mapVisible - True si el mapa és visible.
+ * @returns {void}
  */
 function writeStoredCompactState(mapVisible) {
   try {
@@ -27,6 +35,21 @@ function writeStoredCompactState(mapVisible) {
   }
 }
 
+/**
+ * Configura el toggle de vista mapa/resultats per a mòbils.
+ * Sincronitza l'estat del mapa Leaflet en canviar de vista i
+ * persisteix la preferència de l'usuari entre navegacions.
+ *
+ * @param {Object}   options                      - Opcions de configuració.
+ * @param {L.Map}    options.map                   - La instància del mapa Leaflet.
+ * @param {L.FeatureGroup} options.markerGroup     - El grup de marcadors del mapa.
+ * @param {Function} options.updateOpenPopupsLayout - Funció per refrescar popups oberts.
+ * @param {Function} options.ensureValidViewport   - Funció per validar el viewport.
+ * @param {number}   [options.compactBreakpoint=991.98] - Amplada màxima per a la vista mòbil (px).
+ * @param {Array}    [options.defaultCenter]        - Coordenades per defecte [lat, lng].
+ * @param {number}   [options.defaultZoom=14]       - Zoom per defecte.
+ * @returns {void}
+ */
 export function setupMobileMapViewToggle({
   map,
   markerGroup,

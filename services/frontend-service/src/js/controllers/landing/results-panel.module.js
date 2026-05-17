@@ -1,10 +1,21 @@
 /**
- * initResultsPanelToggle - Funció exportada per a initResultsPanelToggle.
+ * ParkLive – results-panel.module.js
  *
- * @param {any} { map - Paràmetre { map
- * @param {any} updateOpenPopupsLayout - Paràmetre updateOpenPopupsLayout
- * @param {any} compactBreakpoint - Paràmetre compactBreakpoint
- * @returns {any} Resultat de la funció.
+ * Mòdul que gestiona el toggle d'expandir/encongir el panell de resultats
+ * de la landing page. Sincronitza la mida del mapa Leaflet durant
+ * la transició CSS per evitar artefactes de renderització.
+ */
+
+/**
+ * Inicialitza el toggle del panell de resultats de cerca.
+ * En expandir o encongir el panell, invalida la mida del mapa durant
+ * la duració de la transició CSS (320ms) per mantenır el mapa correcte.
+ *
+ * @param {Object}   options                      - Opcions de configuració.
+ * @param {L.Map}    options.map                   - La instància del mapa Leaflet.
+ * @param {Function} options.updateOpenPopupsLayout - Funció per refrescar els popups oberts.
+ * @param {number}   [options.compactBreakpoint=991.98] - Amplada màxima per a la vista mòbil (px).
+ * @returns {void}
  */
 export function initResultsPanelToggle({ map, updateOpenPopupsLayout, compactBreakpoint = 991.98 }) {
   const toggleBtn = document.getElementById('toggleResultsPanelBtn');

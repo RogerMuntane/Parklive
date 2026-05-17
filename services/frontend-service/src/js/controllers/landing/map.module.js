@@ -1,3 +1,11 @@
+/**
+ * ParkLive – map.module.js
+ *
+ * Mòdul encarregat d'inicialitzar i controlar el mapa Leaflet
+ * de la pàgina principal (landing). Gestó: marcadors d'aparcaments,
+ * contribucions de carrer, ubicació de l'usuari i controls de navigació.
+ */
+
 const DEFAULT_CENTER = [41.3872, 2.1703];
 const DEFAULT_ZOOM = 14;
 const MIN_ZOOM = 4;
@@ -5,10 +13,10 @@ const OPEN_AIR_BASE_RADIUS_METERS = 45;
 const REPORT_DISPONIBILITAT_MARKER_RADIUS = 7;
 
 /**
- * escapeHtml - Funció per a escapeHtml.
+ * Escapa un valor per evitar XSS en els popups del mapa.
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {string} value - La cadena a escapar.
+ * @returns {string} La cadena escapada.
  */
 function escapeHtml(value) {
   if (!value) return '';
@@ -18,20 +26,21 @@ function escapeHtml(value) {
 }
 
 /**
- * isOpenAirParking - Funció per a isOpenAirParking.
+ * Comprova si un punt d'aparcament és del tipus aire lliure.
  *
- * @param {any} spot - Paràmetre spot
- * @returns {any} Resultat de la funció.
+ * @param {Object} spot - L'objecte del punt d'aparcament.
+ * @returns {boolean} True si el tipus és 'aire_lliure'.
  */
 function isOpenAirParking(spot) {
   return spot?.raw?.tipus === 'aire_lliure';
 }
 
 /**
- * computeOpenAirRadius - Funció per a computeOpenAirRadius.
+ * Calcula el radi del cercle SVG per a aparcaments d'aire lliure
+ * en funció de la capacitat total.
  *
- * @param {any} spot - Paràmetre spot
- * @returns {any} Resultat de la funció.
+ * @param {Object} spot - L'objecte del punt d'aparcament.
+ * @returns {number} El radi en metres per a Leaflet (mínim 35, màxim 95).
  */
 function computeOpenAirRadius(spot) {
   const totalCapacity = Number(spot?.raw?.capacitat_total);
@@ -43,11 +52,12 @@ function computeOpenAirRadius(spot) {
 }
 
 /**
- * normalizeLatLng - Funció per a normalizeLatLng.
+ * Normalitza un objecte {lat, lon} a un LatLng de Leaflet.
+ * Retorna null si les coordenades no són vàlides.
  *
- * @param {any} leaflet - Paràmetre leaflet
- * @param {any} location - Paràmetre location
- * @returns {any} Resultat de la funció.
+ * @param {Object} leaflet   - La instància global de Leaflet (L).
+ * @param {Object} location  - Objecte amb propietats `lat` i `lon`.
+ * @returns {L.LatLng|null}  La instància LatLng o null si invàlid.
  */
 function normalizeLatLng(leaflet, location) {
   const lat = Number(location?.lat);
@@ -61,9 +71,26 @@ function normalizeLatLng(leaflet, location) {
 }
 
 /**
- * initLandingMap - Funció exportada per a initLandingMap.
+ * Inicialitza el mapa Leaflet de la landing page.
+ * Configura les capes de tiles (CartoDB Voyager), els controls de zoom,
+ * escala i localització, i retorna un objecte de control amb funcions
+ * per gestionar marcadors, contribucions i la ubicació de l'usuari.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {Object|null} Objecte de control del mapa, o null si no es pot inicialitzar.
+ * @returns {L.Map}      .map              - La instància del mapa Leaflet.
+ * @returns {L.FeatureGroup} .markerGroup  - El grup de marcadors d'aparcaments.
+ * @returns {Function}   .setParkingSpots  - Actualitza els marcadors del mapa.
+ * @returns {Function}   .setStreetReports - Actualitza les contribucions de carrer.
+ * @returns {Function}   .setUserLocationMarker - Posa/actualitza el marcador d'ubicació.
+ * @returns {Function}   .focusUserLocation - Centra el mapa a la ubicació de l'usuari.
+ * @returns {Function}   .setLocateMeAction - Assigna el callback del botó "Localitza'm".
+ * @returns {Function}   .focusParkingById  - Centra el mapa i obre el popup d'un aparcament.
+ * @returns {Function}   .hideParkingMarkerById - Amaga un marcador per ID.
+ * @returns {Function}   .updateOpenPopupsLayout - Actualitza els popups oberts.
+ * @returns {Function}   .fitToParkingSpots - Enquadra el mapa als marcadors actuals.
+ * @returns {Function}   .ensureValidViewport - Valida i corregeix el viewport.
+ * @returns {Array}      .defaultCenter     - Coordenades per defecte [lat, lng].
+ * @returns {number}     .defaultZoom       - Zoom per defecte.
  */
 export function initLandingMap() {
   const mapElement = document.getElementById('map');

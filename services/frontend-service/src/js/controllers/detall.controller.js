@@ -19,10 +19,10 @@ import { PHP_API_URL, PYTHON_API_URL } from '../config.js';
 /* ------------------------------------------------------------------ */
 
 /**
- * esc - Funció per a esc.
+ * Escapa una cadena per evitar injeccions XSS al DOM.
  *
- * @param {any} str - Paràmetre str
- * @returns {any} Resultat de la funció.
+ * @param {string} str - La cadena a escapar.
+ * @returns {string} La cadena escapada.
  */
 function esc(str) {
   if (!str) return '';
@@ -32,10 +32,10 @@ function esc(str) {
 }
 
 /**
- * formatCurrency - Funció per a formatCurrency.
+ * Formata un valor numèric com a moneda en format "12,50 €".
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {number|string} value - El valor a formatar.
+ * @returns {string} El text formatat o "\u2014" si no és vàlid.
  */
 function formatCurrency(value) {
   const n = Number(value);
@@ -43,7 +43,12 @@ function formatCurrency(value) {
   return `${n.toFixed(2).replace('.', ',')} €`;
 }
 
-/** Genera les estrelles HTML (1–5 amb mitges) */
+/**
+ * Genera les estrelles HTML per a una valoració (1–5 amb mitges).
+ *
+ * @param {number} rating - La puntuació (p.ex. 4.5).
+ * @returns {string} HTML amb les icones Bootstrap `bi-star*`.
+ */
 function buildStars(rating) {
   const full = Math.floor(rating);
   const half = rating - full >= 0.5;
@@ -56,13 +61,23 @@ function buildStars(rating) {
   );
 }
 
-/** Formata un TIME de MySQL "HH:MM:SS" → "HH:MM" */
+/**
+ * Formata un TIME de MySQL "HH:MM:SS" a "HH:MM".
+ *
+ * @param {string|null} t - La cadena de temps.
+ * @returns {string|null} La cadena formatada o null si no hi ha valor.
+ */
 function formatTime(t) {
   if (!t) return null;
   return String(t).slice(0, 5);
 }
 
-/** Etiqueta llegible per al tipus d'aparcament */
+/**
+ * Retorna una etiqueta llegible per al tipus d'aparcament.
+ *
+ * @param {string} tipus - El codi del tipus (p.ex. 'subterrani').
+ * @returns {string} La descripcio localitzada.
+ */
 function tipusLabel(tipus) {
   const map = {
     carrer: 'Carrer',
@@ -75,7 +90,12 @@ function tipusLabel(tipus) {
   return map[tipus] || esc(tipus || '—');
 }
 
-/** Icona Bootstrap per al tipus d'aparcament */
+/**
+ * Retorna la classe d'icona Bootstrap per al tipus d'aparcament.
+ *
+ * @param {string} tipus - El codi del tipus.
+ * @returns {string} La classe `bi-*` corresponent.
+ */
 function tipusIcon(tipus) {
   const map = {
     carrer: 'bi-signpost-split',
@@ -88,7 +108,14 @@ function tipusIcon(tipus) {
   return map[tipus] || 'bi-p-circle';
 }
 
-/** Omple un element [data-detall] amb el valor corresponent */
+/**
+ * Omple tots els elements `[data-detall="key"]` amb el valor donat.
+ * Per a `<img>` assigna `src`; per a la resta, `innerHTML`.
+ *
+ * @param {string} key   - Valor de l'atribut data-detall.
+ * @param {string} value - El contingut a assignar.
+ * @returns {void}
+ */
 function fill(key, value) {
   document.querySelectorAll(`[data-detall="${key}"]`).forEach((el) => {
     if (el.tagName === 'IMG') {
@@ -99,7 +126,13 @@ function fill(key, value) {
   });
 }
 
-/** Mostra/amaga un element per atribut [data-detall-feature] */
+/**
+ * Mostra o amaga elements amb `[data-detall-feature="key"]`.
+ *
+ * @param {string}  key     - Valor de l'atribut data-detall-feature.
+ * @param {boolean} enabled - True per mostrar, false per amagar.
+ * @returns {void}
+ */
 function setFeature(key, enabled) {
   document.querySelectorAll(`[data-detall-feature="${key}"]`).forEach((el) => {
     el.style.display = enabled ? '' : 'none';
@@ -111,10 +144,12 @@ function setFeature(key, enabled) {
 /* ------------------------------------------------------------------ */
 
 /**
- * renderDetall - Funció per a renderDetall.
+ * Renderitza tot el contingut de la pàgina de detall d'un aparcament.
+ * Omple els slots `[data-detall]`, configura el mapa Leaflet i
+ * renderitza el carrusel d'imatges i les valoracions.
  *
- * @param {any} a - Paràmetre a
- * @returns {any} Resultat de la funció.
+ * @param {Object} a - L'objecte aparcament retornat per l'API.
+ * @returns {void}
  */
 function renderDetall(a) {
   /* ── Hero ─────────────────────────────────────────────────────── */
@@ -342,14 +377,9 @@ function renderDetall(a) {
 
 /**
  * Converteix un Date a cadena "YYYY-MM-DD HH:MM" en hora local.
- * @param {Date} d
- * @returns {string}
- */
-/**
- * toLocalDateTimeString - Funció per a toLocalDateTimeString.
  *
- * @param {any} d - Paràmetre d
- * @returns {any} Resultat de la funció.
+ * @param {Date} d - L'objecte Date a convertir.
+ * @returns {string} La cadena de data/hora.
  */
 function toLocalDateTimeString(d) {
   const pad = (n) => String(n).padStart(2, '0');
@@ -365,13 +395,8 @@ function toLocalDateTimeString(d) {
  *
  * Utilitza la franja horària actual (ara → ara+2h) per defecte.
  *
- * @param {string|number} aparcamentId
- */
-/**
- * fetchAndUpdateDisponibilitat - Funció per a fetchAndUpdateDisponibilitat.
- *
- * @param {any} aparcamentId - Paràmetre aparcamentId
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string|number} aparcamentId - Identificador de l'aparcament.
+ * @returns {Promise<void>}
  */
 async function fetchAndUpdateDisponibilitat(aparcamentId) {
   try {
@@ -416,10 +441,12 @@ async function fetchAndUpdateDisponibilitat(aparcamentId) {
 }
 
 /**
- * initDetallFavoriteButton - Funció per a initDetallFavoriteButton.
+ * Inicialitza el botó de favorits de la pàgina de detall.
+ * Comprova si l'aparcament és favorit i vincula el toggle.
+ * Si l'usuari no està autenticat, amaga el botó.
  *
- * @param {any} aparcamentId - Paràmetre aparcamentId
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string|number} aparcamentId - Identificador de l'aparcament.
+ * @returns {Promise<void>}
  */
 async function initDetallFavoriteButton(aparcamentId) {
   const favoriteBtn = document.querySelector('[data-detall="favorit-btn"]');
@@ -474,7 +501,13 @@ async function initDetallFavoriteButton(aparcamentId) {
   });
 }
 
-/** Renderitza la llista de ressenyes recents */
+/**
+ * Renderitza la llista de ressenyes recents de l'aparcament.
+ * Mostra les 3 primeres a la vista i totes al modal.
+ *
+ * @param {Array<Object>} valoracions - Llista de valoracions de l'API.
+ * @returns {void}
+ */
 function renderValoracions(valoracions) {
   const container = document.querySelector('[data-detall-list="valoracions"]');
   const allReviewsModalContainer = document.getElementById('all-reviews-container');
@@ -567,7 +600,13 @@ function renderValoracions(valoracions) {
   });
 }
 
-/** Renderitza el carrusel d'imatges */
+/**
+ * Renderitza el carrusel d'imatges de l'aparcament.
+ * Si no hi ha fotos, utilitza imatges per defecte d'Unsplash.
+ *
+ * @param {Array<Object>} fotos - Llista d'objectes amb propietat `url`.
+ * @returns {void}
+ */
 function renderCarousel(fotos) {
   const container = document.querySelector('#parkingCarousel .carousel-inner');
   const prevBtn = document.querySelector('#parkingCarousel .carousel-control-prev');
@@ -620,9 +659,9 @@ function renderCarousel(fotos) {
 /* ------------------------------------------------------------------ */
 
 /**
- * showSkeleton - Funció per a showSkeleton.
+ * Mostra l'estat de càrrega (skeleton) i amaga el contingut i els errors.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function showSkeleton() {
   document.querySelector('[data-detall-state="loading"]').style.display = '';
@@ -631,9 +670,9 @@ function showSkeleton() {
 }
 
 /**
- * showContent - Funció per a showContent.
+ * Amaga l'estat de càrrega i mostra el contingut de la pàgina.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {void}
  */
 function showContent() {
   document.querySelector('[data-detall-state="loading"]').style.display = 'none';
@@ -641,10 +680,10 @@ function showContent() {
 }
 
 /**
- * showError - Funció per a showError.
+ * Amaga el contingut i mostra el banderó d'error amb un missatge.
  *
- * @param {any} msg - Paràmetre msg
- * @returns {any} Resultat de la funció.
+ * @param {string} [msg="No s'ha pogut carregar l'aparcament."] - El missatge d'error.
+ * @returns {void}
  */
 function showError(msg = "No s'ha pogut carregar l'aparcament.") {
   document.querySelector('[data-detall-state="loading"]').style.display = 'none';
@@ -660,9 +699,11 @@ function showError(msg = "No s'ha pogut carregar l'aparcament.") {
 /* ------------------------------------------------------------------ */
 
 /**
- * initDetallAparcament - Funció exportada per a initDetallAparcament.
+ * Punt d'entrada públic del controlador de detall d'aparcament.
+ * Llegeix el paràmetre `id` de la URL, crida l'API Python, i orquestra
+ * la renderització, la disponibilitat, els favorits i el mapa.
  *
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @returns {Promise<void>}
  */
 export async function initDetallAparcament() {
   const id = getQueryParam('id');

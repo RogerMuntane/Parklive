@@ -1,3 +1,12 @@
+/**
+ * ParkLive – search.module.js
+ *
+ * Mòdul de cerca principal de la landing page.
+ * Gestó: suggeriments automàtics (Photon + Nominatim), geocodificació,
+ * construcció de paràmetres de filtre, càrrega de spots al mapa,
+ * paginació del panell de resultats i enriquiment async de disponibilitat.
+ */
+
 import { pythonApi } from '../../api.js';
 import { isAuthenticated, showBootstrapAlert, isPremiumUser, redirectToUpgradePlan } from '../../utils.js';
 import { PHP_API_URL } from '../../config.js';
@@ -5,7 +14,6 @@ import {
   loadFavoriteIds,
   toggleFavoriteParking,
 } from '../favorits.service.js';
-
 
 
 const PAGE_SIZE = 5;
@@ -24,26 +32,17 @@ const LOCATION_EXPANSION_RADII_KM = [5, 15, 40, 120, 300];
 const AVAIL_CONCURRENCY = 1;
 
 let userLocation = null;
-/**
- * setUserLocationMarker - Funció per a setUserLocationMarker.
- *
- * @returns {any} Resultat de la funció.
- */
 let setUserLocationMarker = () => {};
-/**
- * setSearchAnchor - Funció per a setSearchAnchor.
- *
- * @returns {any} Resultat de la funció.
- */
 let setSearchAnchor = () => {};
 let searchAnchorLocation = null;
 let hideParkingMarkerById = null;
 
 /**
- * setUserLocation - Funció per a setUserLocation.
+ * Actualitza la ubicació de l'usuari i el marcador del mapa.
+ * No modifica `searchAnchorLocation` — només el marcador visual.
  *
- * @param {any} nextLocation - Paràmetre nextLocation
- * @returns {any} Resultat de la funció.
+ * @param {{lat: number, lon: number}|null} nextLocation - Nova ubicació o null per netejar.
+ * @returns {void}
  */
 function setUserLocation(nextLocation) {
   if (
@@ -67,10 +66,11 @@ function setUserLocation(nextLocation) {
 }
 
 /**
- * updateSearchAnchor - Funció per a updateSearchAnchor.
+ * Actualitza el punt d'ancoratge de la cerca (centre del viewport del mapa).
+ * S'usa per cerques dinàmiques en moure o fer zoom al mapa.
  *
- * @param {any} nextLocation - Paràmetre nextLocation
- * @returns {any} Resultat de la funció.
+ * @param {{lat: number, lon: number}|null} nextLocation - Nou ancoratge o null per netejar.
+ * @returns {void}
  */
 function updateSearchAnchor(nextLocation) {
   if (
@@ -89,10 +89,10 @@ function updateSearchAnchor(nextLocation) {
 }
 
 /**
- * buildLocationLabelFromPhotonProperties - Funció per a buildLocationLabelFromPhotonProperties.
+ * Construeix una etiqueta de text llegible per a una suggeriment de Photon.
  *
- * @param {any} properties - Paràmetre properties
- * @returns {any} Resultat de la funció.
+ * @param {Object} [properties={}] - Les propietats de la feature de Photon.
+ * @returns {string} L'etiqueta (nom, ciutat, estat, país), separada per comes.
  */
 function buildLocationLabelFromPhotonProperties(properties = {}) {
   const parts = [
@@ -106,20 +106,21 @@ function buildLocationLabelFromPhotonProperties(properties = {}) {
 }
 
 /**
- * normalizeQuery - Funció per a normalizeQuery.
+ * Normalitza una cadena de cerca: trimeja i passa a minúscules.
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {string} value - La cadena a normalitzar.
+ * @returns {string} La cadena normalitzada.
  */
 function normalizeQuery(value) {
   return String(value || '').trim().toLowerCase();
 }
 
 /**
- * buildLocationLabelFromNominatim - Funció per a buildLocationLabelFromNominatim.
+ * Construeix una etiqueta de text llegible per a un resultat de Nominatim.
+ * Pren els 3 primers segments del `display_name`.
  *
- * @param {any} entry - Paràmetre entry
- * @returns {any} Resultat de la funció.
+ * @param {Object} [entry={}] - La fila de resultat de Nominatim.
+ * @returns {string} L'etiqueta abreviada.
  */
 function buildLocationLabelFromNominatim(entry = {}) {
   const displayName = String(entry.display_name || '').trim();
@@ -135,10 +136,10 @@ function buildLocationLabelFromNominatim(entry = {}) {
 }
 
 /**
- * geocodeWithNominatim - Funció per a geocodeWithNominatim.
+ * Geocodifica una consulta de text via Nominatim i retorna coordenades.
  *
- * @param {any} query - Paràmetre query
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string} query - La cadena de text a geocodificar.
+ * @returns {Promise<{lat: number, lon: number}|null>} Coordenades o null si falla.
  */
 async function geocodeWithNominatim(query) {
   const url = new URL(NOMINATIM_ENDPOINT);
@@ -172,10 +173,10 @@ async function geocodeWithNominatim(query) {
 }
 
 /**
- * geocodeWithPhoton - Funció per a geocodeWithPhoton.
+ * Geocodifica una consulta de text via Photon (Komoot) i retorna coordenades.
  *
- * @param {any} query - Paràmetre query
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string} query - La cadena de text a geocodificar.
+ * @returns {Promise<{lat: number, lon: number}|null>} Coordenades o null si falla.
  */
 async function geocodeWithPhoton(query) {
   const url = new URL(PHOTON_ENDPOINT);
@@ -212,11 +213,11 @@ async function geocodeWithPhoton(query) {
 }
 
 /**
- * fetchLocationSuggestions - Funció per a fetchLocationSuggestions.
+ * Obté suggeriments de localització geogràfica via Photon.
  *
- * @param {any} query - Paràmetre query
- * @param {any} signal - Paràmetre signal
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string}      query  - Text de cerca de l'usuari.
+ * @param {AbortSignal} signal - Senyal per cancel·lar la petició HTTP.
+ * @returns {Promise<Array<{type: 'location', label: string, lat: number, lon: number}>>}
  */
 async function fetchLocationSuggestions(query, signal) {
   const trimmedQuery = query.trim();
@@ -257,6 +258,13 @@ async function fetchLocationSuggestions(query, signal) {
     .filter(Boolean);
 }
 
+/**
+ * Obté suggeriments de localització geogràfica via Nominatim (fallback).
+ *
+ * @param {string}      query  - Text de cerca de l'usuari.
+ * @param {AbortSignal} signal - Senyal per cancel·lar la petició HTTP.
+ * @returns {Promise<Array<{type: 'location', label: string, lat: number, lon: number}>>}
+ */
     async function fetchLocationSuggestionsFromNominatim(query, signal) {
   const trimmedQuery = query.trim();
   if (!trimmedQuery || trimmedQuery.length < 1) return [];
@@ -295,11 +303,12 @@ async function fetchLocationSuggestions(query, signal) {
 }
 
 /**
- * scoreParkingSuggestion - Funció per a scoreParkingSuggestion.
+ * Puntua la relevància d'un aparcament en relació a la consulta de cerca.
+ * Valors més baixos = més rellevants. Retorna -1 si no hi ha coincidència.
  *
- * @param {any} item - Paràmetre item
- * @param {any} loweredQuery - Paràmetre loweredQuery
- * @returns {any} Resultat de la funció.
+ * @param {Object} item         - Objecte aparcament del catàleg.
+ * @param {string} loweredQuery - La consulta normalitzada en minúscules.
+ * @returns {number} Puntuació de relevància (0–4) o -1 si no coincideix.
  */
 function scoreParkingSuggestion(item, loweredQuery) {
   const name = normalizeQuery(item?.nom);
@@ -317,10 +326,10 @@ function scoreParkingSuggestion(item, loweredQuery) {
 }
 
 /**
- * buildParkingSuggestionLabel - Funció per a buildParkingSuggestionLabel.
+ * Construeix l'etiqueta de text per a un suggeriment d'aparcament.
  *
- * @param {any} item - Paràmetre item
- * @returns {any} Resultat de la funció.
+ * @param {Object} item - Objecte aparcament del catàleg.
+ * @returns {string} L'etiqueta (nom + ciutat entre parèntesis si existeix).
  */
 function buildParkingSuggestionLabel(item) {
   const name = String(item?.nom || 'Aparcament').trim();
@@ -330,11 +339,11 @@ function buildParkingSuggestionLabel(item) {
 }
 
 /**
- * buildParkingSuggestions - Funció per a buildParkingSuggestions.
+ * Filtra i ordena els aparcaments del catàleg per relevància a la consulta.
  *
- * @param {any} query - Paràmetre query
- * @param {any} parkingCatalog - Paràmetre parkingCatalog
- * @returns {any} Resultat de la funció.
+ * @param {string} query          - Text de cerca de l'usuari.
+ * @param {Array}  parkingCatalog - Catàleg complet d'aparcaments.
+ * @returns {Array<{type: 'parking', label: string, parkingId: string, score: number}>}
  */
 function buildParkingSuggestions(query, parkingCatalog) {
   const loweredQuery = normalizeQuery(query);
@@ -362,11 +371,11 @@ function buildParkingSuggestions(query, parkingCatalog) {
 }
 
 /**
- * mergeSuggestions - Funció per a mergeSuggestions.
+ * Fusiona suggeriments de parking i localització, amb els de parking primer.
  *
- * @param {any} locationItems - Paràmetre locationItems
- * @param {any} parkingItems - Paràmetre parkingItems
- * @returns {any} Resultat de la funció.
+ * @param {Array} locationItems - Suggeriments de lloc geogràfic.
+ * @param {Array} parkingItems  - Suggeriments d'aparcament.
+ * @returns {Array} Llista fusionada, limitada a SUGGESTIONS_TOTAL_LIMIT elements.
  */
 function mergeSuggestions(locationItems, parkingItems) {
   const merged = [];
@@ -383,10 +392,10 @@ function mergeSuggestions(locationItems, parkingItems) {
 }
 
 /**
- * geocodeSearchLocation - Funció per a geocodeSearchLocation.
+ * Geocodifica una consulta de text: intenta Photon primer, Nominatim com a fallback.
  *
- * @param {any} query - Paràmetre query
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string} query - El text a geocodificar.
+ * @returns {Promise<{lat: number, lon: number}|null>} Coordenades o null.
  */
 async function geocodeSearchLocation(query) {
   const trimmedQuery = query.trim();
@@ -408,10 +417,10 @@ async function geocodeSearchLocation(query) {
 }
 
 /**
- * formatEuroPerHour - Funció per a formatEuroPerHour.
+ * Formata un valor numèric com a tarifa en euros per hora.
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {number|string} value - El valor a formatar.
+ * @returns {string} La cadena "X,XX €/h" o "—" si invàlid.
  */
 function formatEuroPerHour(value) {
   const amount = Number(value);
@@ -420,10 +429,10 @@ function formatEuroPerHour(value) {
 }
 
 /**
- * formatParkingType - Funció per a formatParkingType.
+ * Retorna una etiqueta llegible per al tipus d'aparcament.
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {string} value - El codi de tipus (p.ex. 'subterrani').
+ * @returns {string} El text localitzat o 'No indicat'.
  */
 function formatParkingType(value) {
   const typeMap = {
@@ -439,10 +448,10 @@ function formatParkingType(value) {
 }
 
 /**
- * formatMaxHeight - Funció per a formatMaxHeight.
+ * Formata l'altura màxima d'un aparcament.
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {number|string} value - L'altura en metres.
+ * @returns {string} La cadena "X,XX m" o 'No indicada' si invàlid.
  */
 function formatMaxHeight(value) {
   const height = Number(value);
@@ -451,9 +460,10 @@ function formatMaxHeight(value) {
 }
 
 /**
- * formatAvailabilitySummary - Funció per a formatAvailabilitySummary.
+ * Retorna un placeholder HTML amb un spinner per a la disponibilitat.
+ * El contingut real s'és omplert per `enrichDisponibilitatAsync`.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {string} HTML amb el spinner de càrrega.
  */
 function formatAvailabilitySummary() {
   // No usem les dades de la BD (poden ser obsoletes).
@@ -462,12 +472,12 @@ function formatAvailabilitySummary() {
 }
 
 /**
- * formatSchedule - Funció per a formatSchedule.
+ * Formata l'horari d'un aparcament en text llegible.
  *
- * @param {any} open24h - Paràmetre open24h
- * @param {any} openingTime - Paràmetre openingTime
- * @param {any} closingTime - Paràmetre closingTime
- * @returns {any} Resultat de la funció.
+ * @param {boolean}     open24h     - Si l'aparcament és obert 24 hores.
+ * @param {string|null} openingTime  - Hora d'obertura (HH:MM:SS).
+ * @param {string|null} closingTime  - Hora de tancament (HH:MM:SS).
+ * @returns {string} La cadena d'horari o 'No indicat'.
  */
 function formatSchedule(open24h, openingTime, closingTime) {
   if (open24h) return '24 h';
@@ -476,11 +486,11 @@ function formatSchedule(open24h, openingTime, closingTime) {
 }
 
 /**
- * formatRatingSummary - Funció per a formatRatingSummary.
+ * Formata el resum de valoracions d'un aparcament.
  *
- * @param {any} avgRating - Paràmetre avgRating
- * @param {any} totalRatings - Paràmetre totalRatings
- * @returns {any} Resultat de la funció.
+ * @param {number|string} avgRating    - La valoració mitjana.
+ * @param {number|string} totalRatings - El nombre total de valoracions.
+ * @returns {string} La cadena "X,X (N)" o 'Sense valoracions'.
  */
 function formatRatingSummary(avgRating, totalRatings) {
   const avg = Number(avgRating);
@@ -494,13 +504,13 @@ function formatRatingSummary(avgRating, totalRatings) {
 }
 
 /**
- * computeDistanceKm - Funció per a computeDistanceKm.
+ * Calcula la distància en kilòmetres entre dos punts geogràfics (Haversine).
  *
- * @param {any} fromLat - Paràmetre fromLat
- * @param {any} fromLon - Paràmetre fromLon
- * @param {any} toLat - Paràmetre toLat
- * @param {any} toLon - Paràmetre toLon
- * @returns {any} Resultat de la funció.
+ * @param {number} fromLat - Latitud del punt d'origen.
+ * @param {number} fromLon - Longitud del punt d'origen.
+ * @param {number} toLat   - Latitud del punt de destí.
+ * @param {number} toLon   - Longitud del punt de destí.
+ * @returns {number} La distància en kilòmetres.
  */
 function computeDistanceKm(fromLat, fromLon, toLat, toLon) {
   const earthRadiusKm = 6371;
@@ -520,11 +530,12 @@ function computeDistanceKm(fromLat, fromLon, toLat, toLon) {
 }
 
 /**
- * normalizeParking - Funció per a normalizeParking.
+ * Normalitza un objecte de la BD a un spot del mapa amb tots els camps calculats.
+ * Retorna null si les coordenades no són vàlides.
  *
- * @param {any} raw - Paràmetre raw
- * @param {any} origin - Paràmetre origin
- * @returns {any} Resultat de la funció.
+ * @param {Object}      raw    - L'objecte cru de l'API.
+ * @param {{lat: number, lon: number}|null} origin - Punt d'origen per calcular distància.
+ * @returns {Object|null} El spot normalitzat o null.
  */
 function normalizeParking(raw, origin = null) {
   const lat = Number(raw.latitud);
@@ -591,10 +602,10 @@ function normalizeParking(raw, origin = null) {
 }
 
 /**
- * parsePositiveNumber - Funció per a parsePositiveNumber.
+ * Intenta parsejar un valor com a número positiu. Retorna null si no ho és.
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {string|number} value - El valor a parsejar.
+ * @returns {number|null} El número positiu o null.
  */
 function parsePositiveNumber(value) {
   const numericValue = Number(value);
@@ -603,12 +614,13 @@ function parsePositiveNumber(value) {
 }
 
 /**
- * addRadiusParam - Funció per a addRadiusParam.
+ * Afegeix el paràmetre de radi de cerca (`radi_km`) a l'objecte de paràmetres.
+ * Prioritza `radiusOverrideKm` sobre el slider de distància del DOM.
  *
- * @param {any} params - Paràmetre params
- * @param {any} distanceRange - Paràmetre distanceRange
- * @param {any} radiusOverrideKm - Paràmetre radiusOverrideKm
- * @returns {any} Resultat de la funció.
+ * @param {Object}      params          - L'objecte de paràmetres a modificar.
+ * @param {string}      distanceRange   - El valor del slider de distància.
+ * @param {number|null} radiusOverrideKm - Radi forsat (viewport dinàmic).
+ * @returns {number|null} El radi afegit o null si cap.
  */
 function addRadiusParam(params, distanceRange, radiusOverrideKm) {
   const overrideRadius = parsePositiveNumber(radiusOverrideKm);
@@ -627,11 +639,11 @@ function addRadiusParam(params, distanceRange, radiusOverrideKm) {
 }
 
 /**
- * addUserLocationParams - Funció per a addUserLocationParams.
+ * Afegeix les coordenades de l'ancoratge de cerca (o de l'usuari) als paràmetres.
  *
- * @param {any} params - Paràmetre params
- * @param {any} forceSearchAnchor - Paràmetre forceSearchAnchor
- * @returns {any} Resultat de la funció.
+ * @param {Object}  params            - L'objecte de paràmetres a modificar.
+ * @param {boolean} [forceSearchAnchor=false] - Si true, usa només `searchAnchorLocation`.
+ * @returns {void}
  */
 function addUserLocationParams(params, forceSearchAnchor = false) {
   const anchor = forceSearchAnchor ? searchAnchorLocation : (searchAnchorLocation || userLocation);
@@ -645,12 +657,14 @@ function addUserLocationParams(params, forceSearchAnchor = false) {
 }
 
 /**
- * buildSearchParams - Funció per a buildSearchParams.
+ * Construeix l'objecte de paràmetres de cerca a partir dels filtres del DOM.
+ * Inclou cercador, preu, distància, dates, tipus de vehicle i categoria.
  *
- * @param {any} { ignoreCityFilter - Paràmetre { ignoreCityFilter
- * @param {any} radiusOverrideKm - Paràmetre radiusOverrideKm
- * @param {any} forceSearchAnchor - Paràmetre forceSearchAnchor
- * @returns {any} Resultat de la funció.
+ * @param {Object}      [options={}]              - Opcions addicionals.
+ * @param {boolean}     [options.ignoreCityFilter] - Si true, no afegeix el filtre per ciutat.
+ * @param {number|null} [options.radiusOverrideKm] - Radi forsat per viewport.
+ * @param {boolean}     [options.forceSearchAnchor] - Usa només l'ancoratge de cerca.
+ * @returns {{params: Object, searchTerm: string}}
  */
 function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null, forceSearchAnchor = false } = {}) {
   const searchTerm = document.getElementById('mapSearchInput')?.value.trim() || '';
@@ -745,19 +759,21 @@ function buildSearchParams({ ignoreCityFilter = false, radiusOverrideKm = null, 
 }
 
 /**
- * isFavoritesOnlyFilterEnabled - Funció per a isFavoritesOnlyFilterEnabled.
+ * Comprova si el filtre "només favorits" està activat al DOM.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {boolean}
  */
 function isFavoritesOnlyFilterEnabled() {
   return document.getElementById('favoritesOnly')?.checked === true;
 }
 
 /**
- * resolveSearchOrigin - Funció per a resolveSearchOrigin.
+ * Resol el punt d'origen per al càlcul de distàncies.
+ * Usa l'ancoratge de cerca si està disponible; sinó, la ubicació de l'usuari;
+ * sinó, les coordenades del primer resultat.
  *
- * @param {any} records - Paràmetre records
- * @returns {any} Resultat de la funció.
+ * @param {Array} records - Els registres retornats per la cerca.
+ * @returns {{lat: number, lon: number}|null}
  */
 function resolveSearchOrigin(records) {
   const anchor = searchAnchorLocation || userLocation;
@@ -779,11 +795,12 @@ function resolveSearchOrigin(records) {
 }
 
 /**
- * normalizeAndSortSpots - Funció per a normalizeAndSortSpots.
+ * Normalitza els spots i els ordena per distància a l'origen.
+ * Els spots sense distància calculada van al final.
  *
- * @param {any} records - Paràmetre records
- * @param {any} origin - Paràmetre origin
- * @returns {any} Resultat de la funció.
+ * @param {Array}                         records - Registres crus de l'API.
+ * @param {{lat: number, lon: number}|null} origin  - Punt d'origen per distància.
+ * @returns {Array} Llista de spots normalitzats i ordenats.
  */
 function normalizeAndSortSpots(records, origin) {
   return records
@@ -804,10 +821,11 @@ function normalizeAndSortSpots(records, origin) {
 }
 
 /**
- * resolveFavoritesState - Funció per a resolveFavoritesState.
+ * Verifica l'estat de favorits i retorna l'estat complet (IDs, flags).
+ * Si l'usuari no està autenticat o no és premium, desactiva el filtre de favorits.
  *
- * @param {any} favoritesOnly - Paràmetre favoritesOnly
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {boolean} favoritesOnly - Si l'usuari ha activat el filtre de favorits.
+ * @returns {Promise<{favoritesEnabled: boolean, favoriteIds: Set, effectiveFavoritesOnly: boolean}>}
  */
 async function resolveFavoritesState(favoritesOnly) {
   // Favorits: requereix estar autenticat I ser usuari premium
@@ -846,10 +864,10 @@ async function resolveFavoritesState(favoritesOnly) {
 }
 
 /**
- * fetchRecordsByParams - Funció per a fetchRecordsByParams.
+ * Fa la petició a l'API de cerca d'aparcaments amb els paràmetres donats.
  *
- * @param {any} params - Paràmetre params
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {Object} params - Paràmetres de cerca (vegeu `buildSearchParams`).
+ * @returns {Promise<Array>} Llista de registres crus.
  */
 async function fetchRecordsByParams(params) {
   const response = await pythonApi.get('/api/aparcaments/cerca', params);
@@ -857,10 +875,11 @@ async function fetchRecordsByParams(params) {
 }
 
 /**
- * fetchRecordsExpandingRadius - Funció per a fetchRecordsExpandingRadius.
+ * Cerca aparcaments expandint progressivament el radi fins trobar resultats.
+ * Usa els radis definits a `LOCATION_EXPANSION_RADII_KM`.
  *
- * @param {any} ignoreCityFilter - Paràmetre ignoreCityFilter
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {boolean} ignoreCityFilter - Si true, no filtra per nom de ciutat.
+ * @returns {Promise<Array>} El primer conjunt de resultats no buit.
  */
 async function fetchRecordsExpandingRadius(ignoreCityFilter) {
   for (const radiusKm of LOCATION_EXPANSION_RADII_KM) {
@@ -875,10 +894,11 @@ async function fetchRecordsExpandingRadius(ignoreCityFilter) {
 }
 
 /**
- * fallbackToTextSearch - Funció per a fallbackToTextSearch.
+ * Cerca d'aparcaments per text (nom, adreça, ciutat) com a fallback
+ * quan la cerca geogràfica no dóna resultats.
  *
- * @param {any} searchTerm - Paràmetre searchTerm
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {string} searchTerm - El text de cerca de l'usuari.
+ * @returns {Promise<Array>} Llista filtrada de registres.
  */
 async function fallbackToTextSearch(searchTerm) {
   if (!searchTerm) return [];
@@ -901,10 +921,11 @@ async function fallbackToTextSearch(searchTerm) {
 }
 
 /**
- * fallbackToNearestSearch - Funció per a fallbackToNearestSearch.
+ * Retorna els aparcaments més propers a un origen com a fallback.
+ * Pren els 100 més propers de tot el catàleg.
  *
- * @param {any} origin - Paràmetre origin
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {{lat: number, lon: number}|null} origin - El punt de refència.
+ * @returns {Promise<Array>} Llista d'aparcaments més propers.
  */
 async function fallbackToNearestSearch(origin) {
   if (!origin) return [];
@@ -935,10 +956,10 @@ async function fallbackToNearestSearch(origin) {
 }
 
 /**
- * escapeHtml - Funció per a escapeHtml.
+ * Escapa un valor per evitar XSS als templates HTML.
  *
- * @param {any} value - Paràmetre value
- * @returns {any} Resultat de la funció.
+ * @param {string} value - La cadena a escapar.
+ * @returns {string} La cadena escapada.
  */
 function escapeHtml(value) {
   if (!value) return '';
@@ -952,15 +973,10 @@ function escapeHtml(value) {
 /* ------------------------------------------------------------------ */
 
 /**
- * Converteix un Date a cadena "YYYY-MM-DD HH:MM" en hora local.
- * @param {Date} d
- * @returns {string}
- */
-/**
- * toLocalDateTimeStr - Funció per a toLocalDateTimeStr.
+ * Converteix un objecte Date a cadena "YYYY-MM-DD HH:MM" en hora local.
  *
- * @param {any} d - Paràmetre d
- * @returns {any} Resultat de la funció.
+ * @param {Date} d - L'objecte Date.
+ * @returns {string} La cadena de data/hora.
  */
 function toLocalDateTimeStr(d) {
   const pad = (n) => String(n).padStart(2, '0');
@@ -971,14 +987,10 @@ function toLocalDateTimeStr(d) {
 }
 
 /**
- * Retorna [dataEntrada, dataSortida] per la consulta de disponibilitat.
- * Usa les dates del cercador si estan seleccionades; sinó ara → ara+2h.
- * @returns {[string, string]}
- */
-/**
- * getDisponibilitatFranja - Funció per a getDisponibilitatFranja.
+ * Retorna la franja horària [entrada, sortida] per les consultes de disponibilitat.
+ * Usa les dates del cercador si l'usuari les ha omplert; sinó ara→ara+2h.
  *
- * @returns {any} Resultat de la funció.
+ * @returns {[string, string]} Parella [data_entrada, data_sortida].
  */
 function getDisponibilitatFranja() {
   const entryDate = document.getElementById('entryDate')?.value;
@@ -1005,12 +1017,6 @@ function getDisponibilitatFranja() {
  * i actualitza els elements [data-avail-spot-id] al DOM.
  *
  * @param {Array} spots - Spots normalitzats ja renderitzats
- */
-/**
- * enrichDisponibilitatAsync - Funció per a enrichDisponibilitatAsync.
- *
- * @param {any} spots - Paràmetre spots
- * @returns {Promise<any>} Promesa amb el resultat.
  */
 async function enrichDisponibilitatAsync(spots) {
   if (!spots || spots.length === 0) return;
@@ -1090,6 +1096,17 @@ async function enrichDisponibilitatAsync(spots) {
   }
 }
 
+/**
+ * Renderitza els controls de paginació al panell de resultats.
+ * No fa res si el total de pàgines és 1 o menys.
+ *
+ * @param {HTMLElement} panel       - El contenidor del panell de resultats.
+ * @param {Object}      options     - Opcions de paginació.
+ * @param {number}      options.currentPage - Pàgina actual (1-indexed).
+ * @param {number}      options.totalPages  - Total de pàgines.
+ * @param {Function}    options.onChangePage - Callback que rep el nou número de pàgina.
+ * @returns {void}
+ */
 function renderPagination(panel, {
   currentPage,
   totalPages,
@@ -1131,6 +1148,23 @@ function renderPagination(panel, {
   panel.appendChild(wrapper);
 }
 
+/**
+ * Renderitza les targetes de resultats d'aparcament al panell lateral.
+ * Gestiona la paginació, el botó de favorits i el de detall per cada targeta.
+ * Actualitza el subcomp de recompte de resultats visibles.
+ *
+ * @param {Object}   options                  - Opcions de renderització.
+ * @param {Array}    options.spots             - Llista de spots normalitzats a mostrar.
+ * @param {number}   options.total             - Total de resultats (per paginació).
+ * @param {number}   options.currentPage       - Pàgina actual.
+ * @param {number}   options.totalPages        - Total de pàgines.
+ * @param {Function} options.onFocusParking    - Callback quan l'usuari clica "Veure detall".
+ * @param {Function} options.onChangePage      - Callback de canvi de pàgina.
+ * @param {boolean}  [options.favoritesEnabled=false] - Si el mòdul de favorits està actiu.
+ * @param {Set}      [options.favoriteIds]     - Conjunt d'IDs d'aparcaments favorits.
+ * @param {Function} [options.onToggleFavorite] - Callback per activar/desactivar un favorit.
+ * @returns {void}
+ */
 function renderResults({
   spots,
   total,
@@ -1279,12 +1313,14 @@ function renderResults({
 }
 
 /**
- * fetchSearchResults - Funció per a fetchSearchResults.
+ * Executa la cerca d'aparcaments combinant els filtres del DOM
+ * amb les estratègies de fallback de text i proximitat.
  *
- * @param {any} { ignoreCityFilter - Paràmetre { ignoreCityFilter
- * @param {any} expandLocationRadius - Paràmetre expandLocationRadius
- * @param {any} viewportRadiusKm - Paràmetre viewportRadiusKm
- * @returns {Promise<any>} Promesa amb el resultat.
+ * @param {Object}      [options={}]                   - Opcions de cerca.
+ * @param {boolean}     [options.ignoreCityFilter]      - Si true, ignora el filtre de text de la barra.
+ * @param {boolean}     [options.expandLocationRadius]  - Si true, expan el radi fins trobar resultats.
+ * @param {number|null} [options.viewportRadiusKm]      - Radi del viewport per cerca dinàmica.
+ * @returns {Promise<Array>} Llista de registres crus de l'API.
  */
 async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadius = false, viewportRadiusKm = null } = {}) {
   const forceSearchAnchor = Boolean(viewportRadiusKm);
@@ -1306,6 +1342,23 @@ async function fetchSearchResults({ ignoreCityFilter = false, expandLocationRadi
   return records;
 }
 
+/**
+ * Inicialitza el servei de cerca de la landing page.
+ * Connecta la barra de cerca, el panell de filtres i la paginació
+ * amb el mapa Leaflet i el panell de resultats.
+ *
+ * @param {Object}   options                         - Opcions de configuració.
+ * @param {Function} options.setParkingSpots          - Actualitza els marcadors del mapa.
+ * @param {Function} options.focusParkingById         - Centra el mapa en un aparcament per ID.
+ * @param {Function} options.hideParkingMarkerById    - Amaga un marcador del mapa per ID.
+ * @param {Function} options.closeFilters             - Tanca el sidepanel de filtres.
+ * @param {Function} [options.onSearchLocationResolved] - Callback quan es resol una ubicació de cerca.
+ * @param {Function} [options.setUserLocationMarker]  - Actualitza el marcador d'ubicació de l'usuari.
+ * @returns {{runSearch: Function, setUserLocation: Function, setSearchAnchor: Function}}
+ *   - `runSearch`: executa una cerca amb els filtres actuals del DOM.
+ *   - `setUserLocation`: actualitza la ubicació de l'usuari.
+ *   - `setSearchAnchor`: fixa el punt d'ancoratge de la cerca.
+ */
 export function initLandingSearch({
   setParkingSpots,
   focusParkingById,
