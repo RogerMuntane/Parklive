@@ -55,14 +55,11 @@ function setUserLocation(nextLocation) {
       lon: Number(nextLocation.lon),
     };
     setUserLocationMarker(userLocation);
-    // NOTE: No toques searchAnchorLocation aquí. Solo actualiza el marcador del usuari.
-    // searchAnchorLocation debería actualizar-se SOLO per moviments de mapa.
     return;
   }
 
   userLocation = null;
   setUserLocationMarker(null);
-  // NOTE: No toques searchAnchorLocation aquí tampoc.
 }
 
 /**
@@ -1468,14 +1465,14 @@ export function initLandingSearch({
     try {
       if (!mapSearchInput) return;
       mapSearchInput.value = label;
-      
+
       const coords = { lat: Number(lat), lon: Number(lon) };
-      
+
       // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
       updateSearchAnchor(coords);
       onSearchLocationResolved(coords);
       hideSuggestions();
-      
+
       await runSearch({
         resetPage: true,
         resolveSearchLocation: false,
