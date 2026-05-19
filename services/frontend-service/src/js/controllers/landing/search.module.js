@@ -1228,9 +1228,9 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
         <div class="parking-result-tags d-flex flex-wrap gap-1 mt-1" aria-label="Serveis del parking">
-          ${spot.isVerified
+          ${ /* spot.isVerified
             ? '<span class="badge rounded-pill text-bg-success border-0 fw-normal"><i class="bi bi-patch-check-fill me-1"></i>Oficial</span>'
-            : ''}
+            : '' */ '' }
           <span class="badge rounded-pill text-bg-light border fw-normal">Alt: ${escapeHtml(spot.maxHeightLabel)}</span>
           ${spot.hasEv
             ? '<span class="badge rounded-pill text-bg-light border fw-normal">Elèctric</span>'
