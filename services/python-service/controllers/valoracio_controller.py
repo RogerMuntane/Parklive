@@ -12,6 +12,7 @@ import json
 import logging
 import requests as http_requests
 import cloudinary.uploader
+from flask import request, jsonify, send_from_directory
 from pathlib import Path
 from PIL import Image
 from werkzeug.utils import secure_filename
@@ -54,15 +55,15 @@ def _process_valoracio_image(file_obj):
         file_obj.seek(0, os.SEEK_END)
         file_size = file_obj.tell()
         file_obj.seek(0)
-        
+
         random_hash = hashlib.md5(
             f"{file_obj.filename}_{file_size}".encode()
         ).hexdigest()[:8]
-        
+
         # Guardem com a webp per defecte per optimitzar espai
         safe_filename = f"val_{random_hash}_{uuid.uuid4().hex[:6]}.webp"
         target_path = valoracions_dir / safe_filename
-        
+
         cloud_public_id = f"parklive_valoracions/val_{random_hash}"
 
         try:
@@ -87,16 +88,16 @@ def _process_valoracio_image(file_obj):
         except Exception as cloud_err:
             # FALLBACK: Si falla Cloudinary, optimitzem localment amb Pillow
             logger.error(f"Error Cloudinary (valoracio image): {str(cloud_err)}")
-            
+
             file_obj.seek(0)
             img = Image.open(file_obj)
-            
+
             # Convertir a RGB/RGBA si cal per desar com a WebP
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGBA")
             else:
                 img = img.convert("RGB")
-            
+
             # Desar localment com a WebP optimitzat
             img.save(target_path, "WEBP", quality=80)
 
@@ -120,7 +121,7 @@ def serve_valoracio_photo(filename):
         # Ruta absoluta al directori de valoracions
         base_storage = Path(__file__).parent.parent / "storage"
         valoracions_dir = base_storage / "valoracions"
-        
+
         return send_from_directory(str(valoracions_dir), filename)
     except Exception as e:
         print(f"[ParkLive] Error servint foto de valoració: {e}")
@@ -208,24 +209,18 @@ def create_valoracio(aparcament_id):
         JSON 500: Error intern del servidor.
     """
     try:
-        import os
-        from werkzeug.utils import secure_filename
-        import uuid
-        import json
-        from pathlib import Path
-        
         # Determinar si és multipart o json
         is_multipart = request.content_type and request.content_type.startswith('multipart/form-data')
-        
+
         if is_multipart:
             data = request.form.to_dict()
             aspectes_raw = data.get('aspectes_valorats')
             aspectes_valorats = json.loads(aspectes_raw) if aspectes_raw else []
-            
+
             fotos_url = []
             # 'fotos_url[]' o 'fotos_url'
             files = request.files.getlist('fotos_url[]') if 'fotos_url[]' in request.files else request.files.getlist('fotos_url')
-            
+
             if files:
                 for file_obj in files[:3]:
                     processed_filename = _process_valoracio_image(file_obj)
@@ -240,35 +235,35 @@ def create_valoracio(aparcament_id):
 
         puntuacio = data.get('puntuacio')
         comentari = data.get('comentari')
-        
+
         if not puntuacio:
             return jsonify({"success": False, "error": "La puntuació és obligatòria"}), 400
-            
+
         try:
             puntuacio = int(puntuacio)
             if puntuacio < 1 or puntuacio > 5:
                 raise ValueError()
         except (ValueError, TypeError):
             return jsonify({"success": False, "error": "La puntuació ha de ser un número entre 1 i 5"}), 400
-            
+
         try:
             usuari_id = _get_authenticated_user_id()
         except ValueError as e:
             return jsonify({"success": False, "error": str(e)}), 401
-            
+
         try:
             aparcament_id = int(aparcament_id)
         except (ValueError, TypeError):
             return jsonify({"success": False, "error": "ID d'aparcament no vàlid"}), 400
-            
+
         valoracio_id = add_valoracio(usuari_id, aparcament_id, puntuacio, comentari, aspectes_valorats, fotos_url)
-        
+
         return jsonify({
             "success": True,
             "message": "Valoració creada correctament",
             "id": valoracio_id
         }), 201
-        
+
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
@@ -300,37 +295,37 @@ def update_user_valoracio(aparcament_id):
     try:
         if not request.is_json:
             return jsonify({"success": False, "error": "El contingut ha de ser JSON"}), 400
-        
+
         data = request.get_json()
         puntuacio = data.get('puntuacio')
         comentari = data.get('comentari')
         if not puntuacio:
             return jsonify({"success": False, "error": "La puntuació és obligatòria"}), 400
-        
+
         try:
             puntuacio = int(puntuacio)
             if puntuacio < 1 or puntuacio > 5:
                 raise ValueError()
         except (ValueError, TypeError):
             return jsonify({"success": False, "error": "La puntuació ha de ser un número entre 1 i 5"}), 400
-        
+
         try:
             usuari_id = _get_authenticated_user_id()
         except ValueError as e:
             return jsonify({"success": False, "error": str(e)}), 401
-        
+
         try:
             aparcament_id = int(aparcament_id)
         except (ValueError, TypeError):
             return jsonify({"success": False, "error": "ID d'aparcament no vàlid"}), 400
-        
+
         # Buscar valoració existent
         from models.valoracio_model import get_valoracions_aparcament
         valoracions = get_valoracions_aparcament(aparcament_id, limit=1000)
         user_val = next((v for v in valoracions if v.get('usuari_id') == usuari_id), None)
         if not user_val:
             return jsonify({"success": False, "error": "Valoració no existent"}), 404
-        
+
         # Actualitzar
         result = update_valoracio(user_val['id'], puntuacio, comentari)
         # result is a Flask response already

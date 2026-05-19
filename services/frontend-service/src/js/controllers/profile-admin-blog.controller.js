@@ -232,7 +232,7 @@ async function saveArticle(e) {
     if (response && response.success) {
       modalInstance.hide();
       await loadArticles();
-      alert('Article desat correctament.');
+      // alert('Article desat correctament.');
     } else {
       throw new Error(response.error || 'Error desconegut');
     }

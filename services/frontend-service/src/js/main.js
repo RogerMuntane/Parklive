@@ -369,12 +369,6 @@ function getUserRole() {
  * @param {string} requiredRole - Rol mínim requerit ('admin', 'operador', etc.)
  * @returns {boolean}
  */
-/**
- * hasRole - Funció per a hasRole.
- *
- * @param {any} requiredRole - Paràmetre requiredRole
- * @returns {any} Resultat de la funció.
- */
 function hasRole(requiredRole) {
   const role = getUserRole();
   if (requiredRole === 'admin') return role === 'admin';
@@ -500,7 +494,7 @@ async function initControllers() {
       const { initBlogDetail } = await import(new URL(`./controllers/blog.controller.js?v=${Date.now()}`, import.meta.url).href);
       initBlogDetail();
     }
-    
+
     // ── Nova Valoració ───────────────────────────────────────────────
     if (bodyClass.includes('page-nova-valoracio')) {
       const { initNovaValoracio } = await import(new URL(`./controllers/nova_valoracio.controller.js?v=${Date.now()}`, import.meta.url).href);
@@ -533,7 +527,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initControllers();
 
   // Inicialitza el controlador de perfil només a la pàgina de perfil
-    if (document.body.classList.contains('page-profile')) {
+  if (document.body.classList.contains('page-profile')) {
     const {
       initProfilePasswordForm,
       initProfileInfoForm,
@@ -646,14 +640,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         sidebarBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         sections.forEach(s => s.classList.remove('active'));
-        
+
         const target = document.getElementById('section-' + sec);
         if (target) {
           // Reset animació per permetre que es torni a reproduir
           target.style.animation = 'none';
           void target.offsetWidth; // Force reflow
           target.style.animation = null;
-          
+
           target.classList.add('active');
 
           // Si entrem a estadístiques:
@@ -673,12 +667,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sectionTitle) sectionTitle.textContent = sectionTitles[sec] || '';
       });
     });
-    
+
     // Suport per a enllaços directes a seccions via URL (?section=XXX o ?upgrade=1)
     const urlParams = new URLSearchParams(window.location.search);
     const sectionParam = urlParams.get('section');
     const isUpgrade = urlParams.get('upgrade') === '1';
-    
+
     if (isUpgrade) {
       const planBtn = document.querySelector('.sidebar-nav-item[data-section="plan"]');
       if (planBtn) planBtn.click();

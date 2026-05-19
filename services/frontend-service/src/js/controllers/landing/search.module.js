@@ -55,14 +55,11 @@ function setUserLocation(nextLocation) {
       lon: Number(nextLocation.lon),
     };
     setUserLocationMarker(userLocation);
-    // NOTE: No toques searchAnchorLocation aquí. Solo actualiza el marcador del usuari.
-    // searchAnchorLocation debería actualizar-se SOLO per moviments de mapa.
     return;
   }
 
   userLocation = null;
   setUserLocationMarker(null);
-  // NOTE: No toques searchAnchorLocation aquí tampoc.
 }
 
 /**
@@ -1231,9 +1228,9 @@ function renderResults({
           <span class="col d-inline-flex align-items-center gap-1"><i class="bi bi-star"></i>${escapeHtml(spot.ratingSummary)}</span>
         </div>
         <div class="parking-result-tags d-flex flex-wrap gap-1 mt-1" aria-label="Serveis del parking">
-          ${spot.isVerified
+          ${ /* spot.isVerified
             ? '<span class="badge rounded-pill text-bg-success border-0 fw-normal"><i class="bi bi-patch-check-fill me-1"></i>Oficial</span>'
-            : ''}
+            : '' */ '' }
           <span class="badge rounded-pill text-bg-light border fw-normal">Alt: ${escapeHtml(spot.maxHeightLabel)}</span>
           ${spot.hasEv
             ? '<span class="badge rounded-pill text-bg-light border fw-normal">Elèctric</span>'
@@ -1468,14 +1465,14 @@ export function initLandingSearch({
     try {
       if (!mapSearchInput) return;
       mapSearchInput.value = label;
-      
+
       const coords = { lat: Number(lat), lon: Number(lon) };
-      
+
       // Actualitzar EXPLÍCITAMENT el viewport per a la búsqueda (no GPS)
       updateSearchAnchor(coords);
       onSearchLocationResolved(coords);
       hideSuggestions();
-      
+
       await runSearch({
         resetPage: true,
         resolveSearchLocation: false,
