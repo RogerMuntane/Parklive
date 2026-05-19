@@ -57,7 +57,7 @@ VALUES -- Reserves finalitzades
 
 -- Batch 3 - Cobertura de tots els aparcaments (Test Ocupació 1 any)
 INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
-VALUES 
+VALUES
     (15, 7, NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 'en_curs', 20.00, 0.00, 'RES-YEAR-P7', 'Ocupació test Parking 7'),
     (16, 9, NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 'en_curs', 24.00, 0.00, 'RES-YEAR-P9', 'Ocupació test Parking 9'),
     (17, 10, NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 'en_curs', 26.00, 0.00, 'RES-YEAR-P10', 'Ocupació test Parking 10'),
@@ -88,7 +88,7 @@ VALUES
 
 -- Batch 4 - Simulació massiva de dades (30+ reserves addicionals)
 INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
-VALUES 
+VALUES
     -- P1 (Centre BCN) - Molta demanda
     (5, 1, DATE_ADD(NOW(), INTERVAL 10 DAY), DATE_ADD(NOW(), INTERVAL 11 DAY), 'confirmada', 25.00, 0.00, 'RES-M-P1-1', 'Test demanda P1'),
     (6, 1, DATE_ADD(NOW(), INTERVAL 12 DAY), DATE_ADD(NOW(), INTERVAL 13 DAY), 'confirmada', 25.00, 0.00, 'RES-M-P1-2', 'Test demanda P1'),
@@ -212,23 +212,23 @@ VALUES (1, 5, 'FACT-2026-000001', 13.22, 2.78, 16.00, '2026-02-15', '/factures/2
 -- reflecteixi l'ocupació real generada per aquest seeder en el moment de la càrrega.
 UPDATE aparcaments a
 SET places_disponibles = GREATEST(0, CAST(capacitat_total AS SIGNED) - (
-    SELECT COUNT(*) 
-    FROM reserves r 
-    WHERE r.aparcament_id = a.id 
+    SELECT COUNT(*)
+    FROM reserves r
+    WHERE r.aparcament_id = a.id
     AND r.estat IN ('confirmada', 'pendent', 'en_curs')
-    AND r.data_entrada <= NOW() 
+    AND r.data_entrada <= NOW()
     AND r.data_sortida >= NOW()
 ));
 
 
-UPDATE aparcaments 
-SET places_disponibles = 0 
+UPDATE aparcaments
+SET places_disponibles = 0
 WHERE id IN (16, 17);
 
 -- 5. RESERVES ADDICIONALS (SIMULACIÓ MASSIVA PER A TEST D'OCUPACIÓ)
 -- Afegim una càrrega massiva de dades per a que els llistats i el detall semblin reals.
 INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
-VALUES 
+VALUES
     -- P1: Plaça Catalunya (Capacitat 500) - Afegim 30 reserves en curs
     (5, 1, NOW() - INTERVAL 2 HOUR, NOW() + INTERVAL 5 HOUR, 'en_curs', 15.00, 0.00, 'RES-P1-M1', 'Test massiu'),
     (6, 1, NOW() - INTERVAL 3 HOUR, NOW() + INTERVAL 4 HOUR, 'en_curs', 15.00, 0.00, 'RES-P1-M2', 'Test massiu'),
@@ -243,21 +243,21 @@ VALUES
     -- P1: Reserves futures per a demà
     (15, 1, NOW() + INTERVAL 1 DAY, NOW() + INTERVAL 1 DAY + INTERVAL 3 HOUR, 'confirmada', 10.50, 0.00, 'RES-P1-F1', 'Demà matí'),
     (16, 1, NOW() + INTERVAL 1 DAY + INTERVAL 4 HOUR, NOW() + INTERVAL 1 DAY + INTERVAL 8 HOUR, 'confirmada', 14.00, 0.00, 'RES-P1-F2', 'Demà tarda'),
-    
+
     -- P4: Sagrada Família (Capacitat 350) - Afegim 15 reserves en curs
     (5, 4, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 3 HOUR, 'en_curs', 12.00, 0.00, 'RES-P4-M1', 'Turisme'),
     (6, 4, NOW() - INTERVAL 2 HOUR, NOW() + INTERVAL 2 HOUR, 'en_curs', 12.00, 0.00, 'RES-P4-M2', 'Turisme'),
     (7, 4, NOW() - INTERVAL 30 MINUTE, NOW() + INTERVAL 4 HOUR, 'en_curs', 12.00, 0.00, 'RES-P4-M3', 'Turisme'),
     (8, 4, NOW() - INTERVAL 4 HOUR, NOW() + INTERVAL 1 HOUR, 'en_curs', 12.00, 0.00, 'RES-P4-M4', 'Turisme'),
     (9, 4, NOW() - INTERVAL 3 HOUR, NOW() + INTERVAL 5 HOUR, 'en_curs', 12.00, 0.00, 'RES-P4-M5', 'Turisme'),
-    
+
     -- P13: Sants Estació (Capacitat 600) - Afegim 20 reserves de llarga durada (en curs)
     (10, 13, NOW() - INTERVAL 2 DAY, NOW() + INTERVAL 3 DAY, 'en_curs', 80.00, 0.00, 'RES-P13-L1', 'Viatge tren'),
     (11, 13, NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 4 DAY, 'en_curs', 100.00, 0.00, 'RES-P13-L2', 'Viatge tren'),
     (12, 13, NOW() - INTERVAL 12 HOUR, NOW() + INTERVAL 5 DAY, 'en_curs', 120.00, 0.00, 'RES-P13-L3', 'Viatge tren'),
     (13, 13, NOW() - INTERVAL 3 DAY, NOW() + INTERVAL 1 DAY, 'en_curs', 80.00, 0.00, 'RES-P13-L4', 'Viatge tren'),
     (14, 13, NOW() - INTERVAL 5 HOUR, NOW() + INTERVAL 6 DAY, 'en_curs', 140.00, 0.00, 'RES-P13-L5', 'Viatge tren'),
-    
+
     -- P16: Aparcament Full Center (Capacitat 100) - L'OMPLIM fins al 95%
     -- Ja en teníem 3 reserves 'en_curs'. N'afegim 92 més.
     -- (Simulem un bucle d'inserció manual per al seeder)
@@ -279,7 +279,7 @@ VALUES
     (18, 16, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 12 HOUR, 'en_curs', 30.00, 0.00, 'RES-FILL-P16-14', 'Full'),
     (19, 16, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 12 HOUR, 'en_curs', 30.00, 0.00, 'RES-FILL-P16-15', 'Full'),
     (20, 16, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 12 HOUR, 'en_curs', 30.00, 0.00, 'RES-FILL-P16-16', 'Full'),
-    
+
     -- P17: Mataró Centre (Capacitat 50) - L'OMPLIM gairebé tot (75%)
     (5, 17, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 8 HOUR, 'en_curs', 18.00, 0.00, 'RES-FILL-P17-01', 'Ocupació alta'),
     (6, 17, NOW() - INTERVAL 2 HOUR, NOW() + INTERVAL 7 HOUR, 'en_curs', 18.00, 0.00, 'RES-FILL-P17-02', 'Ocupació alta'),
@@ -289,16 +289,16 @@ VALUES
     (10, 17, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 3 HOUR, 'en_curs', 18.00, 0.00, 'RES-FILL-P17-06', 'Ocupació alta'),
     (11, 17, NOW() - INTERVAL 2 HOUR, NOW() + INTERVAL 2 HOUR, 'en_curs', 18.00, 0.00, 'RES-FILL-P17-07', 'Ocupació alta'),
     (12, 17, NOW() - INTERVAL 3 HOUR, NOW() + INTERVAL 1 HOUR, 'en_curs', 18.00, 0.00, 'RES-FILL-P17-08', 'Ocupació alta'),
-    
+
     -- P2: Eixample (Capacitat 300)
     (13, 2, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 2 HOUR, 'en_curs', 10.00, 0.00, 'RES-P2-M1', 'Eixample test'),
     (14, 2, NOW() - INTERVAL 2 HOUR, NOW() + INTERVAL 3 HOUR, 'en_curs', 12.00, 0.00, 'RES-P2-M2', 'Eixample test'),
     (15, 2, NOW() - INTERVAL 3 HOUR, NOW() + INTERVAL 4 HOUR, 'en_curs', 14.00, 0.00, 'RES-P2-M3', 'Eixample test'),
-    
+
     -- P3: Passeig de Gràcia (Capacitat 250)
     (16, 3, NOW() - INTERVAL 1 HOUR, NOW() + INTERVAL 5 HOUR, 'en_curs', 20.00, 0.00, 'RES-P3-M1', 'Passeig Gràcia test'),
     (17, 3, NOW() - INTERVAL 2 HOUR, NOW() + INTERVAL 6 HOUR, 'en_curs', 24.00, 0.00, 'RES-P3-M2', 'Passeig Gràcia test'),
-    
+
     -- P8: Fira (Capacitat 800)
     (18, 8, NOW() - INTERVAL 4 HOUR, NOW() + INTERVAL 10 HOUR, 'en_curs', 15.00, 0.00, 'RES-P8-M1', 'Fira test'),
     (19, 8, NOW() - INTERVAL 5 HOUR, NOW() + INTERVAL 9 HOUR, 'en_curs', 15.00, 0.00, 'RES-P8-M2', 'Fira test'),
@@ -336,14 +336,14 @@ WHERE n < 41;
 -- Batch 7 - Dades històriques per a estadístiques (últims 5-6 mesos)
 -- Generem reserves completades per als usuaris principals per omplir les gràfiques de despesa
 INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
-VALUES 
+VALUES
     -- Usuari 5 (Joan García)
     (5, 1, DATE_SUB(NOW(), INTERVAL 5 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 5 MONTH), INTERVAL 4 HOUR), 'completada', 15.00, 0.00, 'HIST-U5-M5', 'Històric Mes -5'),
     (5, 2, DATE_SUB(NOW(), INTERVAL 4 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 4 MONTH), INTERVAL 3 HOUR), 'completada', 12.50, 0.00, 'HIST-U5-M4', 'Històric Mes -4'),
     (5, 4, DATE_SUB(NOW(), INTERVAL 3 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 3 MONTH), INTERVAL 5 HOUR), 'completada', 18.00, 2.00, 'HIST-U5-M3', 'Històric Mes -3'),
     (5, 6, DATE_SUB(NOW(), INTERVAL 2 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 2 MONTH), INTERVAL 2 HOUR), 'completada', 10.00, 0.00, 'HIST-U5-M2', 'Històric Mes -2'),
     (5, 1, DATE_SUB(NOW(), INTERVAL 1 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 1 MONTH), INTERVAL 6 HOUR), 'completada', 22.00, 0.00, 'HIST-U5-M1', 'Històric Mes -1'),
-    
+
     -- Usuari 6 (Laura)
     (6, 4, DATE_SUB(NOW(), INTERVAL 5 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 5 MONTH), INTERVAL 8 HOUR), 'completada', 28.00, 0.00, 'HIST-U6-M5', 'Històric Mes -5'),
     (6, 13, DATE_SUB(NOW(), INTERVAL 4 MONTH), DATE_ADD(DATE_SUB(NOW(), INTERVAL 4 MONTH), INTERVAL 4 HOUR), 'completada', 14.00, 0.00, 'HIST-U6-M4', 'Històric Mes -4'),
@@ -414,8 +414,7 @@ VALUES
 
 -- Batch 8 - Reserves per als nous aparcaments de Mataró (IDs 18, 19, 20)
 INSERT INTO reserves (usuari_id, aparcament_id, data_entrada, data_sortida, estat, preu_total, descompte_aplicat, codi_reserva, notes)
-VALUES 
+VALUES
     (5, 18, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 20 HOUR), 'completada', 8.00, 0.00, 'RES-MAT-P18-1', 'Test Mataró TecnoCampus'),
     (6, 19, NOW() + INTERVAL 2 DAY, NOW() + INTERVAL 2 DAY + INTERVAL 5 HOUR, 'confirmada', 9.00, 0.00, 'RES-MAT-P19-1', 'Test Mataró Port'),
-    (7, 20, NOW() - INTERVAL 1 HOUR, DATE_ADD(NOW(), INTERVAL 3 HOUR), 'en_curs', 0.00, 0.00, 'RES-MAT-P20-1', 'Test Mataró Parc - Gratis');
-
+    (7, 20, NOW() - INTERVAL 1 HOUR, DATE_ADD(NOW(), INTERVAL 3 HOUR), 'en_curs', 0.00, 0.00, 'RES-MAT-P20-1', 'Test Mataró Parc');
