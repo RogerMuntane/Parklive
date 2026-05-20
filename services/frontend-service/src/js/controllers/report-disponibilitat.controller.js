@@ -1,3 +1,11 @@
+/**
+ * ParkLive – report-disponibilitat.controller.js
+ *
+ * Controlador per a la pàgina de reportar disponibilitat al carrer.
+ * Permet als usuaris informar si una zona d'aparcament lliure està ocupada o disponible.
+ * Inclou geolocalització, restricció de radi (150m) i gestió de cooldown (temps d'espera).
+ */
+
 import { pythonApi } from '../api.js';
 import { getUserId, showBootstrapAlert } from '../utils.js';
 
@@ -6,6 +14,12 @@ const DEFAULT_ZOOM = 14;
 const REPORT_COOLDOWN_SECONDS = 60;
 const COOLDOWN_STORAGE_KEY = 'parklive_report_disponibilitat_cooldown_until';
 
+/**
+ * Actualitza l'estat visual dels botons de selecció (Disponible/Ocupat).
+ *
+ * @param {HTMLElement[]} statusButtons - Llista de botons d'estat.
+ * @param {string} nextStatus - L'estat a activar ('available' o 'occupied').
+ */
 function setStatusButtons(statusButtons, nextStatus) {
   statusButtons.forEach((button) => {
     const active = button.dataset.status === nextStatus;
@@ -14,6 +28,13 @@ function setStatusButtons(statusButtons, nextStatus) {
   });
 }
 
+/**
+ * Mostra un missatge flotant (toast) informatiu o d'error.
+ *
+ * @param {HTMLElement} toastEl - Element on es mostrarà el missatge.
+ * @param {string} message - Text a mostrar.
+ * @param {string} [type='success'] - Tipus de missatge ('success' o 'error').
+ */
 function showToast(toastEl, message, type = 'success') {
   if (!toastEl) return;
   toastEl.textContent = message;
@@ -25,6 +46,11 @@ function showToast(toastEl, message, type = 'success') {
   }, 2600);
 }
 
+/**
+ * Obté la data límit del temps d'espera des del localStorage.
+ *
+ * @returns {number} Timestamp en ms o 0 si no n'hi ha.
+ */
 function getCooldownUntil() {
   const storedValue = Number(globalThis.localStorage.getItem(COOLDOWN_STORAGE_KEY));
   if (!Number.isFinite(storedValue) || storedValue <= Date.now()) {
@@ -34,6 +60,11 @@ function getCooldownUntil() {
   return storedValue;
 }
 
+/**
+ * Desa la data límit del temps d'espera al localStorage.
+ *
+ * @param {number} untilMs - Timestamp en ms.
+ */
 function setCooldownUntil(untilMs) {
   if (!Number.isFinite(untilMs) || untilMs <= Date.now()) {
     globalThis.localStorage.removeItem(COOLDOWN_STORAGE_KEY);
@@ -43,11 +74,19 @@ function setCooldownUntil(untilMs) {
   globalThis.localStorage.setItem(COOLDOWN_STORAGE_KEY, String(Math.floor(untilMs)));
 }
 
+/**
+ * Formata el text del botó durant el compte enrere.
+ */
 function formatCooldownText(secondsLeft) {
   const safeSeconds = Math.max(0, Math.ceil(secondsLeft));
   return `Espera ${safeSeconds}s`;
 }
 
+/**
+ * Intenta obtenir la ubicació GPS actual de l'usuari.
+ *
+ * @returns {Promise<{lat: number, lon: number}>} Coordenades de l'usuari.
+ */
 async function resolveCurrentPosition() {
   if (!globalThis.navigator?.geolocation) {
     throw new Error('El teu navegador no admet geolocalització.');
@@ -65,6 +104,7 @@ async function resolveCurrentPosition() {
           return;
         }
 
+        // Filtre de precisió: evitem ubicacions massa imprecises (> 5km)
         if (accuracy && accuracy > 5000) {
           reject(new Error('La precisió de la ubicació és massa baixa. Comprova el GPS.'));
           return;
@@ -84,6 +124,9 @@ async function resolveCurrentPosition() {
   });
 }
 
+/**
+ * Inicialitza tota la lògica de la pàgina de reports de disponibilitat.
+ */
 export function initReportDisponibilitat() {
   const form = document.getElementById('reportDisponibilitatForm');
   const mapEl = document.getElementById('reportDisponibilitatMap');
@@ -105,9 +148,11 @@ export function initReportDisponibilitat() {
   let cooldownUntilMs = getCooldownUntil();
   let cooldownTimerId = null;
 
-  const MAX_RADIUS_M = 150; // Radi màxim permès en metres
+  const MAX_RADIUS_M = 150; // Radi màxim permès en metres des de la posició GPS real
 
-  // Fórmula Haversine: distància en metres entre dos punts lat/lon
+  /**
+   * Fórmula Haversine: calcula la distància en metres entre dos punts (lat/lon).
+   */
   const haversineMeters = (a, b) => {
     const R = 6371000;
     const toRad = (d) => (d * Math.PI) / 180;
@@ -119,12 +164,15 @@ export function initReportDisponibilitat() {
     return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
   };
 
-  // Retorna el punt clamped al radi màxim si queda fora
+  /**
+   * Força un punt (target) a quedar-se dins del radi màxim respecte a l'origen (GPS).
+   * S'utilitza per evitar que els usuaris reportin places lluny d'on realment es troben.
+   */
   const clampToRadius = (target, origin) => {
     const dist = haversineMeters(origin, target);
     if (dist <= MAX_RADIUS_M) return target;
 
-    // Projectar sobre el cercle: bearing conservat, distància = MAX_RADIUS_M
+    // Si està fora, calculem el punt més proper sobre el perímetre del cercle
     const R = 6371000;
     const toRad = (d) => (d * Math.PI) / 180;
     const toDeg = (r) => (r * 180) / Math.PI;
@@ -140,6 +188,9 @@ export function initReportDisponibilitat() {
     return { lat: toDeg(φ2), lon: toDeg(λ2) };
   };
 
+  /**
+   * Atura el temporitzador de cooldown.
+   */
   const clearCooldownTimer = () => {
     if (cooldownTimerId) {
       globalThis.clearInterval(cooldownTimerId);
@@ -147,6 +198,9 @@ export function initReportDisponibilitat() {
     }
   };
 
+  /**
+   * Actualitza l'estat del botó d'enviament segons el temps d'espera restant.
+   */
   const refreshSubmitCooldown = () => {
     const secondsLeft = (cooldownUntilMs - Date.now()) / 1000;
     if (secondsLeft <= 0) {
@@ -162,6 +216,9 @@ export function initReportDisponibilitat() {
     submitBtn.textContent = formatCooldownText(secondsLeft);
   };
 
+  /**
+   * Inicia el compte enrere per poder fer un nou report.
+   */
   const startCooldown = (seconds) => {
     const safeSeconds = Math.max(1, Math.ceil(Number(seconds) || REPORT_COOLDOWN_SECONDS));
     cooldownUntilMs = Date.now() + safeSeconds * 1000;
@@ -174,7 +231,7 @@ export function initReportDisponibilitat() {
     }, 500);
   };
 
-  // ── Inicialitzar mapa amb estil CartoDB (igual que el landing) ─────────────
+  // ── Inicialitzar mapa Leaflet ─────────────────────────────────────────────
   const map = globalThis.L.map(mapEl, {
     zoomControl: false,
     attributionControl: false,
@@ -194,10 +251,17 @@ export function initReportDisponibilitat() {
     { subdomains: 'abcd', minZoom: 4, maxZoom: 20 },
   ).addTo(map);
 
+  /**
+   * Actualitza les coordenades mostrades a l'usuari sota el mapa.
+   */
   const updateCoordDisplay = ({ lat, lon }) => {
     coordsEl.innerHTML = `<i class="bi bi-geo-alt"></i><span>Lat ${lat.toFixed(5)} · Lon ${lon.toFixed(5)}</span>`;
   };
 
+  /**
+   * Sincronitza la posició del marcador personalitzat al mapa.
+   * Si no existeix, el crea amb el seu icona de polsació (pulse).
+   */
   const syncMapPosition = ({ lat, lon }, animate = true) => {
     const latLng = [lat, lon];
 
@@ -218,12 +282,13 @@ export function initReportDisponibilitat() {
         iconAnchor: [20, 20],
       });
 
-      marker = globalThis.L.marker(latLng, { 
+      marker = globalThis.L.marker(latLng, {
         draggable: true,
         icon: reportIcon
       }).addTo(map);
       marker.bindPopup('Arrossega per ajustar · Radi màxim 150 m').openPopup();
 
+      // En arrossegar, limitem el marcador al radi de 150m si coneixem la posició GPS real
       marker.on('dragend', () => {
         const pos = marker.getLatLng();
         let clamped = { lat: pos.lat, lon: pos.lng };
@@ -246,7 +311,7 @@ export function initReportDisponibilitat() {
     updateCoordDisplay({ lat, lon });
   };
 
-  // Clic al mapa per posar la ubicació manualment (amb limitació de radi)
+  // Clic al mapa: mou el marcador a la posició clicada (respectant el radi màxim)
   map.on('click', (e) => {
     const clicked = { lat: e.latlng.lat, lon: e.latlng.lng };
 
@@ -265,13 +330,16 @@ export function initReportDisponibilitat() {
     syncMapPosition(clicked, false);
   });
 
+  /**
+   * Obté la posició inicial i dibuixa el cercle blau de permís (radi de 150m).
+   */
   const loadPosition = async () => {
     try {
       const gps = await resolveCurrentPosition();
       userGpsCoords = gps;
       currentCoords = gps;
 
-      // Dibuixar cercle de l'àrea permesa
+      // Dibuixar cercle de l'àrea permesa al voltant de la posició GPS real
       if (allowedCircle) allowedCircle.remove();
       allowedCircle = globalThis.L.circle([gps.lat, gps.lon], {
         radius: MAX_RADIUS_M,
@@ -289,6 +357,7 @@ export function initReportDisponibilitat() {
     }
   };
 
+  // Selecció d'estat (Disponible / Ocupat)
   statusButtons.forEach((button) => {
     button.addEventListener('click', () => {
       selectedStatus = button.dataset.status;
@@ -296,9 +365,11 @@ export function initReportDisponibilitat() {
     });
   });
 
+  // Enviament del formulari
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    // Verifiquem cooldown abans d'enviar
     const localCooldownLeft = (cooldownUntilMs - Date.now()) / 1000;
     if (localCooldownLeft > 0) {
       showToast(toastEl, `Espera ${Math.ceil(localCooldownLeft)}s per tornar a reportar.`, 'error');
@@ -325,6 +396,8 @@ export function initReportDisponibilitat() {
 
     try {
       const response = await pythonApi.post('/api/reports/disponibilitat', payload);
+
+      // El backend ens pot retornar un temps d'espera personalitzat
       const successCooldownSeconds = Number(response?.cooldown_seconds);
       const cooldownSeconds = Number.isFinite(successCooldownSeconds) && successCooldownSeconds > 0
         ? successCooldownSeconds
@@ -336,12 +409,13 @@ export function initReportDisponibilitat() {
       setStatusButtons(statusButtons, selectedStatus);
       startCooldown(cooldownSeconds);
 
-      // Tornar al mapa després d'un breu retard
+      // Tornem a la home després d'uns segons
       setTimeout(() => {
         window.location.href = '/';
       }, 1500);
     } catch (error) {
       if (error?.status === 429) {
+        // Error de "Too Many Requests": l'API ens diu quant de temps hem d'esperar
         const secondsLeft = Number(error?.data?.cooldown_seconds_left);
         const safeSeconds = Number.isFinite(secondsLeft) && secondsLeft > 0
           ? secondsLeft
@@ -359,6 +433,7 @@ export function initReportDisponibilitat() {
     }
   });
 
+  // Execució inicial
   loadPosition();
   refreshSubmitCooldown();
 }

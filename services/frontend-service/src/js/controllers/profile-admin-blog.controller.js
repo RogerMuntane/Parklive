@@ -5,7 +5,7 @@ let modalInstance = null;
 
 /**
  * Renderitza la taula d'articles del blog a l'àrea d'administració.
- * 
+ *
  * @returns {void}
  */
 function renderBlogTable() {
@@ -82,7 +82,7 @@ function renderBlogTable() {
 
 /**
  * Carrega la llista d'articles des de l'API.
- * 
+ *
  * @returns {Promise<void>}
  */
 async function loadArticles() {
@@ -116,7 +116,7 @@ async function loadArticles() {
 /**
  * Obre el modal per crear o editar un article.
  * Si es passa un ID, es carreguen les dades de l'article per editar.
- * 
+ *
  * @param {number|string|null} [id=null] - L'ID de l'article a editar, o null per crear-ne un de nou.
  * @returns {void}
  */
@@ -173,7 +173,7 @@ function openArticleModal(id = null) {
 
 /**
  * Gestiona l'enviament del formulari de creació o edició d'un article.
- * 
+ *
  * @param {Event} e - L'objecte de l'esdeveniment (submit).
  * @returns {Promise<void>}
  */
@@ -220,9 +220,9 @@ async function saveArticle(e) {
 
   try {
     let response;
-    // La nostra API per defecte assumeix JSON si enviem `{}`. Per enviar FormData cal usar fetch directament
-    // o modificar el nostre client d'API si no suporta FormData automàticament.
-    // ParkLive pythonApi ja hauria d'acceptar FormData si ho detecta.
+    // Enviem les dades com a FormData per permetre la pujada de la imatge destacada.
+    // El client pythonApi detecta automàticament si el body és FormData i gestiona
+    // correctament els headers (Sense forçar application/json).
     if (id) {
       response = await pythonApi.put(`/api/blog/${id}`, formData);
     } else {
@@ -246,7 +246,7 @@ async function saveArticle(e) {
 
 /**
  * Executa la petició HTTP per esborrar un article.
- * 
+ *
  * @param {number|string} id - L'ID de l'article a esborrar.
  * @returns {Promise<void>}
  */
@@ -265,7 +265,7 @@ async function deleteArticle(id) {
 
 /**
  * Inicialitza la lògica d'administració del blog.
- * 
+ *
  * @returns {void}
  */
 export function initAdminBlog() {

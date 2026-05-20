@@ -439,7 +439,7 @@ export function initLandingMap() {
     });
   }
 
-  // First render can occur before the layout is fully stable; re-validate after paint.
+  // El primer renderitzat pot ocórrer abans que el disseny sigui totalment estable; revalidem després de pintar.
   globalThis.requestAnimationFrame(() => {
     globalThis.requestAnimationFrame(() => {
       if (typeof map.invalidateSize === 'function') {

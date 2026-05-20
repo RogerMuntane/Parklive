@@ -1,15 +1,15 @@
 /**
  * ParkLive – date-sheet.module.js
  *
- * Mòdul que gestiona el mini-full (bottom sheet) de selecció de dates
- * per a la cerca de la landing page en dispositius mòbils.
- * Sincronitza els inputs de cerca principals amb els del full.
+ * Mòdul que gestiona la selecció de dates de la landing page.
+ * Sincronitza els inputs de cerca principals amb el mini-full (bottom sheet)
+ * i inicialitza els selectors de data (Flatpickr) per a tot el formulari.
  */
 
 /**
- * Inicialitza el mini-full de selecció de dates.
+ * Inicialitza els selectors de data i el mini-full de selecció.
  * Vincula els events d'apertura, tancament i aplicació de dates,
- * i inicialitza Flatpickr en tots els inputs de data de la landing.
+ * i configura Flatpickr en tots els inputs de data de la landing.
  *
  * @returns {void}
  */
